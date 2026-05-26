@@ -161,7 +161,7 @@ export function renderMemoryGraph(layout: InitialAppShellEvidenceLayout): string
       return `<g class="memory-node ${isHighlighted ? 'graph-highlight-active' : ''} ${accent ? 'graph-accent-memory' : ''}" ${renderHighlightAttributes(
         node.id,
         highlightedIds,
-      )}>
+      )} data-control="select-memory" data-inspector-title="${escapeHtml(node.summary)}" data-inspector-source="${escapeHtml(`${node.sourceType} · ${node.recordType} · ${node.observedAt}`)}" data-inspector-body="${escapeHtml(`선택한 기억: ${node.summary} Outcome and source evidence stay linked through ${node.id.replace(/^memory:/, '')}.`)}" data-inspector-citation="${escapeHtml(node.id.replace(/^memory:/, ''))}" tabindex="0" role="button" aria-label="Select memory ${escapeHtml(truncate(node.summary, 48))}">
         <title>${escapeHtml(node.summary)}</title>
         <circle cx="${position.x}" cy="${position.y}" r="${isHighlighted ? '52' : '42'}" fill="${accent ? '#d24040' : '#d8d8d8'}" fill-opacity="${accent ? '0.82' : '0.72'}" stroke="#f3f1ea" stroke-opacity="${isHighlighted ? '0.46' : '0.16'}" stroke-width="${isHighlighted ? '2.4' : '1.1'}" />
         <circle cx="${position.x}" cy="${position.y}" r="${isHighlighted ? '62' : '50'}" fill="none" stroke="${accent ? '#d24040' : '#f3f1ea'}" stroke-opacity="${isHighlighted ? '0.22' : '0.06'}" />

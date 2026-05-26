@@ -229,6 +229,12 @@ const APP_SHELL_STYLES = `
     filter: drop-shadow(0 32px 90px rgba(0, 0, 0, 0.44));
   }
   .memory-graph rect:first-child { fill: transparent; stroke: rgba(255, 255, 255, 0.05); }
+  .memory-node { cursor: pointer; outline: none; }
+  .memory-node[data-selected="true"] circle:first-of-type { stroke: #f7d774; stroke-opacity: 0.88; stroke-width: 3.2px; }
+  .memory-node[data-selected="true"] circle:nth-of-type(2) { stroke: #f7d774; stroke-opacity: 0.42; }
+  .memory-node:focus-visible circle:first-of-type { stroke: #f7d774; stroke-opacity: 0.9; }
+  .citation-ref[data-active="true"] { background: rgba(247, 215, 116, 0.16); border-color: rgba(247, 215, 116, 0.42); color: #f7d774; }
+  .memory-inspector-source { color: rgba(243, 241, 234, 0.52); font-size: 12px; font-weight: 760; letter-spacing: 0.01em; }
   .memory-node .node-kicker,
   .hub-count { fill: rgba(243, 241, 234, 0.42); font-size: 9px; font-weight: 800; }
   .memory-node .node-title { fill: #f4f1e9; font-size: 12px; font-weight: 850; }
@@ -328,7 +334,7 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
   const relationshipCount = layout.links.length;
   const citationLinks = layout.ask.citationMemoryIds
     .slice(0, 3)
-    .map((citationId) => `<a href="#evidence-${escapeHtml(citationId)}" class="citation-ref">[${escapeHtml(citationId)}]</a>`)
+    .map((citationId) => `<a href="#evidence-${escapeHtml(citationId)}" class="citation-ref" data-citation-ref="${escapeHtml(citationId)}">[${escapeHtml(citationId)}]</a>`)
     .join('');
   const drawerLedger = layout.evidenceDrawer.items
     .map((item) => {
@@ -430,11 +436,12 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
         ${variant === 'no-svg' ? '' : renderMemoryGraph(layout)}
       </div>
 
-      <article class="memory-inspector" aria-label="Ask My Past Self cited question flow">
+      <article class="memory-inspector" aria-label="Ask My Past Self cited question flow" data-inspector-panel="pmi015">
         <p class="eyebrow">Ask My Past Self · cited path</p>
-        <h2>${escapeHtml(layout.ask.recommendation)}</h2>
-        <p>반복된 <span class="pill-red">anxiety → feature addition → launch delay</span> 경로만 근거로 답한다. Decision Replay는 현재 결정을 과거 결과와 비교하고, Evidence drawer는 출처·날짜·기억 원문으로 되돌아간다.</p>
-        <div class="citation-row" aria-label="Ask My Past Self citations">${citationLinks}</div>
+        <h2 data-inspector-headline>${escapeHtml(layout.ask.recommendation)}</h2>
+        <p class="memory-inspector-source" data-inspector-source>selected path · 3 cited memories</p>
+        <p data-inspector-body>반복된 <span class="pill-red">anxiety → feature addition → launch delay</span> 경로만 근거로 답한다. Decision Replay는 현재 결정을 과거 결과와 비교하고, Evidence drawer는 출처·날짜·기억 원문으로 되돌아간다.</p>
+        <div class="citation-row" aria-label="Ask My Past Self citations" data-inspector-citations>${citationLinks}</div>
       </article>
 
       <section class="evidence-ledger" aria-label="Evidence drawer">
@@ -460,6 +467,26 @@ const GRAPH_CONTROL_SCRIPT = `
   const reset = document.querySelector('[data-control="reset"]');
   const rearrange = document.querySelector('[data-control="rearrange"]');
   const focusSelected = document.querySelector('[data-control="focus-selected"]');
+  const memoryNodes = Array.from(document.querySelectorAll('[data-control="select-memory"]'));
+  const inspector = document.querySelector('[data-inspector-panel="pmi015"]');
+  const inspectorHeadline = inspector?.querySelector('[data-inspector-headline]');
+  const inspectorSource = inspector?.querySelector('[data-inspector-source]');
+  const inspectorBody = inspector?.querySelector('[data-inspector-body]');
+  const citationRefs = Array.from(document.querySelectorAll('[data-citation-ref]'));
+
+  const selectMemory = (node) => {
+    if (!node || !inspectorHeadline || !inspectorBody || !inspectorSource) return;
+    memoryNodes.forEach((item) => item.setAttribute('data-selected', String(item === node)));
+    const title = node.getAttribute('data-inspector-title') || 'Selected memory';
+    const source = node.getAttribute('data-inspector-source') || 'memory source';
+    const body = node.getAttribute('data-inspector-body') || '';
+    const citation = node.getAttribute('data-inspector-citation') || '';
+    inspectorHeadline.textContent = title;
+    inspectorSource.textContent = source;
+    inspectorBody.textContent = body;
+    citationRefs.forEach((ref) => ref.setAttribute('data-active', String(ref.getAttribute('data-citation-ref') === citation)));
+    inspector.setAttribute('data-selected-memory', citation);
+  };
 
   const setSpacing = (value) => {
     shell.setAttribute('data-spacing', value);
@@ -481,6 +508,17 @@ const GRAPH_CONTROL_SCRIPT = `
     });
   });
 
+  memoryNodes.forEach((node) => {
+    node.addEventListener('click', () => selectMemory(node));
+    node.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        selectMemory(node);
+      }
+    });
+  });
+  if (memoryNodes[2]) selectMemory(memoryNodes[2]);
+
   if (toggleLabels) {
     toggleLabels.addEventListener('click', () => {
       const hidden = shell.getAttribute('data-labels') === 'hidden';
@@ -501,6 +539,8 @@ const GRAPH_CONTROL_SCRIPT = `
     focusSelected.addEventListener('click', () => {
       shell.setAttribute('data-labels', 'visible');
       setSpacing('normal');
+      const selected = document.querySelector('[data-control="select-memory"][data-selected="true"]') || memoryNodes[2];
+      if (selected) selectMemory(selected);
       document.querySelector('.selected-node-affordance')?.scrollIntoView({ block: 'center', inline: 'center', behavior: 'smooth' });
     });
   }

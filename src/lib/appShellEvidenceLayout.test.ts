@@ -74,6 +74,10 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('class="control-action rearrange-graph"');
     expect(html).toContain('class="control-action hide-secondary-labels"');
     expect(html).toContain('data-control="toggle-labels"');
+    expect(html).toContain('data-control="select-memory"');
+    expect(html).toContain('data-inspector-title=');
+    expect(html).toContain('data-inspector-panel="pmi015"');
+    expect(html).toContain('data-inspector-headline');
     expect(html).toContain('data-spacing="wide"');
     expect(html).toContain('data-filter-chip="episodic"');
     expect(html).toContain('class="control-action subtle reset-graph-filters"');
@@ -103,7 +107,7 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('이번에도 기능을 더 넣어야 할까?');
     expect(html).toContain('[mem_launch_may_anxiety_scope_delay]');
     expect(html).toContain(
-      '<a href="#evidence-mem_launch_may_anxiety_scope_delay" class="citation-ref">[mem_launch_may_anxiety_scope_delay]</a>',
+      '<a href="#evidence-mem_launch_may_anxiety_scope_delay" class="citation-ref" data-citation-ref="mem_launch_may_anxiety_scope_delay">[mem_launch_may_anxiety_scope_delay]</a>',
     );
     expect(html).toContain('aria-label="Ask My Past Self citations"');
     expect(html).toContain('data-citation-id="mem_launch_june_anxiety_scope_delay"');
@@ -143,7 +147,7 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('data-replay-memory-id="mem_launch_may_anxiety_scope_delay"');
     expect(html).toContain('data-replay-memory-id="mem_launch_june_anxiety_scope_delay"');
     expect(html).toContain(
-      '<a href="#evidence-mem_launch_may_anxiety_scope_delay" class="citation-ref">[mem_launch_may_anxiety_scope_delay]</a>',
+      '<a href="#evidence-mem_launch_may_anxiety_scope_delay" class="citation-ref" data-citation-ref="mem_launch_may_anxiety_scope_delay">[mem_launch_may_anxiety_scope_delay]</a>',
     );
 
     for (const highlightId of shell.replay.graphHighlightIds.slice(0, 5)) {
@@ -162,6 +166,9 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(documentHtml).toContain('.second-brain-shell');
     expect(documentHtml).toContain('Personal Memory AI Second Brain');
     expect(documentHtml).toContain('data-graph-control-script="pmi014"');
+    expect(documentHtml).toContain('data-inspector-panel="pmi015"');
+    expect(documentHtml).toContain('const selectMemory = (node) =>');
+    expect(documentHtml).toContain("inspector.setAttribute('data-selected-memory', citation)");
     expect(documentHtml).toContain("shell.setAttribute('data-labels', hidden ? 'visible' : 'hidden')");
     expect(documentHtml).toContain("setSpacing('normal')");
   });
