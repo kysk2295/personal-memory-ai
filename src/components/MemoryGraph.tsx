@@ -72,7 +72,12 @@ function renderGhostNodes(): string {
   return SATELLITE_POSITIONS.map((position, index) => {
     const radius = [5, 3, 4, 6, 3, 5, 4, 3, 5, 4, 3, 5, 3, 4][index] ?? 4;
     const opacity = index % 4 === 0 ? 0.42 : 0.26;
-    return `<circle class="ghost-memory-node" cx="${position.x}" cy="${position.y}" r="${radius}" fill="#d8d8d8" fill-opacity="${opacity}" />`;
+    const label = ['semantic', 'reflective', 'procedural', 'episodic', 'source', 'topic', 'near-miss', 'requires', 'trigger', 'thesis', 'extends', 'refines', 'supports', 'import'][index] ?? 'memory';
+    const labelOffset = index % 2 === 0 ? 9 : -42;
+    return `<g class="ghost-memory-cluster">
+      <circle class="ghost-memory-node" cx="${position.x}" cy="${position.y}" r="${radius}" fill="#d8d8d8" fill-opacity="${opacity}" />
+      <text class="ghost-memory-label" x="${position.x + labelOffset}" y="${position.y + 3}">${escapeHtml(label)}</text>
+    </g>`;
   }).join('');
 }
 
@@ -192,6 +197,10 @@ export function renderMemoryGraph(layout: InitialAppShellEvidenceLayout): string
         <text x="742" y="96" class="satellite-label">${escapeHtml(truncate(layout.replay.currentDecision.prompt, 38))}</text>
       </g>
       ${renderGhostNodes()}
+      <g class="selected-node-affordance" aria-label="Selected node affordance">
+        <circle class="selected-node-halo" cx="604" cy="318" r="76" />
+        <circle class="selected-node-handle" cx="660" cy="267" r="4" />
+      </g>
       ${hubNodes}
       ${renderFacetHighlightNodes(graphHighlightIds, highlightedIds)}
       ${memoryNodes}

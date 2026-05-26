@@ -42,6 +42,8 @@ const APP_SHELL_STYLES = `
   .locale-toggle button,
   .filter-chip,
   .layout-button,
+  .control-pill,
+  .control-action,
   .ask-submit {
     border: 1px solid rgba(255, 255, 255, 0.1);
     background: rgba(255, 255, 255, 0.045);
@@ -126,7 +128,17 @@ const APP_SHELL_STYLES = `
   .filter-count { color: rgba(243, 241, 234, 0.46); font-weight: 750; }
   .layout-modes { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
   .layout-button { min-height: 32px; border-radius: 999px; font-size: 12px; }
-  .layout-button.active { color: #0b0b0b; background: #f3f1ea; }
+  .layout-button.active,
+  .control-pill.active { color: #0b0b0b; background: #f3f1ea; }
+  .graph-control-panel { display: flex; flex-direction: column; gap: 9px; }
+  .control-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .control-label { color: rgba(243, 241, 234, 0.48); font-size: 11px; font-weight: 760; }
+  .control-pill-group { display: inline-flex; gap: 5px; }
+  .control-pill { min-height: 28px; min-width: 42px; border-radius: 999px; padding: 5px 9px; font-size: 11px; }
+  .control-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+  .control-action { min-height: 31px; border-radius: 999px; font-size: 12px; }
+  .control-action.subtle { color: rgba(243, 241, 234, 0.52); }
+  .control-hint { margin: 0; color: rgba(243, 241, 234, 0.38); font-size: 11px; line-height: 1.45; }
   .sidebar-footer {
     margin-top: auto;
     color: rgba(243, 241, 234, 0.46);
@@ -214,6 +226,9 @@ const APP_SHELL_STYLES = `
   .hub-title,
   .satellite-label { fill: rgba(243, 241, 234, 0.72); font-size: 10px; font-weight: 800; }
   .satellite-label { fill: rgba(243, 241, 234, 0.54); font-size: 9px; }
+  .ghost-memory-label { fill: rgba(243, 241, 234, 0.3); font-size: 8px; font-weight: 650; }
+  .selected-node-halo { fill: none; stroke: #d24040; stroke-opacity: 0.32; stroke-width: 1.4; stroke-dasharray: 3 5; }
+  .selected-node-handle { fill: #d24040; fill-opacity: 0.86; }
   .graph-support-copy,
   .graph-highlight-manifest,
   .graph-support-list {
@@ -366,9 +381,28 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
         <div class="layout-modes">
           <button type="button" class="layout-button active">자유</button>
           <button type="button" class="layout-button">주장별</button>
+          <button type="button" class="layout-button">계층</button>
           <button type="button" class="layout-button">시간순</button>
-          <button type="button" class="layout-button">집중</button>
         </div>
+      </section>
+
+      <section class="legend-section graph-control-panel" aria-label="Graph control panel">
+        <p class="legend-title">그래프 조절</p>
+        <div class="control-row node-spacing-controls" aria-label="Node spacing controls">
+          <span class="control-label">노드 간격</span>
+          <span class="control-pill-group">
+            <button type="button" class="control-pill">좁게</button>
+            <button type="button" class="control-pill active">보통</button>
+            <button type="button" class="control-pill">넓게</button>
+          </span>
+        </div>
+        <div class="control-actions">
+          <button type="button" class="control-action rearrange-graph">다시 정렬</button>
+          <button type="button" class="control-action hide-secondary-labels">라벨 숨기기</button>
+          <button type="button" class="control-action subtle reset-graph-filters">필터 초기화</button>
+          <button type="button" class="control-action subtle selected-node-focus">선택 노드 보기</button>
+        </div>
+        <p class="control-hint">노드·엣지 필터와 라벨 밀도는 그래프 탐색 affordance로 노출하고, 실제 기억 답변은 인용 칩으로만 확정한다.</p>
       </section>
 
       <p class="sidebar-footer">대시보드가 아니라 기억을 탐색하는 작업공간. 상태 라벨과 내부 구현 목록은 첫 인상에서 제거하고, 그래프와 질문 입력을 전면에 둔다.</p>

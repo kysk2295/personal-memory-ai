@@ -69,6 +69,11 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('class="brain-sidebar"');
     expect(html).toContain('class="brain-canvas"');
     expect(html).toContain('class="graph-meta-line"');
+    expect(html).toContain('graph-control-panel');
+    expect(html).toContain('class="control-row node-spacing-controls"');
+    expect(html).toContain('class="control-action rearrange-graph"');
+    expect(html).toContain('class="control-action hide-secondary-labels"');
+    expect(html).toContain('class="control-action subtle reset-graph-filters"');
     expect(html).toContain('class="ask-memory-bar"');
     expect(html).toContain('Second Brain');
     expect(html).toContain('지식 그래프');
@@ -103,6 +108,8 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('data-highlight-id="memory:mem_launch_may_anxiety_scope_delay"');
     expect(html).toContain('class="graph-highlight-node');
     expect(html).toContain('class="ghost-memory-node"');
+    expect(html).toContain('class="ghost-memory-label"');
+    expect(html).toContain('class="selected-node-affordance"');
     expect(html).toContain('class="semantic-edge"');
     expect(html).toContain('data-highlight-id="emotion:anxiety"');
     expect(html).toContain('data-highlight-id="decision:chosen"');
