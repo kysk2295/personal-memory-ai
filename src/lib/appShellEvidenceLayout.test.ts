@@ -73,6 +73,9 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('class="control-row node-spacing-controls"');
     expect(html).toContain('class="control-action rearrange-graph"');
     expect(html).toContain('class="control-action hide-secondary-labels"');
+    expect(html).toContain('data-control="toggle-labels"');
+    expect(html).toContain('data-spacing="wide"');
+    expect(html).toContain('data-filter-chip="episodic"');
     expect(html).toContain('class="control-action subtle reset-graph-filters"');
     expect(html).toContain('class="ask-memory-bar"');
     expect(html).toContain('Second Brain');
@@ -158,5 +161,8 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(documentHtml).toContain('<meta name="viewport" content="width=device-width, initial-scale=1" />');
     expect(documentHtml).toContain('.second-brain-shell');
     expect(documentHtml).toContain('Personal Memory AI Second Brain');
+    expect(documentHtml).toContain('data-graph-control-script="pmi014"');
+    expect(documentHtml).toContain("shell.setAttribute('data-labels', hidden ? 'visible' : 'hidden')");
+    expect(documentHtml).toContain("setSpacing('normal')");
   });
 });

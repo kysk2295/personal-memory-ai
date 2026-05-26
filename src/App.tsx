@@ -116,7 +116,9 @@ const APP_SHELL_STYLES = `
     align-items: center;
     gap: 9px;
     font-size: 12px;
+    transition: opacity 160ms ease, background 160ms ease, border-color 160ms ease;
   }
+  .filter-chip[aria-pressed="false"] { opacity: 0.34; border-color: rgba(255,255,255,0.06); background: transparent; }
   .filter-dot { width: 8px; height: 8px; border-radius: 999px; background: #d9d9d9; }
   .filter-dot.semantic { background: #f0f0f0; }
   .filter-dot.reflective { background: #9d9d9d; }
@@ -210,7 +212,16 @@ const APP_SHELL_STYLES = `
     position: relative;
     width: min(112%, 1240px);
     transform: scale(1.09) translateY(8px);
+    transition: transform 180ms ease, width 180ms ease;
   }
+  .second-brain-shell[data-spacing="tight"] .graph-workspace { width: min(104%, 1160px); transform: scale(1.02) translateY(8px); }
+  .second-brain-shell[data-spacing="wide"] .graph-workspace { width: min(122%, 1320px); transform: scale(1.15) translateY(8px); }
+  .second-brain-shell[data-labels="hidden"] .ghost-memory-label,
+  .second-brain-shell[data-labels="hidden"] .satellite-label,
+  .second-brain-shell[data-labels="hidden"] .hub-title,
+  .second-brain-shell[data-labels="hidden"] .node-kicker,
+  .second-brain-shell[data-labels="hidden"] .node-source { opacity: 0; }
+  .second-brain-shell[data-labels="hidden"] .node-title { opacity: 0.72; }
   .memory-graph {
     display: block;
     width: 100%;
@@ -308,7 +319,7 @@ function escapeHtml(value: string): string {
 export type RenderVariant = 'full' | 'plain' | 'topbar-only' | 'no-svg' | 'svg-only' | 'debug-text';
 
 function renderFilter(labelKo: string, labelEn: string, count: number, kind: string): string {
-  return `<button type="button" class="filter-chip"><span class="filter-dot ${kind}" aria-hidden="true"></span><span class="filter-name">${labelKo}<span aria-hidden="true"> ${labelEn}</span></span><span class="filter-count">${count}</span></button>`;
+  return `<button type="button" class="filter-chip" data-filter-chip="${escapeHtml(kind)}" aria-pressed="true"><span class="filter-dot ${kind}" aria-hidden="true"></span><span class="filter-name">${labelKo}<span aria-hidden="true"> ${labelEn}</span></span><span class="filter-count">${count}</span></button>`;
 }
 
 export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
@@ -331,7 +342,7 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
     return `<main class="second-brain-shell"><aside class="brain-sidebar"><section class="brain-title"><p class="eyebrow">지식 그래프</p><h1>Second Brain</h1><p>${escapeHtml(layout.northStar)}</p></section></aside></main>`;
   }
 
-  return `<main class="second-brain-shell">
+  return `<main class="second-brain-shell" data-labels="visible" data-spacing="normal">
     <aside class="brain-sidebar" aria-label="Second Brain graph controls">
       <div class="sidebar-topline">
         <a class="home-button" href="/" aria-label="home">←</a>
@@ -391,16 +402,16 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
         <div class="control-row node-spacing-controls" aria-label="Node spacing controls">
           <span class="control-label">노드 간격</span>
           <span class="control-pill-group">
-            <button type="button" class="control-pill">좁게</button>
-            <button type="button" class="control-pill active">보통</button>
-            <button type="button" class="control-pill">넓게</button>
+            <button type="button" class="control-pill" data-control="spacing" data-spacing="tight">좁게</button>
+            <button type="button" class="control-pill active" data-control="spacing" data-spacing="normal" aria-pressed="true">보통</button>
+            <button type="button" class="control-pill" data-control="spacing" data-spacing="wide">넓게</button>
           </span>
         </div>
         <div class="control-actions">
-          <button type="button" class="control-action rearrange-graph">다시 정렬</button>
-          <button type="button" class="control-action hide-secondary-labels">라벨 숨기기</button>
-          <button type="button" class="control-action subtle reset-graph-filters">필터 초기화</button>
-          <button type="button" class="control-action subtle selected-node-focus">선택 노드 보기</button>
+          <button type="button" class="control-action rearrange-graph" data-control="rearrange">다시 정렬</button>
+          <button type="button" class="control-action hide-secondary-labels" data-control="toggle-labels" aria-pressed="false">라벨 숨기기</button>
+          <button type="button" class="control-action subtle reset-graph-filters" data-control="reset">필터 초기화</button>
+          <button type="button" class="control-action subtle selected-node-focus" data-control="focus-selected">선택 노드 보기</button>
         </div>
         <p class="control-hint">노드·엣지 필터와 라벨 밀도는 그래프 탐색 affordance로 노출하고, 실제 기억 답변은 인용 칩으로만 확정한다.</p>
       </section>
@@ -438,6 +449,76 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
   </main>`;
 }
 
+const GRAPH_CONTROL_SCRIPT = `
+(() => {
+  const shell = document.querySelector('.second-brain-shell');
+  if (!shell) return;
+
+  const spacingButtons = Array.from(document.querySelectorAll('[data-control="spacing"]'));
+  const filterButtons = Array.from(document.querySelectorAll('[data-filter-chip]'));
+  const toggleLabels = document.querySelector('[data-control="toggle-labels"]');
+  const reset = document.querySelector('[data-control="reset"]');
+  const rearrange = document.querySelector('[data-control="rearrange"]');
+  const focusSelected = document.querySelector('[data-control="focus-selected"]');
+
+  const setSpacing = (value) => {
+    shell.setAttribute('data-spacing', value);
+    spacingButtons.forEach((button) => {
+      const active = button.getAttribute('data-spacing') === value;
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-pressed', String(active));
+    });
+  };
+
+  spacingButtons.forEach((button) => {
+    button.addEventListener('click', () => setSpacing(button.getAttribute('data-spacing') || 'normal'));
+  });
+
+  filterButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      const active = button.getAttribute('aria-pressed') !== 'false';
+      button.setAttribute('aria-pressed', String(!active));
+    });
+  });
+
+  if (toggleLabels) {
+    toggleLabels.addEventListener('click', () => {
+      const hidden = shell.getAttribute('data-labels') === 'hidden';
+      shell.setAttribute('data-labels', hidden ? 'visible' : 'hidden');
+      toggleLabels.setAttribute('aria-pressed', String(!hidden));
+      toggleLabels.textContent = hidden ? '라벨 숨기기' : '라벨 보이기';
+    });
+  }
+
+  if (rearrange) {
+    rearrange.addEventListener('click', () => {
+      const next = shell.getAttribute('data-spacing') === 'wide' ? 'tight' : 'wide';
+      setSpacing(next);
+    });
+  }
+
+  if (focusSelected) {
+    focusSelected.addEventListener('click', () => {
+      shell.setAttribute('data-labels', 'visible');
+      setSpacing('normal');
+      document.querySelector('.selected-node-affordance')?.scrollIntoView({ block: 'center', inline: 'center', behavior: 'smooth' });
+    });
+  }
+
+  if (reset) {
+    reset.addEventListener('click', () => {
+      shell.setAttribute('data-labels', 'visible');
+      if (toggleLabels) {
+        toggleLabels.setAttribute('aria-pressed', 'false');
+        toggleLabels.textContent = '라벨 숨기기';
+      }
+      filterButtons.forEach((button) => button.setAttribute('aria-pressed', 'true'));
+      setSpacing('normal');
+    });
+  }
+})();
+`;
+
 export function renderAppShellDocument(variant: RenderVariant = 'full'): string {
   return `<!doctype html>
 <html lang="ko">
@@ -447,6 +528,6 @@ export function renderAppShellDocument(variant: RenderVariant = 'full'): string 
     <title>Personal Memory AI Second Brain</title>
     <style>${APP_SHELL_STYLES}</style>
   </head>
-  <body>${renderAppShellHtml(variant)}</body>
+  <body>${renderAppShellHtml(variant)}<script data-graph-control-script="pmi014">${GRAPH_CONTROL_SCRIPT}</script></body>
 </html>`;
 }
