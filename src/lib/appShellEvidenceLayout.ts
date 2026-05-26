@@ -2,6 +2,7 @@ import { askMyPastSelf } from './askMyPastSelf';
 import { replayDecision } from './decisionReplay';
 import { buildGraphEvidence, type EvidenceDrawerItem } from './graphEvidence';
 import { buildImportPreview } from './importPreview';
+import { compileMemoryRecordsToWikiGraph, type CompiledWikiGraph } from './llmWikiCompiler';
 import { personalMemoryRecords } from './__fixtures__/personalMemoryRecords';
 import type { MemoryRecord } from './memoryRecord';
 import { detectRepeatedPatterns, type PatternDetectionStatus } from './patternDetector';
@@ -46,6 +47,7 @@ export interface InitialAppShellEvidenceLayout {
   patterns: ReturnType<typeof detectRepeatedPatterns>;
   replay: ReturnType<typeof replayDecision>;
   importPreview: ReturnType<typeof buildImportPreview>;
+  compiledWiki: CompiledWikiGraph;
   evidenceDrawer: {
     status: PatternDetectionStatus;
     items: EvidenceDrawerItem[];
@@ -161,6 +163,7 @@ export function buildInitialAppShellEvidenceLayout(): InitialAppShellEvidenceLay
     memories: records,
     patterns: patterns.patterns,
   });
+  const compiledWiki = compileMemoryRecordsToWikiGraph(records);
   const graphEvidence = buildGraphEvidence({
     currentQuery: {
       id: 'ask_current_more_features',
@@ -273,6 +276,7 @@ export function buildInitialAppShellEvidenceLayout(): InitialAppShellEvidenceLay
     patterns,
     replay,
     importPreview,
+    compiledWiki,
     evidenceDrawer: {
       status: graphEvidence.status,
       items: graphEvidence.drawerItems,

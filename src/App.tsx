@@ -235,6 +235,27 @@ const APP_SHELL_STYLES = `
   .memory-node:focus-visible circle:first-of-type { stroke: #f7d774; stroke-opacity: 0.9; }
   .citation-ref[data-active="true"] { background: rgba(247, 215, 116, 0.16); border-color: rgba(247, 215, 116, 0.42); color: #f7d774; }
   .memory-inspector-source { color: rgba(243, 241, 234, 0.52); font-size: 12px; font-weight: 760; letter-spacing: 0.01em; }
+  .wiki-compiler-strip {
+    position: absolute;
+    left: 34px;
+    bottom: 30px;
+    z-index: 2;
+    max-width: 360px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    align-items: center;
+    color: rgba(243, 241, 234, 0.5);
+    font-size: 11px;
+    line-height: 1.35;
+  }
+  .wiki-compiler-strip strong { color: rgba(243, 241, 234, 0.82); }
+  .wiki-node-chip {
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 999px;
+    padding: 5px 8px;
+    background: rgba(255, 255, 255, 0.035);
+  }
   .memory-node .node-kicker,
   .hub-count { fill: rgba(243, 241, 234, 0.42); font-size: 9px; font-weight: 800; }
   .memory-node .node-title { fill: #f4f1e9; font-size: 12px; font-weight: 850; }
@@ -434,6 +455,16 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
 
       <div class="graph-stage">
         ${variant === 'no-svg' ? '' : renderMemoryGraph(layout)}
+        <aside class="wiki-compiler-strip" aria-label="LLM Wiki compiler preview" data-wiki-compiler="pmi016">
+          <span><strong>${layout.compiledWiki.nodeCount}</strong> compiled wiki nodes</span>
+          <span><strong>${layout.compiledWiki.citationCount}</strong> citations</span>
+          ${layout.compiledWiki.nodes
+            .filter((node) => node.type === 'pattern' || node.type === 'concept')
+            .sort((left, right) => (left.type === right.type ? left.id.localeCompare(right.id) : left.type === 'pattern' ? -1 : 1))
+            .slice(0, 3)
+            .map((node) => `<span class="wiki-node-chip" data-wiki-node-id="${escapeHtml(node.id)}">${escapeHtml(node.title)}</span>`)
+            .join('')}
+        </aside>
       </div>
 
       <article class="memory-inspector" aria-label="Ask My Past Self cited question flow" data-inspector-panel="pmi015">

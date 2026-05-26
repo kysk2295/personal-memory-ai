@@ -45,6 +45,13 @@ describe('buildInitialAppShellEvidenceLayout', () => {
       ]),
     );
     expect(shell.evidenceDrawer.items.length).toBeGreaterThan(0);
+    expect(shell.compiledWiki.nodeCount).toBeGreaterThan(10);
+    expect(shell.compiledWiki.nodes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: 'pattern:launch-delay-from-feature-expansion', type: 'pattern' }),
+        expect.objectContaining({ id: 'concept:feature-addition', type: 'concept' }),
+      ]),
+    );
   });
 
   test('keeps graph-supporting surfaces and sample data status honest in the data contract', () => {
@@ -77,6 +84,9 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('data-control="select-memory"');
     expect(html).toContain('data-inspector-title=');
     expect(html).toContain('data-inspector-panel="pmi015"');
+    expect(html).toContain('data-wiki-compiler="pmi016"');
+    expect(html).toContain('compiled wiki nodes');
+    expect(html).toContain('data-wiki-node-id="pattern:launch-delay-from-feature-expansion"');
     expect(html).toContain('data-inspector-headline');
     expect(html).toContain('data-spacing="wide"');
     expect(html).toContain('data-filter-chip="episodic"');
