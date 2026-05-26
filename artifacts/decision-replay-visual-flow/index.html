@@ -1,0 +1,950 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>personal-memory-ai memory brain graph</title>
+    <style>
+  :root {
+    color: #171717;
+    background: #f3f1ea;
+    font-family:
+      Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-width: 320px; background: #f3f1ea; }
+  button { font: inherit; }
+  .app-shell {
+    min-height: 100vh;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .topbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 18px;
+    padding: 18px 20px;
+    border: 1px solid #d8d2c3;
+    background: #fffdf8;
+  }
+  .topbar h1,
+  .section-header h2,
+  .panel h3 { margin: 0; letter-spacing: 0; }
+  .topbar h1 { font-size: 34px; line-height: 1.04; }
+  .topbar p { margin: 7px 0 0; max-width: 760px; color: #4d463d; }
+  .eyebrow {
+    margin: 0;
+    color: #73695c;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0;
+    text-transform: uppercase;
+  }
+  .topbar-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  .topbar-actions button,
+  .capture-card button {
+    border: 1px solid #171717;
+    background: #171717;
+    color: #fff;
+    padding: 10px 12px;
+    min-height: 42px;
+  }
+  .first-screen-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 360px;
+    gap: 14px;
+    align-items: start;
+  }
+  .workspace-main { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+  .graph-workspace,
+  .ask-flow,
+  .evidence-drawer,
+  .analysis-panels .panel,
+  .app-capture-strip {
+    border: 1px solid #d8d2c3;
+    background: #fffdf8;
+  }
+  .graph-workspace { padding: 16px; }
+  .ask-flow { padding: 16px; }
+  .decision-replay-flow {
+    border: 1px solid #d8d2c3;
+    background: #fffdf8;
+    padding: 16px;
+  }
+  .section-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .section-header h2 { font-size: 20px; line-height: 1.2; }
+  .section-header.compact h2 { font-size: 17px; }
+  .graph-subtitle { margin: 7px 0 0; color: #5b5147; font-size: 13px; line-height: 1.4; }
+  .status {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid #b8b0a1;
+    background: #f7f4ed;
+    color: #302b25;
+    padding: 2px 6px;
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 1.4;
+    white-space: nowrap;
+  }
+  .status-implemented { border-color: #2f7d32; color: #19551d; background: #ecf7ec; }
+  .status-partial { border-color: #98710f; color: #674800; background: #fff5cf; }
+  .status-skeleton { border-color: #6b6b6b; color: #424242; background: #f0f0f0; }
+  .status-fake-sample { border-color: #9f4d00; color: #6f3300; background: #fff0de; }
+  .status-planned { border-color: #4c6fb8; color: #294777; background: #eef4ff; }
+  .status-blocked { border-color: #b3261e; color: #7b1a14; background: #ffedea; }
+  .memory-graph {
+    display: block;
+    width: 100%;
+    aspect-ratio: 860 / 520;
+    min-height: 360px;
+  }
+  .memory-node .node-kicker,
+  .hub-count { fill: #6c6256; font-size: 10px; font-weight: 700; }
+  .memory-node .node-title { fill: #151515; font-size: 13px; font-weight: 800; }
+  .memory-node .node-summary { fill: #37312b; font-size: 10px; }
+  .node-source,
+  .hub-title { fill: #4f463d; font-size: 11px; font-weight: 700; }
+  .graph-legend,
+  .graph-highlight-manifest,
+  .graph-node-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .graph-legend span,
+  .graph-highlight-manifest span,
+  .graph-node-list span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 7px;
+    border: 1px solid #ddd8cc;
+    background: #fbfaf6;
+    font-size: 12px;
+    color: #3c352d;
+  }
+  .graph-legend i { width: 10px; height: 10px; display: inline-block; }
+  .graph-highlight-manifest span {
+    border-color: #171717;
+    background: #fffdf8;
+    color: #171717;
+    font-size: 11px;
+    overflow-wrap: anywhere;
+  }
+  .app-capture-strip {
+    padding: 12px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .capture-card { border: 1px solid #e0dbcf; padding: 12px; background: #fbfaf6; }
+  .capture-card strong { display: block; margin-bottom: 6px; }
+  .capture-card p { margin: 0 0 10px; color: #5b5147; font-size: 13px; line-height: 1.4; }
+  .ask-question-row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .ask-question-row label {
+    color: #51483f;
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+  .ask-question-row input {
+    width: 100%;
+    min-height: 42px;
+    border: 1px solid #cfc7b8;
+    background: #fbfaf6;
+    color: #171717;
+    padding: 9px 10px;
+    font: inherit;
+  }
+  .ask-question-row button {
+    min-height: 42px;
+    border: 1px solid #171717;
+    background: #171717;
+    color: #fff;
+    padding: 9px 12px;
+  }
+  .ask-answer-cited {
+    border: 1px solid #d8d2c3;
+    background: #fbfaf6;
+    padding: 12px;
+  }
+  .ask-answer-cited h3 { margin: 0; font-size: 16px; line-height: 1.3; }
+  .ask-answer-cited p { margin: 8px 0 0; color: #3a332d; font-size: 13px; line-height: 1.48; }
+  .citation-ref { color: #5f3dc4; font-weight: 800; text-decoration: none; }
+  .ask-citations {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 9px;
+    padding: 0;
+    margin: 10px 0 0;
+    list-style: none;
+  }
+  .ask-citations li {
+    border: 1px solid #e0dbcf;
+    background: #fffdf8;
+    padding: 10px;
+    min-width: 0;
+  }
+  .ask-citations strong { display: block; font-size: 12px; line-height: 1.35; }
+  .ask-citations p { margin: 7px 0; color: #4d453c; font-size: 12px; line-height: 1.4; }
+  .ask-citations code {
+    display: block;
+    color: #5b3316;
+    font-size: 11px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .decision-current-card,
+  .decision-recommendation,
+  .similar-decision {
+    border: 1px solid #d8d2c3;
+    background: #fbfaf6;
+    padding: 12px;
+  }
+  .decision-current-card label {
+    display: block;
+    color: #51483f;
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .decision-current-card input {
+    width: 100%;
+    min-height: 42px;
+    border: 1px solid #cfc7b8;
+    background: #fffdf8;
+    color: #171717;
+    padding: 9px 10px;
+    font: inherit;
+  }
+  .decision-columns {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 10px;
+  }
+  .decision-columns span {
+    display: block;
+    color: #655b50;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .decision-tag-list {
+    list-style: none;
+    padding: 0;
+    margin: 9px 0 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .decision-tag-list li {
+    border: 1px solid #d8d2c3;
+    background: #fffdf8;
+    color: #332d27;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 5px 7px;
+  }
+  .decision-recommendation {
+    margin-top: 10px;
+  }
+  .decision-recommendation h3 {
+    margin: 0;
+    font-size: 16px;
+    line-height: 1.3;
+  }
+  .decision-recommendation p,
+  .similar-decision p {
+    margin: 8px 0 0;
+    color: #3a332d;
+    font-size: 13px;
+    line-height: 1.48;
+  }
+  .similar-decision-list {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 9px;
+    margin-top: 10px;
+  }
+  .similar-decision strong { display: block; font-size: 12px; line-height: 1.35; }
+  .decision-citations {
+    list-style: none;
+    padding: 0;
+    margin: 10px 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .decision-citations li {
+    border: 1px solid #e0dbcf;
+    background: #fffdf8;
+    padding: 9px;
+  }
+  .decision-citations code {
+    display: block;
+    color: #5b3316;
+    font-size: 11px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .analysis-panels {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .analysis-panels .panel { padding: 13px; min-height: 164px; }
+  .panel-topline {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    align-items: flex-start;
+    margin-bottom: 9px;
+    color: #655b50;
+    font-size: 12px;
+    font-weight: 800;
+  }
+  .panel h3 { font-size: 15px; line-height: 1.25; }
+  .panel p { color: #544b41; font-size: 13px; line-height: 1.45; margin: 8px 0 0; }
+  .metric-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; font-size: 12px; }
+  .panel-wide { grid-column: 1 / -1; }
+  .surface-list,
+  .status-key { list-style: none; padding: 0; margin: 0; }
+  .status-key {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+  .surface-list {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .surface-list li {
+    min-height: 100px;
+    border: 1px solid #e0dbcf;
+    padding: 10px;
+    background: #fbfaf6;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .surface-list strong { display: block; font-size: 13px; }
+  .surface-list p { margin: 5px 0 0; font-size: 12px; }
+  .evidence-drawer {
+    position: sticky;
+    top: 14px;
+    padding: 14px;
+    max-height: calc(100vh - 28px);
+    overflow: auto;
+  }
+  .drawer-list { display: flex; flex-direction: column; gap: 9px; }
+  .drawer-principle {
+    margin: 0 0 12px;
+    color: #544b41;
+    font-size: 13px;
+    line-height: 1.45;
+  }
+  .drawer-item {
+    border: 1px solid #e0dbcf;
+    background: #fbfaf6;
+    padding: 10px;
+  }
+  .drawer-current-question {
+    border: 1px solid #171717;
+    background: #fffdf8;
+    padding: 10px;
+    margin-bottom: 10px;
+  }
+  .drawer-current-question strong { display: block; font-size: 12px; text-transform: uppercase; }
+  .drawer-current-question p { margin: 7px 0; color: #332d27; font-size: 13px; line-height: 1.4; }
+  .drawer-current-question code { color: #5b3316; font-size: 11px; overflow-wrap: anywhere; }
+  .drawer-meta {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    align-items: center;
+    color: #645b51;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .drawer-item p { margin: 8px 0; font-size: 13px; line-height: 1.45; color: #332d27; }
+  .drawer-item code { font-size: 11px; white-space: normal; color: #5b3316; }
+  @media (max-width: 1120px) {
+    .first-screen-grid { grid-template-columns: 1fr; }
+    .evidence-drawer { position: static; max-height: none; }
+    .analysis-panels { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .surface-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .ask-citations { grid-template-columns: 1fr; }
+    .similar-decision-list { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 720px) {
+    .app-shell { padding: 10px; }
+    .topbar { grid-template-columns: 1fr; }
+    .topbar h1 { font-size: 28px; }
+    .topbar-actions { justify-content: flex-start; }
+    .app-capture-strip,
+    .analysis-panels,
+    .surface-list { grid-template-columns: 1fr; }
+    .ask-question-row { grid-template-columns: 1fr; }
+    .decision-columns { grid-template-columns: 1fr; }
+    .memory-graph { min-height: 300px; }
+  }
+</style>
+  </head>
+  <body><main class="app-shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">personal-memory-ai · first screen</p>
+        <h1>Memory brain graph</h1>
+        <p>나보다 나를 더 잘 아는 개인 기억 AI. Web graph workspace is the first screen; app capture and imports feed MemoryRecord evidence into it.</p>
+      </div>
+      <div class="topbar-actions">
+        <button type="button">Quick diary capture <span class="status status-partial">partial</span></button>
+        <button type="button">Import preview <span class="status status-partial">partial</span></button>
+      </div>
+    </header>
+    <section class="first-screen-grid">
+      <div class="workspace-main">
+        <section class="graph-workspace" aria-label="Initial loaded memory-brain graph">
+    <div class="section-header">
+      <div>
+        <p class="eyebrow">web second-brain graph workspace</p>
+        <h2>Daily diary and imported memories are the primary graph nodes</h2>
+        <p class="graph-subtitle">Edges are evidence facets: emotion, project, decision, outcome, and source. Ask, pattern, import preview, Decision Replay, and drawer panels stay attached to this graph.</p>
+      </div>
+      <span class="status status-implemented">implemented</span>
+    </div>
+    <svg class="memory-graph" viewBox="0 0 860 520" role="img" aria-label="Memory brain graph linking records to emotion, project, decision, outcome, and source" data-current-question-id="question:이번에도-기능을-더-넣어야-할까">
+      <rect x="8" y="8" width="844" height="504" fill="#f6f5f1" stroke="#ddd8cc" />
+      <g class="graph-question-node" data-highlight-id="question:이번에도-기능을-더-넣어야-할까" data-highlight-status="active">
+        <rect x="258" y="24" width="344" height="38" rx="8" fill="#171717" stroke="#171717" />
+        <text x="430" y="48" text-anchor="middle" fill="#fff" font-size="12" font-weight="800">이번에도 기능을 더 넣어야 할까?</text>
+      </g>
+      <g class="graph-current-decision-node" data-highlight-id="decision:decision_current_add_replay_polish" data-highlight-status="active">
+        <rect x="268" y="236" width="324" height="38" rx="8" fill="#fffdf8" stroke="#5f3dc4" stroke-width="2.6" />
+        <text x="430" y="260" text-anchor="middle" class="hub-title">Should I add more Decision Replay polish befo...</text>
+      </g>
+      <g class="graph-highlight-node" data-highlight-id="emotion:anxiety" data-highlight-status="active">
+        <rect x="104" y="76" width="190" height="34" rx="6" fill="#fffdf8" stroke="#d9480f" stroke-width="2.4" />
+        <text x="114" y="97" class="hub-title">emotion:anxiety</text>
+      </g><g class="graph-highlight-node" data-highlight-id="emotion:pressure" data-highlight-status="active">
+        <rect x="330" y="76" width="190" height="34" rx="6" fill="#fffdf8" stroke="#d9480f" stroke-width="2.4" />
+        <text x="340" y="97" class="hub-title">emotion:pressure</text>
+      </g><g class="graph-highlight-node" data-highlight-id="decision:chosen" data-highlight-status="active">
+        <rect x="556" y="76" width="190" height="34" rx="6" fill="#fffdf8" stroke="#5f3dc4" stroke-width="2.4" />
+        <text x="566" y="97" class="hub-title">decision:chosen</text>
+      </g><g class="graph-highlight-node" data-highlight-id="outcome:launch-delayed-by-two-days-after-adding-graph-filters" data-highlight-status="active">
+        <rect x="104" y="130" width="190" height="34" rx="6" fill="#fffdf8" stroke="#2b8a3e" stroke-width="2.4" />
+        <text x="114" y="151" class="hub-title">outcome:launch-delayed-by-t...</text>
+      </g><g class="graph-highlight-node" data-highlight-id="outcome:launch-delayed-after-onboarding-examples-and-replay-controls-were-added" data-highlight-status="active">
+        <rect x="330" y="130" width="190" height="34" rx="6" fill="#fffdf8" stroke="#2b8a3e" stroke-width="2.4" />
+        <text x="340" y="151" class="hub-title">outcome:launch-delayed-afte...</text>
+      </g><g class="graph-highlight-node" data-highlight-id="emotion:avoidance" data-highlight-status="active">
+        <rect x="556" y="130" width="190" height="34" rx="6" fill="#fffdf8" stroke="#d9480f" stroke-width="2.4" />
+        <text x="566" y="151" class="hub-title">emotion:avoidance</text>
+      </g><g class="graph-highlight-node" data-highlight-id="decision:avoided" data-highlight-status="active">
+        <rect x="104" y="184" width="190" height="34" rx="6" fill="#fffdf8" stroke="#5f3dc4" stroke-width="2.4" />
+        <text x="114" y="205" class="hub-title">decision:avoided</text>
+      </g><g class="graph-highlight-node" data-highlight-id="outcome:launches-keep-being-postponed-when-feature-addition-wins-over-cutting-scope" data-highlight-status="active">
+        <rect x="330" y="184" width="190" height="34" rx="6" fill="#fffdf8" stroke="#2b8a3e" stroke-width="2.4" />
+        <text x="340" y="205" class="hub-title">outcome:launches-keep-being...</text>
+      </g><g class="graph-highlight-node" data-highlight-id="pattern:pattern_anxiety_scope_expansion_launch_delay" data-highlight-status="active">
+        <rect x="556" y="184" width="190" height="34" rx="6" fill="#fffdf8" stroke="#98710f" stroke-width="2.4" />
+        <text x="566" y="205" class="hub-title">pattern:pattern_anxiety_sco...</text>
+      </g><g class="graph-highlight-node" data-highlight-id="decision:decision_current_add_replay_polish" data-highlight-status="active">
+        <rect x="104" y="238" width="190" height="34" rx="6" fill="#fffdf8" stroke="#5f3dc4" stroke-width="2.4" />
+        <text x="114" y="259" class="hub-title">decision:decision_current_a...</text>
+      </g><g class="graph-highlight-node" data-highlight-id="choice:add-polish" data-highlight-status="active">
+        <rect x="330" y="238" width="190" height="34" rx="6" fill="#fffdf8" stroke="#151515" stroke-width="2.4" />
+        <text x="340" y="259" class="hub-title">choice:add-polish</text>
+      </g><g class="graph-highlight-node" data-highlight-id="choice:freeze-for-review" data-highlight-status="active">
+        <rect x="556" y="238" width="190" height="34" rx="6" fill="#fffdf8" stroke="#151515" stroke-width="2.4" />
+        <text x="566" y="259" class="hub-title">choice:freeze-for-review</text>
+      </g><g class="graph-highlight-node" data-highlight-id="topic:launch" data-highlight-status="active">
+        <rect x="104" y="292" width="190" height="34" rx="6" fill="#fffdf8" stroke="#151515" stroke-width="2.4" />
+        <text x="114" y="313" class="hub-title">topic:launch</text>
+      </g><g class="graph-highlight-node" data-highlight-id="topic:feature-addition" data-highlight-status="active">
+        <rect x="330" y="292" width="190" height="34" rx="6" fill="#fffdf8" stroke="#151515" stroke-width="2.4" />
+        <text x="340" y="313" class="hub-title">topic:feature-addition</text>
+      </g><g class="graph-highlight-node" data-highlight-id="topic:decision-replay" data-highlight-status="active">
+        <rect x="556" y="292" width="190" height="34" rx="6" fill="#fffdf8" stroke="#151515" stroke-width="2.4" />
+        <text x="566" y="313" class="hub-title">topic:decision-replay</text>
+      </g>
+      <line x1="420" y1="90" x2="142" y2="126" stroke="#d9480f" stroke-width="1.8" stroke-opacity="0.36" /><line x1="420" y1="90" x2="142" y2="126" stroke="#d9480f" stroke-width="1.8" stroke-opacity="0.36" /><line x1="420" y1="90" x2="182" y2="412" stroke="#1971c2" stroke-width="1.8" stroke-opacity="0.36" /><line x1="420" y1="90" x2="708" y2="126" stroke="#5f3dc4" stroke-width="1.8" stroke-opacity="0.36" /><line x1="420" y1="90" x2="710" y2="412" stroke="#2b8a3e" stroke-width="1.8" stroke-opacity="0.36" /><line x1="420" y1="90" x2="430" y2="472" stroke="#495057" stroke-width="1.8" stroke-opacity="0.36" /><line x1="662.5194116552641" y1="204.01219592813368" x2="142" y2="126" stroke="#d9480f" stroke-width="1.8" stroke-opacity="0.36" /><line x1="662.5194116552641" y1="204.01219592813368" x2="182" y2="412" stroke="#1971c2" stroke-width="1.8" stroke-opacity="0.36" /><line x1="662.5194116552641" y1="204.01219592813368" x2="708" y2="126" stroke="#5f3dc4" stroke-width="1.8" stroke-opacity="0.36" /><line x1="662.5194116552641" y1="204.01219592813368" x2="710" y2="412" stroke="#2b8a3e" stroke-width="1.8" stroke-opacity="0.36" /><line x1="662.5194116552641" y1="204.01219592813368" x2="430" y2="472" stroke="#495057" stroke-width="1.8" stroke-opacity="0.36" /><line x1="569.8852393345807" y1="388.4878040718663" x2="142" y2="126" stroke="#d9480f" stroke-width="1.8" stroke-opacity="0.36" /><line x1="569.8852393345807" y1="388.4878040718663" x2="142" y2="126" stroke="#d9480f" stroke-width="1.8" stroke-opacity="0.36" /><line x1="569.8852393345807" y1="388.4878040718663" x2="182" y2="412" stroke="#1971c2" stroke-width="1.8" stroke-opacity="0.36" /><line x1="569.8852393345807" y1="388.4878040718663" x2="708" y2="126" stroke="#5f3dc4" stroke-width="1.8" stroke-opacity="0.36" /><line x1="569.8852393345807" y1="388.4878040718663" x2="710" y2="412" stroke="#2b8a3e" stroke-width="1.8" stroke-opacity="0.36" /><line x1="569.8852393345807" y1="388.4878040718663" x2="430" y2="472" stroke="#495057" stroke-width="1.8" stroke-opacity="0.36" /><line x1="270.11476066541934" y1="388.4878040718663" x2="142" y2="126" stroke="#d9480f" stroke-width="1.8" stroke-opacity="0.36" /><line x1="270.11476066541934" y1="388.4878040718663" x2="182" y2="412" stroke="#1971c2" stroke-width="1.8" stroke-opacity="0.36" /><line x1="270.11476066541934" y1="388.4878040718663" x2="430" y2="472" stroke="#495057" stroke-width="1.8" stroke-opacity="0.36" /><line x1="177.48058834473582" y1="204.0121959281337" x2="142" y2="126" stroke="#d9480f" stroke-width="1.8" stroke-opacity="0.36" /><line x1="177.48058834473582" y1="204.0121959281337" x2="182" y2="412" stroke="#1971c2" stroke-width="1.8" stroke-opacity="0.36" /><line x1="177.48058834473582" y1="204.0121959281337" x2="708" y2="126" stroke="#5f3dc4" stroke-width="1.8" stroke-opacity="0.36" /><line x1="177.48058834473582" y1="204.0121959281337" x2="710" y2="412" stroke="#2b8a3e" stroke-width="1.8" stroke-opacity="0.36" /><line x1="177.48058834473582" y1="204.0121959281337" x2="430" y2="472" stroke="#495057" stroke-width="1.8" stroke-opacity="0.36" />
+      <g>
+        <circle cx="142" cy="126" r="40" fill="#f8f9fa" stroke="#d9480f" stroke-width="2" />
+        <text x="142" y="123" text-anchor="middle" class="hub-title">emotion</text>
+        <text x="142" y="142" text-anchor="middle" class="hub-count">7 links</text>
+      </g><g>
+        <circle cx="182" cy="412" r="40" fill="#f8f9fa" stroke="#1971c2" stroke-width="2" />
+        <text x="182" y="409" text-anchor="middle" class="hub-title">project</text>
+        <text x="182" y="428" text-anchor="middle" class="hub-count">5 links</text>
+      </g><g>
+        <circle cx="708" cy="126" r="40" fill="#f8f9fa" stroke="#5f3dc4" stroke-width="2" />
+        <text x="708" y="123" text-anchor="middle" class="hub-title">decision</text>
+        <text x="708" y="142" text-anchor="middle" class="hub-count">4 links</text>
+      </g><g>
+        <circle cx="710" cy="412" r="40" fill="#f8f9fa" stroke="#2b8a3e" stroke-width="2" />
+        <text x="710" y="409" text-anchor="middle" class="hub-title">outcome</text>
+        <text x="710" y="428" text-anchor="middle" class="hub-count">4 links</text>
+      </g><g>
+        <circle cx="430" cy="472" r="40" fill="#f8f9fa" stroke="#495057" stroke-width="2" />
+        <text x="430" y="469" text-anchor="middle" class="hub-title">source</text>
+        <text x="430" y="488" text-anchor="middle" class="hub-count">5 links</text>
+      </g>
+      <g class="memory-node graph-highlight-active" data-highlight-id="memory:mem_launch_may_anxiety_scope_delay" data-highlight-status="active">
+        <title>Anxiety before the memory import demo led to graph filter scope expansion and a two-day launch delay.</title>
+        <circle cx="420" cy="90" r="62" fill="none" stroke="#0b7285" stroke-width="4" stroke-opacity="0.9" />
+        <circle cx="420" cy="90" r="58" fill="#fff" stroke="#151515" stroke-width="2" />
+        <text x="420" y="78" text-anchor="middle" class="node-kicker">imported memory</text>
+        <text x="420" y="96" text-anchor="middle" class="node-title">Anxiety before the...</text>
+        <text x="420" y="113" text-anchor="middle" class="node-summary">decision · notion</text>
+        <text x="420" y="129" text-anchor="middle" class="node-source">2026-05-01</text>
+      </g><g class="memory-node graph-highlight-active" data-highlight-id="memory:mem_launch_june_anxiety_scope_delay" data-highlight-status="active">
+        <title>Anxiety about Ask My Past Self became feature additions and delayed the launch.</title>
+        <circle cx="662.5194116552641" cy="204.01219592813368" r="62" fill="none" stroke="#0b7285" stroke-width="4" stroke-opacity="0.9" />
+        <circle cx="662.5194116552641" cy="204.01219592813368" r="58" fill="#fff" stroke="#151515" stroke-width="2" />
+        <text x="662.5194116552641" y="192.01219592813368" text-anchor="middle" class="node-kicker">imported memory</text>
+        <text x="662.5194116552641" y="210.01219592813368" text-anchor="middle" class="node-title">Anxiety about Ask M...</text>
+        <text x="662.5194116552641" y="227.01219592813368" text-anchor="middle" class="node-summary">reflection · obsidian</text>
+        <text x="662.5194116552641" y="243.01219592813368" text-anchor="middle" class="node-source">2026-05-13</text>
+      </g><g class="memory-node graph-highlight-active" data-highlight-id="memory:mem_freeze_vs_feature_addition" data-highlight-status="active">
+        <title>Anxiety creates a freeze-vs-feature-addition choice, and feature addition postpones launches.</title>
+        <circle cx="569.8852393345807" cy="388.4878040718663" r="62" fill="none" stroke="#0b7285" stroke-width="4" stroke-opacity="0.9" />
+        <circle cx="569.8852393345807" cy="388.4878040718663" r="58" fill="#fff" stroke="#151515" stroke-width="2" />
+        <text x="569.8852393345807" y="376.4878040718663" text-anchor="middle" class="node-kicker">imported memory</text>
+        <text x="569.8852393345807" y="394.4878040718663" text-anchor="middle" class="node-title">Anxiety creates a f...</text>
+        <text x="569.8852393345807" y="411.4878040718663" text-anchor="middle" class="node-summary">pattern · markdown</text>
+        <text x="569.8852393345807" y="427.4878040718663" text-anchor="middle" class="node-source">2026-05-20</text>
+      </g><g class="memory-node " data-highlight-id="memory:mem_unrelated_calm_import" data-highlight-status="inactive">
+        <title>Calm Markdown import verification.</title>
+        <circle cx="270.11476066541934" cy="388.4878040718663" r="62" fill="none" stroke="#0b7285" stroke-width="0" stroke-opacity="0.9" />
+        <circle cx="270.11476066541934" cy="388.4878040718663" r="58" fill="#fff" stroke="#151515" stroke-width="2" />
+        <text x="270.11476066541934" y="376.4878040718663" text-anchor="middle" class="node-kicker">imported memory</text>
+        <text x="270.11476066541934" y="394.4878040718663" text-anchor="middle" class="node-title">Calm Markdown impor...</text>
+        <text x="270.11476066541934" y="411.4878040718663" text-anchor="middle" class="node-summary">episodic · paste</text>
+        <text x="270.11476066541934" y="427.4878040718663" text-anchor="middle" class="node-source">2026-05-22</text>
+      </g><g class="memory-node " data-highlight-id="memory:mem_captured_ship_note" data-highlight-status="inactive">
+        <title>Quick captured note about shipping the import parser before more polish.</title>
+        <circle cx="177.48058834473582" cy="204.0121959281337" r="62" fill="none" stroke="#0b7285" stroke-width="0" stroke-opacity="0.9" />
+        <circle cx="177.48058834473582" cy="204.0121959281337" r="58" fill="#fff" stroke="#151515" stroke-width="2" />
+        <text x="177.48058834473582" y="192.0121959281337" text-anchor="middle" class="node-kicker">daily diary capture</text>
+        <text x="177.48058834473582" y="210.0121959281337" text-anchor="middle" class="node-title">Quick captured note...</text>
+        <text x="177.48058834473582" y="227.0121959281337" text-anchor="middle" class="node-summary">episodic · mobile</text>
+        <text x="177.48058834473582" y="243.0121959281337" text-anchor="middle" class="node-source">2026-05-23</text>
+      </g>
+    </svg>
+    <div class="graph-legend">
+      <span><i style="background:#d9480f"></i>emotion 7</span><span><i style="background:#1971c2"></i>project 5</span><span><i style="background:#5f3dc4"></i>decision 4</span><span><i style="background:#2b8a3e"></i>outcome 4</span><span><i style="background:#495057"></i>source 5</span>
+    </div>
+    <div class="graph-highlight-manifest" aria-label="Active Ask My Past Self graph highlights">
+      <span data-highlight-id="question:이번에도-기능을-더-넣어야-할까">question:이번에도-기능을-더-넣어야-할까</span><span data-highlight-id="memory:mem_launch_may_anxiety_scope_delay">memory:mem_launch_may_anxiety_scope_delay</span><span data-highlight-id="emotion:anxiety">emotion:anxiety</span><span data-highlight-id="emotion:pressure">emotion:pressure</span><span data-highlight-id="decision:chosen">decision:chosen</span><span data-highlight-id="outcome:launch-delayed-by-two-days-after-adding-graph-filters">outcome:launch-delayed-by-two-days-after-adding-graph-filters</span><span data-highlight-id="memory:mem_launch_june_anxiety_scope_delay">memory:mem_launch_june_anxiety_scope_delay</span><span data-highlight-id="outcome:launch-delayed-after-onboarding-examples-and-replay-controls-were-added">outcome:launch-delayed-after-onboarding-examples-and-replay-controls-were-added</span><span data-highlight-id="memory:mem_freeze_vs_feature_addition">memory:mem_freeze_vs_feature_addition</span><span data-highlight-id="emotion:avoidance">emotion:avoidance</span><span data-highlight-id="decision:avoided">decision:avoided</span><span data-highlight-id="outcome:launches-keep-being-postponed-when-feature-addition-wins-over-cutting-scope">outcome:launches-keep-being-postponed-when-feature-addition-wins-over-cutting-scope</span><span data-highlight-id="pattern:pattern_anxiety_scope_expansion_launch_delay">pattern:pattern_anxiety_scope_expansion_launch_delay</span><span data-highlight-id="decision:decision_current_add_replay_polish">decision:decision_current_add_replay_polish</span><span data-highlight-id="choice:add-polish">choice:add-polish</span><span data-highlight-id="choice:freeze-for-review">choice:freeze-for-review</span><span data-highlight-id="topic:launch">topic:launch</span><span data-highlight-id="topic:feature-addition">topic:feature-addition</span><span data-highlight-id="topic:decision-replay">topic:decision-replay</span>
+    </div>
+    <div class="graph-node-list" aria-label="Primary loaded memories">
+      <span>notion · decision · Anxiety before the memory import demo led to grap... <span class="status status-implemented">implemented</span></span><span>obsidian · reflection · Anxiety about Ask My Past Self became feature add... <span class="status status-implemented">implemented</span></span><span>markdown · pattern · Anxiety creates a freeze-vs-feature-addition choi... <span class="status status-implemented">implemented</span></span><span>paste · episodic · Calm Markdown import verification. <span class="status status-implemented">implemented</span></span><span>mobile · episodic · Quick captured note about shipping the import par... <span class="status status-implemented">implemented</span></span>
+    </div>
+  </section>
+        <section class="ask-flow" aria-label="Ask My Past Self cited question flow" data-ask-highlight="question:이번에도-기능을-더-넣어야-할까">
+    <div class="section-header">
+      <div>
+        <p class="eyebrow">Ask My Past Self</p>
+        <h2>Cited answer, graph path, and drawer evidence</h2>
+      </div>
+      <span class="status status-implemented">implemented</span>
+    </div>
+    <div class="ask-question-row">
+      <label for="ask-my-past-self-question">Question</label>
+      <input id="ask-my-past-self-question" type="text" value="이번에도 기능을 더 넣어야 할까?" readonly />
+      <button type="button">Ask</button>
+    </div>
+    <article class="ask-answer-cited">
+      <div class="panel-topline">
+        <span>sufficient_evidence</span>
+        <span>confidence <strong>95%</strong></span>
+      </div>
+      <h3>이번에는 기능을 더 넣기보다 freeze하고 사용자 피드백을 먼저 받으세요.</h3>
+      <p>질문: 이번에도 기능을 더 넣어야 할까? 추천: 이번에는 기능을 더 넣기보다 freeze하고 사용자 피드백을 먼저 받으세요. 근거: mem_launch_may_anxiety_scope_delay, mem_launch_june_anxiety_scope_delay, mem_freeze_vs_feature_addition. 이 답변은 과거 기억에서 반복된 anxiety -&gt; feature addition/scope expansion -&gt; launch delay 흐름에만 근거합니다. Citations: <a href="#evidence-mem_launch_may_anxiety_scope_delay" class="citation-ref">[mem_launch_may_anxiety_scope_delay]</a> <a href="#evidence-mem_launch_june_anxiety_scope_delay" class="citation-ref">[mem_launch_june_anxiety_scope_delay]</a> <a href="#evidence-mem_freeze_vs_feature_addition" class="citation-ref">[mem_freeze_vs_feature_addition]</a></p>
+    </article>
+    <ol class="ask-citations" aria-label="Ask My Past Self citations">
+      <li id="citation-mem_launch_may_anxiety_scope_delay" data-citation-id="mem_launch_may_anxiety_scope_delay">
+            <strong><a href="#evidence-mem_launch_may_anxiety_scope_delay" class="citation-ref">[mem_launch_may_anxiety_scope_delay]</a> notion 2026-05-01</strong>
+            <p>notion 2026-05-01: Anxiety before the memory import demo led to graph filter scope expansion and a two-day launch delay. Outcome: Launch delayed by two days after adding graph filters. [mem_launch_may_anxiety_scope_delay]</p>
+            <code>question:이번에도-기능을-더-넣어야-할까 · memory:mem_launch_may_anxiety_scope_delay · emotion:anxiety · emotion:pressure · decision:chosen · outcome:launch-delayed-by-two-days-after-adding-graph-filters</code>
+          </li><li id="citation-mem_launch_june_anxiety_scope_delay" data-citation-id="mem_launch_june_anxiety_scope_delay">
+            <strong><a href="#evidence-mem_launch_june_anxiety_scope_delay" class="citation-ref">[mem_launch_june_anxiety_scope_delay]</a> obsidian 2026-05-13</strong>
+            <p>obsidian 2026-05-13: Anxiety about Ask My Past Self became feature additions and delayed the launch. Outcome: Launch delayed after onboarding examples and replay controls were added. [mem_launch_june_anxiety_scope_delay]</p>
+            <code>question:이번에도-기능을-더-넣어야-할까 · memory:mem_launch_june_anxiety_scope_delay · emotion:anxiety · decision:chosen · outcome:launch-delayed-after-onboarding-examples-and-replay-controls-were-added</code>
+          </li><li id="citation-mem_freeze_vs_feature_addition" data-citation-id="mem_freeze_vs_feature_addition">
+            <strong><a href="#evidence-mem_freeze_vs_feature_addition" class="citation-ref">[mem_freeze_vs_feature_addition]</a> markdown 2026-05-20</strong>
+            <p>markdown 2026-05-20: Anxiety creates a freeze-vs-feature-addition choice, and feature addition postpones launches. Outcome: Launches keep being postponed when feature addition wins over cutting scope. [mem_freeze_vs_feature_addition]</p>
+            <code>question:이번에도-기능을-더-넣어야-할까 · memory:mem_freeze_vs_feature_addition · emotion:anxiety · emotion:avoidance · decision:avoided · outcome:launches-keep-being-postponed-when-feature-addition-wins-over-cutting-scope</code>
+          </li>
+    </ol>
+  </section>
+        <section class="decision-replay-flow" aria-label="Decision Replay cited visual flow" data-replay-highlight="decision:decision_current_add_replay_polish">
+    <div class="section-header">
+      <div>
+        <p class="eyebrow">Decision Replay</p>
+        <h2>Current choice replayed against cited past decisions</h2>
+      </div>
+      <span class="status status-implemented">implemented</span>
+    </div>
+    <div class="decision-current-card" data-current-decision-id="decision:decision_current_add_replay_polish">
+      <label for="decision-replay-current">Current decision</label>
+      <input id="decision-replay-current" type="text" value="Should I add more Decision Replay polish before review?" readonly />
+      <div class="decision-columns">
+        <div>
+          <span>emotions</span>
+          <ul class="decision-tag-list" aria-label="Current decision emotions">
+    <li>anxiety</li><li>pressure</li>
+  </ul>
+        </div>
+        <div>
+          <span>choices</span>
+          <ul class="decision-tag-list" aria-label="Current decision choices">
+    <li>add polish</li><li>freeze for review</li>
+  </ul>
+        </div>
+      </div>
+      <ul class="decision-tag-list" aria-label="Current decision topics">
+    <li>launch</li><li>feature addition</li><li>Decision Replay</li>
+  </ul>
+    </div>
+    <div class="decision-recommendation" aria-label="Decision Replay recommendation and uncertainty">
+      <div class="panel-topline">
+        <span>sufficient_evidence</span>
+        <span>confidence <strong>95%</strong></span>
+      </div>
+      <h3>Based on cited memories, freeze Decision Replay scope for review instead of adding more polish.</h3>
+      <p>Recommendation is bounded to cited personal memories and should not be treated as general advice.</p>
+      <p><strong>Anxiety -&gt; scope expansion -&gt; launch delay</strong>: Detected repeated anxiety -&gt; scope expansion -&gt; launch delay evidence across 3 MemoryRecord citations: mem_launch_may_anxiety_scope_delay (notion://launch-journal/may); mem_launch_june_anxiety_scope_delay (obsidian://daily/2026-05-13); mem_freeze_vs_feature_addition (markdown://retros/freezing-vs-features.md). The freeze-vs-feature-addition citation is treated as supporting evidence because it names anxiety, feature addition, and postponed launches.</p>
+    </div>
+    <div class="similar-decision-list" aria-label="Similar past decisions with citations">
+      <article class="similar-decision" data-replay-memory-id="mem_launch_may_anxiety_scope_delay">
+    <div>
+      <strong>Anxiety before the memory import demo led to graph filter scope expansion and a two-day launch delay.</strong>
+      <p>Launch delayed by two days after adding graph filters.</p>
+    </div>
+    <div class="decision-columns">
+      <div>
+        <span>emotions</span>
+        <ul class="decision-tag-list" aria-label="Past decision mem_launch_may_anxiety_scope_delay emotions">
+    <li>anxiety</li><li>pressure</li>
+  </ul>
+      </div>
+      <div>
+        <span>choices</span>
+        <ul class="decision-tag-list" aria-label="Past decision mem_launch_may_anxiety_scope_delay choices">
+    <li>chosen</li>
+  </ul>
+      </div>
+    </div>
+    <ol class="decision-citations" aria-label="Decision Replay citations for mem_launch_may_anxiety_scope_delay">
+      <li data-replay-citation-id="mem_launch_may_anxiety_scope_delay">
+    <strong><a href="#evidence-mem_launch_may_anxiety_scope_delay" class="citation-ref">[mem_launch_may_anxiety_scope_delay]</a> notion 2026-05-01</strong>
+    <p>Anxiety before the memory import demo led to graph filter scope expansion and a two-day launch delay. Outcome: Launch delayed by two days after adding graph filters. [mem_launch_may_anxiety_scope_delay]</p>
+    <code>decision:decision_current_add_replay_polish · memory:mem_launch_may_anxiety_scope_delay · decision:chosen · outcome:launch-delayed-by-two-days-after-adding-graph-filters</code>
+  </li>
+    </ol>
+  </article><article class="similar-decision" data-replay-memory-id="mem_launch_june_anxiety_scope_delay">
+    <div>
+      <strong>Anxiety about Ask My Past Self became feature additions and delayed the launch.</strong>
+      <p>Launch delayed after onboarding examples and replay controls were added.</p>
+    </div>
+    <div class="decision-columns">
+      <div>
+        <span>emotions</span>
+        <ul class="decision-tag-list" aria-label="Past decision mem_launch_june_anxiety_scope_delay emotions">
+    <li>anxiety</li>
+  </ul>
+      </div>
+      <div>
+        <span>choices</span>
+        <ul class="decision-tag-list" aria-label="Past decision mem_launch_june_anxiety_scope_delay choices">
+    <li>chosen</li>
+  </ul>
+      </div>
+    </div>
+    <ol class="decision-citations" aria-label="Decision Replay citations for mem_launch_june_anxiety_scope_delay">
+      <li data-replay-citation-id="mem_launch_june_anxiety_scope_delay">
+    <strong><a href="#evidence-mem_launch_june_anxiety_scope_delay" class="citation-ref">[mem_launch_june_anxiety_scope_delay]</a> obsidian 2026-05-13</strong>
+    <p>Anxiety about Ask My Past Self became feature additions and delayed the launch. Outcome: Launch delayed after onboarding examples and replay controls were added. [mem_launch_june_anxiety_scope_delay]</p>
+    <code>decision:decision_current_add_replay_polish · memory:mem_launch_june_anxiety_scope_delay · decision:chosen · outcome:launch-delayed-after-onboarding-examples-and-replay-controls-were-added</code>
+  </li>
+    </ol>
+  </article><article class="similar-decision" data-replay-memory-id="mem_freeze_vs_feature_addition">
+    <div>
+      <strong>Anxiety creates a freeze-vs-feature-addition choice, and feature addition postpones launches.</strong>
+      <p>Launches keep being postponed when feature addition wins over cutting scope.</p>
+    </div>
+    <div class="decision-columns">
+      <div>
+        <span>emotions</span>
+        <ul class="decision-tag-list" aria-label="Past decision mem_freeze_vs_feature_addition emotions">
+    <li>anxiety</li><li>avoidance</li>
+  </ul>
+      </div>
+      <div>
+        <span>choices</span>
+        <ul class="decision-tag-list" aria-label="Past decision mem_freeze_vs_feature_addition choices">
+    <li>avoided</li>
+  </ul>
+      </div>
+    </div>
+    <ol class="decision-citations" aria-label="Decision Replay citations for mem_freeze_vs_feature_addition">
+      <li data-replay-citation-id="mem_freeze_vs_feature_addition">
+    <strong><a href="#evidence-mem_freeze_vs_feature_addition" class="citation-ref">[mem_freeze_vs_feature_addition]</a> markdown 2026-05-20</strong>
+    <p>Anxiety creates a freeze-vs-feature-addition choice, and feature addition postpones launches. Outcome: Launches keep being postponed when feature addition wins over cutting scope. [mem_freeze_vs_feature_addition]</p>
+    <code>decision:decision_current_add_replay_polish · memory:mem_freeze_vs_feature_addition · decision:avoided · outcome:launches-keep-being-postponed-when-feature-addition-wins-over-cutting-scope</code>
+  </li>
+    </ol>
+  </article>
+    </div>
+    <div class="graph-highlight-manifest decision-highlight-manifest" aria-label="Decision Replay graph highlights">
+      <span data-highlight-id="decision:decision_current_add_replay_polish">decision:decision_current_add_replay_polish</span><span data-highlight-id="emotion:anxiety">emotion:anxiety</span><span data-highlight-id="emotion:pressure">emotion:pressure</span><span data-highlight-id="choice:add-polish">choice:add-polish</span><span data-highlight-id="choice:freeze-for-review">choice:freeze-for-review</span><span data-highlight-id="topic:launch">topic:launch</span><span data-highlight-id="topic:feature-addition">topic:feature-addition</span><span data-highlight-id="topic:decision-replay">topic:decision-replay</span><span data-highlight-id="memory:mem_launch_may_anxiety_scope_delay">memory:mem_launch_may_anxiety_scope_delay</span><span data-highlight-id="memory:mem_launch_june_anxiety_scope_delay">memory:mem_launch_june_anxiety_scope_delay</span><span data-highlight-id="memory:mem_freeze_vs_feature_addition">memory:mem_freeze_vs_feature_addition</span><span data-highlight-id="decision:chosen">decision:chosen</span><span data-highlight-id="decision:avoided">decision:avoided</span><span data-highlight-id="outcome:launch-delayed-by-two-days-after-adding-graph-filters">outcome:launch-delayed-by-two-days-after-adding-graph-filters</span><span data-highlight-id="outcome:launch-delayed-after-onboarding-examples-and-replay-controls-were-added">outcome:launch-delayed-after-onboarding-examples-and-replay-controls-were-added</span><span data-highlight-id="outcome:launches-keep-being-postponed-when-feature-addition-wins-over-cutting-scope">outcome:launches-keep-being-postponed-when-feature-addition-wins-over-cutting-scope</span><span data-highlight-id="pattern:pattern_anxiety_scope_expansion_launch_delay">pattern:pattern_anxiety_scope_expansion_launch_delay</span>
+    </div>
+  </section>
+        <section class="app-capture-strip" aria-label="App capture feeds MemoryRecord graph">
+          <article class="capture-card">
+            <strong>Quick diary capture <span class="status status-partial">partial</span></strong>
+            <p>Fast app capture writes daily diary notes into MemoryRecord before graph analysis.</p>
+            <button type="button">Capture diary</button>
+          </article>
+          <article class="capture-card">
+            <strong>Notion/Obsidian/Markdown import <span class="status status-partial">partial</span></strong>
+            <p>P0 imported memories enter the same graph as diary entries with source evidence.</p>
+            <button type="button">Preview imports</button>
+          </article>
+          <article class="capture-card">
+            <strong>Native app client <span class="status status-skeleton">skeleton</span></strong>
+            <p>The app surface remains separate from this browser workspace and is only specified here.</p>
+            <button type="button">View capture contract</button>
+          </article>
+        </section>
+        <section class="analysis-panels" aria-label="Graph-supporting panels">
+    <article class="panel">
+      <div class="panel-topline">
+        <span>Pattern panel</span>
+        <span class="status status-implemented">implemented</span>
+      </div>
+      <h3>Anxiety -&gt; scope expansion -&gt; launch delay</h3>
+      <p>Detected repeated anxiety -&gt; scope expansion -&gt; launch delay evidence across 3 MemoryRecord citations: mem_launch_may_anxiety_scope_delay (notion://launch-journal/may); mem_launch_june_anxiety_scope_delay (obsidian://daily/2026-05-13); mem_freeze_vs_feature_addition (markdown://retros/freezing-vs-features.md). The freeze-vs-feature-addition citation is treated as supporting evidence because it names anxiety, feature addition, and postponed launches.</p>
+      <div class="metric-row">
+        <span>confidence <strong>95%</strong></span>
+        <span>citations <strong>3</strong></span>
+      </div>
+    </article>
+    <article class="panel">
+      <div class="panel-topline">
+        <span>Ask My Past Self</span>
+        <span class="status status-implemented">implemented</span>
+      </div>
+      <h3>이번에는 기능을 더 넣기보다 freeze하고 사용자 피드백을 먼저 받으세요.</h3>
+      <p>질문: 이번에도 기능을 더 넣어야 할까? 추천: 이번에는 기능을 더 넣기보다 freeze하고 사용자 피드백을 먼저 받으세요. 근거: mem_launch_may_anxiety_scope_delay, mem_launch_june_anxiety_scope_delay, mem_freeze_vs_feature_addition. 이 답변은 과거 기억에서 반복된 anxiety -&gt; feature addition/scope expansion -&gt; launch delay 흐름에만 근거합니다.</p>
+    </article>
+    <article class="panel">
+      <div class="panel-topline">
+        <span>Decision Replay</span>
+        <span class="status status-implemented">implemented</span>
+      </div>
+      <h3>Based on cited memories, freeze Decision Replay scope for review instead of adding more polish.</h3>
+      <p>Recommendation is bounded to cited personal memories and should not be treated as general advice.</p>
+    </article>
+    <article class="panel">
+      <div class="panel-topline">
+        <span>Import preview</span>
+        <span class="status status-partial">partial</span>
+      </div>
+      <h3>Notion, Obsidian, and Markdown are P0 imports</h3>
+      <p>1 duplicate, 1 new, 0 possible from the visible preview batch. Preview supports the graph and does not replace the web workspace.</p>
+    </article>
+    <article class="panel panel-wide">
+      <div class="panel-topline">
+        <span>Surface status labels</span>
+        <span class="status status-implemented">implemented</span>
+      </div>
+      <ul class="status-key" aria-label="Allowed surface statuses">
+        <li><span class="status status-implemented">implemented</span></li><li><span class="status status-partial">partial</span></li><li><span class="status status-skeleton">skeleton</span></li><li><span class="status status-fake-sample">fake/sample</span></li><li><span class="status status-planned">planned</span></li><li><span class="status status-blocked">blocked</span></li>
+      </ul>
+      <ul class="surface-list">
+        <li>
+    <div>
+      <strong>Initial loaded memory seed</strong>
+      <p>Review dataset only: diary/imported MemoryRecords are seeded so the first screen is loaded without reading private files.</p>
+    </div>
+    <span class="status status-fake-sample">fake/sample</span>
+  </li><li>
+    <div>
+      <strong>App quick diary capture</strong>
+      <p>Fast capture contract exists in lib; native app surface is still separate from this web shell.</p>
+    </div>
+    <span class="status status-partial">partial</span>
+  </li><li>
+    <div>
+      <strong>Native app capture client</strong>
+      <p>Two-surface product boundary is represented, but iOS/Android/macOS capture clients are not built in this web cycle.</p>
+    </div>
+    <span class="status status-skeleton">skeleton</span>
+  </li><li>
+    <div>
+      <strong>Web graph workspace</strong>
+      <p>Initial loaded browser graph connects diary/import memories by emotion, project, decision, outcome, and source.</p>
+    </div>
+    <span class="status status-implemented">implemented</span>
+  </li><li>
+    <div>
+      <strong>Notion/Obsidian/Markdown import preview</strong>
+      <p>Preview contract and sample batch are wired; live OAuth import is intentionally not required here.</p>
+    </div>
+    <span class="status status-partial">partial</span>
+  </li><li>
+    <div>
+      <strong>Ask My Past Self</strong>
+      <p>Answer is generated only from cited MemoryRecord evidence.</p>
+    </div>
+    <span class="status status-implemented">implemented</span>
+  </li><li>
+    <div>
+      <strong>Pattern panel</strong>
+      <p>Repeated anxiety -&gt; scope expansion -&gt; launch delay pattern is detected from citations.</p>
+    </div>
+    <span class="status status-implemented">implemented</span>
+  </li><li>
+    <div>
+      <strong>Decision Replay</strong>
+      <p>Current decision is compared with cited past decision memories.</p>
+    </div>
+    <span class="status status-implemented">implemented</span>
+  </li><li>
+    <div>
+      <strong>Weekly report</strong>
+      <p>Visible roadmap item only; no weekly synthesis is claimed in this cycle.</p>
+    </div>
+    <span class="status status-planned">planned</span>
+  </li><li>
+    <div>
+      <strong>Evidence drawer</strong>
+      <p>Highlighted graph nodes and actions expose source/date/citation traces.</p>
+    </div>
+    <span class="status status-implemented">implemented</span>
+  </li>
+      </ul>
+    </article>
+  </section>
+      </div>
+      <aside class="evidence-drawer" aria-label="Graph evidence drawer">
+    <div class="section-header compact">
+      <div>
+        <p class="eyebrow">Evidence drawer</p>
+        <h2>Every action points back to cited memory</h2>
+      </div>
+      <span class="status status-implemented">implemented</span>
+    </div>
+    <p class="drawer-principle">Ask, pattern, import preview, and Decision Replay remain graph-supported actions. No generic advice is shown without MemoryRecord citations.</p>
+    <article class="drawer-current-question" data-current-question-id="question:이번에도-기능을-더-넣어야-할까">
+      <strong>Current question</strong>
+      <p>이번에도 기능을 더 넣어야 할까?</p>
+      <code>question:이번에도-기능을-더-넣어야-할까</code>
+    </article>
+    <article class="drawer-current-question" data-current-decision-id="decision:decision_current_add_replay_polish">
+      <strong>Current decision</strong>
+      <p>Should I add more Decision Replay polish before review?</p>
+      <code>decision:decision_current_add_replay_polish</code>
+    </article>
+    <div class="drawer-list">
+      <article class="drawer-item" id="evidence-query:ask_current_more_features" data-highlight-id="query:ask_current_more_features">
+            <div class="drawer-meta">
+              <span>current_query</span>
+              <span>2026-05-26T10:00:00.000Z</span>
+              <span class="status status-implemented">implemented</span>
+            </div>
+            <p>이번에도 기능을 더 넣어야 할까?</p>
+            <code>query:ask_current_more_features</code>
+            <code>trace query:ask_current_more_features</code>
+          </article><article class="drawer-item" id="evidence-decision:decision_current_add_replay_polish" data-highlight-id="decision:decision_current_add_replay_polish">
+            <div class="drawer-meta">
+              <span>current_query</span>
+              <span>2026-05-26T10:00:00.000Z</span>
+              <span class="status status-implemented">implemented</span>
+            </div>
+            <p>이번에도 기능을 더 넣어야 할까?</p>
+            <code>decision:decision_current_add_replay_polish</code>
+            <code>trace query:ask_current_more_features</code>
+          </article><article class="drawer-item" id="evidence-mem_launch_may_anxiety_scope_delay" data-highlight-id="memory:mem_launch_may_anxiety_scope_delay">
+            <div class="drawer-meta">
+              <span>notion:notion://launch-journal/may</span>
+              <span>2026-05-01</span>
+              <span class="status status-implemented">implemented</span>
+            </div>
+            <p>Anxiety before the memory import demo led to graph filter scope expansion and a two-day launch delay. Outcome: Launch delayed by two days after adding graph filters. [mem_launch_may_anxiety_scope_delay]</p>
+            <code>memory:mem_launch_may_anxiety_scope_delay</code>
+            <code>trace memory:mem_launch_may_anxiety_scope_delay</code>
+          </article><article class="drawer-item" id="evidence-mem_launch_june_anxiety_scope_delay" data-highlight-id="memory:mem_launch_june_anxiety_scope_delay">
+            <div class="drawer-meta">
+              <span>obsidian:obsidian://daily/2026-05-13</span>
+              <span>2026-05-13</span>
+              <span class="status status-implemented">implemented</span>
+            </div>
+            <p>Anxiety about Ask My Past Self became feature additions and delayed the launch. Outcome: Launch delayed after onboarding examples and replay controls were added. [mem_launch_june_anxiety_scope_delay]</p>
+            <code>memory:mem_launch_june_anxiety_scope_delay</code>
+            <code>trace memory:mem_launch_june_anxiety_scope_delay</code>
+          </article><article class="drawer-item" id="evidence-mem_freeze_vs_feature_addition" data-highlight-id="memory:mem_freeze_vs_feature_addition">
+            <div class="drawer-meta">
+              <span>markdown:markdown://retros/freezing-vs-features.md</span>
+              <span>2026-05-20</span>
+              <span class="status status-implemented">implemented</span>
+            </div>
+            <p>Anxiety creates a freeze-vs-feature-addition choice, and feature addition postpones launches. Outcome: Launches keep being postponed when feature addition wins over cutting scope. [mem_freeze_vs_feature_addition]</p>
+            <code>memory:mem_freeze_vs_feature_addition</code>
+            <code>trace memory:mem_freeze_vs_feature_addition</code>
+          </article><article class="drawer-item" id="evidence-emotion:anxiety" data-highlight-id="emotion:anxiety">
+            <div class="drawer-meta">
+              <span>current_query</span>
+              <span>2026-05-26T10:00:00.000Z</span>
+              <span class="status status-implemented">implemented</span>
+            </div>
+            <p>이번에도 기능을 더 넣어야 할까?</p>
+            <code>emotion:anxiety</code>
+            <code>trace query:ask_current_more_features</code>
+          </article><article class="drawer-item" id="evidence-emotion:pressure" data-highlight-id="emotion:pressure">
+            <div class="drawer-meta">
+              <span>current_query</span>
+              <span>2026-05-26T10:00:00.000Z</span>
+              <span class="status status-implemented">implemented</span>
+            </div>
+            <p>이번에도 기능을 더 넣어야 할까?</p>
+            <code>emotion:pressure</code>
+            <code>trace query:ask_current_more_features</code>
+          </article>
+    </div>
+  </aside>
+    </section>
+  </main></body>
+</html>

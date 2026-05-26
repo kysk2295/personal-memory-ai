@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Ask My Past Self visual flow evidence</title>
+    <style>
+      :root {
+        color: #171717;
+        background: #f3f1ea;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: #f3f1ea; }
+      .app-shell { min-height: 100vh; padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+      .topbar, .graph-workspace, .ask-flow, .evidence-drawer { border: 1px solid #d8d2c3; background: #fffdf8; }
+      .topbar { padding: 18px 20px; }
+      .eyebrow { margin: 0; color: #73695c; font-size: 12px; font-weight: 800; text-transform: uppercase; }
+      h1, h2, h3 { margin: 0; letter-spacing: 0; }
+      h1 { margin-top: 6px; font-size: 32px; line-height: 1.05; }
+      .topbar p { max-width: 900px; color: #4d463d; }
+      .first-screen-grid { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 14px; }
+      .workspace-main { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+      .graph-workspace, .ask-flow, .evidence-drawer { padding: 16px; }
+      .section-header { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+      .section-header h2 { font-size: 20px; line-height: 1.2; }
+      .status { display: inline-flex; border: 1px solid #2f7d32; background: #ecf7ec; color: #19551d; padding: 2px 6px; font-size: 11px; font-weight: 800; }
+      .memory-graph { width: 100%; aspect-ratio: 860 / 520; min-height: 360px; }
+      .node-kicker, .hub-count { fill: #6c6256; font-size: 10px; font-weight: 700; }
+      .node-title { fill: #151515; font-size: 13px; font-weight: 800; }
+      .node-summary, .hub-title { fill: #4f463d; font-size: 11px; font-weight: 800; }
+      .graph-highlight-manifest { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+      .graph-highlight-manifest span { border: 1px solid #171717; background: #fffdf8; padding: 5px 7px; font-size: 11px; overflow-wrap: anywhere; }
+      .ask-question-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px; margin-bottom: 12px; }
+      .ask-question-row label { font-size: 12px; font-weight: 800; text-transform: uppercase; }
+      .ask-question-row input { min-height: 42px; border: 1px solid #cfc7b8; background: #fbfaf6; padding: 9px 10px; font: inherit; }
+      .ask-question-row button { min-height: 42px; border: 1px solid #171717; background: #171717; color: #fff; padding: 9px 12px; }
+      .ask-answer-cited { border: 1px solid #d8d2c3; background: #fbfaf6; padding: 12px; }
+      .ask-answer-cited h3 { font-size: 16px; line-height: 1.3; }
+      .ask-answer-cited p { margin: 8px 0 0; color: #3a332d; font-size: 13px; line-height: 1.48; }
+      .citation-ref { color: #5f3dc4; font-weight: 800; text-decoration: none; }
+      .ask-citations { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; padding: 0; margin: 10px 0 0; list-style: none; }
+      .ask-citations li, .drawer-item, .drawer-current-question { border: 1px solid #e0dbcf; background: #fffdf8; padding: 10px; }
+      .ask-citations strong { font-size: 12px; }
+      .ask-citations p, .drawer-item p, .drawer-current-question p { font-size: 12px; color: #4d453c; line-height: 1.4; }
+      code { display: block; color: #5b3316; font-size: 11px; overflow-wrap: anywhere; }
+      .drawer-list { display: flex; flex-direction: column; gap: 9px; }
+      .drawer-principle { font-size: 13px; color: #544b41; line-height: 1.45; }
+      .drawer-current-question { border-color: #171717; margin-bottom: 10px; }
+      @media (max-width: 1120px) { .first-screen-grid { grid-template-columns: 1fr; } .ask-citations { grid-template-columns: 1fr; } }
+      @media (max-width: 720px) { .app-shell { padding: 10px; } .ask-question-row { grid-template-columns: 1fr; } .memory-graph { min-height: 300px; } }
+    </style>
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <p class="eyebrow">personal-memory-ai · ask-graph-visual-flow</p>
+        <h1>Memory brain graph</h1>
+        <p>나보다 나를 더 잘 아는 개인 기억 AI. Ask My Past Self is wired as an evidence-backed action inside the web second-brain graph workspace.</p>
+      </header>
+      <section class="first-screen-grid">
+        <div class="workspace-main">
+          <section class="graph-workspace" aria-label="Initial loaded memory-brain graph">
+            <div class="section-header">
+              <div>
+                <p class="eyebrow">web second-brain graph workspace</p>
+                <h2>Current question highlights memory, emotion, decision, and outcome evidence</h2>
+              </div>
+              <span class="status">implemented</span>
+            </div>
+            <svg class="memory-graph" viewBox="0 0 860 520" role="img" data-current-question-id="question:이번에도-기능을-더-넣어야-할까">
+              <rect x="8" y="8" width="844" height="504" fill="#f6f5f1" stroke="#ddd8cc" />
+              <g data-highlight-id="question:이번에도-기능을-더-넣어야-할까"><rect x="258" y="24" width="344" height="38" rx="8" fill="#171717" /><text x="430" y="48" text-anchor="middle" fill="#fff" font-size="12" font-weight="800">이번에도 기능을 더 넣어야 할까?</text></g>
+              <g data-highlight-id="emotion:anxiety"><rect x="104" y="76" width="190" height="34" rx="6" fill="#fffdf8" stroke="#d9480f" stroke-width="2.4" /><text x="114" y="97" class="hub-title">emotion:anxiety</text></g>
+              <g data-highlight-id="decision:chosen"><rect x="330" y="76" width="190" height="34" rx="6" fill="#fffdf8" stroke="#5f3dc4" stroke-width="2.4" /><text x="340" y="97" class="hub-title">decision:chosen</text></g>
+              <g data-highlight-id="outcome:launch-delayed-by-two-days-after-adding-graph-filters"><rect x="556" y="76" width="190" height="34" rx="6" fill="#fffdf8" stroke="#2b8a3e" stroke-width="2.4" /><text x="566" y="97" class="hub-title">outcome:launch-delayed...</text></g>
+              <line x1="420" y1="90" x2="420" y2="255" stroke="#111" stroke-width="2" stroke-opacity=".25" />
+              <g data-highlight-id="memory:mem_launch_may_anxiety_scope_delay"><circle cx="420" cy="255" r="64" fill="none" stroke="#0b7285" stroke-width="5" /><circle cx="420" cy="255" r="58" fill="#fff" stroke="#151515" stroke-width="2" /><text x="420" y="242" text-anchor="middle" class="node-kicker">imported memory</text><text x="420" y="260" text-anchor="middle" class="node-title">May launch delay</text><text x="420" y="278" text-anchor="middle" class="node-summary">decision · notion</text></g>
+              <g data-highlight-id="memory:mem_launch_june_anxiety_scope_delay"><circle cx="605" cy="310" r="58" fill="#fff" stroke="#0b7285" stroke-width="3" /><text x="605" y="305" text-anchor="middle" class="node-title">Ask launch delay</text><text x="605" y="323" text-anchor="middle" class="node-summary">reflection · obsidian</text></g>
+              <g data-highlight-id="memory:mem_freeze_vs_feature_addition"><circle cx="265" cy="310" r="58" fill="#fff" stroke="#0b7285" stroke-width="3" /><text x="265" y="305" text-anchor="middle" class="node-title">Freeze vs features</text><text x="265" y="323" text-anchor="middle" class="node-summary">pattern · markdown</text></g>
+            </svg>
+            <div class="graph-highlight-manifest" aria-label="Active Ask My Past Self graph highlights">
+              <span>question:이번에도-기능을-더-넣어야-할까</span>
+              <span>memory:mem_launch_may_anxiety_scope_delay</span>
+              <span>emotion:anxiety</span>
+              <span>decision:chosen</span>
+              <span>outcome:launch-delayed-by-two-days-after-adding-graph-filters</span>
+            </div>
+          </section>
+          <section class="ask-flow" aria-label="Ask My Past Self cited question flow" data-ask-highlight="question:이번에도-기능을-더-넣어야-할까">
+            <div class="section-header">
+              <div><p class="eyebrow">Ask My Past Self</p><h2>Cited answer, graph path, and drawer evidence</h2></div>
+              <span class="status">implemented</span>
+            </div>
+            <div class="ask-question-row"><label for="ask-my-past-self-question">Question</label><input id="ask-my-past-self-question" type="text" value="이번에도 기능을 더 넣어야 할까?" readonly /><button type="button">Ask</button></div>
+            <article class="ask-answer-cited"><h3>이번에는 기능을 더 넣기보다 freeze하고 사용자 피드백을 먼저 받으세요.</h3><p>질문: 이번에도 기능을 더 넣어야 할까? 근거: mem_launch_may_anxiety_scope_delay, mem_launch_june_anxiety_scope_delay, mem_freeze_vs_feature_addition. Citations: <a href="#evidence-mem_launch_may_anxiety_scope_delay" class="citation-ref">[mem_launch_may_anxiety_scope_delay]</a> <a href="#evidence-mem_launch_june_anxiety_scope_delay" class="citation-ref">[mem_launch_june_anxiety_scope_delay]</a> <a href="#evidence-mem_freeze_vs_feature_addition" class="citation-ref">[mem_freeze_vs_feature_addition]</a></p></article>
+            <ol class="ask-citations" aria-label="Ask My Past Self citations">
+              <li data-citation-id="mem_launch_may_anxiety_scope_delay"><strong>[mem_launch_may_anxiety_scope_delay] notion 2026-05-01</strong><p>Scope expansion and a two-day launch delay.</p><code>question · memory · emotion:anxiety · decision:chosen · outcome</code></li>
+              <li data-citation-id="mem_launch_june_anxiety_scope_delay"><strong>[mem_launch_june_anxiety_scope_delay] obsidian 2026-05-13</strong><p>Ask launch anxiety became feature additions and delayed the launch.</p><code>memory:mem_launch_june_anxiety_scope_delay · emotion:anxiety · decision:chosen</code></li>
+              <li data-citation-id="mem_freeze_vs_feature_addition"><strong>[mem_freeze_vs_feature_addition] markdown 2026-05-20</strong><p>Feature addition postpones launches when anxiety spikes.</p><code>memory:mem_freeze_vs_feature_addition · emotion:anxiety · decision:avoided</code></li>
+            </ol>
+          </section>
+        </div>
+        <aside class="evidence-drawer" aria-label="Graph evidence drawer">
+          <div class="section-header"><div><p class="eyebrow">Evidence drawer</p><h2>Every action points back to cited memory</h2></div><span class="status">implemented</span></div>
+          <p class="drawer-principle">No generic advice is shown without MemoryRecord citations.</p>
+          <article class="drawer-current-question" data-current-question-id="question:이번에도-기능을-더-넣어야-할까"><strong>Current question</strong><p>이번에도 기능을 더 넣어야 할까?</p><code>question:이번에도-기능을-더-넣어야-할까</code></article>
+          <div class="drawer-list">
+            <article class="drawer-item" id="evidence-mem_launch_may_anxiety_scope_delay" data-highlight-id="memory:mem_launch_may_anxiety_scope_delay"><p>[mem_launch_may_anxiety_scope_delay] Launch slipped by two days after graph filters were added.</p><code>trace question:ask_current_more_features, memory:mem_launch_may_anxiety_scope_delay</code></article>
+            <article class="drawer-item" id="evidence-mem_launch_june_anxiety_scope_delay" data-highlight-id="memory:mem_launch_june_anxiety_scope_delay"><p>[mem_launch_june_anxiety_scope_delay] Ask launch anxiety became onboarding examples and replay controls.</p><code>trace memory:mem_launch_june_anxiety_scope_delay</code></article>
+            <article class="drawer-item" id="evidence-mem_freeze_vs_feature_addition" data-highlight-id="memory:mem_freeze_vs_feature_addition"><p>[mem_freeze_vs_feature_addition] Past self chose review freeze over one more feature after similar anxiety.</p><code>trace memory:mem_freeze_vs_feature_addition</code></article>
+          </div>
+        </aside>
+      </section>
+    </main>
+  </body>
+</html>

@@ -1,1 +1,1 @@
-{"compilerOptions":{"target":"ES2022","module":"ESNext","moduleResolution":"Bundler","strict":true,"skipLibCheck":true,"types":[]},"include":["src/lib/**/*.ts"]}
+{"compilerOptions":{"target":"ES2022","module":"ESNext","moduleResolution":"Bundler","strict":true,"skipLibCheck":true,"jsx":"preserve","types":[]},"include":["src/**/*.ts","src/**/*.tsx"]}

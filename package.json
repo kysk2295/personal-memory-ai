@@ -1,1 +1,16 @@
-{"name":"personal-memory-ai-rpi-mirror","private":true,"type":"module","scripts":{"typecheck":"tsc --noEmit --strict --moduleResolution bundler --module esnext --target es2022 src/lib/**/*.ts"},"devDependencies":{"typescript":"5.6.3","vitest":"2.1.8"}}
+{
+  "name": "personal-memory-ai-rpi-mirror",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsx scripts/render-static.ts",
+    "start": "node server.mjs",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2",
+    "typescript": "5.6.3",
+    "vitest": "2.1.8"
+  }
+}
