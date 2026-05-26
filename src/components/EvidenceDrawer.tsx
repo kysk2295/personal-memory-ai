@@ -5,7 +5,7 @@ function escapeHtml(value: string): string {
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
+    .replace(/\"/g, '&quot;')
     .replace(/'/g, '&#39;');
 }
 
@@ -14,18 +14,18 @@ function renderStatus(status: string): string {
 }
 
 export function renderEvidenceDrawer(layout: InitialAppShellEvidenceLayout): string {
-  const items = layout.evidenceDrawer.items.slice(0, 7);
+  const items = layout.evidenceDrawer.items.slice(0, 4);
   const questionHighlightId = layout.ask.graphHighlightIds[0] ?? '';
 
   return `<aside class="evidence-drawer" aria-label="Graph evidence drawer">
     <div class="section-header compact">
       <div>
         <p class="eyebrow">Evidence drawer</p>
-        <h2>Every action points back to cited memory</h2>
+        <h2>Every answer stays traceable to remembered evidence</h2>
       </div>
       ${renderStatus(layout.evidenceDrawer.status)}
     </div>
-    <p class="drawer-principle">Ask, pattern, import preview, and Decision Replay remain graph-supported actions. No generic advice is shown without MemoryRecord citations.</p>
+    <p class="drawer-principle">This is the trust surface. Ask, pattern, import preview, and Decision Replay stay grounded in source, date, citation id, and memory trace.</p>
     <article class="drawer-current-question" data-current-question-id="${escapeHtml(questionHighlightId)}">
       <strong>Current question</strong>
       <p>${escapeHtml(layout.askQuestion)}</p>
@@ -38,11 +38,10 @@ export function renderEvidenceDrawer(layout: InitialAppShellEvidenceLayout): str
     </article>
     <div class="drawer-list">
       ${items
-        .map(
-          (item) => {
-            const traceLabel = item.trace.map((trace) => `${trace.type}:${trace.id}`).join(', ');
-            const citationId = item.trace.find((trace) => trace.type === 'memory')?.id ?? item.highlightId;
-            return `<article class="drawer-item" id="evidence-${escapeHtml(citationId)}" data-highlight-id="${escapeHtml(item.highlightId)}">
+        .map((item) => {
+          const traceLabel = item.trace.map((trace) => `${trace.type}:${trace.id}`).join(', ');
+          const citationId = item.trace.find((trace) => trace.type === 'memory')?.id ?? item.highlightId;
+          return `<article class="drawer-item" id="evidence-${escapeHtml(citationId)}" data-highlight-id="${escapeHtml(item.highlightId)}">
             <div class="drawer-meta">
               <span>${escapeHtml(item.source)}</span>
               <span>${escapeHtml(item.date)}</span>
@@ -52,8 +51,7 @@ export function renderEvidenceDrawer(layout: InitialAppShellEvidenceLayout): str
             <code>${escapeHtml(item.highlightId)}</code>
             <code>trace ${escapeHtml(traceLabel)}</code>
           </article>`;
-          },
-        )
+        })
         .join('')}
     </div>
   </aside>`;

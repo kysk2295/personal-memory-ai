@@ -22,25 +22,21 @@ function escapeHtml(value: string): string {
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
+    .replace(/\"/g, '&quot;')
     .replace(/'/g, '&#39;');
-}
-
-function nodePosition(index: number, total: number): { x: number; y: number } {
-  const angle = (Math.PI * 2 * index) / total - Math.PI / 2;
-  return {
-    x: 420 + Math.cos(angle) * 255,
-    y: 255 + Math.sin(angle) * 165,
-  };
-}
-
-function renderStatus(status: string): string {
-  return `<span class="status status-${escapeHtml(status.replace('/', '-'))}">${escapeHtml(status)}</span>`;
 }
 
 function truncate(value: string, maxLength: number): string {
   if (value.length <= maxLength) return value;
   return `${value.slice(0, Math.max(0, maxLength - 3)).trimEnd()}...`;
+}
+
+function nodePosition(index: number, total: number): { x: number; y: number } {
+  const angle = (Math.PI * 2 * index) / total - Math.PI / 2;
+  return {
+    x: 430 + Math.cos(angle) * 255,
+    y: 274 + Math.sin(angle) * 168,
+  };
 }
 
 function highlightKind(highlightId: string): string {
@@ -65,15 +61,16 @@ function renderFacetHighlightNodes(highlightIds: readonly string[]): string {
   );
 
   return facetHighlightIds
+    .slice(0, 5)
     .map((highlightId, index) => {
       const kind = highlightKind(highlightId);
-      const x = 104 + (index % 3) * 226;
-      const y = 76 + Math.floor(index / 3) * 54;
+      const x = 120 + (index % 3) * 212;
+      const y = 84 + Math.floor(index / 3) * 52;
       const color = HIGHLIGHT_COLORS[kind] ?? '#151515';
 
       return `<g class="graph-highlight-node" ${renderHighlightAttributes(highlightId, new Set(highlightIds))}>
-        <rect x="${x}" y="${y}" width="190" height="34" rx="6" fill="#fffdf8" stroke="${color}" stroke-width="2.4" />
-        <text x="${x + 10}" y="${y + 21}" class="hub-title">${escapeHtml(truncate(highlightId, 30))}</text>
+        <rect x="${x}" y="${y}" width="180" height="32" rx="10" fill="#fffdf8" fill-opacity="0.94" stroke="${color}" stroke-width="2.2" />
+        <text x="${x + 10}" y="${y + 20}" class="hub-title">${escapeHtml(truncate(highlightId, 26))}</text>
       </g>`;
     })
     .join('');
@@ -89,11 +86,11 @@ export function renderMemoryGraph(layout: InitialAppShellEvidenceLayout): string
   const currentDecisionHighlightId = `decision:${layout.replay.currentDecision.id}`;
   const positions = new Map(layout.primaryNodes.map((node, index) => [node.id, nodePosition(index, layout.primaryNodes.length)]));
   const hubByKind: Record<ShellLinkKind, { id: string; x: number; y: number; label: string }> = {
-    emotion: { id: 'hub:emotion', x: 142, y: 126, label: 'emotion' },
-    project: { id: 'hub:project', x: 182, y: 412, label: 'project' },
-    decision: { id: 'hub:decision', x: 708, y: 126, label: 'decision' },
-    outcome: { id: 'hub:outcome', x: 710, y: 412, label: 'outcome' },
-    source: { id: 'hub:source', x: 430, y: 472, label: 'source' },
+    emotion: { id: 'hub:emotion', x: 150, y: 176, label: 'emotion' },
+    project: { id: 'hub:project', x: 214, y: 450, label: 'project' },
+    decision: { id: 'hub:decision', x: 712, y: 176, label: 'decision' },
+    outcome: { id: 'hub:outcome', x: 646, y: 450, label: 'outcome' },
+    source: { id: 'hub:source', x: 430, y: 474, label: 'source' },
   };
   const edgeCounts = layout.links.reduce<Record<ShellLinkKind, number>>(
     (counts, link) => ({ ...counts, [link.kind]: counts[link.kind] + 1 }),
@@ -104,7 +101,7 @@ export function renderMemoryGraph(layout: InitialAppShellEvidenceLayout): string
       const source = positions.get(link.from);
       const target = hubByKind[link.kind];
       if (!source) return '';
-      return `<line x1="${source.x}" y1="${source.y}" x2="${target.x}" y2="${target.y}" stroke="${LINK_COLORS[link.kind]}" stroke-width="1.8" stroke-opacity="0.36" />`;
+      return `<line x1="${source.x}" y1="${source.y}" x2="${target.x}" y2="${target.y}" stroke="${LINK_COLORS[link.kind]}" stroke-width="1.7" stroke-opacity="0.34" />`;
     })
     .join('');
   const memoryNodes = layout.primaryNodes
@@ -118,10 +115,10 @@ export function renderMemoryGraph(layout: InitialAppShellEvidenceLayout): string
         highlightedIds,
       )}>
         <title>${escapeHtml(node.summary)}</title>
-        <circle cx="${position.x}" cy="${position.y}" r="62" fill="none" stroke="#0b7285" stroke-width="${
+        <circle cx="${position.x}" cy="${position.y}" r="64" fill="none" stroke="#0b7285" stroke-width="${
           isHighlighted ? '4' : '0'
-        }" stroke-opacity="0.9" />
-        <circle cx="${position.x}" cy="${position.y}" r="58" fill="#fff" stroke="#151515" stroke-width="2" />
+        }" stroke-opacity="0.92" />
+        <circle cx="${position.x}" cy="${position.y}" r="58" fill="#171411" stroke="#f1e8d9" stroke-opacity="0.2" stroke-width="1.8" />
         <text x="${position.x}" y="${position.y - 12}" text-anchor="middle" class="node-kicker">${escapeHtml(primaryLabel)}</text>
         <text x="${position.x}" y="${position.y + 6}" text-anchor="middle" class="node-title">${escapeHtml(truncate(node.summary, 22))}</text>
         <text x="${position.x}" y="${position.y + 23}" text-anchor="middle" class="node-summary">${escapeHtml(node.recordType)} · ${escapeHtml(node.sourceType)}</text>
@@ -132,7 +129,7 @@ export function renderMemoryGraph(layout: InitialAppShellEvidenceLayout): string
   const hubNodes = Object.values(hubByKind)
     .map(
       (hub) => `<g>
-        <circle cx="${hub.x}" cy="${hub.y}" r="40" fill="#f8f9fa" stroke="${LINK_COLORS[hub.label as ShellLinkKind]}" stroke-width="2" />
+        <circle cx="${hub.x}" cy="${hub.y}" r="40" fill="#201b18" stroke="${LINK_COLORS[hub.label as ShellLinkKind]}" stroke-width="1.8" />
         <text x="${hub.x}" y="${hub.y - 3}" text-anchor="middle" class="hub-title">${escapeHtml(hub.label)}</text>
         <text x="${hub.x}" y="${hub.y + 16}" text-anchor="middle" class="hub-count">${edgeCounts[hub.label as ShellLinkKind]} links</text>
       </g>`,
@@ -140,25 +137,17 @@ export function renderMemoryGraph(layout: InitialAppShellEvidenceLayout): string
     .join('');
 
   return `<section class="graph-workspace" aria-label="Initial loaded memory-brain graph">
-    <div class="section-header">
-      <div>
-        <p class="eyebrow">web second-brain graph workspace</p>
-        <h2>Daily diary and imported memories are the primary graph nodes</h2>
-        <p class="graph-subtitle">Edges are evidence facets: emotion, project, decision, outcome, and source. Ask, pattern, import preview, Decision Replay, and drawer panels stay attached to this graph.</p>
-      </div>
-      ${renderStatus('implemented')}
-    </div>
     <svg class="memory-graph" viewBox="0 0 860 520" role="img" aria-label="Memory brain graph linking records to emotion, project, decision, outcome, and source" data-current-question-id="${escapeHtml(questionHighlightId)}">
-      <rect x="8" y="8" width="844" height="504" fill="#f6f5f1" stroke="#ddd8cc" />
+      <rect x="8" y="8" width="844" height="504" rx="22" fill="#120f0d" stroke="#2d2722" />
       <g class="graph-question-node" ${renderHighlightAttributes(questionHighlightId, highlightedIds)}>
-        <rect x="258" y="24" width="344" height="38" rx="8" fill="#171717" stroke="#171717" />
-        <text x="430" y="48" text-anchor="middle" fill="#fff" font-size="12" font-weight="800">${escapeHtml(
+        <rect x="258" y="30" width="344" height="40" rx="12" fill="#f0e6d6" fill-opacity="0.94" stroke="#f0e6d6" />
+        <text x="430" y="55" text-anchor="middle" fill="#151311" font-size="12" font-weight="800">${escapeHtml(
           truncate(layout.askQuestion, 46),
         )}</text>
       </g>
       <g class="graph-current-decision-node" ${renderHighlightAttributes(currentDecisionHighlightId, highlightedIds)}>
-        <rect x="268" y="236" width="324" height="38" rx="8" fill="#fffdf8" stroke="#5f3dc4" stroke-width="2.6" />
-        <text x="430" y="260" text-anchor="middle" class="hub-title">${escapeHtml(
+        <rect x="264" y="248" width="332" height="40" rx="12" fill="#181412" stroke="#5f3dc4" stroke-width="2.2" />
+        <text x="430" y="273" text-anchor="middle" class="hub-title">${escapeHtml(
           truncate(layout.replay.currentDecision.prompt, 48),
         )}</text>
       </g>
@@ -167,22 +156,19 @@ export function renderMemoryGraph(layout: InitialAppShellEvidenceLayout): string
       ${hubNodes}
       ${memoryNodes}
     </svg>
-    <div class="graph-legend">
-      ${Object.entries(edgeCounts)
-        .map(([kind, count]) => `<span><i style="background:${LINK_COLORS[kind as ShellLinkKind]}"></i>${escapeHtml(kind)} ${count}</span>`)
-        .join('')}
+    <div class="graph-support-copy" aria-label="Graph supporting cues">
+      <span class="hero-pill">Question and decision remain visible as active evidence prompts</span>
+      <span class="hero-pill">Graph highlight IDs stay tied to cited memories</span>
     </div>
     <div class="graph-highlight-manifest" aria-label="Active Ask My Past Self graph highlights">
       ${graphHighlightIds
         .map((highlightId) => `<span data-highlight-id="${escapeHtml(highlightId)}">${escapeHtml(highlightId)}</span>`)
         .join('')}
     </div>
-    <div class="graph-node-list" aria-label="Primary loaded memories">
+    <div class="graph-support-list" aria-label="Primary loaded memories">
       ${layout.primaryNodes
-        .map(
-          (node) =>
-            `<span>${escapeHtml(node.sourceType)} · ${escapeHtml(node.recordType)} · ${escapeHtml(truncate(node.summary, 52))} ${renderStatus(node.status)}</span>`,
-        )
+        .slice(0, 5)
+        .map((node) => `<span>${escapeHtml(node.sourceType)} · ${escapeHtml(node.recordType)} · ${escapeHtml(truncate(node.summary, 44))}</span>`)
         .join('')}
     </div>
   </section>`;

@@ -6,7 +6,7 @@ function escapeHtml(value: string): string {
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
+    .replace(/\"/g, '&quot;')
     .replace(/'/g, '&#39;');
 }
 
@@ -51,7 +51,7 @@ function renderSimilarDecision(decision: SimilarPastDecision): string {
       </div>
     </div>
     <ol class="decision-citations" aria-label="Decision Replay citations for ${escapeHtml(decision.memoryId)}">
-      ${decision.citations.map(renderCitation).join('')}
+      ${decision.citations.slice(0, 1).map(renderCitation).join('')}
     </ol>
   </article>`;
 }
@@ -67,10 +67,11 @@ export function renderDecisionReplayPanel(layout: InitialAppShellEvidenceLayout)
     <div class="section-header">
       <div>
         <p class="eyebrow">Decision Replay</p>
-        <h2>Current choice replayed against cited past decisions</h2>
+        <h2>Current choice replayed against past outcomes</h2>
       </div>
       ${renderStatus(replay.status)}
     </div>
+    <p class="section-intro">Replay stays visible as a product pillar, but the screen now edits the story down to the current decision, recommendation, and the strongest similar memories.</p>
     <div class="decision-current-card" data-current-decision-id="${escapeHtml(currentDecisionHighlightId)}">
       <label for="decision-replay-current">Current decision</label>
       <input id="decision-replay-current" type="text" value="${escapeHtml(replay.currentDecision.prompt)}" readonly />
@@ -100,10 +101,11 @@ export function renderDecisionReplayPanel(layout: InitialAppShellEvidenceLayout)
       }
     </div>
     <div class="similar-decision-list" aria-label="Similar past decisions with citations">
-      ${replay.similarPastDecisions.map(renderSimilarDecision).join('')}
+      ${replay.similarPastDecisions.slice(0, 2).map(renderSimilarDecision).join('')}
     </div>
     <div class="graph-highlight-manifest decision-highlight-manifest" aria-label="Decision Replay graph highlights">
       ${replay.graphHighlightIds
+        .slice(0, 5)
         .map((highlightId) => `<span data-highlight-id="${escapeHtml(highlightId)}">${escapeHtml(highlightId)}</span>`)
         .join('')}
     </div>

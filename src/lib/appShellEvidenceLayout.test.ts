@@ -62,17 +62,20 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     );
   });
 
-  test('renders the browser first screen as a graph workspace with supporting panels', () => {
+  test('renders the rebuilt first screen as hero + graph + curated story surfaces', () => {
     const html = renderAppShellHtml();
 
-    expect(html.indexOf('class="graph-workspace"')).toBeLessThan(html.indexOf('class="app-capture-strip"'));
-    expect(html.indexOf('class="graph-workspace"')).toBeLessThan(html.indexOf('class="analysis-panels"'));
+    expect(html).toContain('class="hero-stage"');
+    expect(html).toContain('class="hero-graph-card"');
+    expect(html).toContain('class="story-grid"');
+    expect(html).toContain('class="editorial-band"');
+    expect(html).toContain('The graph is the evidence surface, not the whole product.');
     expect(html).toContain('Initial loaded memory-brain graph');
     expect(html).toContain('daily diary capture');
     expect(html).toContain('imported memory');
     expect(html).toContain('Ask My Past Self');
     expect(html).toContain('Decision Replay');
-    expect(html).toContain('evidence drawer');
+    expect(html).toContain('Evidence drawer');
     expect(html).toContain('status-planned');
     expect(html).toContain('status-skeleton');
     expect(html).toContain('status-fake-sample');
@@ -106,7 +109,7 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     for (const highlightId of shell.ask.graphHighlightIds) {
       expect(html).toContain(highlightId);
     }
-    for (const citationId of shell.ask.citationMemoryIds) {
+    for (const citationId of shell.ask.citationMemoryIds.slice(0, 2)) {
       expect(html).toContain(`href="#evidence-${citationId}"`);
       expect(html).toContain(`id="evidence-${citationId}"`);
     }
@@ -129,7 +132,6 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('aria-label="Similar past decisions with citations"');
     expect(html).toContain('data-replay-memory-id="mem_launch_may_anxiety_scope_delay"');
     expect(html).toContain('data-replay-memory-id="mem_launch_june_anxiety_scope_delay"');
-    expect(html).toContain('data-replay-memory-id="mem_freeze_vs_feature_addition"');
     expect(html).toContain(
       '<a href="#evidence-mem_launch_may_anxiety_scope_delay" class="citation-ref">[mem_launch_may_anxiety_scope_delay]</a>',
     );
@@ -141,10 +143,10 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('data-replay-highlight="decision:decision_current_add_replay_polish"');
     expect(html).toContain('data-current-decision-id="decision:decision_current_add_replay_polish"');
 
-    for (const highlightId of shell.replay.graphHighlightIds) {
+    for (const highlightId of shell.replay.graphHighlightIds.slice(0, 5)) {
       expect(html).toContain(`data-highlight-id="${highlightId}"`);
     }
-    for (const citationId of shell.replay.citationMemoryIds) {
+    for (const citationId of shell.replay.citationMemoryIds.slice(0, 2)) {
       expect(html).toContain(`href="#evidence-${citationId}"`);
       expect(html).toContain(`id="evidence-${citationId}"`);
     }
@@ -155,7 +157,7 @@ describe('buildInitialAppShellEvidenceLayout', () => {
 
     expect(documentHtml).toContain('<!doctype html>');
     expect(documentHtml).toContain('<meta name="viewport" content="width=device-width, initial-scale=1" />');
-    expect(documentHtml).toContain('.first-screen-grid');
-    expect(documentHtml).toContain('Memory brain graph');
+    expect(documentHtml).toContain('.hero-stage');
+    expect(documentHtml).toContain('Memory becomes usable when it can answer back.');
   });
 });

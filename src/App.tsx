@@ -7,10 +7,10 @@ import { buildInitialAppShellEvidenceLayout } from './lib/appShellEvidenceLayout
 
 const APP_SHELL_STYLES = `
   :root {
-    color: #f5f1e8;
+    color: #f4ecdf;
     background:
-      radial-gradient(circle at top, rgba(110, 94, 79, 0.28), transparent 0 32%),
-      linear-gradient(180deg, #12100e 0%, #161311 34%, #1b1714 100%);
+      radial-gradient(circle at top, rgba(120, 97, 68, 0.18), transparent 0 32%),
+      linear-gradient(180deg, #0e0c0b 0%, #12100f 45%, #171412 100%);
     font-family:
       Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   }
@@ -19,117 +19,199 @@ const APP_SHELL_STYLES = `
     margin: 0;
     min-width: 320px;
     background:
-      radial-gradient(circle at top, rgba(110, 94, 79, 0.28), transparent 0 32%),
-      linear-gradient(180deg, #12100e 0%, #161311 34%, #1b1714 100%);
+      radial-gradient(circle at top, rgba(120, 97, 68, 0.18), transparent 0 32%),
+      linear-gradient(180deg, #0e0c0b 0%, #12100f 45%, #171412 100%);
   }
-  button { font: inherit; }
+  button, input { font: inherit; }
   .app-shell {
-    min-height: 100vh;
     max-width: 1480px;
     margin: 0 auto;
-    padding: 28px 24px 56px;
+    padding: 26px 24px 80px;
     display: flex;
     flex-direction: column;
-    gap: 22px;
-  }
-  .topbar {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: end;
-    gap: 24px;
-    padding: 44px 40px 36px;
-    border: 1px solid rgba(235, 223, 208, 0.18);
-    border-radius: 28px;
-    background:
-      linear-gradient(180deg, rgba(38, 33, 29, 0.92) 0%, rgba(22, 19, 17, 0.96) 100%),
-      radial-gradient(circle at top right, rgba(191, 146, 91, 0.16), transparent 0 34%);
-    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.28);
-  }
-  .topbar h1,
-  .section-header h2,
-  .panel h3 { margin: 0; letter-spacing: 0; }
-  .topbar h1 {
-    max-width: 10ch;
-    font-size: clamp(52px, 8vw, 82px);
-    line-height: 0.94;
-    letter-spacing: -0.05em;
-  }
-  .topbar p {
-    margin: 16px 0 0;
-    max-width: 760px;
-    color: rgba(245, 241, 232, 0.76);
-    font-size: 15px;
-    line-height: 1.65;
+    gap: 30px;
   }
   .eyebrow {
     margin: 0;
-    color: rgba(245, 241, 232, 0.5);
+    color: rgba(244, 236, 223, 0.5);
     font-size: 11px;
     font-weight: 700;
     letter-spacing: 0.18em;
     text-transform: uppercase;
   }
-  .topbar-actions {
+  .topbar {
     display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-    justify-content: flex-end;
+    justify-content: space-between;
+    gap: 14px;
+    align-items: center;
+    color: rgba(244, 236, 223, 0.64);
+    font-size: 12px;
   }
-  .topbar-actions button,
-  .capture-card button {
-    border: 1px solid rgba(245, 241, 232, 0.18);
+  .topbar-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .topbar-dot {
+    width: 8px;
+    height: 8px;
     border-radius: 999px;
-    background: rgba(245, 241, 232, 0.06);
-    color: #f5f1e8;
-    padding: 11px 16px;
-    min-height: 42px;
-    letter-spacing: 0.01em;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+    background: #d9b37b;
+    box-shadow: 0 0 24px rgba(217, 179, 123, 0.55);
   }
-  .first-screen-grid {
+  .topbar-note {
+    margin: 0;
+    max-width: 420px;
+    text-align: right;
+    line-height: 1.45;
+  }
+  .hero-stage,
+  .story-card,
+  .editorial-band,
+  .evidence-drawer {
+    border: 1px solid rgba(244, 236, 223, 0.12);
+    border-radius: 30px;
+    background:
+      linear-gradient(180deg, rgba(29, 25, 22, 0.92) 0%, rgba(20, 17, 15, 0.96) 100%),
+      radial-gradient(circle at top right, rgba(191, 146, 91, 0.12), transparent 0 35%);
+    box-shadow: 0 28px 80px rgba(0, 0, 0, 0.22);
+    backdrop-filter: blur(18px);
+  }
+  .hero-stage {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 380px;
+    grid-template-columns: minmax(0, 1.05fr) minmax(420px, 0.95fr);
+    gap: 28px;
+    padding: 34px;
+    align-items: stretch;
+  }
+  .hero-copy {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 22px;
+    min-width: 0;
+  }
+  .hero-copy h1,
+  .hero-narrative h2,
+  .graph-workspace h2,
+  .section-header h2,
+  .panel h3 {
+    margin: 0;
+    letter-spacing: -0.04em;
+  }
+  .hero-copy h1 {
+    max-width: 8ch;
+    font-size: clamp(58px, 8vw, 92px);
+    line-height: 0.9;
+  }
+  .hero-lead {
+    margin: 18px 0 0;
+    max-width: 540px;
+    color: rgba(244, 236, 223, 0.76);
+    font-size: 16px;
+    line-height: 1.72;
+  }
+  .hero-note {
+    margin: 0;
+    max-width: 520px;
+    color: rgba(244, 236, 223, 0.56);
+    font-size: 13px;
+    line-height: 1.65;
+  }
+  .hero-pill-row,
+  .hero-truths {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .hero-pill,
+  .hero-truth {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 40px;
+    padding: 10px 14px;
+    border-radius: 999px;
+    border: 1px solid rgba(244, 236, 223, 0.12);
+    background: rgba(244, 236, 223, 0.04);
+    color: #f4ecdf;
+    font-size: 12px;
+    line-height: 1.35;
+  }
+  .hero-pill strong,
+  .hero-truth strong { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
+  .hero-graph-card {
+    border: 1px solid rgba(244, 236, 223, 0.12);
+    border-radius: 26px;
+    padding: 22px;
+    background: linear-gradient(180deg, rgba(244, 236, 223, 0.04) 0%, rgba(244, 236, 223, 0.02) 100%);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
+  }
+  .hero-graph-intro {
+    display: flex;
+    justify-content: space-between;
+    gap: 18px;
+    align-items: flex-start;
+  }
+  .hero-graph-intro p { margin: 8px 0 0; color: rgba(244, 236, 223, 0.62); font-size: 13px; line-height: 1.55; }
+  .hero-graph-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(217, 179, 123, 0.26);
+    color: #eed3a8;
+    background: rgba(217, 179, 123, 0.08);
+    white-space: nowrap;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .story-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 360px;
     gap: 22px;
     align-items: start;
   }
-  .workspace-main { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
-  .graph-workspace,
-  .ask-flow,
-  .evidence-drawer,
-  .analysis-panels .panel,
-  .app-capture-strip {
-    border: 1px solid rgba(235, 223, 208, 0.14);
-    border-radius: 24px;
-    background: linear-gradient(180deg, rgba(36, 31, 28, 0.92) 0%, rgba(25, 22, 19, 0.94) 100%);
-    box-shadow: 0 18px 48px rgba(0, 0, 0, 0.2);
-    backdrop-filter: blur(18px);
+  .story-stack {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 22px;
   }
-  .graph-workspace { padding: 24px; }
-  .ask-flow { padding: 22px; }
-  .decision-replay-flow {
-    border: 1px solid rgba(235, 223, 208, 0.14);
-    border-radius: 24px;
-    background: linear-gradient(180deg, rgba(36, 31, 28, 0.92) 0%, rgba(25, 22, 19, 0.94) 100%);
-    box-shadow: 0 18px 48px rgba(0, 0, 0, 0.2);
-    padding: 22px;
+  .story-card {
+    padding: 24px;
+    min-width: 0;
   }
   .section-header {
     display: flex;
-    align-items: flex-start;
     justify-content: space-between;
+    align-items: flex-start;
     gap: 12px;
     margin-bottom: 18px;
   }
-  .section-header h2 { font-size: 24px; line-height: 1.08; letter-spacing: -0.03em; }
-  .section-header.compact h2 { font-size: 18px; }
-  .graph-subtitle { margin: 10px 0 0; color: rgba(245, 241, 232, 0.62); font-size: 13px; line-height: 1.55; }
+  .section-header.compact h2 { font-size: 19px; }
+  .section-header h2 { font-size: 28px; line-height: 1.05; }
+  .section-intro,
+  .panel p,
+  .drawer-principle,
+  .ask-answer-cited p,
+  .decision-recommendation p,
+  .similar-decision p,
+  .capture-card p,
+  .surface-list p {
+    color: rgba(244, 236, 223, 0.68);
+  }
   .status {
     display: inline-flex;
     align-items: center;
-    border: 1px solid rgba(245, 241, 232, 0.18);
+    border: 1px solid rgba(244, 236, 223, 0.14);
     border-radius: 999px;
-    background: rgba(245, 241, 232, 0.05);
-    color: #f5f1e8;
+    background: rgba(244, 236, 223, 0.05);
+    color: #f4ecdf;
     padding: 4px 8px;
     font-size: 10px;
     font-weight: 800;
@@ -156,315 +238,296 @@ const APP_SHELL_STYLES = `
   .memory-node .node-summary { fill: #d5c8ba; font-size: 10px; }
   .node-source,
   .hub-title { fill: #cdc0b1; font-size: 11px; font-weight: 700; }
-  .graph-legend,
-  .graph-highlight-manifest,
-  .graph-node-list {
+  .graph-support-copy,
+  .graph-support-list,
+  .graph-highlight-manifest {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
-    margin-top: 14px;
   }
-  .graph-legend span,
-  .graph-highlight-manifest span,
-  .graph-node-list span {
+  .graph-support-copy { margin-top: 4px; }
+  .graph-support-list span,
+  .graph-highlight-manifest span {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 6px 9px;
-    border: 1px solid rgba(245, 241, 232, 0.12);
+    padding: 7px 10px;
+    border: 1px solid rgba(244, 236, 223, 0.1);
     border-radius: 999px;
-    background: rgba(245, 241, 232, 0.04);
+    background: rgba(244, 236, 223, 0.04);
     font-size: 12px;
-    color: rgba(245, 241, 232, 0.84);
+    color: rgba(244, 236, 223, 0.82);
   }
-  .graph-legend i { width: 10px; height: 10px; display: inline-block; }
   .graph-highlight-manifest span {
-    border-color: rgba(227, 190, 128, 0.45);
-    background: rgba(227, 190, 128, 0.08);
-    color: #f5f1e8;
+    border-color: rgba(217, 179, 123, 0.32);
+    background: rgba(217, 179, 123, 0.08);
+    color: #f4ecdf;
     font-size: 11px;
     overflow-wrap: anywhere;
   }
-  .app-capture-strip {
-    padding: 18px;
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 14px;
+  .ask-flow,
+  .decision-replay-flow,
+  .panel,
+  .capture-card,
+  .drawer-item,
+  .drawer-current-question,
+  .decision-current-card,
+  .decision-recommendation,
+  .similar-decision {
+    border: 1px solid rgba(244, 236, 223, 0.1);
+    border-radius: 22px;
+    background: rgba(244, 236, 223, 0.03);
   }
-  .capture-card {
-    border: 1px solid rgba(245, 241, 232, 0.1);
-    border-radius: 18px;
-    padding: 16px;
-    background: rgba(245, 241, 232, 0.03);
-  }
-  .capture-card strong { display: block; margin-bottom: 6px; }
-  .capture-card p { margin: 0 0 10px; color: rgba(245, 241, 232, 0.62); font-size: 13px; line-height: 1.4; }
+  .ask-flow,
+  .decision-replay-flow { padding: 22px; }
   .ask-question-row {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr) auto;
     align-items: center;
     gap: 10px;
-    margin-bottom: 12px;
+    margin-bottom: 14px;
   }
-  .ask-question-row label {
-    color: rgba(245, 241, 232, 0.72);
+  .ask-question-row label,
+  .decision-current-card label {
+    color: rgba(244, 236, 223, 0.72);
     font-size: 12px;
     font-weight: 800;
     text-transform: uppercase;
   }
-  .ask-question-row input {
+  .ask-question-row input,
+  .decision-current-card input {
     width: 100%;
-    min-height: 42px;
-    border: 1px solid rgba(245, 241, 232, 0.14);
-    background: rgba(245, 241, 232, 0.04);
-    color: #f5f1e8;
-    padding: 9px 10px;
-    font: inherit;
+    min-height: 44px;
+    border: 1px solid rgba(244, 236, 223, 0.12);
+    border-radius: 14px;
+    background: rgba(8, 7, 6, 0.25);
+    color: #f4ecdf;
+    padding: 11px 12px;
   }
-  .ask-question-row button {
+  .ask-question-row button,
+  .capture-card button {
     min-height: 42px;
-    border: 1px solid rgba(245, 241, 232, 0.18);
-    background: rgba(245, 241, 232, 0.08);
-    color: #f5f1e8;
-    padding: 9px 12px;
+    border: 1px solid rgba(244, 236, 223, 0.14);
     border-radius: 999px;
+    background: rgba(244, 236, 223, 0.06);
+    color: #f4ecdf;
+    padding: 10px 14px;
   }
-  .ask-answer-cited {
-    border: 1px solid rgba(245, 241, 232, 0.12);
-    border-radius: 18px;
-    background: rgba(245, 241, 232, 0.03);
-    padding: 14px;
+  .ask-answer-cited,
+  .decision-current-card,
+  .decision-recommendation,
+  .similar-decision,
+  .capture-card,
+  .drawer-item,
+  .drawer-current-question {
+    padding: 16px;
   }
-  .ask-answer-cited h3 { margin: 0; font-size: 16px; line-height: 1.3; }
-  .ask-answer-cited p { margin: 8px 0 0; color: rgba(245, 241, 232, 0.72); font-size: 13px; line-height: 1.48; }
-  .citation-ref { color: #5f3dc4; font-weight: 800; text-decoration: none; }
-  .ask-citations {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 9px;
-    padding: 0;
-    margin: 10px 0 0;
+  .panel-topline {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    align-items: flex-start;
+    margin-bottom: 10px;
+    color: rgba(244, 236, 223, 0.56);
+    font-size: 12px;
+    font-weight: 800;
+  }
+  .ask-answer-cited h3,
+  .decision-recommendation h3 { margin: 0; font-size: 18px; line-height: 1.35; }
+  .citation-ref { color: #e7c594; font-weight: 800; text-decoration: none; }
+  .ask-citations,
+  .decision-citations,
+  .decision-tag-list,
+  .surface-list,
+  .status-key {
     list-style: none;
+    padding: 0;
+    margin: 0;
   }
-  .ask-citations li {
-    border: 1px solid rgba(245, 241, 232, 0.1);
+  .ask-citations {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 12px;
+  }
+  .ask-citations li,
+  .decision-citations li {
+    border: 1px solid rgba(244, 236, 223, 0.08);
     border-radius: 18px;
-    background: rgba(245, 241, 232, 0.03);
+    background: rgba(244, 236, 223, 0.025);
     padding: 12px;
-    min-width: 0;
   }
-  .ask-citations strong { display: block; font-size: 12px; line-height: 1.35; }
-  .ask-citations p { margin: 7px 0; color: rgba(245, 241, 232, 0.68); font-size: 12px; line-height: 1.4; }
-  .ask-citations code {
+  .ask-citations strong,
+  .similar-decision strong { display: block; font-size: 12px; line-height: 1.4; }
+  .ask-citations p,
+  .decision-citations p,
+  .drawer-item p,
+  .drawer-current-question p,
+  .capture-card p,
+  .similar-decision p,
+  .decision-recommendation p,
+  .surface-list p {
+    margin: 8px 0 0;
+    font-size: 13px;
+    line-height: 1.55;
+  }
+  .ask-citations code,
+  .decision-citations code,
+  .drawer-item code,
+  .drawer-current-question code {
     display: block;
-    color: #5b3316;
+    margin-top: 8px;
+    color: #c6b293;
     font-size: 11px;
     white-space: normal;
     overflow-wrap: anywhere;
   }
-  .decision-current-card,
-  .decision-recommendation,
-  .similar-decision {
-    border: 1px solid rgba(245, 241, 232, 0.1);
-    border-radius: 18px;
-    background: rgba(245, 241, 232, 0.03);
-    padding: 14px;
-  }
-  .decision-current-card label {
-    display: block;
-    color: #51483f;
-    font-size: 12px;
-    font-weight: 800;
-    text-transform: uppercase;
-    margin-bottom: 8px;
-  }
-  .decision-current-card input {
-    width: 100%;
-    min-height: 42px;
-    border: 1px solid #cfc7b8;
-    background: #fffdf8;
-    color: #171717;
-    padding: 9px 10px;
-    font: inherit;
-  }
   .decision-columns {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
-    margin-top: 10px;
+    gap: 12px;
+    margin-top: 14px;
   }
   .decision-columns span {
     display: block;
-    color: #655b50;
+    color: rgba(244, 236, 223, 0.54);
     font-size: 11px;
     font-weight: 800;
     text-transform: uppercase;
     margin-bottom: 6px;
   }
   .decision-tag-list {
-    list-style: none;
-    padding: 0;
-    margin: 9px 0 0;
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
+    margin-top: 8px;
   }
   .decision-tag-list li {
-    border: 1px solid #d8d2c3;
-    background: #fffdf8;
-    color: #332d27;
+    border: 1px solid rgba(244, 236, 223, 0.12);
+    border-radius: 999px;
+    background: rgba(244, 236, 223, 0.04);
+    color: #f4ecdf;
     font-size: 12px;
     font-weight: 700;
-    padding: 5px 7px;
-  }
-  .decision-recommendation {
-    margin-top: 10px;
-  }
-  .decision-recommendation h3 {
-    margin: 0;
-    font-size: 16px;
-    line-height: 1.3;
-  }
-  .decision-recommendation p,
-  .similar-decision p {
-    margin: 8px 0 0;
-    color: #3a332d;
-    font-size: 13px;
-    line-height: 1.48;
+    padding: 6px 9px;
   }
   .similar-decision-list {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 9px;
-    margin-top: 10px;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin-top: 12px;
   }
-  .similar-decision strong { display: block; font-size: 12px; line-height: 1.35; }
-  .decision-citations {
-    list-style: none;
-    padding: 0;
-    margin: 10px 0 0;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-  .decision-citations li {
-    border: 1px solid #e0dbcf;
-    background: #fffdf8;
-    padding: 9px;
-  }
-  .decision-citations code {
-    display: block;
-    color: #5b3316;
-    font-size: 11px;
-    white-space: normal;
-    overflow-wrap: anywhere;
+  .editorial-band {
+    padding: 24px;
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
+    gap: 22px;
   }
   .analysis-panels {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 10px;
-  }
-  .analysis-panels .panel { padding: 13px; min-height: 164px; }
-  .panel-topline {
     display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .analysis-lead {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 16px;
+  }
+  .panel { padding: 18px; }
+  .panel h3 { font-size: 21px; line-height: 1.2; }
+  .metric-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 12px;
+    color: rgba(244, 236, 223, 0.74);
+    font-size: 12px;
+  }
+  .surface-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 12px;
+  }
+  .surface-list li {
+    min-height: 108px;
+    border: 1px solid rgba(244, 236, 223, 0.08);
+    border-radius: 18px;
+    padding: 14px;
+    background: rgba(244, 236, 223, 0.025);
+    display: flex;
+    flex-direction: column;
     justify-content: space-between;
     gap: 10px;
-    align-items: flex-start;
-    margin-bottom: 9px;
-    color: rgba(245, 241, 232, 0.58);
-    font-size: 12px;
-    font-weight: 800;
   }
-  .panel h3 { font-size: 15px; line-height: 1.25; }
-  .panel p { color: rgba(245, 241, 232, 0.68); font-size: 13px; line-height: 1.45; margin: 8px 0 0; }
-  .metric-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; font-size: 12px; }
-  .panel-wide { grid-column: 1 / -1; }
-  .surface-list,
-  .status-key { list-style: none; padding: 0; margin: 0; }
   .status-key {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
-    margin-bottom: 10px;
+    margin-top: 10px;
   }
-  .surface-list {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 8px;
-  }
-  .surface-list li {
-    min-height: 100px;
-    border: 1px solid rgba(245, 241, 232, 0.1);
-    border-radius: 18px;
-    padding: 12px;
-    background: rgba(245, 241, 232, 0.03);
+  .app-capture-strip {
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    gap: 10px;
+    gap: 12px;
   }
-  .surface-list strong { display: block; font-size: 13px; }
-  .surface-list p { margin: 5px 0 0; font-size: 12px; }
+  .capture-card strong { display: block; margin-bottom: 6px; }
+  .capture-rail-title {
+    margin: 0 0 2px;
+    font-size: 28px;
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+  }
+  .capture-rail-intro {
+    margin: 0;
+    color: rgba(244, 236, 223, 0.64);
+    font-size: 13px;
+    line-height: 1.6;
+  }
   .evidence-drawer {
     position: sticky;
-    top: 14px;
-    padding: 18px;
-    max-height: calc(100vh - 28px);
+    top: 18px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: calc(100vh - 36px);
     overflow: auto;
   }
-  .drawer-list { display: flex; flex-direction: column; gap: 9px; }
-  .drawer-principle {
-    margin: 0 0 12px;
-    color: rgba(245, 241, 232, 0.68);
-    font-size: 13px;
-    line-height: 1.45;
-  }
-  .drawer-item {
-    border: 1px solid rgba(245, 241, 232, 0.1);
-    border-radius: 18px;
-    background: rgba(245, 241, 232, 0.03);
-    padding: 12px;
-  }
-  .drawer-current-question {
-    border: 1px solid rgba(227, 190, 128, 0.4);
-    border-radius: 18px;
-    background: rgba(227, 190, 128, 0.08);
-    padding: 12px;
-    margin-bottom: 10px;
-  }
-  .drawer-current-question strong { display: block; font-size: 12px; text-transform: uppercase; }
-  .drawer-current-question p { margin: 7px 0; color: #332d27; font-size: 13px; line-height: 1.4; }
-  .drawer-current-question code { color: #5b3316; font-size: 11px; overflow-wrap: anywhere; }
+  .drawer-principle { margin: 0 0 2px; font-size: 13px; line-height: 1.55; }
+  .drawer-list { display: flex; flex-direction: column; gap: 10px; }
   .drawer-meta {
     display: flex;
     gap: 6px;
     flex-wrap: wrap;
     align-items: center;
-    color: #645b51;
+    color: rgba(244, 236, 223, 0.56);
     font-size: 11px;
     font-weight: 700;
   }
-  .drawer-item p { margin: 8px 0; font-size: 13px; line-height: 1.45; color: #332d27; }
-  .drawer-item code { font-size: 11px; white-space: normal; color: #5b3316; }
-  @media (max-width: 1120px) {
-    .first-screen-grid { grid-template-columns: 1fr; }
+  @media (max-width: 1180px) {
+    .hero-stage,
+    .story-grid,
+    .story-stack,
+    .editorial-band,
+    .analysis-lead { grid-template-columns: 1fr; }
     .evidence-drawer { position: static; max-height: none; }
-    .analysis-panels { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .surface-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .ask-citations { grid-template-columns: 1fr; }
-    .similar-decision-list { grid-template-columns: 1fr; }
+    .topbar { flex-direction: column; align-items: flex-start; }
+    .topbar-note { text-align: left; }
   }
   @media (max-width: 720px) {
-    .app-shell { padding: 10px; }
-    .topbar { grid-template-columns: 1fr; }
-    .topbar h1 { font-size: 28px; }
-    .topbar-actions { justify-content: flex-start; }
-    .app-capture-strip,
-    .analysis-panels,
+    .app-shell { padding: 14px 12px 56px; gap: 20px; }
+    .hero-stage,
+    .story-card,
+    .editorial-band,
+    .evidence-drawer { padding: 18px; border-radius: 24px; }
+    .hero-copy h1 { font-size: 42px; }
+    .hero-stage { grid-template-columns: 1fr; }
+    .hero-graph-card { padding: 16px; }
+    .ask-question-row,
+    .decision-columns,
     .surface-list { grid-template-columns: 1fr; }
-    .ask-question-row { grid-template-columns: 1fr; }
-    .decision-columns { grid-template-columns: 1fr; }
-    .memory-graph { min-height: 300px; }
+    .memory-graph { min-height: 280px; }
   }
 `;
 
@@ -502,47 +565,86 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
     ${
       shouldRender(variant, 'topbar')
         ? `<header class="topbar">
-      <div>
-        <p class="eyebrow">personal-memory-ai · first screen</p>
-        <h1>Memory brain graph</h1>
-        <p>${escapeHtml(layout.northStar)} Web graph workspace is the first screen; app capture and imports feed MemoryRecord evidence into it.</p>
+      <div class="topbar-brand">
+        <span class="topbar-dot" aria-hidden="true"></span>
+        <p class="eyebrow">personal-memory-ai · benchmark rebuild</p>
       </div>
-      <div class="topbar-actions">
-        <button type="button">Quick diary capture <span class="status status-partial">partial</span></button>
-        <button type="button">Import preview <span class="status status-partial">partial</span></button>
-      </div>
+      <p class="topbar-note">App capture feeds the web workspace, but the first impression should feel like a remembered life becoming evidence — not a dashboard.</p>
     </header>`
         : ''
     }
-    <section class="first-screen-grid">
-      <div class="workspace-main">
-        ${shouldRender(variant, 'graph') ? renderMemoryGraph(layout) : ''}
-        ${shouldRender(variant, 'ask') ? renderAskMyPastSelfPanel(layout) : ''}
-        ${shouldRender(variant, 'decision') ? renderDecisionReplayPanel(layout) : ''}
-        ${
-          shouldRender(variant, 'capture')
-            ? `<section class="app-capture-strip" aria-label="App capture feeds MemoryRecord graph">
-          <article class="capture-card">
-            <strong>Quick diary capture <span class="status status-partial">partial</span></strong>
-            <p>Fast app capture writes daily diary notes into MemoryRecord before graph analysis.</p>
-            <button type="button">Capture diary</button>
-          </article>
-          <article class="capture-card">
-            <strong>Notion/Obsidian/Markdown import <span class="status status-partial">partial</span></strong>
-            <p>P0 imported memories enter the same graph as diary entries with source evidence.</p>
-            <button type="button">Preview imports</button>
-          </article>
-          <article class="capture-card">
-            <strong>Native app client <span class="status status-skeleton">skeleton</span></strong>
-            <p>The app surface remains separate from this browser workspace and is only specified here.</p>
-            <button type="button">View capture contract</button>
-          </article>
-        </section>`
-            : ''
-        }
-        ${shouldRender(variant, 'pattern') ? renderPatternPanel(layout) : ''}
+    <section class="hero-stage">
+      <div class="hero-copy">
+        <div>
+          <p class="eyebrow">나보다 나를 더 잘 아는 개인 기억 AI</p>
+          <h1>Memory becomes usable when it can answer back.</h1>
+          <p class="hero-lead">${escapeHtml(layout.northStar)} 빠르게 남긴 일기와 가져온 기록이 하나의 second-brain graph로 모이고, Ask My Past Self와 Decision Replay는 그 기억을 근거로만 답한다.</p>
+        </div>
+        <div class="hero-narrative">
+          <h2 class="capture-rail-title">The graph is the evidence surface, not the whole product.</h2>
+          <p class="hero-note">First-screen composition borrows benchmark restraint and pacing, but preserves the product pillars: graph, cited Ask, replayed decisions, pattern detection, and a trust-surface drawer.</p>
+          <div class="hero-pill-row">
+            <span class="hero-pill"><strong>Ask</strong> cited answer first</span>
+            <span class="hero-pill"><strong>Replay</strong> past outcome grounding</span>
+            <span class="hero-pill"><strong>Drawer</strong> source · date · memory trace</span>
+          </div>
+          <div class="hero-truths">
+            <span class="hero-truth">daily diary capture → web graph workspace</span>
+            <span class="hero-truth">imported memory → cited evidence</span>
+          </div>
+        </div>
+      </div>
+      ${
+        shouldRender(variant, 'graph')
+          ? `<div class="hero-graph-card">
+        <div class="hero-graph-intro">
+          <div>
+            <p class="eyebrow">web second-brain graph workspace</p>
+            <h2>Daily diary and imported memories stay visible as primary evidence nodes</h2>
+            <p>Emotion, project, decision, outcome, and source stay attached so the rest of the product can answer from memory instead of generic advice.</p>
+          </div>
+          <span class="hero-graph-kicker">evidence UI</span>
+        </div>
+        ${renderMemoryGraph(layout)}
+      </div>`
+          : ''
+      }
+    </section>
+    <section class="story-grid">
+      <div class="story-stack">
+        ${shouldRender(variant, 'ask') ? `<div class="story-card">${renderAskMyPastSelfPanel(layout)}</div>` : ''}
+        ${shouldRender(variant, 'decision') ? `<div class="story-card">${renderDecisionReplayPanel(layout)}</div>` : ''}
       </div>
       ${shouldRender(variant, 'drawer') ? renderEvidenceDrawer(layout) : ''}
+    </section>
+    <section class="editorial-band">
+      ${shouldRender(variant, 'pattern') ? renderPatternPanel(layout) : ''}
+      ${
+        shouldRender(variant, 'capture')
+          ? `<div class="app-capture-strip" aria-label="App capture feeds MemoryRecord graph">
+        <div>
+          <p class="eyebrow">capture and import lane</p>
+          <h2 class="capture-rail-title">The product still has to ingest a life before it can reflect one.</h2>
+          <p class="capture-rail-intro">Product planning stays visible here: app capture, import preview, and native client boundaries are shown honestly without crowding the hero.</p>
+        </div>
+        <article class="capture-card">
+          <strong>Quick diary capture <span class="status status-partial">partial</span></strong>
+          <p>Fast app capture writes daily diary notes into MemoryRecord before graph analysis.</p>
+          <button type="button">Capture diary</button>
+        </article>
+        <article class="capture-card">
+          <strong>Notion / Obsidian / Markdown import <span class="status status-partial">partial</span></strong>
+          <p>Imported memories enter the same evidence graph as diary entries, with duplicate and source visibility.</p>
+          <button type="button">Preview imports</button>
+        </article>
+        <article class="capture-card">
+          <strong>Native app client <span class="status status-skeleton">skeleton</span></strong>
+          <p>The app surface remains a separate product boundary and is shown honestly instead of being faked as complete.</p>
+          <button type="button">View capture contract</button>
+        </article>
+      </div>`
+          : ''
+      }
     </section>
   </main>`;
 }

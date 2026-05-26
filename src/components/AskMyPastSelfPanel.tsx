@@ -5,7 +5,7 @@ function escapeHtml(value: string): string {
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
+    .replace(/\"/g, '&quot;')
     .replace(/'/g, '&#39;');
 }
 
@@ -20,15 +20,17 @@ function renderCitationReference(citationId: string): string {
 export function renderAskMyPastSelfPanel(layout: InitialAppShellEvidenceLayout): string {
   const questionHighlightId = layout.ask.graphHighlightIds[0] ?? '';
   const answerCitationRefs = layout.ask.citationMemoryIds.map(renderCitationReference).join(' ');
+  const visibleBullets = layout.ask.evidenceBullets.slice(0, 2);
 
   return `<section class="ask-flow" aria-label="Ask My Past Self cited question flow" data-ask-highlight="${escapeHtml(questionHighlightId)}">
     <div class="section-header">
       <div>
         <p class="eyebrow">Ask My Past Self</p>
-        <h2>Cited answer, graph path, and drawer evidence</h2>
+        <h2>Cited answer first, explanation second</h2>
       </div>
       ${renderStatus(layout.ask.status)}
     </div>
+    <p class="section-intro">The first question stays emotionally legible, but the answer is still bounded to memory evidence instead of generic coaching.</p>
     <div class="ask-question-row">
       <label for="ask-my-past-self-question">Question</label>
       <input id="ask-my-past-self-question" type="text" value="${escapeHtml(layout.askQuestion)}" readonly />
@@ -43,7 +45,7 @@ export function renderAskMyPastSelfPanel(layout: InitialAppShellEvidenceLayout):
       <p>${escapeHtml(layout.ask.answer)} Citations: ${answerCitationRefs}</p>
     </article>
     <ol class="ask-citations" aria-label="Ask My Past Self citations">
-      ${layout.ask.evidenceBullets
+      ${visibleBullets
         .map(
           (bullet) => `<li id="citation-${escapeHtml(bullet.citationId)}" data-citation-id="${escapeHtml(bullet.citationId)}">
             <strong>${renderCitationReference(bullet.citationId)} ${escapeHtml(bullet.sourceType)} ${escapeHtml(
