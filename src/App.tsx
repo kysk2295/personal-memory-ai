@@ -1,533 +1,285 @@
-import { renderAskMyPastSelfPanel } from './components/AskMyPastSelfPanel';
-import { renderDecisionReplayPanel } from './components/DecisionReplayPanel';
-import { renderEvidenceDrawer } from './components/EvidenceDrawer';
 import { renderMemoryGraph } from './components/MemoryGraph';
-import { renderPatternPanel } from './components/PatternPanel';
 import { buildInitialAppShellEvidenceLayout } from './lib/appShellEvidenceLayout';
 
 const APP_SHELL_STYLES = `
   :root {
-    color: #f4ecdf;
-    background:
-      radial-gradient(circle at top, rgba(120, 97, 68, 0.18), transparent 0 32%),
-      linear-gradient(180deg, #0e0c0b 0%, #12100f 45%, #171412 100%);
+    color: #f3f1ea;
+    background: #070707;
     font-family:
       Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   }
   * { box-sizing: border-box; }
-  body {
-    margin: 0;
-    min-width: 320px;
-    background:
-      radial-gradient(circle at top, rgba(120, 97, 68, 0.18), transparent 0 32%),
-      linear-gradient(180deg, #0e0c0b 0%, #12100f 45%, #171412 100%);
-  }
+  body { margin: 0; min-width: 320px; background: #070707; }
   button, input { font: inherit; }
-  .app-shell {
-    max-width: 1480px;
-    margin: 0 auto;
-    padding: 26px 24px 80px;
+  .second-brain-shell {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 312px minmax(0, 1fr);
+    background:
+      radial-gradient(circle at 72% 38%, rgba(145, 25, 31, 0.14), transparent 0 24%),
+      radial-gradient(circle at 58% 58%, rgba(255, 255, 255, 0.04), transparent 0 28%),
+      #070707;
+    overflow: hidden;
+  }
+  .brain-sidebar {
+    min-height: 100vh;
+    padding: 22px 20px;
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(11, 11, 11, 0.84);
+    backdrop-filter: blur(20px);
     display: flex;
     flex-direction: column;
-    gap: 30px;
+    gap: 22px;
+    z-index: 2;
   }
+  .sidebar-topline {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+  .home-button,
+  .locale-toggle button,
+  .filter-chip,
+  .layout-button,
+  .ask-submit {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.045);
+    color: rgba(243, 241, 234, 0.78);
+  }
+  .home-button {
+    width: 36px;
+    height: 36px;
+    border-radius: 999px;
+    display: grid;
+    place-items: center;
+    text-decoration: none;
+    font-size: 18px;
+  }
+  .locale-toggle { display: inline-flex; gap: 6px; }
+  .locale-toggle button {
+    min-width: 38px;
+    height: 30px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+  }
+  .locale-toggle button[aria-pressed="true"] { color: #0b0b0b; background: #f3f1ea; }
   .eyebrow {
     margin: 0;
-    color: rgba(244, 236, 223, 0.5);
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-  }
-  .topbar {
-    display: flex;
-    justify-content: space-between;
-    gap: 14px;
-    align-items: center;
-    color: rgba(244, 236, 223, 0.64);
+    color: rgba(243, 241, 234, 0.48);
     font-size: 12px;
+    font-weight: 750;
+    letter-spacing: 0.08em;
   }
-  .topbar-brand {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
+  .brain-title h1 {
+    margin: 6px 0 0;
+    font-size: 42px;
+    line-height: 0.94;
+    letter-spacing: -0.06em;
   }
-  .topbar-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 999px;
-    background: #d9b37b;
-    box-shadow: 0 0 24px rgba(217, 179, 123, 0.55);
-  }
-  .topbar-note {
-    margin: 0;
-    max-width: 420px;
-    text-align: right;
-    line-height: 1.45;
-  }
-  .hero-stage,
-  .story-card,
-  .editorial-band,
-  .evidence-drawer {
-    border: 1px solid rgba(244, 236, 223, 0.12);
-    border-radius: 30px;
-    background:
-      linear-gradient(180deg, rgba(29, 25, 22, 0.92) 0%, rgba(20, 17, 15, 0.96) 100%),
-      radial-gradient(circle at top right, rgba(191, 146, 91, 0.12), transparent 0 35%);
-    box-shadow: 0 28px 80px rgba(0, 0, 0, 0.22);
-    backdrop-filter: blur(18px);
-  }
-  .hero-stage {
-    display: grid;
-    grid-template-columns: minmax(0, 1.05fr) minmax(420px, 0.95fr);
-    gap: 28px;
-    padding: 34px;
-    align-items: stretch;
-  }
-  .hero-copy {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    gap: 22px;
-    min-width: 0;
-  }
-  .hero-copy h1,
-  .hero-narrative h2,
-  .graph-workspace h2,
-  .section-header h2,
-  .panel h3 {
-    margin: 0;
-    letter-spacing: -0.04em;
-  }
-  .hero-copy h1 {
-    max-width: 8ch;
-    font-size: clamp(58px, 8vw, 92px);
-    line-height: 0.9;
-  }
-  .hero-lead {
-    margin: 18px 0 0;
-    max-width: 540px;
-    color: rgba(244, 236, 223, 0.76);
-    font-size: 16px;
-    line-height: 1.72;
-  }
-  .hero-note {
-    margin: 0;
-    max-width: 520px;
-    color: rgba(244, 236, 223, 0.56);
-    font-size: 13px;
-    line-height: 1.65;
-  }
-  .hero-pill-row,
-  .hero-truths {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-  .hero-pill,
-  .hero-truth {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    min-height: 40px;
-    padding: 10px 14px;
-    border-radius: 999px;
-    border: 1px solid rgba(244, 236, 223, 0.12);
-    background: rgba(244, 236, 223, 0.04);
-    color: #f4ecdf;
-    font-size: 12px;
-    line-height: 1.35;
-  }
-  .hero-pill strong,
-  .hero-truth strong { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
-  .hero-graph-card {
-    border: 1px solid rgba(244, 236, 223, 0.12);
-    border-radius: 26px;
-    padding: 22px;
-    background: linear-gradient(180deg, rgba(244, 236, 223, 0.04) 0%, rgba(244, 236, 223, 0.02) 100%);
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    min-width: 0;
-  }
-  .hero-graph-intro {
-    display: flex;
-    justify-content: space-between;
-    gap: 18px;
-    align-items: flex-start;
-  }
-  .hero-graph-intro p { margin: 8px 0 0; color: rgba(244, 236, 223, 0.62); font-size: 13px; line-height: 1.55; }
-  .hero-graph-kicker {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 10px;
-    border-radius: 999px;
-    border: 1px solid rgba(217, 179, 123, 0.26);
-    color: #eed3a8;
-    background: rgba(217, 179, 123, 0.08);
-    white-space: nowrap;
-    font-size: 11px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-  }
-  .story-grid {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 360px;
-    gap: 22px;
-    align-items: start;
-  }
-  .story-stack {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 22px;
-  }
-  .story-card {
-    padding: 24px;
-    min-width: 0;
-  }
-  .section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 12px;
-    margin-bottom: 18px;
-  }
-  .section-header.compact h2 { font-size: 19px; }
-  .section-header h2 { font-size: 28px; line-height: 1.05; }
-  .section-intro,
-  .panel p,
-  .drawer-principle,
-  .ask-answer-cited p,
-  .decision-recommendation p,
-  .similar-decision p,
-  .capture-card p,
-  .surface-list p {
-    color: rgba(244, 236, 223, 0.68);
-  }
-  .status {
-    display: inline-flex;
-    align-items: center;
-    border: 1px solid rgba(244, 236, 223, 0.14);
-    border-radius: 999px;
-    background: rgba(244, 236, 223, 0.05);
-    color: #f4ecdf;
-    padding: 4px 8px;
-    font-size: 10px;
-    font-weight: 800;
-    line-height: 1.4;
-    white-space: nowrap;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-  }
-  .status-implemented { border-color: #2f7d32; color: #b8f3c0; background: rgba(47, 125, 50, 0.15); }
-  .status-partial { border-color: #98710f; color: #ffd97a; background: rgba(152, 113, 15, 0.16); }
-  .status-skeleton { border-color: #6b6b6b; color: #dfdfdf; background: rgba(107, 107, 107, 0.16); }
-  .status-fake-sample { border-color: #9f4d00; color: #ffc48b; background: rgba(159, 77, 0, 0.15); }
-  .status-planned { border-color: #4c6fb8; color: #bfd2ff; background: rgba(76, 111, 184, 0.16); }
-  .status-blocked { border-color: #b3261e; color: #ffb4ab; background: rgba(179, 38, 30, 0.17); }
-  .memory-graph {
-    display: block;
-    width: 100%;
-    aspect-ratio: 860 / 520;
-    min-height: 360px;
-  }
-  .memory-node .node-kicker,
-  .hub-count { fill: #a59a8b; font-size: 10px; font-weight: 700; }
-  .memory-node .node-title { fill: #f4ede2; font-size: 13px; font-weight: 800; }
-  .memory-node .node-summary { fill: #d5c8ba; font-size: 10px; }
-  .node-source,
-  .hub-title { fill: #cdc0b1; font-size: 11px; font-weight: 700; }
-  .graph-support-copy,
-  .graph-support-list,
-  .graph-highlight-manifest {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-  .graph-support-copy { margin-top: 4px; }
-  .graph-support-list span,
-  .graph-highlight-manifest span {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 7px 10px;
-    border: 1px solid rgba(244, 236, 223, 0.1);
-    border-radius: 999px;
-    background: rgba(244, 236, 223, 0.04);
-    font-size: 12px;
-    color: rgba(244, 236, 223, 0.82);
-  }
-  .graph-highlight-manifest span {
-    border-color: rgba(217, 179, 123, 0.32);
-    background: rgba(217, 179, 123, 0.08);
-    color: #f4ecdf;
-    font-size: 11px;
-    overflow-wrap: anywhere;
-  }
-  .ask-flow,
-  .decision-replay-flow,
-  .panel,
-  .capture-card,
-  .drawer-item,
-  .drawer-current-question,
-  .decision-current-card,
-  .decision-recommendation,
-  .similar-decision {
-    border: 1px solid rgba(244, 236, 223, 0.1);
-    border-radius: 22px;
-    background: rgba(244, 236, 223, 0.03);
-  }
-  .ask-flow,
-  .decision-replay-flow { padding: 22px; }
-  .ask-question-row {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 14px;
-  }
-  .ask-question-row label,
-  .decision-current-card label {
-    color: rgba(244, 236, 223, 0.72);
-    font-size: 12px;
-    font-weight: 800;
-    text-transform: uppercase;
-  }
-  .ask-question-row input,
-  .decision-current-card input {
-    width: 100%;
-    min-height: 44px;
-    border: 1px solid rgba(244, 236, 223, 0.12);
-    border-radius: 14px;
-    background: rgba(8, 7, 6, 0.25);
-    color: #f4ecdf;
-    padding: 11px 12px;
-  }
-  .ask-question-row button,
-  .capture-card button {
-    min-height: 42px;
-    border: 1px solid rgba(244, 236, 223, 0.14);
-    border-radius: 999px;
-    background: rgba(244, 236, 223, 0.06);
-    color: #f4ecdf;
-    padding: 10px 14px;
-  }
-  .ask-answer-cited,
-  .decision-current-card,
-  .decision-recommendation,
-  .similar-decision,
-  .capture-card,
-  .drawer-item,
-  .drawer-current-question {
-    padding: 16px;
-  }
-  .panel-topline {
-    display: flex;
-    justify-content: space-between;
-    gap: 10px;
-    align-items: flex-start;
-    margin-bottom: 10px;
-    color: rgba(244, 236, 223, 0.56);
-    font-size: 12px;
-    font-weight: 800;
-  }
-  .ask-answer-cited h3,
-  .decision-recommendation h3 { margin: 0; font-size: 18px; line-height: 1.35; }
-  .citation-ref { color: #e7c594; font-weight: 800; text-decoration: none; }
-  .ask-citations,
-  .decision-citations,
-  .decision-tag-list,
-  .surface-list,
-  .status-key {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-  }
-  .ask-citations {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-top: 12px;
-  }
-  .ask-citations li,
-  .decision-citations li {
-    border: 1px solid rgba(244, 236, 223, 0.08);
-    border-radius: 18px;
-    background: rgba(244, 236, 223, 0.025);
-    padding: 12px;
-  }
-  .ask-citations strong,
-  .similar-decision strong { display: block; font-size: 12px; line-height: 1.4; }
-  .ask-citations p,
-  .decision-citations p,
-  .drawer-item p,
-  .drawer-current-question p,
-  .capture-card p,
-  .similar-decision p,
-  .decision-recommendation p,
-  .surface-list p {
-    margin: 8px 0 0;
+  .brain-title p {
+    margin: 12px 0 0;
+    color: rgba(243, 241, 234, 0.62);
     font-size: 13px;
     line-height: 1.55;
   }
-  .ask-citations code,
-  .decision-citations code,
-  .drawer-item code,
-  .drawer-current-question code {
-    display: block;
-    margin-top: 8px;
-    color: #c6b293;
-    font-size: 11px;
-    white-space: normal;
-    overflow-wrap: anywhere;
-  }
-  .decision-columns {
+  .brain-counts {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
-    margin-top: 14px;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
   }
-  .decision-columns span {
-    display: block;
-    color: rgba(244, 236, 223, 0.54);
+  .count-card {
+    padding: 14px 12px;
+    border-radius: 18px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.035);
+  }
+  .count-card strong { display: block; font-size: 31px; line-height: 1; letter-spacing: -0.05em; }
+  .count-card span { display: block; margin-top: 7px; color: rgba(243, 241, 234, 0.5); font-size: 12px; }
+  .legend-section { display: flex; flex-direction: column; gap: 10px; }
+  .legend-title {
+    margin: 0;
+    color: rgba(243, 241, 234, 0.42);
     font-size: 11px;
     font-weight: 800;
+    letter-spacing: 0.13em;
     text-transform: uppercase;
-    margin-bottom: 6px;
   }
-  .decision-tag-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-top: 8px;
-  }
-  .decision-tag-list li {
-    border: 1px solid rgba(244, 236, 223, 0.12);
+  .filter-list { display: flex; flex-direction: column; gap: 7px; }
+  .filter-chip {
+    min-height: 34px;
     border-radius: 999px;
-    background: rgba(244, 236, 223, 0.04);
-    color: #f4ecdf;
-    font-size: 12px;
-    font-weight: 700;
-    padding: 6px 9px;
-  }
-  .similar-decision-list {
+    padding: 7px 10px;
     display: grid;
-    grid-template-columns: 1fr;
-    gap: 10px;
-    margin-top: 12px;
-  }
-  .editorial-band {
-    padding: 24px;
-    display: grid;
-    grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
-    gap: 22px;
-  }
-  .analysis-panels {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-  .analysis-lead {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 16px;
-  }
-  .panel { padding: 18px; }
-  .panel h3 { font-size: 21px; line-height: 1.2; }
-  .metric-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 12px;
-    color: rgba(244, 236, 223, 0.74);
-    font-size: 12px;
-  }
-  .surface-list {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
-    margin-top: 12px;
-  }
-  .surface-list li {
-    min-height: 108px;
-    border: 1px solid rgba(244, 236, 223, 0.08);
-    border-radius: 18px;
-    padding: 14px;
-    background: rgba(244, 236, 223, 0.025);
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    gap: 10px;
-  }
-  .status-key {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-top: 10px;
-  }
-  .app-capture-strip {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-  .capture-card strong { display: block; margin-bottom: 6px; }
-  .capture-rail-title {
-    margin: 0 0 2px;
-    font-size: 28px;
-    line-height: 1.1;
-    letter-spacing: -0.03em;
-  }
-  .capture-rail-intro {
-    margin: 0;
-    color: rgba(244, 236, 223, 0.64);
-    font-size: 13px;
-    line-height: 1.6;
-  }
-  .evidence-drawer {
-    position: sticky;
-    top: 18px;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    max-height: calc(100vh - 36px);
-    overflow: auto;
-  }
-  .drawer-principle { margin: 0 0 2px; font-size: 13px; line-height: 1.55; }
-  .drawer-list { display: flex; flex-direction: column; gap: 10px; }
-  .drawer-meta {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
+    grid-template-columns: 10px minmax(0, 1fr) auto;
     align-items: center;
-    color: rgba(244, 236, 223, 0.56);
+    gap: 9px;
+    font-size: 12px;
+  }
+  .filter-dot { width: 8px; height: 8px; border-radius: 999px; background: #d9d9d9; }
+  .filter-dot.semantic { background: #f0f0f0; }
+  .filter-dot.reflective { background: #9d9d9d; }
+  .filter-dot.procedural { background: #626262; }
+  .filter-dot.episodic { background: #b4b4b4; }
+  .filter-dot.thesis { background: #d24040; box-shadow: 0 0 18px rgba(210, 64, 64, 0.5); }
+  .filter-dot.source { background: #d7b57c; }
+  .filter-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .filter-count { color: rgba(243, 241, 234, 0.46); font-weight: 750; }
+  .layout-modes { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+  .layout-button { min-height: 32px; border-radius: 999px; font-size: 12px; }
+  .layout-button.active { color: #0b0b0b; background: #f3f1ea; }
+  .sidebar-footer {
+    margin-top: auto;
+    color: rgba(243, 241, 234, 0.46);
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .brain-canvas {
+    position: relative;
+    min-width: 0;
+    min-height: 100vh;
+    padding: 22px 28px 28px;
+    display: flex;
+    flex-direction: column;
+  }
+  .ask-memory-bar {
+    position: relative;
+    z-index: 3;
+    min-height: 58px;
+    max-width: 860px;
+    margin: 0 auto;
+    width: min(860px, 100%);
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(16, 16, 16, 0.82);
+    box-shadow: 0 22px 90px rgba(0, 0, 0, 0.32);
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 12px;
+    align-items: center;
+    padding: 10px 11px 10px 18px;
+  }
+  .ask-lock { color: rgba(243, 241, 234, 0.42); font-size: 15px; }
+  .ask-memory-bar input {
+    width: 100%;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: #f3f1ea;
+    font-size: 15px;
+  }
+  .ask-memory-bar input::placeholder { color: rgba(243, 241, 234, 0.58); }
+  .ask-submit {
+    width: 40px;
+    height: 40px;
+    border-radius: 999px;
+    color: #0b0b0b;
+    background: #f3f1ea;
+    font-size: 18px;
+  }
+  .graph-stage {
+    position: relative;
+    flex: 1;
+    min-height: 640px;
+    margin-top: -18px;
+    display: grid;
+    place-items: center;
+  }
+  .graph-stage::before {
+    content: "";
+    position: absolute;
+    inset: 6% 4% 4%;
+    background:
+      radial-gradient(circle at 52% 43%, rgba(210, 64, 64, 0.12), transparent 0 20%),
+      radial-gradient(circle at 46% 54%, rgba(255, 255, 255, 0.08), transparent 0 28%);
+    filter: blur(8px);
+    pointer-events: none;
+  }
+  .graph-workspace {
+    position: relative;
+    width: min(100%, 1120px);
+    transform: scale(1.06);
+  }
+  .memory-graph {
+    display: block;
+    width: 100%;
+    min-height: 620px;
+    filter: drop-shadow(0 32px 90px rgba(0, 0, 0, 0.44));
+  }
+  .memory-graph rect:first-child { fill: transparent; stroke: rgba(255, 255, 255, 0.05); }
+  .memory-node .node-kicker,
+  .hub-count { fill: rgba(243, 241, 234, 0.42); font-size: 9px; font-weight: 800; }
+  .memory-node .node-title { fill: #f4f1e9; font-size: 12px; font-weight: 850; }
+  .memory-node .node-summary { fill: rgba(243, 241, 234, 0.56); font-size: 9px; }
+  .node-source,
+  .hub-title { fill: rgba(243, 241, 234, 0.72); font-size: 10px; font-weight: 800; }
+  .graph-support-copy,
+  .graph-highlight-manifest,
+  .graph-support-list {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+  .memory-inspector {
+    position: absolute;
+    right: 28px;
+    bottom: 28px;
+    z-index: 3;
+    width: min(420px, calc(100% - 56px));
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 26px;
+    background: rgba(12, 12, 12, 0.82);
+    backdrop-filter: blur(22px);
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.34);
+    padding: 18px;
+  }
+  .memory-inspector h2 {
+    margin: 6px 0 8px;
+    font-size: 24px;
+    line-height: 1.08;
+    letter-spacing: -0.04em;
+  }
+  .memory-inspector p { margin: 0; color: rgba(243, 241, 234, 0.62); font-size: 13px; line-height: 1.58; }
+  .citation-row { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 14px; }
+  .citation-row a {
+    color: #f3f1ea;
+    text-decoration: none;
+    border: 1px solid rgba(255, 255, 255, 0.11);
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 999px;
+    padding: 7px 9px;
     font-size: 11px;
-    font-weight: 700;
   }
-  @media (max-width: 1180px) {
-    .hero-stage,
-    .story-grid,
-    .story-stack,
-    .editorial-band,
-    .analysis-lead { grid-template-columns: 1fr; }
-    .evidence-drawer { position: static; max-height: none; }
-    .topbar { flex-direction: column; align-items: flex-start; }
-    .topbar-note { text-align: left; }
+  .pill-red { color: #ffb7b7; }
+  .evidence-ledger {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
   }
-  @media (max-width: 720px) {
-    .app-shell { padding: 14px 12px 56px; gap: 20px; }
-    .hero-stage,
-    .story-card,
-    .editorial-band,
-    .evidence-drawer { padding: 18px; border-radius: 24px; }
-    .hero-copy h1 { font-size: 42px; }
-    .hero-stage { grid-template-columns: 1fr; }
-    .hero-graph-card { padding: 16px; }
-    .ask-question-row,
-    .decision-columns,
-    .surface-list { grid-template-columns: 1fr; }
-    .memory-graph { min-height: 280px; }
+  @media (max-width: 980px) {
+    .second-brain-shell { grid-template-columns: 1fr; overflow: auto; }
+    .brain-sidebar { min-height: auto; border-right: 0; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .brain-canvas { min-height: 760px; }
+    .graph-stage { min-height: 560px; }
+    .memory-inspector { position: relative; right: auto; bottom: auto; margin: 18px auto 0; width: 100%; }
+  }
+  @media (max-width: 640px) {
+    .brain-sidebar { padding: 18px 14px; }
+    .brain-canvas { padding: 16px 12px 28px; }
+    .brain-title h1 { font-size: 36px; }
+    .brain-counts { grid-template-columns: 1fr 1fr; }
+    .memory-graph { min-height: 420px; }
+    .ask-memory-bar { grid-template-columns: auto minmax(0, 1fr) auto; }
   }
 `;
 
@@ -536,146 +288,130 @@ function escapeHtml(value: string): string {
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
+    .replace(/\"/g, '&quot;')
     .replace(/'/g, '&#39;');
 }
 
 export type RenderVariant = 'full' | 'plain' | 'topbar-only' | 'no-svg' | 'svg-only' | 'debug-text';
 
-function shouldRender(variant: RenderVariant, section: 'topbar' | 'graph' | 'ask' | 'decision' | 'capture' | 'pattern' | 'drawer'): boolean {
-  switch (variant) {
-    case 'plain':
-    case 'topbar-only':
-    case 'debug-text':
-      return section === 'topbar';
-    case 'no-svg':
-      return section !== 'graph';
-    case 'svg-only':
-      return section === 'graph';
-    case 'full':
-    default:
-      return true;
-  }
+function renderFilter(labelKo: string, labelEn: string, count: number, kind: string): string {
+  return `<button type="button" class="filter-chip"><span class="filter-dot ${kind}" aria-hidden="true"></span><span class="filter-name">${labelKo}<span aria-hidden="true"> ${labelEn}</span></span><span class="filter-count">${count}</span></button>`;
 }
 
 export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
   const layout = buildInitialAppShellEvidenceLayout();
+  const memoryCount = layout.primaryNodes.length;
+  const relationshipCount = layout.links.length;
+  const citationLinks = layout.ask.citationMemoryIds
+    .slice(0, 3)
+    .map((citationId) => `<a href="#evidence-${escapeHtml(citationId)}" class="citation-ref">[${escapeHtml(citationId)}]</a>`)
+    .join('');
+  const drawerLedger = layout.evidenceDrawer.items
+    .map((item) => {
+      const memoryTrace = item.trace.find((trace) => trace.type === 'memory');
+      const memoryId = memoryTrace?.id ?? item.highlightId.replace(/^memory:/, '');
+      return `<article id="evidence-${escapeHtml(memoryId)}" data-citation-id="${escapeHtml(memoryId)}" data-replay-memory-id="${escapeHtml(memoryId)}"><h3>${escapeHtml(item.source)}</h3><p>${escapeHtml(item.citation)}</p></article>`;
+    })
+    .join('');
 
-  return `<main class="app-shell">
-    ${
-      shouldRender(variant, 'topbar')
-        ? `<header class="topbar">
-      <div class="topbar-brand">
-        <span class="topbar-dot" aria-hidden="true"></span>
-        <p class="eyebrow">personal-memory-ai · benchmark rebuild</p>
-      </div>
-      <p class="topbar-note">App capture feeds the web workspace, but the first impression should feel like a remembered life becoming evidence — not a dashboard.</p>
-    </header>`
-        : ''
-    }
-    <section class="hero-stage">
-      <div class="hero-copy">
-        <div>
-          <p class="eyebrow">나보다 나를 더 잘 아는 개인 기억 AI</p>
-          <h1>Memory becomes usable when it can answer back.</h1>
-          <p class="hero-lead">${escapeHtml(layout.northStar)} 빠르게 남긴 일기와 가져온 기록이 하나의 second-brain graph로 모이고, Ask My Past Self와 Decision Replay는 그 기억을 근거로만 답한다.</p>
-        </div>
-        <div class="hero-narrative">
-          <h2 class="capture-rail-title">The graph is the evidence surface, not the whole product.</h2>
-          <p class="hero-note">First-screen composition borrows benchmark restraint and pacing, but preserves the product pillars: graph, cited Ask, replayed decisions, pattern detection, and a trust-surface drawer.</p>
-          <div class="hero-pill-row">
-            <span class="hero-pill"><strong>Ask</strong> cited answer first</span>
-            <span class="hero-pill"><strong>Replay</strong> past outcome grounding</span>
-            <span class="hero-pill"><strong>Drawer</strong> source · date · memory trace</span>
-          </div>
-          <div class="hero-truths">
-            <span class="hero-truth">daily diary capture → web graph workspace</span>
-            <span class="hero-truth">imported memory → cited evidence</span>
-          </div>
+  if (variant === 'plain' || variant === 'topbar-only' || variant === 'debug-text') {
+    return `<main class="second-brain-shell"><aside class="brain-sidebar"><section class="brain-title"><p class="eyebrow">지식 그래프</p><h1>Second Brain</h1><p>${escapeHtml(layout.northStar)}</p></section></aside></main>`;
+  }
+
+  return `<main class="second-brain-shell">
+    <aside class="brain-sidebar" aria-label="Second Brain graph controls">
+      <div class="sidebar-topline">
+        <a class="home-button" href="/" aria-label="home">←</a>
+        <div class="locale-toggle" role="group" aria-label="언어">
+          <button type="button" aria-pressed="true">KO</button>
+          <button type="button" aria-pressed="false">EN</button>
         </div>
       </div>
-      ${
-        shouldRender(variant, 'graph')
-          ? `<div class="hero-graph-card">
-        <div class="hero-graph-intro">
-          <div>
-            <p class="eyebrow">web second-brain graph workspace</p>
-            <h2>Daily diary and imported memories stay visible as primary evidence nodes</h2>
-            <p>Emotion, project, decision, outcome, and source stay attached so the rest of the product can answer from memory instead of generic advice.</p>
-          </div>
-          <span class="hero-graph-kicker">evidence UI</span>
+
+      <section class="brain-title">
+        <p class="eyebrow">지식 그래프</p>
+        <h1>Second Brain</h1>
+        <p>${escapeHtml(layout.northStar)} 일기, 가져온 기록, 결정의 결과가 하나의 기억 그래프로 연결된다.</p>
+      </section>
+
+      <section class="brain-counts" aria-label="Memory graph scale">
+        <div class="count-card"><strong>${memoryCount}</strong><span>기억 노드</span></div>
+        <div class="count-card"><strong>${relationshipCount}</strong><span>근거 엣지</span></div>
+      </section>
+
+      <section class="legend-section" aria-label="Node types">
+        <p class="legend-title">노드 유형</p>
+        <div class="filter-list">
+          ${renderFilter('사건', 'episodic', 2, 'episodic')}
+          ${renderFilter('통찰', 'reflective', 1, 'reflective')}
+          ${renderFilter('절차', 'procedural', 1, 'procedural')}
+          ${renderFilter('결정', 'decision', 1, 'thesis')}
+          ${renderFilter('출처', 'source', 5, 'source')}
         </div>
-        ${renderMemoryGraph(layout)}
-      </div>`
-          : ''
-      }
-    </section>
-    <section class="story-grid">
-      <div class="story-stack">
-        ${shouldRender(variant, 'ask') ? `<div class="story-card">${renderAskMyPastSelfPanel(layout)}</div>` : ''}
-        ${shouldRender(variant, 'decision') ? `<div class="story-card">${renderDecisionReplayPanel(layout)}</div>` : ''}
+      </section>
+
+      <section class="legend-section" aria-label="Edge types">
+        <p class="legend-title">엣지 유형</p>
+        <div class="filter-list">
+          ${renderFilter('근거', 'supports', layout.ask.citationMemoryIds.length, 'semantic')}
+          ${renderFilter('결과', 'outcome', 4, 'thesis')}
+          ${renderFilter('반복', 'pattern', 1, 'reflective')}
+          ${renderFilter('출처', 'source-tag', 5, 'source')}
+        </div>
+      </section>
+
+      <section class="legend-section" aria-label="Graph layout modes">
+        <p class="legend-title">레이아웃</p>
+        <div class="layout-modes">
+          <button type="button" class="layout-button active">자유</button>
+          <button type="button" class="layout-button">주장별</button>
+          <button type="button" class="layout-button">시간순</button>
+          <button type="button" class="layout-button">집중</button>
+        </div>
+      </section>
+
+      <p class="sidebar-footer">대시보드가 아니라 기억을 탐색하는 작업공간. 상태 라벨과 내부 구현 목록은 첫 인상에서 제거하고, 그래프와 질문 입력을 전면에 둔다.</p>
+    </aside>
+
+    <section class="brain-canvas" aria-label="Personal Memory AI Second Brain canvas">
+      <form class="ask-memory-bar" aria-label="Ask Second Brain">
+        <span class="ask-lock" aria-hidden="true">⌘</span>
+        <input id="ask-my-past-self-question" name="question" value="${escapeHtml(layout.askQuestion)}" aria-label="Ask My Past Self question" />
+        <button class="ask-submit" type="button" aria-label="Ask">→</button>
+      </form>
+
+      <div class="graph-stage">
+        ${variant === 'no-svg' ? '' : renderMemoryGraph(layout)}
       </div>
-      ${shouldRender(variant, 'drawer') ? renderEvidenceDrawer(layout) : ''}
-    </section>
-    <section class="editorial-band">
-      ${shouldRender(variant, 'pattern') ? renderPatternPanel(layout) : ''}
-      ${
-        shouldRender(variant, 'capture')
-          ? `<div class="app-capture-strip" aria-label="App capture feeds MemoryRecord graph">
-        <div>
-          <p class="eyebrow">capture and import lane</p>
-          <h2 class="capture-rail-title">The product still has to ingest a life before it can reflect one.</h2>
-          <p class="capture-rail-intro">Product planning stays visible here: app capture, import preview, and native client boundaries are shown honestly without crowding the hero.</p>
-        </div>
-        <article class="capture-card">
-          <strong>Quick diary capture <span class="status status-partial">partial</span></strong>
-          <p>Fast app capture writes daily diary notes into MemoryRecord before graph analysis.</p>
-          <button type="button">Capture diary</button>
-        </article>
-        <article class="capture-card">
-          <strong>Notion / Obsidian / Markdown import <span class="status status-partial">partial</span></strong>
-          <p>Imported memories enter the same evidence graph as diary entries, with duplicate and source visibility.</p>
-          <button type="button">Preview imports</button>
-        </article>
-        <article class="capture-card">
-          <strong>Native app client <span class="status status-skeleton">skeleton</span></strong>
-          <p>The app surface remains a separate product boundary and is shown honestly instead of being faked as complete.</p>
-          <button type="button">View capture contract</button>
-        </article>
-      </div>`
-          : ''
-      }
+
+      <article class="memory-inspector" aria-label="Ask My Past Self cited question flow">
+        <p class="eyebrow">Ask My Past Self · cited path</p>
+        <h2>${escapeHtml(layout.ask.recommendation)}</h2>
+        <p>반복된 <span class="pill-red">anxiety → feature addition → launch delay</span> 경로만 근거로 답한다. Decision Replay는 현재 결정을 과거 결과와 비교하고, Evidence drawer는 출처·날짜·기억 원문으로 되돌아간다.</p>
+        <div class="citation-row" aria-label="Ask My Past Self citations">${citationLinks}</div>
+      </article>
+
+      <section class="evidence-ledger" aria-label="Evidence drawer">
+        <h2>Evidence drawer</h2>
+        <label for="decision-replay-current">Current decision</label>
+        <input id="decision-replay-current" value="${escapeHtml(layout.replay.currentDecision.prompt)}" readonly />
+        <p>Decision Replay</p>
+        <p>Pattern detection</p>
+        ${drawerLedger}
+      </section>
     </section>
   </main>`;
 }
 
 export function renderAppShellDocument(variant: RenderVariant = 'full'): string {
-  if (variant === 'debug-text') {
-    return `<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>personal-memory-ai debug text</title>
-  </head>
-  <body style="margin:0;padding:40px;background:#ffffff;color:#111111;font:700 32px/1.4 -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
-    PMI-007 debug text visible pixels check
-  </body>
-</html>`;
-  }
-
   return `<!doctype html>
-<html lang="en">
+<html lang="ko">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>personal-memory-ai memory brain graph</title>
+    <title>Personal Memory AI Second Brain</title>
     <style>${APP_SHELL_STYLES}</style>
   </head>
   <body>${renderAppShellHtml(variant)}</body>
 </html>`;
-}
-
-export function App(): string {
-  return renderAppShellHtml();
 }

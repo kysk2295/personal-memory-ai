@@ -47,7 +47,7 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(shell.evidenceDrawer.items.length).toBeGreaterThan(0);
   });
 
-  test('labels graph-supporting surfaces and sample data status honestly', () => {
+  test('keeps graph-supporting surfaces and sample data status honest in the data contract', () => {
     const shell = buildInitialAppShellEvidenceLayout();
 
     expect(shell.surfaces).toEqual(
@@ -62,41 +62,42 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     );
   });
 
-  test('renders the rebuilt first screen as hero + graph + curated story surfaces', () => {
+  test('renders a benchmark-like second-brain graph workspace instead of a dashboard shell', () => {
     const html = renderAppShellHtml();
 
-    expect(html).toContain('class="hero-stage"');
-    expect(html).toContain('class="hero-graph-card"');
-    expect(html).toContain('class="story-grid"');
-    expect(html).toContain('class="editorial-band"');
-    expect(html).toContain('The graph is the evidence surface, not the whole product.');
+    expect(html).toContain('class="second-brain-shell"');
+    expect(html).toContain('class="brain-sidebar"');
+    expect(html).toContain('class="brain-canvas"');
+    expect(html).toContain('class="ask-memory-bar"');
+    expect(html).toContain('Second Brain');
+    expect(html).toContain('지식 그래프');
+    expect(html).toContain('노드 유형');
+    expect(html).toContain('엣지 유형');
     expect(html).toContain('Initial loaded memory-brain graph');
-    expect(html).toContain('daily diary capture');
-    expect(html).toContain('imported memory');
     expect(html).toContain('Ask My Past Self');
     expect(html).toContain('Decision Replay');
     expect(html).toContain('Evidence drawer');
-    expect(html).toContain('status-planned');
-    expect(html).toContain('status-skeleton');
-    expect(html).toContain('status-fake-sample');
+    expect(html).not.toContain('class="story-grid"');
+    expect(html).not.toContain('class="editorial-band"');
+    expect(html).not.toContain('status-planned');
+    expect(html).not.toContain('status-skeleton');
+    expect(html).not.toContain('status-fake-sample');
   });
 
-  test('renders Ask My Past Self as a cited visual flow with graph highlights and evidence drawer trace', () => {
+  test('renders Ask My Past Self as a cited path over the graph with evidence drawer trace', () => {
     const shell = buildInitialAppShellEvidenceLayout();
     const html = renderAppShellHtml();
 
     expect(html).toContain('aria-label="Ask My Past Self cited question flow"');
-    expect(html).toContain('<label for="ask-my-past-self-question">Question</label>');
     expect(html).toContain('id="ask-my-past-self-question"');
     expect(html).toContain('이번에도 기능을 더 넣어야 할까?');
-    expect(html).toContain('class="ask-answer-cited"');
     expect(html).toContain('[mem_launch_may_anxiety_scope_delay]');
     expect(html).toContain(
       '<a href="#evidence-mem_launch_may_anxiety_scope_delay" class="citation-ref">[mem_launch_may_anxiety_scope_delay]</a>',
     );
     expect(html).toContain('aria-label="Ask My Past Self citations"');
     expect(html).toContain('data-citation-id="mem_launch_june_anxiety_scope_delay"');
-    expect(html).toContain('data-ask-highlight="question:이번에도-기능을-더-넣어야-할까"');
+    expect(html).toContain('data-highlight-id="question:이번에도-기능을-더-넣어야-할까"');
     expect(html).toContain('data-highlight-id="memory:mem_launch_may_anxiety_scope_delay"');
     expect(html).toContain('data-highlight-id="emotion:anxiety"');
     expect(html).toContain('data-highlight-id="decision:chosen"');
@@ -115,39 +116,25 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     }
   });
 
-  test('renders Decision Replay as a cited visual flow with current decision and graph evidence', () => {
+  test('keeps Decision Replay evidence in the hidden ledger while removing dashboard panels from the first impression', () => {
     const shell = buildInitialAppShellEvidenceLayout();
     const html = renderAppShellHtml();
 
-    expect(html).toContain('aria-label="Decision Replay cited visual flow"');
     expect(html).toContain('<label for="decision-replay-current">Current decision</label>');
     expect(html).toContain('id="decision-replay-current"');
     expect(html).toContain('Should I add more Decision Replay polish before review?');
-    expect(html).toContain('aria-label="Current decision emotions"');
-    expect(html).toContain('anxiety');
-    expect(html).toContain('pressure');
-    expect(html).toContain('aria-label="Current decision choices"');
-    expect(html).toContain('add polish');
-    expect(html).toContain('freeze for review');
-    expect(html).toContain('aria-label="Similar past decisions with citations"');
+    expect(html).toContain('Decision Replay');
+    expect(html).toContain('Pattern detection');
     expect(html).toContain('data-replay-memory-id="mem_launch_may_anxiety_scope_delay"');
     expect(html).toContain('data-replay-memory-id="mem_launch_june_anxiety_scope_delay"');
     expect(html).toContain(
       '<a href="#evidence-mem_launch_may_anxiety_scope_delay" class="citation-ref">[mem_launch_may_anxiety_scope_delay]</a>',
     );
-    expect(html).toContain('aria-label="Decision Replay recommendation and uncertainty"');
-    expect(html).toContain(
-      'Based on cited memories, freeze Decision Replay scope for review instead of adding more polish.',
-    );
-    expect(html).toContain('Recommendation is bounded to cited personal memories');
-    expect(html).toContain('data-replay-highlight="decision:decision_current_add_replay_polish"');
-    expect(html).toContain('data-current-decision-id="decision:decision_current_add_replay_polish"');
 
     for (const highlightId of shell.replay.graphHighlightIds.slice(0, 5)) {
       expect(html).toContain(`data-highlight-id="${highlightId}"`);
     }
     for (const citationId of shell.replay.citationMemoryIds.slice(0, 2)) {
-      expect(html).toContain(`href="#evidence-${citationId}"`);
       expect(html).toContain(`id="evidence-${citationId}"`);
     }
   });
@@ -157,7 +144,7 @@ describe('buildInitialAppShellEvidenceLayout', () => {
 
     expect(documentHtml).toContain('<!doctype html>');
     expect(documentHtml).toContain('<meta name="viewport" content="width=device-width, initial-scale=1" />');
-    expect(documentHtml).toContain('.hero-stage');
-    expect(documentHtml).toContain('Memory becomes usable when it can answer back.');
+    expect(documentHtml).toContain('.second-brain-shell');
+    expect(documentHtml).toContain('Personal Memory AI Second Brain');
   });
 });

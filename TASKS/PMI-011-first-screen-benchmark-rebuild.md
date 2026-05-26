@@ -25,6 +25,7 @@ Ko Yunseo explicitly rejected the current frontend direction as too different fr
 - `src/components/PatternPanel.tsx`
 - `src/components/EvidenceDrawer.tsx`
 - `src/lib/appShellEvidenceLayout.test.ts`
+- `server.mjs` (serve already-built `dist/index.html` only; no TSX runtime import, no product logic)
 - `docs/design/pmi011-first-screen-benchmark-rebuild-report.md`
 - `artifacts/design-baseline/*`
 - `TASKS/PMI-011-first-screen-benchmark-rebuild.md`
@@ -35,7 +36,6 @@ Ko Yunseo explicitly rejected the current frontend direction as too different fr
 - `package-lock.json`
 - `railway.json`
 - `Dockerfile`
-- `server.mjs`
 - `db/**`
 - `.env`
 - `.env.*`

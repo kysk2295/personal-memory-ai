@@ -1,7 +1,6 @@
 import { createReadStream, existsSync, statSync } from 'node:fs';
 import { extname, join, normalize } from 'node:path';
 import { createServer } from 'node:http';
-import { renderAppShellDocument } from './src/App.tsx';
 
 const root = join(process.cwd(), 'dist');
 const port = Number(process.env.PORT || 3000);
@@ -26,13 +25,6 @@ createServer((req, res) => {
   if (req.url === '/health/live') {
     res.writeHead(200, { 'content-type': 'application/json' });
     res.end(JSON.stringify({ status: 'ok', service: 'personal-memory-ai-web' }));
-    return;
-  }
-  const requestUrl = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`);
-  const variant = requestUrl.searchParams.get('variant');
-  if (requestUrl.pathname === '/' && variant) {
-    res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
-    res.end(renderAppShellDocument(variant));
     return;
   }
   const filePath = resolvePath(req.url || '/');
