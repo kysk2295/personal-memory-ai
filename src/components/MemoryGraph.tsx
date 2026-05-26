@@ -2,20 +2,47 @@ import type { InitialAppShellEvidenceLayout, ShellLinkKind } from '../lib/appShe
 
 const LINK_COLORS: Record<ShellLinkKind, string> = {
   emotion: '#d9480f',
-  project: '#1971c2',
-  decision: '#5f3dc4',
-  outcome: '#2b8a3e',
-  source: '#495057',
+  project: '#8b8b8b',
+  decision: '#d24040',
+  outcome: '#b7b7b7',
+  source: '#686868',
 };
 
 const HIGHLIGHT_COLORS: Record<string, string> = {
-  question: '#111111',
-  memory: '#0b7285',
-  emotion: '#d9480f',
-  decision: '#5f3dc4',
-  outcome: '#2b8a3e',
-  pattern: '#98710f',
+  question: '#f3f1ea',
+  memory: '#f0f0f0',
+  emotion: '#a5a5a5',
+  decision: '#d24040',
+  outcome: '#c2c2c2',
+  pattern: '#d7b57c',
+  choice: '#858585',
+  topic: '#737373',
 };
+
+const PRIMARY_POSITIONS = [
+  { x: 344, y: 180 },
+  { x: 522, y: 134 },
+  { x: 604, y: 318 },
+  { x: 392, y: 388 },
+  { x: 236, y: 302 },
+];
+
+const SATELLITE_POSITIONS = [
+  { x: 168, y: 126 },
+  { x: 222, y: 210 },
+  { x: 702, y: 158 },
+  { x: 718, y: 270 },
+  { x: 660, y: 428 },
+  { x: 484, y: 472 },
+  { x: 284, y: 454 },
+  { x: 122, y: 352 },
+  { x: 434, y: 76 },
+  { x: 780, y: 374 },
+  { x: 96, y: 214 },
+  { x: 570, y: 230 },
+  { x: 498, y: 326 },
+  { x: 314, y: 86 },
+];
 
 function escapeHtml(value: string): string {
   return value
@@ -31,14 +58,6 @@ function truncate(value: string, maxLength: number): string {
   return `${value.slice(0, Math.max(0, maxLength - 3)).trimEnd()}...`;
 }
 
-function nodePosition(index: number, total: number): { x: number; y: number } {
-  const angle = (Math.PI * 2 * index) / total - Math.PI / 2;
-  return {
-    x: 430 + Math.cos(angle) * 255,
-    y: 274 + Math.sin(angle) * 168,
-  };
-}
-
 function highlightKind(highlightId: string): string {
   return highlightId.split(':', 1)[0] ?? 'memory';
 }
@@ -49,7 +68,30 @@ function renderHighlightAttributes(highlightId: string, highlightedIds: Readonly
   }"`;
 }
 
-function renderFacetHighlightNodes(highlightIds: readonly string[]): string {
+function renderGhostNodes(): string {
+  return SATELLITE_POSITIONS.map((position, index) => {
+    const radius = [5, 3, 4, 6, 3, 5, 4, 3, 5, 4, 3, 5, 3, 4][index] ?? 4;
+    const opacity = index % 4 === 0 ? 0.42 : 0.26;
+    return `<circle class="ghost-memory-node" cx="${position.x}" cy="${position.y}" r="${radius}" fill="#d8d8d8" fill-opacity="${opacity}" />`;
+  }).join('');
+}
+
+function renderGhostEdges(): string {
+  const pairs = [
+    [0, 1], [1, 4], [2, 3], [3, 9], [4, 5], [5, 12], [6, 7], [7, 10], [8, 1], [8, 2], [9, 13], [10, 0], [11, 2], [11, 12], [12, 3], [13, 2],
+  ];
+  return pairs
+    .map(([left, right], index) => {
+      const source = SATELLITE_POSITIONS[left];
+      const target = SATELLITE_POSITIONS[right];
+      if (!source || !target) return '';
+      const dash = index % 3 === 0 ? ' stroke-dasharray="3 7"' : '';
+      return `<line class="ghost-memory-edge" x1="${source.x}" y1="${source.y}" x2="${target.x}" y2="${target.y}" stroke="#f3f1ea" stroke-opacity="0.09" stroke-width="1"${dash} />`;
+    })
+    .join('');
+}
+
+function renderFacetHighlightNodes(highlightIds: readonly string[], highlightedIds: ReadonlySet<string>): string {
   const facetHighlightIds = highlightIds.filter(
     (highlightId) =>
       highlightId.startsWith('emotion:') ||
@@ -61,16 +103,16 @@ function renderFacetHighlightNodes(highlightIds: readonly string[]): string {
   );
 
   return facetHighlightIds
-    .slice(0, 5)
+    .slice(0, 9)
     .map((highlightId, index) => {
       const kind = highlightKind(highlightId);
-      const x = 120 + (index % 3) * 212;
-      const y = 84 + Math.floor(index / 3) * 52;
-      const color = HIGHLIGHT_COLORS[kind] ?? '#151515';
+      const position = SATELLITE_POSITIONS[index + 2] ?? { x: 120 + index * 54, y: 96 + index * 18 };
+      const color = HIGHLIGHT_COLORS[kind] ?? '#b8b8b8';
+      const isThesis = kind === 'decision' || kind === 'pattern';
 
-      return `<g class="graph-highlight-node" ${renderHighlightAttributes(highlightId, new Set(highlightIds))}>
-        <rect x="${x}" y="${y}" width="180" height="32" rx="10" fill="#fffdf8" fill-opacity="0.94" stroke="${color}" stroke-width="2.2" />
-        <text x="${x + 10}" y="${y + 20}" class="hub-title">${escapeHtml(truncate(highlightId, 26))}</text>
+      return `<g class="graph-highlight-node ${isThesis ? 'graph-thesis-node' : ''}" ${renderHighlightAttributes(highlightId, highlightedIds)}>
+        <circle cx="${position.x}" cy="${position.y}" r="${isThesis ? 13 : 8}" fill="${color}" fill-opacity="${isThesis ? '0.86' : '0.44'}" stroke="#f3f1ea" stroke-opacity="${isThesis ? '0.34' : '0.12'}" />
+        <text x="${position.x + 14}" y="${position.y + 4}" class="satellite-label">${escapeHtml(truncate(highlightId.replace(/^[^:]+:/, ''), 24))}</text>
       </g>`;
     })
     .join('');
@@ -84,13 +126,13 @@ export function renderMemoryGraph(layout: InitialAppShellEvidenceLayout): string
   const highlightedIds = new Set(graphHighlightIds);
   const questionHighlightId = layout.ask.graphHighlightIds[0] ?? '';
   const currentDecisionHighlightId = `decision:${layout.replay.currentDecision.id}`;
-  const positions = new Map(layout.primaryNodes.map((node, index) => [node.id, nodePosition(index, layout.primaryNodes.length)]));
+  const positions = new Map(layout.primaryNodes.map((node, index) => [node.id, PRIMARY_POSITIONS[index] ?? PRIMARY_POSITIONS[0]]));
   const hubByKind: Record<ShellLinkKind, { id: string; x: number; y: number; label: string }> = {
-    emotion: { id: 'hub:emotion', x: 150, y: 176, label: 'emotion' },
-    project: { id: 'hub:project', x: 214, y: 450, label: 'project' },
-    decision: { id: 'hub:decision', x: 712, y: 176, label: 'decision' },
-    outcome: { id: 'hub:outcome', x: 646, y: 450, label: 'outcome' },
-    source: { id: 'hub:source', x: 430, y: 474, label: 'source' },
+    emotion: { id: 'hub:emotion', x: 186, y: 252, label: 'emotion' },
+    project: { id: 'hub:project', x: 474, y: 242, label: 'project' },
+    decision: { id: 'hub:decision', x: 638, y: 196, label: 'decision' },
+    outcome: { id: 'hub:outcome', x: 586, y: 406, label: 'outcome' },
+    source: { id: 'hub:source', x: 312, y: 426, label: 'source' },
   };
   const edgeCounts = layout.links.reduce<Record<ShellLinkKind, number>>(
     (counts, link) => ({ ...counts, [link.kind]: counts[link.kind] + 1 }),
@@ -101,59 +143,57 @@ export function renderMemoryGraph(layout: InitialAppShellEvidenceLayout): string
       const source = positions.get(link.from);
       const target = hubByKind[link.kind];
       if (!source) return '';
-      return `<line x1="${source.x}" y1="${source.y}" x2="${target.x}" y2="${target.y}" stroke="${LINK_COLORS[link.kind]}" stroke-width="1.7" stroke-opacity="0.34" />`;
+      return `<line class="semantic-edge" x1="${source.x}" y1="${source.y}" x2="${target.x}" y2="${target.y}" stroke="${LINK_COLORS[link.kind]}" stroke-width="${link.kind === 'decision' ? '1.45' : '1.05'}" stroke-opacity="${link.kind === 'decision' ? '0.38' : '0.22'}" />`;
     })
     .join('');
   const memoryNodes = layout.primaryNodes
-    .map((node) => {
+    .map((node, index) => {
       const position = positions.get(node.id);
       if (!position) return '';
-      const primaryLabel = node.recordType === 'diary' || node.sourceType === 'mobile' ? 'daily diary capture' : 'imported memory';
+      const primaryLabel = node.recordType === 'diary' || node.sourceType === 'mobile' ? 'diary' : node.recordType;
       const isHighlighted = highlightedIds.has(node.id);
-      return `<g class="memory-node ${isHighlighted ? 'graph-highlight-active' : ''}" ${renderHighlightAttributes(
+      const accent = index === 2 || node.recordType === 'decision';
+      return `<g class="memory-node ${isHighlighted ? 'graph-highlight-active' : ''} ${accent ? 'graph-accent-memory' : ''}" ${renderHighlightAttributes(
         node.id,
         highlightedIds,
       )}>
         <title>${escapeHtml(node.summary)}</title>
-        <circle cx="${position.x}" cy="${position.y}" r="64" fill="none" stroke="#0b7285" stroke-width="${
-          isHighlighted ? '4' : '0'
-        }" stroke-opacity="0.92" />
-        <circle cx="${position.x}" cy="${position.y}" r="58" fill="#171411" stroke="#f1e8d9" stroke-opacity="0.2" stroke-width="1.8" />
-        <text x="${position.x}" y="${position.y - 12}" text-anchor="middle" class="node-kicker">${escapeHtml(primaryLabel)}</text>
-        <text x="${position.x}" y="${position.y + 6}" text-anchor="middle" class="node-title">${escapeHtml(truncate(node.summary, 22))}</text>
-        <text x="${position.x}" y="${position.y + 23}" text-anchor="middle" class="node-summary">${escapeHtml(node.recordType)} · ${escapeHtml(node.sourceType)}</text>
-        <text x="${position.x}" y="${position.y + 39}" text-anchor="middle" class="node-source">${escapeHtml(node.observedAt)}</text>
+        <circle cx="${position.x}" cy="${position.y}" r="${isHighlighted ? '52' : '42'}" fill="${accent ? '#d24040' : '#d8d8d8'}" fill-opacity="${accent ? '0.82' : '0.72'}" stroke="#f3f1ea" stroke-opacity="${isHighlighted ? '0.46' : '0.16'}" stroke-width="${isHighlighted ? '2.4' : '1.1'}" />
+        <circle cx="${position.x}" cy="${position.y}" r="${isHighlighted ? '62' : '50'}" fill="none" stroke="${accent ? '#d24040' : '#f3f1ea'}" stroke-opacity="${isHighlighted ? '0.22' : '0.06'}" />
+        <text x="${position.x + 48}" y="${position.y - 8}" class="node-kicker">${escapeHtml(primaryLabel)} · ${escapeHtml(node.sourceType)}</text>
+        <text x="${position.x + 48}" y="${position.y + 10}" class="node-title">${escapeHtml(truncate(node.summary, 34))}</text>
+        <text x="${position.x + 48}" y="${position.y + 27}" class="node-source">${escapeHtml(node.observedAt)}</text>
       </g>`;
     })
     .join('');
   const hubNodes = Object.values(hubByKind)
     .map(
-      (hub) => `<g>
-        <circle cx="${hub.x}" cy="${hub.y}" r="40" fill="#201b18" stroke="${LINK_COLORS[hub.label as ShellLinkKind]}" stroke-width="1.8" />
-        <text x="${hub.x}" y="${hub.y - 3}" text-anchor="middle" class="hub-title">${escapeHtml(hub.label)}</text>
-        <text x="${hub.x}" y="${hub.y + 16}" text-anchor="middle" class="hub-count">${edgeCounts[hub.label as ShellLinkKind]} links</text>
+      (hub) => `<g class="semantic-hub">
+        <circle cx="${hub.x}" cy="${hub.y}" r="18" fill="transparent" stroke="${LINK_COLORS[hub.label as ShellLinkKind]}" stroke-opacity="0.3" stroke-width="1.2" />
+        <circle cx="${hub.x}" cy="${hub.y}" r="4" fill="${LINK_COLORS[hub.label as ShellLinkKind]}" fill-opacity="0.72" />
+        <text x="${hub.x + 12}" y="${hub.y + 4}" class="hub-title">${escapeHtml(hub.label)} · ${edgeCounts[hub.label as ShellLinkKind]}</text>
       </g>`,
     )
     .join('');
 
   return `<section class="graph-workspace" aria-label="Initial loaded memory-brain graph">
     <svg class="memory-graph" viewBox="0 0 860 520" role="img" aria-label="Memory brain graph linking records to emotion, project, decision, outcome, and source" data-current-question-id="${escapeHtml(questionHighlightId)}">
-      <rect x="8" y="8" width="844" height="504" rx="22" fill="#120f0d" stroke="#2d2722" />
+      <rect x="0" y="0" width="860" height="520" rx="0" fill="transparent" />
+      ${renderGhostEdges()}
+      ${memoryEdges}
       <g class="graph-question-node" ${renderHighlightAttributes(questionHighlightId, highlightedIds)}>
-        <rect x="258" y="30" width="344" height="40" rx="12" fill="#f0e6d6" fill-opacity="0.94" stroke="#f0e6d6" />
-        <text x="430" y="55" text-anchor="middle" fill="#151311" font-size="12" font-weight="800">${escapeHtml(
-          truncate(layout.askQuestion, 46),
+        <rect x="278" y="36" width="316" height="34" rx="17" fill="#0f0f0f" fill-opacity="0.86" stroke="#f3f1ea" stroke-opacity="0.16" />
+        <text x="436" y="58" text-anchor="middle" fill="#f3f1ea" fill-opacity="0.78" font-size="11" font-weight="760">${escapeHtml(
+          truncate(layout.askQuestion, 42),
         )}</text>
       </g>
       <g class="graph-current-decision-node" ${renderHighlightAttributes(currentDecisionHighlightId, highlightedIds)}>
-        <rect x="264" y="248" width="332" height="40" rx="12" fill="#181412" stroke="#5f3dc4" stroke-width="2.2" />
-        <text x="430" y="273" text-anchor="middle" class="hub-title">${escapeHtml(
-          truncate(layout.replay.currentDecision.prompt, 48),
-        )}</text>
+        <circle cx="720" cy="92" r="15" fill="#d24040" fill-opacity="0.82" />
+        <text x="742" y="96" class="satellite-label">${escapeHtml(truncate(layout.replay.currentDecision.prompt, 38))}</text>
       </g>
-      ${renderFacetHighlightNodes(graphHighlightIds)}
-      ${memoryEdges}
+      ${renderGhostNodes()}
       ${hubNodes}
+      ${renderFacetHighlightNodes(graphHighlightIds, highlightedIds)}
       ${memoryNodes}
     </svg>
     <div class="graph-support-copy" aria-label="Graph supporting cues">

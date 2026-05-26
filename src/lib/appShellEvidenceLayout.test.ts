@@ -68,6 +68,7 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('class="second-brain-shell"');
     expect(html).toContain('class="brain-sidebar"');
     expect(html).toContain('class="brain-canvas"');
+    expect(html).toContain('class="graph-meta-line"');
     expect(html).toContain('class="ask-memory-bar"');
     expect(html).toContain('Second Brain');
     expect(html).toContain('지식 그래프');
@@ -77,6 +78,7 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('Ask My Past Self');
     expect(html).toContain('Decision Replay');
     expect(html).toContain('Evidence drawer');
+    expect(html).not.toContain('class="count-card"');
     expect(html).not.toContain('class="story-grid"');
     expect(html).not.toContain('class="editorial-band"');
     expect(html).not.toContain('status-planned');
@@ -99,6 +101,9 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('data-citation-id="mem_launch_june_anxiety_scope_delay"');
     expect(html).toContain('data-highlight-id="question:이번에도-기능을-더-넣어야-할까"');
     expect(html).toContain('data-highlight-id="memory:mem_launch_may_anxiety_scope_delay"');
+    expect(html).toContain('class="graph-highlight-node');
+    expect(html).toContain('class="ghost-memory-node"');
+    expect(html).toContain('class="semantic-edge"');
     expect(html).toContain('data-highlight-id="emotion:anxiety"');
     expect(html).toContain('data-highlight-id="decision:chosen"');
     expect(html).toContain(

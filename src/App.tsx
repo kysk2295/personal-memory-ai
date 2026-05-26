@@ -85,19 +85,16 @@ const APP_SHELL_STYLES = `
     font-size: 13px;
     line-height: 1.55;
   }
-  .brain-counts {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
+  .graph-meta-line {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 10px;
+    color: rgba(243, 241, 234, 0.5);
+    font-size: 12px;
+    line-height: 1.4;
   }
-  .count-card {
-    padding: 14px 12px;
-    border-radius: 18px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    background: rgba(255, 255, 255, 0.035);
-  }
-  .count-card strong { display: block; font-size: 31px; line-height: 1; letter-spacing: -0.05em; }
-  .count-card span { display: block; margin-top: 7px; color: rgba(243, 241, 234, 0.5); font-size: 12px; }
+  .graph-meta-line strong { color: rgba(243, 241, 234, 0.82); font-size: 13px; }
+  .graph-meta-dot { color: rgba(243, 241, 234, 0.24); }
   .legend-section { display: flex; flex-direction: column; gap: 10px; }
   .legend-title {
     margin: 0;
@@ -109,9 +106,9 @@ const APP_SHELL_STYLES = `
   }
   .filter-list { display: flex; flex-direction: column; gap: 7px; }
   .filter-chip {
-    min-height: 34px;
+    min-height: 31px;
     border-radius: 999px;
-    padding: 7px 10px;
+    padding: 6px 9px;
     display: grid;
     grid-template-columns: 10px minmax(0, 1fr) auto;
     align-items: center;
@@ -152,8 +149,8 @@ const APP_SHELL_STYLES = `
     margin: 0 auto;
     width: min(860px, 100%);
     border-radius: 999px;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    background: rgba(16, 16, 16, 0.82);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(10, 10, 10, 0.88);
     box-shadow: 0 22px 90px rgba(0, 0, 0, 0.32);
     display: grid;
     grid-template-columns: auto minmax(0, 1fr) auto;
@@ -182,7 +179,7 @@ const APP_SHELL_STYLES = `
   .graph-stage {
     position: relative;
     flex: 1;
-    min-height: 640px;
+    min-height: 680px;
     margin-top: -18px;
     display: grid;
     place-items: center;
@@ -199,13 +196,13 @@ const APP_SHELL_STYLES = `
   }
   .graph-workspace {
     position: relative;
-    width: min(100%, 1120px);
-    transform: scale(1.06);
+    width: min(112%, 1240px);
+    transform: scale(1.09) translateY(8px);
   }
   .memory-graph {
     display: block;
     width: 100%;
-    min-height: 620px;
+    min-height: 660px;
     filter: drop-shadow(0 32px 90px rgba(0, 0, 0, 0.44));
   }
   .memory-graph rect:first-child { fill: transparent; stroke: rgba(255, 255, 255, 0.05); }
@@ -214,7 +211,9 @@ const APP_SHELL_STYLES = `
   .memory-node .node-title { fill: #f4f1e9; font-size: 12px; font-weight: 850; }
   .memory-node .node-summary { fill: rgba(243, 241, 234, 0.56); font-size: 9px; }
   .node-source,
-  .hub-title { fill: rgba(243, 241, 234, 0.72); font-size: 10px; font-weight: 800; }
+  .hub-title,
+  .satellite-label { fill: rgba(243, 241, 234, 0.72); font-size: 10px; font-weight: 800; }
+  .satellite-label { fill: rgba(243, 241, 234, 0.54); font-size: 9px; }
   .graph-support-copy,
   .graph-highlight-manifest,
   .graph-support-list {
@@ -233,21 +232,21 @@ const APP_SHELL_STYLES = `
     right: 28px;
     bottom: 28px;
     z-index: 3;
-    width: min(420px, calc(100% - 56px));
+    width: min(390px, calc(100% - 56px));
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 26px;
-    background: rgba(12, 12, 12, 0.82);
+    border-radius: 24px;
+    background: rgba(10, 10, 10, 0.78);
     backdrop-filter: blur(22px);
     box-shadow: 0 24px 70px rgba(0, 0, 0, 0.34);
-    padding: 18px;
+    padding: 16px;
   }
   .memory-inspector h2 {
     margin: 6px 0 8px;
-    font-size: 24px;
+    font-size: 21px;
     line-height: 1.08;
     letter-spacing: -0.04em;
   }
-  .memory-inspector p { margin: 0; color: rgba(243, 241, 234, 0.62); font-size: 13px; line-height: 1.58; }
+  .memory-inspector p { margin: 0; color: rgba(243, 241, 234, 0.6); font-size: 12px; line-height: 1.55; }
   .citation-row { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 14px; }
   .citation-row a {
     color: #f3f1ea;
@@ -277,7 +276,6 @@ const APP_SHELL_STYLES = `
     .brain-sidebar { padding: 18px 14px; }
     .brain-canvas { padding: 16px 12px 28px; }
     .brain-title h1 { font-size: 36px; }
-    .brain-counts { grid-template-columns: 1fr 1fr; }
     .memory-graph { min-height: 420px; }
     .ask-memory-bar { grid-template-columns: auto minmax(0, 1fr) auto; }
   }
@@ -334,10 +332,13 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
         <p>${escapeHtml(layout.northStar)} 일기, 가져온 기록, 결정의 결과가 하나의 기억 그래프로 연결된다.</p>
       </section>
 
-      <section class="brain-counts" aria-label="Memory graph scale">
-        <div class="count-card"><strong>${memoryCount}</strong><span>기억 노드</span></div>
-        <div class="count-card"><strong>${relationshipCount}</strong><span>근거 엣지</span></div>
-      </section>
+      <div class="graph-meta-line" aria-label="Memory graph scale">
+        <span><strong>${memoryCount}</strong> 기억 노드</span>
+        <span class="graph-meta-dot">·</span>
+        <span><strong>${relationshipCount}</strong> 근거 엣지</span>
+        <span class="graph-meta-dot">·</span>
+        <span>last woven from diary + imports</span>
+      </div>
 
       <section class="legend-section" aria-label="Node types">
         <p class="legend-title">노드 유형</p>
