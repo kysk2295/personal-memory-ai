@@ -2,7 +2,7 @@
 
 Status: active local execution plan  
 Owner: Ko Yunseo  
-Updated: 2026-05-27, local HTTP API transport pass
+Updated: 2026-05-27, LLM provider adapter pass
 Supersedes for local Codex work: `docs/product/product-master-plan-2026-05-26.md`
 
 ## 1. Product Definition
@@ -102,7 +102,7 @@ Status values:
 | Web | Individual memory detail page | `planned` | Needed for real review/edit workflows. |
 | Web | Search/timeline views | `planned` | Needed for second-brain usefulness. |
 | Ask | Ask My Past Self deterministic contract | `done-foundation` | Citation/insufficient evidence tested. |
-| Ask | LLM answer generation | `planned` | Must be constrained by citations. |
+| Ask | LLM answer generation | `done-foundation` | Provider adapter routes outputs through the citation guard; live provider config/secrets still planned. |
 | Ask | Follow-up conversation | `planned` | Requires session/report memory. |
 | Decision | Decision Replay deterministic contract | `done-foundation` | Past outcome citations tested. |
 | Decision | Decision result save-back | `planned` | Current decisions should become future memories. |
@@ -113,6 +113,7 @@ Status values:
 | Agent | Personal Memory Agent orchestrator | `done-foundation` | Loads store records and returns ask/replay/graph evidence. |
 | Agent | Semantic retrieval/reranking | `done-foundation` | Deterministic retrieval contract ranks user-scoped memories; pgvector path remains a backend task. |
 | Agent | Citation-constrained generation guard | `done-foundation` | LLM-shaped outputs are rejected unless grounded in supplied citation ids. |
+| Agent | LLM provider adapter | `done-foundation` | Provider-agnostic adapter wraps model outputs in the citation guard before advice can surface. |
 | Agent | User feedback learning loop | `planned` | Needed for agent personalization. |
 | Privacy | Private-by-default scope | `done-foundation` | Data model and UI labels exist. |
 | Privacy | Export/delete local UX | `done-foundation` | Owner-only local export, selected delete, and hard-delete confirmation panel are rendered. |
@@ -159,10 +160,11 @@ No remote push, main merge, production deploy, or secret access is allowed witho
 - L14: staging backend readiness.
 - L15: auth/private vault boundary.
 - L16: local HTTP API transport.
+- L17: citation-guarded LLM provider adapter.
 
 ## 6. Active Next Loops
 
-No active local loop is selected. Next likely loop: production transport/deploy wiring or provider-backed auth, depending on deployment target.
+Next local loop: saved advice/report artifacts or memory detail/search views. Production auth, live LLM keys, and deployment wiring stay gated until secrets/deploy target are explicitly available.
 
 ## 7. Completed Loop Details
 
@@ -386,6 +388,22 @@ Implemented:
 - `server.ts`
 - `npm start` uses `tsx server.ts`
 
+### L17 — LLM Provider Adapter
+
+Goal: make provider-backed generation possible without letting uncited generic model output become personal advice.
+
+Acceptance:
+
+- provider prompts receive only supplied memory evidence
+- grounded provider output passes through with provider/model metadata
+- generic uncited provider output is rejected as insufficient evidence
+- no external API or secret is required for the local foundation
+
+Implemented:
+
+- `src/lib/llmProviderAdapter.ts`
+- `src/lib/llmProviderAdapter.test.ts`
+
 ## 8. MVP Time Estimate
 
 Assuming focused local development without major dependency or deployment blockers:
@@ -397,12 +415,12 @@ Assuming focused local development without major dependency or deployment blocke
 | Private beta with API, DB, LLM, export/delete, and basic auth | 6-10 weeks |
 | Product-grade app + web + agent + backend | 4-6 months |
 
-Critical path for "나를 아는 AI" feeling:
+Critical path for the next "나를 아는 AI" jump:
 
-1. LLM provider adapter behind the citation guard.
-2. HTTP/server transport for the API boundary.
-3. PWA/app capture surface.
-4. Private vault/auth.
+1. Persist saved advice/report artifacts so useful answers become future memory.
+2. Add memory detail/search views so the second brain is inspectable like a real vault.
+3. Wire a live LLM provider through the citation-guarded adapter when secrets/config are available.
+4. Run staging PostgreSQL/pgvector/auth smoke against a chosen deployment target.
 
 ## 9. Product Quality Rules
 
