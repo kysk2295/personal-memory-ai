@@ -5,6 +5,7 @@ import {
   retrieveMultiAxisMemories,
   retrieveMultiAxisMemoriesFromRecords,
 } from './multiAxisMemoryRetrieval';
+import { createUserFeedbackMemoryRecord } from './userFeedbackMemory';
 
 describe('multi-axis memory retrieval router', () => {
   test('returns deterministic scored memories with per-axis explanations', () => {
@@ -28,6 +29,7 @@ describe('multi-axis memory retrieval router', () => {
       semantic: 1.2,
       graph: 0.7,
       temporal: 0.15,
+      feedback: 1.6,
     });
     expect(first.retrievedMemoryIds).toEqual([
       'mem_launch_june_anxiety_scope_delay',
@@ -42,6 +44,7 @@ describe('multi-axis memory retrieval router', () => {
           semantic: expect.any(Number),
           graph: expect.any(Number),
           temporal: expect.any(Number),
+          feedback: expect.any(Number),
         }),
         reasons: expect.arrayContaining([expect.stringContaining('keyword')]),
       }),
@@ -106,5 +109,32 @@ describe('multi-axis memory retrieval router', () => {
       retrievedMemoryIds: [],
       insufficientEvidenceReason: 'No user-scoped MemoryRecord matched semantic, keyword, graph, or temporal retrieval gates.',
     });
+  });
+
+  test('prioritizes matching feedback correction memories for future answers', () => {
+    const feedback = createUserFeedbackMemoryRecord({
+      feedbackId: 'feedback-retrieval-001',
+      createdAt: '2026-05-28T04:00:00.000Z',
+      correctionText: '다음 답변에서는 결론보다 citation first, 근거 기억 먼저 보여줘.',
+      targetMemoryIds: ['mem_freeze_vs_feature_addition'],
+      targetArtifactId: 'artifact_ask_answer_sha-test',
+    });
+
+    const result = retrieveMultiAxisMemoriesFromRecords({
+      records: [...personalMemoryRecords, feedback],
+      query: 'citation first 근거 먼저',
+      limit: 3,
+    });
+
+    expect(result.axisWeights.feedback).toBe(1.6);
+    expect(result.retrievedMemoryIds[0]).toBe(feedback.id);
+    expect(result.retrievedMemories[0]).toEqual(
+      expect.objectContaining({
+        memory: expect.objectContaining({ id: feedback.id }),
+        axisScores: expect.objectContaining({ feedback: expect.any(Number) }),
+        reasons: expect.arrayContaining([expect.stringContaining('feedback correction')]),
+      }),
+    );
+    expect(result.retrievedMemories[0].axisScores.feedback).toBeGreaterThan(0);
   });
 });

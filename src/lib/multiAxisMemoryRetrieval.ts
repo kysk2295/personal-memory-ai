@@ -10,6 +10,7 @@ export interface MultiAxisRetrievalScores {
   semantic: number;
   graph: number;
   temporal: number;
+  feedback: number;
 }
 
 export interface MultiAxisRetrievedMemory {
@@ -51,6 +52,7 @@ const AXIS_WEIGHTS: MultiAxisRetrievalScores = {
   semantic: 1.2,
   graph: 0.7,
   temporal: 0.15,
+  feedback: 1.6,
 };
 
 const GRAPH_EDGE_KINDS = new Set<TypedKnowledgeEdge['kind']>([
@@ -152,6 +154,15 @@ function scoreTemporal(record: MemoryRecord, latestObservedAtMs: number): number
   return 1 / (1 + days / 7);
 }
 
+function isFeedbackMemory(record: MemoryRecord): boolean {
+  const topicTags = record.topicTags.map((tag) => tag.toLocaleLowerCase());
+  return (
+    record.sourceRef.startsWith('personal-memory-ai://feedback/') ||
+    topicTags.includes('agent feedback') ||
+    topicTags.includes('correction')
+  );
+}
+
 function compareRetrievedMemories(left: MultiAxisRetrievedMemory, right: MultiAxisRetrievedMemory): number {
   const scoreComparison = right.score - left.score;
   if (scoreComparison !== 0) return scoreComparison;
@@ -193,6 +204,7 @@ function reasonsForScores(axisScores: MultiAxisRetrievalScores): string[] {
   if (axisScores.semantic > 0) reasons.push(`semantic matched ${axisScores.semantic} high-signal field(s)`);
   if (axisScores.graph > 0) reasons.push(`graph traversal matched ${axisScores.graph} shared ledger edge target(s)`);
   if (axisScores.temporal > 0) reasons.push(`temporal freshness contributed ${axisScores.temporal.toFixed(2)}`);
+  if (axisScores.feedback > 0) reasons.push(`feedback correction matched ${axisScores.feedback} learning signal(s)`);
   return reasons;
 }
 
@@ -202,7 +214,20 @@ function weightedScore(axisScores: MultiAxisRetrievalScores): number {
     axisScores.semantic * AXIS_WEIGHTS.semantic +
     axisScores.graph * AXIS_WEIGHTS.graph +
     axisScores.temporal * AXIS_WEIGHTS.temporal
+    + axisScores.feedback * AXIS_WEIGHTS.feedback
   );
+}
+
+function scoreFeedback(
+  record: MemoryRecord,
+  queryTerms: readonly string[],
+  seedMemoryIds: ReadonlySet<string>,
+): number {
+  if (!isFeedbackMemory(record)) return 0;
+  const text = buildKeywordSearchText(record);
+  const directMatches = queryTerms.filter((term) => text.includes(term)).length;
+  const linkedMatches = [...seedMemoryIds].filter((memoryId) => record.rawText.includes(memoryId)).length;
+  return directMatches + linkedMatches;
 }
 
 export function retrieveMultiAxisMemoriesFromRecords(
@@ -240,7 +265,8 @@ export function retrieveMultiAxisMemoriesFromRecords(
     .map((record): MultiAxisRetrievedMemory | null => {
       const direct = directScores.get(record.id) ?? { keyword: 0, semantic: 0, matchedTerms: [] };
       const graph = scoreGraph(record.id, seedTargetIds, edgesByMemoryId);
-      const passesRetrievalGate = direct.keyword > 0 || direct.semantic > 0 || graph.score > 0;
+      const feedback = scoreFeedback(record, queryTerms, seedMemoryIds);
+      const passesRetrievalGate = direct.keyword > 0 || direct.semantic > 0 || graph.score > 0 || feedback > 0;
       if (!passesRetrievalGate) return null;
 
       const axisScores: MultiAxisRetrievalScores = {
@@ -248,6 +274,7 @@ export function retrieveMultiAxisMemoriesFromRecords(
         semantic: direct.semantic,
         graph: graph.score,
         temporal: scoreTemporal(record, latestObservedAtMs),
+        feedback,
       };
 
       return {

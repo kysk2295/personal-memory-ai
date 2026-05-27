@@ -2,7 +2,7 @@
 
 Status: active local execution plan  
 Owner: Ko Yunseo  
-Updated: 2026-05-28, feedback correction UI pass
+Updated: 2026-05-28, feedback retrieval priority pass
 Supersedes for local Codex work: `docs/product/product-master-plan-2026-05-26.md`
 
 ## 1. Product Definition
@@ -132,7 +132,7 @@ Status values:
 | Reports | Scheduler/reminders | `planned` | After report engine and app/PWA capture. |
 | Agent | Personal Memory Agent orchestrator | `done-foundation` | Loads user-scoped retrieved memories and returns ask/replay/graph evidence with retrieval metadata. |
 | Agent | Semantic retrieval/reranking | `done-foundation` | Deterministic retrieval contract ranks user-scoped memories; pgvector path remains a backend task. |
-| Agent | Multi-axis retrieval router | `done-foundation` | Deterministic router fuses keyword, semantic, knowledge-ledger graph traversal, and temporal freshness; legacy retrieval delegates to it. |
+| Agent | Multi-axis retrieval router | `done-foundation` | Deterministic router fuses keyword, semantic, knowledge-ledger graph traversal, temporal freshness, and user feedback corrections; legacy retrieval delegates to it. |
 | Agent | Korean/user-intent retrieval bridge | `done-foundation` | Korean product-intent questions expand into retrieval terms before the agent filters memory context. |
 | Agent | Citation-constrained generation guard | `done-foundation` | LLM-shaped outputs are rejected unless grounded in supplied citation ids. |
 | Agent | LLM provider adapter | `done-foundation` | Provider-agnostic adapter wraps model outputs in the citation guard before advice can surface. Gemini-first runtime readiness and smoke harness now gate live calls on `GEMINI_API_KEY` + `PMI_LLM_MODEL` without leaking secrets. |
@@ -199,10 +199,11 @@ No remote push, main merge, production deploy, or secret access is allowed witho
 - L30: Gemini-first LLM provider smoke harness.
 - L31: user feedback/correction memory.
 - L32: feedback correction UI.
+- L33: feedback retrieval priority.
 
 ## 6. Active Next Loops
 
-Next local loop: wire feedback memories into retrieval priority, or run staging PostgreSQL/pgvector/auth smoke harness when deployment secrets are available. Production auth, live LLM keys, and deployment wiring stay gated until secrets/deploy target are explicitly available.
+Next local loop: run staging PostgreSQL/pgvector/auth smoke harness when deployment secrets are available, or attach a real Gemini provider behind the L30 smoke harness. Production auth, live LLM keys, and deployment wiring stay gated until secrets/deploy target are explicitly available.
 
 ## 7. Completed Loop Details
 
@@ -747,6 +748,24 @@ Implemented:
 - `scripts/verify-playwright-evidence.ts`
 - `docs/superpowers/plans/2026-05-28-feedback-correction-ui.md`
 
+### L33 — Feedback Retrieval Priority
+
+Goal: make saved user correction memories influence future retrieval ranking.
+
+Acceptance:
+
+- multi-axis retrieval includes a `feedback` score axis
+- feedback/correction memories are detected from source refs and tags
+- matching correction memories can rank ahead of ordinary memories
+- retrieval reasons explain feedback correction matches
+- existing memory retrieval and personal agent tests remain green
+
+Implemented:
+
+- `src/lib/multiAxisMemoryRetrieval.ts`
+- `src/lib/multiAxisMemoryRetrieval.test.ts`
+- `docs/superpowers/plans/2026-05-28-feedback-retrieval-priority.md`
+
 ## 8. MVP Time Estimate
 
 Assuming focused local development without major dependency or deployment blockers:
@@ -760,9 +779,9 @@ Assuming focused local development without major dependency or deployment blocke
 
 Critical path for the next "나를 아는 AI" jump:
 
-1. Wire feedback memories into retrieval priority so corrections influence future answers.
-2. Run staging PostgreSQL/pgvector/auth smoke against the already wired Postgres runtime when deployment secrets are available.
-3. Attach a real Gemini provider implementation behind the L30 smoke harness.
+1. Run staging PostgreSQL/pgvector/auth smoke against the already wired Postgres runtime when deployment secrets are available.
+2. Attach a real Gemini provider implementation behind the L30 smoke harness.
+3. Add production auth/private vault provider for multi-user beta.
 
 ## 9. Product Quality Rules
 
