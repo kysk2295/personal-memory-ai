@@ -8,6 +8,7 @@ import {
 import type { MemoryStore } from './memoryStore';
 import { answerPersonalMemoryQuestion } from './personalMemoryAgent';
 import { resolvePrivateVaultAccess, type LocalPrivateVaultSession } from './privateVault';
+import { saveArtifactAsMemoryRecord, type SavedMemoryArtifact } from './savedMemoryArtifact';
 import { generateWeeklyReport } from './weeklyReport';
 
 export type PersonalMemoryApiMethod = 'GET' | 'POST';
@@ -81,8 +82,26 @@ interface DeleteBody {
   hardDeleteUserData?: boolean;
 }
 
+interface SavedArtifactCaptureBody {
+  artifact: SavedMemoryArtifact;
+}
+
 function readBody<T>(body: unknown): T {
   return body as T;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function isSavedArtifactCaptureBody(body: unknown): body is SavedArtifactCaptureBody {
+  if (!isRecord(body) || !isRecord(body.artifact)) return false;
+  return (
+    typeof body.artifact.id === 'string' &&
+    typeof body.artifact.kind === 'string' &&
+    typeof body.artifact.title === 'string' &&
+    typeof body.artifact.body === 'string'
+  );
 }
 
 function methodNotAllowed(): PersonalMemoryApiResponse<{ error: string }> {
@@ -99,6 +118,14 @@ export async function handlePersonalMemoryApiRequest(
 
   if (request.path === '/api/capture') {
     if (request.method !== 'POST') return methodNotAllowed();
+    if (isSavedArtifactCaptureBody(request.body)) {
+      const record = await saveArtifactAsMemoryRecord({
+        store,
+        userId,
+        artifact: request.body.artifact,
+      });
+      return { statusCode: 201, body: { createdMemoryIds: [record.id], record } };
+    }
     const result = await ingestFastDiaryCaptureToMemoryStore({
       store,
       userId,

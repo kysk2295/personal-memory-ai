@@ -7,6 +7,7 @@ import type { MemoryRecord } from './memoryRecord';
 import { handlePersonalMemoryApiRequest, handlePrivateVaultMemoryApiRequest } from './personalMemoryApi';
 import type { PersonalMemoryAgentResult } from './personalMemoryAgent';
 import { createLocalPrivateVaultSession } from './privateVault';
+import { createSavedAskArtifact } from './savedMemoryArtifact';
 import type { WeeklyReport } from './weeklyReport';
 
 describe('personal memory API boundary', () => {
@@ -84,6 +85,59 @@ describe('personal memory API boundary', () => {
     const appliedBody = applied.body as ApplyImportPreviewResult;
     expect(appliedBody.createdMemoryIds).toHaveLength(1);
     expect(appliedBody.skippedPreviewRecordIds).toEqual(['import_preview_api-import_1']);
+  });
+
+  test('persists saved artifacts through the capture endpoint as private memories', async () => {
+    const store = createMemoryStore({ env: {} });
+    await store.create('user-a', personalMemoryRecords[0]);
+    await store.create('user-b', {
+      ...personalMemoryRecords[1],
+      id: 'mem_other_user_saved_artifact_guard',
+      sourceRef: 'obsidian://other-user/saved-artifact-guard',
+    });
+    const artifact = createSavedAskArtifact({
+      question: '이번에도 기능을 더 넣어야 할까?',
+      createdAt: '2026-05-28T02:00:00.000Z',
+      answer: {
+        status: 'implemented',
+        evidenceLabel: 'sufficient_evidence',
+        answer: 'Freeze scope based on cited memories.',
+        recommendation: 'Freeze scope before adding another feature.',
+        evidenceBullets: [],
+        citationMemoryIds: ['mem_launch_may_anxiety_scope_delay'],
+        confidence: 0.87,
+        graphHighlightIds: ['memory:mem_launch_may_anxiety_scope_delay'],
+      },
+    });
+
+    const saved = await handlePersonalMemoryApiRequest({
+      store,
+      userId: 'user-a',
+      request: {
+        method: 'POST',
+        path: '/api/capture',
+        body: { artifact },
+      },
+    });
+
+    expect(saved.statusCode).toBe(201);
+    expect(saved.body).toEqual(
+      expect.objectContaining({
+        createdMemoryIds: [expect.stringMatching(/^mem_api_artifact_ask_answer_sha-/)],
+        record: expect.objectContaining({
+          id: expect.stringMatching(/^mem_api_artifact_ask_answer_sha-/),
+          sourceRef: expect.stringContaining('personal-memory-ai://saved-artifacts/'),
+          memoryType: 'reflection',
+        }),
+      }),
+    );
+    const userARecords = await store.listByUser('user-a');
+    expect(userARecords.map((record) => record.id)).toEqual(
+      expect.arrayContaining([expect.stringMatching(/^mem_api_artifact_ask_answer_sha-/)]),
+    );
+    expect((await store.listByUser('user-b')).map((record) => record.id)).toEqual([
+      'mem_other_user_saved_artifact_guard',
+    ]);
   });
 
   test('handles ask, replay, and weekly report without leaking another user memory', async () => {

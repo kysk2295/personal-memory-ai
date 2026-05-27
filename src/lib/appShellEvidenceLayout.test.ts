@@ -193,6 +193,7 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('data-graph-library="cytoscape"');
     expect(html).toContain('id="memory-graph-cytoscape"');
     expect(html).toContain('id="memory-graph-elements"');
+    expect(html).toContain('id="saved-artifact-actions"');
     expect(html).toContain('"library":"cytoscape"');
     expect(html).toContain('"memoryNodeCount":8');
     expect(html).toContain('"graphLabel":"Anxiety before the memory import demo led to...');
@@ -220,6 +221,8 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('data-save-artifact-action="weekly_report"');
     expect(html).toContain('data-artifact-save-state="ready"');
     expect(html).toContain('data-artifact-save-endpoint="/api/capture"');
+    expect(html).toContain('"endpoint":"/api/capture"');
+    expect(html).toContain('"artifact":{"id":"artifact_');
     expect(html).toContain('personal-memory-ai://saved-artifacts/');
     expect(html).toContain('graph-control-panel');
     expect(html).toContain('class="control-row node-spacing-controls"');

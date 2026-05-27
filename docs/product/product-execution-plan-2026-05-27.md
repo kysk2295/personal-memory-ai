@@ -2,7 +2,7 @@
 
 Status: active local execution plan  
 Owner: Ko Yunseo  
-Updated: 2026-05-28, saved artifacts in graph/timeline pass
+Updated: 2026-05-28, saved artifact persistence pass
 Supersedes for local Codex work: `docs/product/product-master-plan-2026-05-26.md`
 
 ## 1. Product Definition
@@ -122,13 +122,13 @@ Status values:
 | Web | Memory search/detail inspector | `prototype-ui` | Search input dims unmatched nodes, result click selects inspector detail and citation chip. |
 | Ask | Ask My Past Self deterministic contract | `done-foundation` | Citation/insufficient evidence tested. |
 | Ask | LLM answer generation | `done-foundation` | Provider adapter routes outputs through the citation guard; live provider config/secrets still planned. |
-| Ask | Saved advice artifacts | `prototype-ui` | Ask answers can become private saved artifacts and future `MemoryRecord`s; Save answer now feeds the graph/timeline display model. |
+| Ask | Saved advice artifacts | `prototype-ui` | Ask answers can become private saved artifacts and future `MemoryRecord`s; Save answer feeds the graph/timeline display model and posts artifact payloads through `/api/capture` when served over HTTP. |
 | Ask | Follow-up conversation | `planned` | Requires session/report memory. |
 | Decision | Decision Replay deterministic contract | `done-foundation` | Past outcome citations tested. |
-| Decision | Decision result save-back | `prototype-ui` | Decision replay results can become private saved artifacts and future decision memories; Save replay now feeds the graph/timeline display model. |
+| Decision | Decision result save-back | `prototype-ui` | Decision replay results can become private saved artifacts and future decision memories; Save replay feeds the graph/timeline display model and posts artifact payloads through `/api/capture` when served over HTTP. |
 | Reports | Weekly Pattern Report foundation | `done-foundation` | Weekly report panel and pattern citation panel are visible in the web surface. |
 | Reports | Weekly report engine | `done-foundation` | Date-window report generation aggregates emotions, decisions, outcomes, projects, and pattern citations. |
-| Reports | Saved weekly/monthly reports | `prototype-ui` | Weekly reports can become saved artifacts and future pattern memories; Save report now feeds the graph/timeline display model. |
+| Reports | Saved weekly/monthly reports | `prototype-ui` | Weekly reports can become saved artifacts and future pattern memories; Save report feeds the graph/timeline display model and posts artifact payloads through `/api/capture` when served over HTTP. |
 | Reports | Scheduler/reminders | `planned` | After report engine and app/PWA capture. |
 | Agent | Personal Memory Agent orchestrator | `done-foundation` | Loads user-scoped retrieved memories and returns ask/replay/graph evidence with retrieval metadata. |
 | Agent | Semantic retrieval/reranking | `done-foundation` | Deterministic retrieval contract ranks user-scoped memories; pgvector path remains a backend task. |
@@ -141,7 +141,7 @@ Status values:
 | Privacy | Export/delete local UX | `done-foundation` | Owner-only local export, selected delete, and hard-delete confirmation panel are rendered. |
 | Privacy | Auth/private vault boundary | `done-foundation` | Local session owner boundary scopes API calls to one private vault. |
 | Privacy | Production auth provider | `planned` | Required before multi-user beta. |
-| Backend/API | Capture/import endpoints | `done-foundation` | User-scoped API dispatcher handles capture, import preview, and import apply. |
+| Backend/API | Capture/import endpoints | `done-foundation` | User-scoped API dispatcher handles fast diary capture, saved artifact capture, import preview, and import apply. |
 | Backend/API | Ask/replay/report endpoints | `done-foundation` | User-scoped API dispatcher handles ask, replay, weekly report, export, and delete boundaries. |
 | Backend/API | Local HTTP transport | `done-foundation` | `npm start` serves static UI and private-vault `/api/*` JSON routes locally. |
 | Backend/API | Runtime backend selection | `done-foundation` | `server.ts` now uses the memory runtime to select fixture/Postgres, seed fixture data only in fixture mode, and expose safe health metadata. |
@@ -195,10 +195,11 @@ No remote push, main merge, production deploy, or secret access is allowed witho
 - L26: agent retrieval query bridge.
 - L27: saved artifact UI actions.
 - L28: saved artifacts in graph/timeline.
+- L29: saved artifact persistence through capture API.
 
 ## 6. Active Next Loops
 
-Next local loop: backend save persistence for artifact actions, then live LLM provider wiring when secrets/config are available. Production auth, live LLM keys, and deployment wiring stay gated until secrets/deploy target are explicitly available.
+Next local loop: live LLM provider configuration harness and secret-gated smoke path, then staging PostgreSQL/pgvector/auth smoke when deployment secrets are available. Production auth, live LLM keys, and deployment wiring stay gated until secrets/deploy target are explicitly available.
 
 ## 7. Completed Loop Details
 
@@ -662,6 +663,28 @@ Implemented:
 - `scripts/verify-playwright-evidence.ts`
 - `docs/superpowers/plans/2026-05-28-saved-artifacts-in-graph-timeline.md`
 
+### L29 — Saved Artifact Persistence Through Capture API
+
+Goal: persist saved Ask, Decision Replay, and Weekly Report artifacts through the local private backend path as user-scoped memories.
+
+Acceptance:
+
+- `/api/capture` accepts either fast diary capture input or `{ artifact }` saved artifact payloads
+- saved artifacts are stored via `saveArtifactAsMemoryRecord`
+- local HTTP transport keeps saved artifacts inside the private vault session owner
+- web save buttons include a saved artifact manifest and POST to `/api/capture` when served over HTTP
+- static file previews retain the local saved state without requiring a server
+
+Implemented:
+
+- `src/lib/personalMemoryApi.ts`
+- `src/lib/personalMemoryApi.test.ts`
+- `src/lib/localHttpTransport.test.ts`
+- `src/App.tsx`
+- `src/lib/appShellEvidenceLayout.test.ts`
+- `scripts/verify-playwright-evidence.ts`
+- `docs/superpowers/plans/2026-05-28-saved-artifact-persistence.md`
+
 ## 8. MVP Time Estimate
 
 Assuming focused local development without major dependency or deployment blockers:
@@ -675,9 +698,9 @@ Assuming focused local development without major dependency or deployment blocke
 
 Critical path for the next "나를 아는 AI" jump:
 
-1. Persist saved artifact actions through the local API/backend path.
-2. Wire a live LLM provider through the citation-guarded adapter when secrets/config are available.
-3. Run staging PostgreSQL/pgvector/auth smoke against a chosen deployment target.
+1. Wire a live LLM provider through the citation-guarded adapter when secrets/config are available.
+2. Run staging PostgreSQL/pgvector/auth smoke against a chosen deployment target.
+3. Add feedback/correction memory so the agent learns from user edits.
 
 ## 9. Product Quality Rules
 

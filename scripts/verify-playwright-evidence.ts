@@ -74,6 +74,10 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   assert((await attribute(page, '#memory-graph-cytoscape', 'data-cytoscape-node-count')) === '44', 'Expected Cytoscape node count to match graph payload');
   assert((await attribute(page, '#memory-graph-cytoscape', 'data-cytoscape-edge-count')) === '56', 'Expected Cytoscape edge count to match graph payload');
   assert((await page.locator('#memory-graph-cytoscape canvas').count()) > 0, 'Expected Cytoscape to render a canvas');
+  assert((await page.locator('#saved-artifact-actions').count()) === 1, 'Expected saved artifact payload manifest');
+  const savedArtifactManifest = await page.locator('#saved-artifact-actions').textContent();
+  assert(savedArtifactManifest?.includes('"endpoint":"/api/capture"'), 'Expected saved artifact manifest to target capture API');
+  assert(savedArtifactManifest?.includes('"artifact":{"id":"artifact_'), 'Expected saved artifact manifest to include full artifact payloads');
   assert((await attribute(page, '[data-save-artifact-action="ask_answer"]', 'data-artifact-save-state')) === 'ready', 'Expected Ask saved artifact action to start ready');
   assert((await attribute(page, '[data-save-artifact-action="weekly_report"]', 'data-artifact-save-endpoint')) === '/api/capture', 'Expected saved artifact action to expose capture endpoint');
   assert((await attribute(page, '[data-memory-timeline-panel="pmi025"]', 'data-timeline-entry-count')) === '8', 'Expected timeline panel to render eight private memories');
@@ -217,6 +221,7 @@ try {
           'cytoscape data graph ready',
           'data-derived graph stats',
           'saved artifact action',
+          'saved artifact persistence manifest',
           'spacing click',
           'label toggle',
           'filter toggle',

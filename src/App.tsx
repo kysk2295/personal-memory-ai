@@ -1361,6 +1361,20 @@ function renderMemoryGraphPayload(graph: MemoryGraphModel): string {
   return `<script type="application/json" id="memory-graph-elements">${escapeJsonScript(JSON.stringify(graph))}</script>`;
 }
 
+function renderSavedArtifactPayload(layout: ReturnType<typeof buildInitialAppShellEvidenceLayout>): string {
+  const payload = {
+    actions: layout.savedArtifactActions.map((action) => ({
+      id: action.id,
+      kind: action.kind,
+      endpoint: action.endpoint,
+      method: action.method,
+      futureMemoryId: action.futureMemoryId,
+      artifact: action.artifact,
+    })),
+  };
+  return `<script type="application/json" id="saved-artifact-actions">${escapeJsonScript(JSON.stringify(payload))}</script>`;
+}
+
 export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
   const layout = buildInitialAppShellEvidenceLayout();
   const memoryGraph = buildMemoryGraphModel(layout.records);
@@ -1491,6 +1505,7 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
         <div class="graph-stage">
           <div id="memory-graph-cytoscape" class="cytoscape-memory-graph" data-graph-library="cytoscape" data-memory-node-count="${memoryNodeCount}" data-graph-node-count="${graphNodeCount}" data-graph-edge-count="${graphEdgeCount}" aria-label="Cytoscape data-driven personal memory graph"></div>
           ${renderMemoryGraphPayload(memoryGraph)}
+          ${renderSavedArtifactPayload(layout)}
           ${variant === 'no-svg' ? '' : renderMemoryGraph(layout)}
           <aside class="wiki-compiler-strip" aria-label="LLM Wiki compiler preview" data-wiki-compiler="pmi017">
             <span><strong>${layout.compiledWiki.atomCount}</strong> canonical memory atoms</span>
@@ -1562,6 +1577,7 @@ const GRAPH_CONTROL_SCRIPT = `
   const saveArtifactButtons = Array.from(document.querySelectorAll('[data-control="save-artifact"]'));
   const cytoscapeMount = document.querySelector('[data-graph-library="cytoscape"]');
   const graphPayloadScript = document.querySelector('#memory-graph-elements');
+  const savedArtifactPayloadScript = document.querySelector('#saved-artifact-actions');
   let cytoscapeGraph = null;
   let layoutVersion = Number(shell.getAttribute('data-layout-version') || '0');
 
@@ -1576,6 +1592,18 @@ const GRAPH_CONTROL_SCRIPT = `
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#39;');
+
+  const savedArtifactPayload = (() => {
+    try {
+      return JSON.parse(savedArtifactPayloadScript?.textContent || '{"actions":[]}');
+    } catch {
+      return { actions: [] };
+    }
+  })();
+
+  const savedArtifactsById = new Map(
+    (savedArtifactPayload.actions || []).map((action) => [action.artifact?.id, action]),
+  );
 
   const findMemoryNodeByCitation = (citation) =>
     memoryNodes.find((item) => item.getAttribute('data-inspector-citation') === citation);
@@ -1863,14 +1891,38 @@ const GRAPH_CONTROL_SCRIPT = `
   });
 
   saveArtifactButtons.forEach((button) => {
-    button.addEventListener('click', () => {
+    button.addEventListener('click', async () => {
       const artifactId = button.getAttribute('data-artifact-id') || '';
       const futureMemoryId = button.getAttribute('data-future-memory-id') || '';
       const savedLabel = button.getAttribute('data-artifact-saved-label') || 'Saved';
+      const endpoint = button.getAttribute('data-artifact-save-endpoint') || '';
+      const method = button.getAttribute('data-artifact-save-method') || 'POST';
+      const action = savedArtifactsById.get(artifactId);
+      const shouldPersist = Boolean(action?.artifact && endpoint && window.location.protocol !== 'file:');
+      button.setAttribute('data-artifact-save-state', shouldPersist ? 'saving' : 'saved');
+      if (shouldPersist) {
+        try {
+          const response = await fetch(endpoint, {
+            method,
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ artifact: action.artifact }),
+          });
+          if (!response.ok) throw new Error('artifact save failed with ' + response.status);
+          const body = await response.json().catch(() => ({}));
+          const savedMemoryId = body?.createdMemoryIds?.[0] || body?.record?.id || futureMemoryId;
+          shell.setAttribute('data-last-saved-memory', savedMemoryId);
+        } catch (error) {
+          button.setAttribute('data-artifact-save-state', 'error');
+          shell.setAttribute('data-artifact-save-error', String(error?.message || error));
+          setInteractionState('artifact-save-error');
+          return;
+        }
+      } else {
+        shell.setAttribute('data-last-saved-memory', futureMemoryId);
+      }
       button.setAttribute('data-artifact-save-state', 'saved');
       button.textContent = savedLabel;
       shell.setAttribute('data-last-saved-artifact', artifactId);
-      shell.setAttribute('data-last-saved-memory', futureMemoryId);
       setInteractionState('artifact-saved');
     });
   });
