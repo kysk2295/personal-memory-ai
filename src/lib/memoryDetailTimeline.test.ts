@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { personalMemoryRecords } from './__fixtures__/personalMemoryRecords';
 import { buildMemoryDetailTimeline } from './memoryDetailTimeline';
+import { buildMemoryReviewLedgerEntry, buildMemoryReviewLedgerRecord } from './memoryReviewLedger';
 
 describe('buildMemoryDetailTimeline', () => {
   test('builds a newest-first private memory timeline with selected detail metadata', () => {
@@ -47,5 +48,40 @@ describe('buildMemoryDetailTimeline', () => {
       'mem_unrelated_calm_import',
     ]);
     expect(june?.relatedMemoryIds).not.toContain('mem_launch_june_anxiety_scope_delay');
+  });
+
+  test('projects review comparison metadata for source-backed edits', () => {
+    const edited = {
+      ...personalMemoryRecords[2],
+      summary: 'Edited source-backed freeze decision.',
+      rawText: 'Edited source text that keeps the same citation.',
+    };
+    const review = buildMemoryReviewLedgerEntry({
+      userId: 'user-a',
+      before: personalMemoryRecords[2],
+      after: edited,
+      reviewedAt: '2026-05-28T06:30:00.000Z',
+    });
+    const timeline = buildMemoryDetailTimeline(
+      [personalMemoryRecords[2], buildMemoryReviewLedgerRecord(review)],
+      'mem_freeze_vs_feature_addition',
+    );
+
+    expect(timeline.entries.find((entry) => entry.memoryId === 'mem_freeze_vs_feature_addition')).toEqual(
+      expect.objectContaining({
+        reviewComparisons: [
+          {
+            revisionId: review.id,
+            reviewedAt: '2026-05-28T06:30:00.000Z',
+            changedFieldLabels: ['summary', 'raw text'],
+            sourceRef: 'markdown://retros/freezing-vs-features.md',
+            beforeSummary:
+              'Anxiety creates a freeze-vs-feature-addition choice, and feature addition postpones launches.',
+            afterSummary: 'Edited source-backed freeze decision.',
+            deltaLabel: 'summary, raw text changed',
+          },
+        ],
+      }),
+    );
   });
 });

@@ -213,10 +213,11 @@ No remote push, main merge, production deploy, or secret access is allowed witho
 - L44: memory review history timeline.
 - L45: memory provenance export affordance.
 - L46: provenance export download wiring.
+- L47: review history comparison UX.
 
 ## 6. Active Next Loops
 
-Next local loop: run staging PostgreSQL/pgvector/auth smoke harness when deployment secrets are available, or continue the local private-vault polish path with richer review-history comparison UX. Live LLM keys, hosted identity configuration, and deployment wiring stay gated until secrets/deploy target are explicitly available.
+Next local loop: run staging PostgreSQL/pgvector/auth smoke harness when deployment secrets are available, or continue the local private-vault polish path with review-history comparison interaction polish. Live LLM keys, hosted identity configuration, and deployment wiring stay gated until secrets/deploy target are explicitly available.
 
 ## 7. Completed Loop Details
 
@@ -969,6 +970,24 @@ Implemented:
 - `src/lib/localHttpTransport.ts`
 - `src/components/MemoryDetailTimelinePanel.tsx`
 - `docs/superpowers/plans/2026-05-28-provenance-export-download-wiring.md`
+
+### L47 — Review History Comparison UX
+
+Goal: show memory review history as explicit before/after comparison cards so corrections remain auditable.
+
+Acceptance:
+
+- timeline entries expose deterministic review comparison projections
+- comparisons include revision id, reviewed date, changed field labels, source ref, before summary, after summary, and delta label
+- detail timeline panel renders changed-field chips and before/after slots
+- empty review history remains explicit
+- review ledger records remain excluded from normal memory timeline entries
+
+Implemented:
+
+- `src/lib/memoryDetailTimeline.ts`
+- `src/components/MemoryDetailTimelinePanel.tsx`
+- `docs/superpowers/plans/2026-05-28-review-history-comparison-ux.md`
 
 ## 8. MVP Time Estimate
 

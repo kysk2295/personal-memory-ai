@@ -16,9 +16,20 @@ export interface MemoryDetailTimelineEntry {
   facetLabels: string[];
   relatedMemoryIds: string[];
   reviewHistory: MemoryReviewLedgerEntry[];
+  reviewComparisons: MemoryReviewComparison[];
   reviewHistoryCount: number;
   latestReviewRevisionId?: string;
   active: boolean;
+}
+
+export interface MemoryReviewComparison {
+  revisionId: string;
+  reviewedAt: string;
+  changedFieldLabels: string[];
+  sourceRef: string;
+  beforeSummary: string;
+  afterSummary: string;
+  deltaLabel: string;
 }
 
 export interface MemoryDetailTimelineSummary {
@@ -83,6 +94,29 @@ function relatedMemoryIdsForRecord(record: MemoryRecord, records: readonly Memor
     .map((candidate) => candidate.id);
 }
 
+function reviewChangedFieldLabel(field: MemoryReviewLedgerEntry['changedFields'][number]): string {
+  if (field === 'rawText') return 'raw text';
+  if (field === 'observedAt') return 'observed date';
+  if (field === 'emotionTags') return 'emotion tags';
+  if (field === 'topicTags') return 'topic tags';
+  if (field === 'projectTags') return 'project tags';
+  if (field === 'peopleTags') return 'people tags';
+  return field;
+}
+
+function reviewComparisonForEntry(entry: MemoryReviewLedgerEntry): MemoryReviewComparison {
+  const changedFieldLabels = entry.changedFields.map(reviewChangedFieldLabel);
+  return {
+    revisionId: entry.id,
+    reviewedAt: entry.reviewedAt,
+    changedFieldLabels,
+    sourceRef: entry.sourceRef,
+    beforeSummary: entry.beforeSummary,
+    afterSummary: entry.afterSummary,
+    deltaLabel: changedFieldLabels.length ? `${changedFieldLabels.join(', ')} changed` : 'no field changes',
+  };
+}
+
 export function buildMemoryDetailTimeline(
   records: readonly MemoryRecord[],
   selectedMemoryId?: string,
@@ -100,6 +134,7 @@ export function buildMemoryDetailTimeline(
     },
     entries: orderedRecords.map((record) => {
       const reviewHistory = listMemoryReviewLedgerEntries(records, record.id);
+      const reviewComparisons = reviewHistory.map(reviewComparisonForEntry);
       return {
         memoryId: record.id,
         observedAt: recordDate(record),
@@ -111,6 +146,7 @@ export function buildMemoryDetailTimeline(
         facetLabels: facetLabelsForRecord(record),
         relatedMemoryIds: relatedMemoryIdsForRecord(record, memoryRecords),
         reviewHistory,
+        reviewComparisons,
         reviewHistoryCount: reviewHistory.length,
         latestReviewRevisionId: reviewHistory[0]?.id,
         active: record.id === selectedMemoryId,

@@ -29,17 +29,30 @@ function renderTimelineEntry(entry: MemoryDetailTimelineEntry): string {
 }
 
 function renderReviewHistory(entry: MemoryDetailTimelineEntry): string {
-  if (!entry.reviewHistory.length) {
+  if (!entry.reviewComparisons.length) {
     return '<div class="memory-review-history-empty" data-memory-review-history-state="empty">No review history yet</div>';
   }
 
   return `<ol class="memory-review-history-list" data-memory-review-history-state="ready">
-    ${entry.reviewHistory
+    ${entry.reviewComparisons
       .map(
-        (review) => `<li data-memory-review-history-entry="${escapeHtml(review.id)}">
-          <span>${escapeHtml(review.reviewedAt)}</span>
-          <strong>${escapeHtml(review.changedFields.length ? review.changedFields.join(', ') : 'no field changes')}</strong>
-          <p>${escapeHtml(review.beforeSummary)} → ${escapeHtml(review.afterSummary)}</p>
+        (comparison) => `<li data-memory-review-history-entry="${escapeHtml(
+          comparison.revisionId,
+        )}" data-memory-review-comparison="${escapeHtml(comparison.revisionId)}">
+          <span>${escapeHtml(comparison.reviewedAt)}</span>
+          <strong>${escapeHtml(comparison.deltaLabel)}</strong>
+          <div class="memory-review-field-list">
+            ${comparison.changedFieldLabels
+              .map((field) => `<span data-review-changed-field="${escapeHtml(field)}">${escapeHtml(field)}</span>`)
+              .join('')}
+          </div>
+          <p data-review-before-summary="${escapeHtml(comparison.beforeSummary)}">${escapeHtml(
+            comparison.beforeSummary,
+          )}</p>
+          <p data-review-after-summary="${escapeHtml(comparison.afterSummary)}">${escapeHtml(
+            comparison.afterSummary,
+          )}</p>
+          <code>${escapeHtml(comparison.sourceRef)}</code>
         </li>`,
       )
       .join('')}

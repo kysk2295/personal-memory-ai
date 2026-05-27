@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { renderAppShellDocument, renderAppShellHtml } from '../App';
+import { renderMemoryDetailTimelinePanel } from '../components/MemoryDetailTimelinePanel';
 import {
   buildAppShellEvidenceLayoutFromMemoryStore,
   buildInitialAppShellEvidenceLayout,
@@ -218,8 +219,21 @@ describe('buildInitialAppShellEvidenceLayout', () => {
         reviewHistoryCount: 1,
         latestReviewRevisionId: entry.id,
         reviewHistory: [entry],
+        reviewComparisons: [
+          expect.objectContaining({
+            revisionId: entry.id,
+            changedFieldLabels: ['summary'],
+            deltaLabel: 'summary changed',
+          }),
+        ],
       }),
     );
+
+    const html = renderMemoryDetailTimelinePanel(shell);
+    expect(html).toContain('data-memory-review-comparison=');
+    expect(html).toContain('data-review-before-summary=');
+    expect(html).toContain('data-review-after-summary=');
+    expect(html).toContain('data-review-changed-field=');
   });
 
   test('renders a benchmark-like second-brain graph workspace instead of a dashboard shell', () => {
