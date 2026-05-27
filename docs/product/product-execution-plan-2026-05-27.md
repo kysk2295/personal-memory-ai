@@ -117,8 +117,8 @@ Status values:
 | Privacy | Private-by-default scope | `done-foundation` | Data model and UI labels exist. |
 | Privacy | Export/delete local UX | `planned` | Store functions exist; user-facing flow incomplete. |
 | Privacy | Auth/private vault | `planned` | Required before multi-user beta. |
-| Backend/API | Capture/import endpoints | `planned` | Needed after local domain contracts. |
-| Backend/API | Ask/replay/report endpoints | `planned` | Needed before usable web/app integration. |
+| Backend/API | Capture/import endpoints | `done-foundation` | User-scoped API dispatcher handles capture, import preview, and import apply. |
+| Backend/API | Ask/replay/report endpoints | `done-foundation` | User-scoped API dispatcher handles ask, replay, weekly report, export, and delete boundaries. |
 | Backend/API | Staging readiness | `planned` | Must not leak secrets. |
 | Release | Visual evidence gates | `done-foundation` | Local screenshots exist; staging review still planned. |
 | Release | PR/release checklist | `planned` | Needed before remote/main workflow. |
@@ -151,21 +151,9 @@ No remote push, main merge, production deploy, or secret access is allowed witho
 - L8: weekly report product surface.
 - L9: semantic retrieval contract.
 - L10: citation-constrained generation guard.
+- L11: personal memory API boundary.
 
 ## 6. Active Next Loops
-
-### L11 — API Endpoints
-
-Goal: expose capture, import, ask, replay, report, export, and delete through user-scoped API boundaries.
-
-Acceptance:
-
-- no secrets logged
-- user id boundary is explicit
-- endpoints call existing domain services
-- tests cover success and insufficient evidence paths
-
-Estimated effort: 2-4 days.
 
 ### L12 — Privacy Export/Delete UX
 
@@ -332,6 +320,22 @@ Implemented:
 - `src/lib/citationConstrainedGeneration.ts`
 - `src/lib/citationConstrainedGeneration.test.ts`
 
+### L11 — Personal Memory API Boundary
+
+Goal: expose capture, import, ask, replay, report, export, and delete through user-scoped API boundaries.
+
+Acceptance:
+
+- no secrets are logged or returned
+- user id boundary is explicit
+- capture/import/ask/replay/report/export/delete call existing domain services
+- tests cover user-scoped success paths and cross-user non-leakage
+
+Implemented:
+
+- `src/lib/personalMemoryApi.ts`
+- `src/lib/personalMemoryApi.test.ts`
+
 ## 8. MVP Time Estimate
 
 Assuming focused local development without major dependency or deployment blockers:
@@ -345,8 +349,8 @@ Assuming focused local development without major dependency or deployment blocke
 
 Critical path for "나를 아는 AI" feeling:
 
-1. API endpoints.
-2. LLM provider adapter behind the citation guard.
+1. LLM provider adapter behind the citation guard.
+2. HTTP/server transport for the API boundary.
 3. PWA/app capture surface.
 4. Private vault/auth.
 
