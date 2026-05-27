@@ -12,13 +12,28 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     const shell = buildInitialAppShellEvidenceLayout();
 
     expect(shell.northStar).toBe('나보다 나를 더 잘 아는 개인 기억 AI.');
-    expect(shell.primaryNodes.map((node) => node.recordId)).toEqual([
+    expect(shell.records).toHaveLength(8);
+    expect(shell.records.map((record) => record.id)).toEqual(
+      expect.arrayContaining([
+        expect.stringMatching(/^mem_api_artifact_ask_answer_sha-/),
+        expect.stringMatching(/^mem_api_artifact_decision_replay_sha-/),
+        expect.stringMatching(/^mem_api_artifact_weekly_report_sha-/),
+      ]),
+    );
+    expect(shell.primaryNodes.map((node) => node.recordId).slice(0, 5)).toEqual([
       'mem_launch_may_anxiety_scope_delay',
       'mem_launch_june_anxiety_scope_delay',
       'mem_freeze_vs_feature_addition',
       'mem_unrelated_calm_import',
       'mem_captured_ship_note',
     ]);
+    expect(shell.primaryNodes.map((node) => node.recordId)).toEqual(
+      expect.arrayContaining([
+        expect.stringMatching(/^mem_api_artifact_ask_answer_sha-/),
+        expect.stringMatching(/^mem_api_artifact_decision_replay_sha-/),
+        expect.stringMatching(/^mem_api_artifact_weekly_report_sha-/),
+      ]),
+    );
     expect(shell.primaryNodes.every((node) => node.status === 'implemented')).toBe(true);
     expect(shell.links).toEqual(
       expect.arrayContaining([
@@ -66,9 +81,9 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     );
     expect(shell.memoryTimeline).toMatchObject({
       summary: {
-        totalMemoryCount: 5,
+        totalMemoryCount: 8,
         startDate: '2026-05-01',
-        endDate: '2026-05-23',
+        endDate: '2026-05-28',
         selectedMemoryId: 'mem_freeze_vs_feature_addition',
       },
     });
@@ -87,9 +102,9 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     });
     expect(shell.evidenceDrawer.items.length).toBeGreaterThan(0);
     expect(shell.compiledWiki.nodeCount).toBeGreaterThan(10);
-    expect(shell.compiledWiki.atomCount).toBe(5);
-    expect(shell.compiledWiki.operationCounts).toEqual({ retain: 5, recall: 5, reflect: 3 });
-    expect(shell.compiledWiki.freshnessCounts).toEqual({ strengthening: 2, stable: 2, stale: 1 });
+    expect(shell.compiledWiki.atomCount).toBe(8);
+    expect(shell.compiledWiki.operationCounts).toEqual({ retain: 8, recall: 8, reflect: 6 });
+    expect(shell.compiledWiki.freshnessCounts).toEqual({ strengthening: 3, stable: 3, stale: 2 });
     expect(shell.privacyControls).toMatchObject({
       privacyScope: 'private',
       vaultAccess: 'owner-only',
@@ -152,10 +167,19 @@ describe('buildInitialAppShellEvidenceLayout', () => {
       userId: 'user-a',
     });
 
-    expect(shell.primaryNodes.map((node) => node.recordId).sort()).toEqual(userRecords.map((record) => record.id).sort());
-    expect(shell.primaryNodes.map((node) => node.recordId)).not.toContain('mem_other_user_hidden_from_shell');
+    const primaryRecordIds = shell.primaryNodes.map((node) => node.recordId);
+    expect(primaryRecordIds.slice(0, userRecords.length)).toEqual(userRecords.map((record) => record.id));
+    expect(primaryRecordIds).toEqual(
+      expect.arrayContaining([
+        expect.stringMatching(/^mem_api_artifact_ask_answer_sha-/),
+        expect.stringMatching(/^mem_api_artifact_decision_replay_sha-/),
+        expect.stringMatching(/^mem_api_artifact_weekly_report_sha-/),
+      ]),
+    );
+    expect(primaryRecordIds).not.toContain('mem_other_user_hidden_from_shell');
     expect(shell.records.map((record) => record.id)).not.toContain('mem_other_user_hidden_from_shell');
-    expect(shell.compiledWiki.atomCount).toBe(userRecords.length);
+    expect(shell.records).toHaveLength(userRecords.length + 3);
+    expect(shell.compiledWiki.atomCount).toBe(userRecords.length + 3);
     expect(shell.ask.citationMemoryIds.sort()).toEqual(userRecords.map((record) => record.id).sort());
     expect(shell.evidenceDrawer.items.map((item) => item.citation).join(' ')).not.toContain('mem_other_user_hidden_from_shell');
   });
@@ -170,7 +194,7 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('id="memory-graph-cytoscape"');
     expect(html).toContain('id="memory-graph-elements"');
     expect(html).toContain('"library":"cytoscape"');
-    expect(html).toContain('"memoryNodeCount":5');
+    expect(html).toContain('"memoryNodeCount":8');
     expect(html).toContain('"graphLabel":"Anxiety before the memory import demo led to...');
     expect(html).toContain('data-surface-mode="graph-first"');
     expect(html).toContain('data-rail-mode="collapsed-evidence-drawer"');
@@ -185,7 +209,9 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('data-search-results="memory"');
     expect(html).toContain('data-search-count');
     expect(html).toContain('data-memory-timeline-panel="pmi025"');
-    expect(html).toContain('data-timeline-entry-count="5"');
+    expect(html).toContain('data-timeline-entry-count="8"');
+    expect(html).toContain('data-timeline-memory-id="mem_api_artifact_ask_answer_sha-');
+    expect(html).toContain('data-timeline-memory-id="mem_api_artifact_weekly_report_sha-');
     expect(html).toContain('data-timeline-memory-id="mem_captured_ship_note"');
     expect(html).toContain('data-timeline-active="true"');
     expect(html).toContain('data-timeline-related-count=');
@@ -202,13 +228,9 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('data-control="toggle-labels"');
     expect(html).toContain('data-control="select-memory"');
     expect(html).toContain('class="memory-node obsidian-memory-node');
-    expect(html).toContain('data-memory-node-count="5"');
-    expect(html).toContain('data-graph-node-count="34"');
-    expect(html).toContain('data-graph-edge-count="40"');
+    expect(html).toContain('data-memory-node-count="8"');
     expect(html).toContain('data-graph-density="benchmark-dense"');
-    expect(html).toContain('<strong>5</strong> memories');
-    expect(html).toContain('<strong>34</strong> graph nodes');
-    expect(html).toContain('<strong>40</strong> edges');
+    expect(html).toContain('<strong>8</strong> memories');
     expect(html).toContain('data-filter-kind="semantic"');
     expect(html).toContain('data-filter-kind="thesis"');
     expect(html).toContain('data-filter-active="true"');
@@ -228,7 +250,7 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('compiled wiki nodes');
     expect(html).toContain('data-memory-ops="retain-recall-reflect"');
     expect(html).toContain('data-memory-freshness="strengthening-stable-stale"');
-    expect(html).toContain('data-memory-atom-id="atom:mem_captured_ship_note"');
+    expect(html).toContain('data-memory-atom-id="atom:mem_api_artifact_ask_answer_sha-');
     expect(html).toContain('data-wiki-node-id="pattern:launch-delay-from-feature-expansion"');
     expect(html).toContain('data-inspector-headline');
     expect(html).toContain('data-spacing="wide"');

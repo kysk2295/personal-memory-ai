@@ -68,15 +68,19 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   await page.locator('[data-graph-library="cytoscape"][data-cytoscape-ready="true"]').waitFor({ timeout: 10_000 });
 
   assert((await attribute(page, '.second-brain-shell', 'data-graph-renderer')) === 'cytoscape', 'Expected Cytoscape renderer to become active');
-  assert((await attribute(page, '.second-brain-shell', 'data-memory-node-count')) === '5', 'Expected data-derived memory count marker');
-  assert((await attribute(page, '.second-brain-shell', 'data-graph-node-count')) === '34', 'Expected data-derived graph node count marker');
-  assert((await attribute(page, '.second-brain-shell', 'data-graph-edge-count')) === '40', 'Expected data-derived graph edge count marker');
-  assert((await attribute(page, '#memory-graph-cytoscape', 'data-cytoscape-node-count')) === '34', 'Expected Cytoscape node count to match graph payload');
-  assert((await attribute(page, '#memory-graph-cytoscape', 'data-cytoscape-edge-count')) === '40', 'Expected Cytoscape edge count to match graph payload');
+  assert((await attribute(page, '.second-brain-shell', 'data-memory-node-count')) === '8', 'Expected data-derived memory count marker');
+  assert((await attribute(page, '.second-brain-shell', 'data-graph-node-count')) === '44', 'Expected data-derived graph node count marker');
+  assert((await attribute(page, '.second-brain-shell', 'data-graph-edge-count')) === '56', 'Expected data-derived graph edge count marker');
+  assert((await attribute(page, '#memory-graph-cytoscape', 'data-cytoscape-node-count')) === '44', 'Expected Cytoscape node count to match graph payload');
+  assert((await attribute(page, '#memory-graph-cytoscape', 'data-cytoscape-edge-count')) === '56', 'Expected Cytoscape edge count to match graph payload');
   assert((await page.locator('#memory-graph-cytoscape canvas').count()) > 0, 'Expected Cytoscape to render a canvas');
   assert((await attribute(page, '[data-save-artifact-action="ask_answer"]', 'data-artifact-save-state')) === 'ready', 'Expected Ask saved artifact action to start ready');
   assert((await attribute(page, '[data-save-artifact-action="weekly_report"]', 'data-artifact-save-endpoint')) === '/api/capture', 'Expected saved artifact action to expose capture endpoint');
-  assert((await attribute(page, '[data-memory-timeline-panel="pmi025"]', 'data-timeline-entry-count')) === '5', 'Expected timeline panel to render five private memories');
+  assert((await attribute(page, '[data-memory-timeline-panel="pmi025"]', 'data-timeline-entry-count')) === '8', 'Expected timeline panel to render eight private memories');
+  assert(
+    (await page.locator('[data-timeline-memory-id^="mem_api_artifact_"]').count()) === 3,
+    'Expected saved artifacts to render as timeline memories',
+  );
   assert(
     (await attribute(page, '[data-timeline-memory-id="mem_freeze_vs_feature_addition"]', 'data-timeline-active')) === 'true',
     'Expected default selected memory to be active in the timeline',
@@ -86,9 +90,9 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
     const graph = (window as any).__personalMemoryGraph;
     return graph?.stats;
   });
-  assert(graphStats?.memoryNodeCount === 5, 'Expected browser graph stats to include five real memory nodes');
-  assert(graphStats?.graphNodeCount === 34, 'Expected browser graph stats to include data-derived graph nodes');
-  assert(graphStats?.edgeCount === 40, 'Expected browser graph stats to include data-derived graph edges');
+  assert(graphStats?.memoryNodeCount === 8, 'Expected browser graph stats to include eight real memory nodes');
+  assert(graphStats?.graphNodeCount === 44, 'Expected browser graph stats to include data-derived graph nodes');
+  assert(graphStats?.edgeCount === 56, 'Expected browser graph stats to include data-derived graph edges');
   await page.waitForFunction(() => {
     const graph = document.querySelector('#memory-graph-cytoscape');
     const fallback = document.querySelector('.graph-workspace');
@@ -118,7 +122,7 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
     const graph = (window as any).__personalMemoryGraph;
     return graph?.cy?.nodes('.labels-hidden').length ?? 0;
   });
-  assert(cytoscapeHiddenLabelCount === 34, 'Label toggle should hide Cytoscape node labels');
+  assert(cytoscapeHiddenLabelCount === 44, 'Label toggle should hide Cytoscape node labels');
 
   const firstCitation = await clickableCytoscapeMemoryCitation(page);
   await clickCytoscapeNode(page, `memory:${firstCitation}`);
@@ -155,12 +159,12 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   await page.locator('[data-control="memory-search"]').fill('calm');
   assert((await attribute(page, '.second-brain-shell', 'data-search-query')) === 'calm', 'Search input should expose normalized query');
   assert((await attribute(page, '[data-search-count]', 'data-search-count-value')) === '1', 'Search should narrow to one matching memory');
-  assert((await page.locator('[data-control="select-memory"][data-search-match="false"]').count()) === 4, 'Search should dim unmatched memory nodes');
+  assert((await page.locator('[data-control="select-memory"][data-search-match="false"]').count()) === 7, 'Search should dim unmatched memory nodes');
   const cytoscapeDimmedCount = await page.evaluate(() => {
     const graph = (window as any).__personalMemoryGraph;
     return graph?.cy?.nodes('.search-dimmed').length ?? 0;
   });
-  assert(cytoscapeDimmedCount === 4, 'Search should dim unmatched Cytoscape memory nodes');
+  assert(cytoscapeDimmedCount === 7, 'Search should dim unmatched Cytoscape memory nodes');
 
   await page.locator('[data-search-citation="mem_unrelated_calm_import"]').click();
   assert(

@@ -10,6 +10,7 @@ import type { MemoryStore } from './memoryStore';
 import { detectRepeatedPatterns, type PatternDetectionStatus } from './patternDetector';
 import { buildPrivacyControlState, type PrivacyControlState } from './privacyControls';
 import { buildSavedArtifactActions, type SavedArtifactAction } from './savedArtifactActions';
+import { savedArtifactToMemoryRecord } from './savedMemoryArtifact';
 import { generateWeeklyReport, type WeeklyReport } from './weeklyReport';
 
 export type ShellLinkKind = 'emotion' | 'project' | 'decision' | 'outcome' | 'source';
@@ -153,11 +154,12 @@ function buildRecordLinks(records: readonly MemoryRecord[]): ShellLink[] {
 }
 
 export function buildAppShellEvidenceLayoutFromRecords(records: readonly MemoryRecord[]): InitialAppShellEvidenceLayout {
+  const baseRecords = [...records];
   const patterns = detectRepeatedPatterns(records);
   const askQuestion = '이번에도 기능을 더 넣어야 할까?';
   const ask = askMyPastSelf({
     question: askQuestion,
-    memories: records,
+    memories: baseRecords,
     patterns: patterns.patterns,
   });
   const replay = replayDecision({
@@ -168,12 +170,11 @@ export function buildAppShellEvidenceLayoutFromRecords(records: readonly MemoryR
       choices: ['add polish', 'freeze for review'],
       topicTags: ['launch', 'feature addition', 'Decision Replay'],
     },
-    memories: records,
+    memories: baseRecords,
     patterns: patterns.patterns,
   });
-  const compiledWiki = compileMemoryRecordsToWikiGraph(records);
   const weeklyReport = generateWeeklyReport({
-    records,
+    records: baseRecords,
     startDate: '2026-05-01',
     endDate: '2026-05-20',
     generatedAt: '2026-05-27T11:00:00.000Z',
@@ -184,7 +185,7 @@ export function buildAppShellEvidenceLayoutFromRecords(records: readonly MemoryR
       text: askQuestion,
       createdAt: '2026-05-26T10:00:00.000Z',
     },
-    memories: records,
+    memories: baseRecords,
     askAnswer: ask,
     patterns: patterns.patterns,
     replay,
@@ -192,7 +193,7 @@ export function buildAppShellEvidenceLayoutFromRecords(records: readonly MemoryR
   const importPreview = buildImportPreview({
     batchId: 'first-screen-import-preview',
     createdAt: '2026-05-26T09:00:00.000Z',
-    existingRecords: records,
+    existingRecords: baseRecords,
     candidates: [
       {
         sourceType: 'notion',
@@ -217,13 +218,6 @@ export function buildAppShellEvidenceLayoutFromRecords(records: readonly MemoryR
       },
     ],
   });
-  const privacyControls = buildPrivacyControlState({
-    userId: 'local-user',
-    records,
-    selectedMemoryIds: ['mem_freeze_vs_feature_addition'],
-    generatedAt: '2026-05-27T14:00:00.000Z',
-  });
-  const memoryTimeline = buildMemoryDetailTimeline(records, 'mem_freeze_vs_feature_addition');
   const savedArtifactActions = buildSavedArtifactActions({
     askQuestion,
     ask,
@@ -231,13 +225,23 @@ export function buildAppShellEvidenceLayoutFromRecords(records: readonly MemoryR
     weeklyReport,
     createdAt: '2026-05-28T00:00:00.000Z',
   });
+  const savedArtifactRecords = savedArtifactActions.map((action) => savedArtifactToMemoryRecord(action.artifact));
+  const displayRecords = [...baseRecords, ...savedArtifactRecords];
+  const compiledWiki = compileMemoryRecordsToWikiGraph(displayRecords);
+  const privacyControls = buildPrivacyControlState({
+    userId: 'local-user',
+    records: displayRecords,
+    selectedMemoryIds: ['mem_freeze_vs_feature_addition'],
+    generatedAt: '2026-05-27T14:00:00.000Z',
+  });
+  const memoryTimeline = buildMemoryDetailTimeline(displayRecords, 'mem_freeze_vs_feature_addition');
 
   return {
     northStar: '나보다 나를 더 잘 아는 개인 기억 AI.',
     askQuestion,
-    records: [...records],
-    primaryNodes: buildPrimaryNodes(records),
-    links: buildRecordLinks(records),
+    records: displayRecords,
+    primaryNodes: buildPrimaryNodes(displayRecords),
+    links: buildRecordLinks(displayRecords),
     surfaces: [
       {
         id: 'seed-memory-fixtures',

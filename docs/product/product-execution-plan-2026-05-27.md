@@ -2,7 +2,7 @@
 
 Status: active local execution plan  
 Owner: Ko Yunseo  
-Updated: 2026-05-28, saved artifact UI actions pass
+Updated: 2026-05-28, saved artifacts in graph/timeline pass
 Supersedes for local Codex work: `docs/product/product-master-plan-2026-05-26.md`
 
 ## 1. Product Definition
@@ -115,20 +115,20 @@ Status values:
 | Knowledge Layer | LLM Wiki compiler | `done-foundation` | Local compiler turns `MemoryRecord`s into canonical memory atoms plus source/concept/decision/pattern nodes with citations, freshness, and retain/recall/reflect markers. |
 | Knowledge Layer | Typed edge ledger | `done-foundation` | `memoryKnowledgeLedger` emits typed, confidence-weighted edges for citations, facets, sources, outcomes, and compiled patterns with stale-edge checks. |
 | Knowledge Layer | Raw archive and checkpoint loop | `done-foundation` | Immutable raw diary/import archive entries, canonical thoughts, and an atomize/dedup/apply checkpoint exist as a deterministic local ledger. |
-| Web | Graph-first second brain | `prototype-ui` | `MemoryRecord` data now builds a Cytoscape graph with 5 memory nodes, 34 total graph nodes, and 40 data-derived edges; fallback SVG is hidden after the graph library is ready. |
+| Web | Graph-first second brain | `prototype-ui` | `MemoryRecord` data now builds a Cytoscape graph with 8 memory nodes, 44 total graph nodes, and 56 data-derived edges, including saved artifact memories; fallback SVG is hidden after the graph library is ready. |
 | Web | Evidence drawer | `prototype-ui` | Source/date/raw excerpt/why-connected visible. |
 | Web | Individual memory detail page | `prototype-ui` | Selected-memory inspector and timeline detail surface expose source/date/raw excerpts; full review/edit route remains planned. |
-| Web | Search/timeline views | `prototype-ui` | Sidebar search filters nodes and timeline entries show dated private memories with active selection sync. |
+| Web | Search/timeline views | `prototype-ui` | Sidebar search filters nodes and timeline entries show dated private memories, including saved Ask/Decision/Weekly artifacts, with active selection sync. |
 | Web | Memory search/detail inspector | `prototype-ui` | Search input dims unmatched nodes, result click selects inspector detail and citation chip. |
 | Ask | Ask My Past Self deterministic contract | `done-foundation` | Citation/insufficient evidence tested. |
 | Ask | LLM answer generation | `done-foundation` | Provider adapter routes outputs through the citation guard; live provider config/secrets still planned. |
-| Ask | Saved advice artifacts | `prototype-ui` | Ask answers can become private saved artifacts and future `MemoryRecord`s; the web surface exposes a Save answer action. |
+| Ask | Saved advice artifacts | `prototype-ui` | Ask answers can become private saved artifacts and future `MemoryRecord`s; Save answer now feeds the graph/timeline display model. |
 | Ask | Follow-up conversation | `planned` | Requires session/report memory. |
 | Decision | Decision Replay deterministic contract | `done-foundation` | Past outcome citations tested. |
-| Decision | Decision result save-back | `prototype-ui` | Decision replay results can become private saved artifacts and future decision memories; the web surface exposes a Save replay action. |
+| Decision | Decision result save-back | `prototype-ui` | Decision replay results can become private saved artifacts and future decision memories; Save replay now feeds the graph/timeline display model. |
 | Reports | Weekly Pattern Report foundation | `done-foundation` | Weekly report panel and pattern citation panel are visible in the web surface. |
 | Reports | Weekly report engine | `done-foundation` | Date-window report generation aggregates emotions, decisions, outcomes, projects, and pattern citations. |
-| Reports | Saved weekly/monthly reports | `prototype-ui` | Weekly reports can become saved artifacts and future pattern memories; the web surface exposes a Save report action. |
+| Reports | Saved weekly/monthly reports | `prototype-ui` | Weekly reports can become saved artifacts and future pattern memories; Save report now feeds the graph/timeline display model. |
 | Reports | Scheduler/reminders | `planned` | After report engine and app/PWA capture. |
 | Agent | Personal Memory Agent orchestrator | `done-foundation` | Loads user-scoped retrieved memories and returns ask/replay/graph evidence with retrieval metadata. |
 | Agent | Semantic retrieval/reranking | `done-foundation` | Deterministic retrieval contract ranks user-scoped memories; pgvector path remains a backend task. |
@@ -194,10 +194,11 @@ No remote push, main merge, production deploy, or secret access is allowed witho
 - L25: memory detail timeline surface.
 - L26: agent retrieval query bridge.
 - L27: saved artifact UI actions.
+- L28: saved artifacts in graph/timeline.
 
 ## 6. Active Next Loops
 
-Next local loop: saved artifacts in graph/timeline, then live LLM provider wiring when secrets/config are available. Production auth, live LLM keys, and deployment wiring stay gated until secrets/deploy target are explicitly available.
+Next local loop: backend save persistence for artifact actions, then live LLM provider wiring when secrets/config are available. Production auth, live LLM keys, and deployment wiring stay gated until secrets/deploy target are explicitly available.
 
 ## 7. Completed Loop Details
 
@@ -643,6 +644,24 @@ Implemented:
 - `scripts/verify-playwright-evidence.ts`
 - `docs/superpowers/plans/2026-05-28-saved-artifact-ui-actions.md`
 
+### L28 — Saved Artifacts in Graph/Timeline
+
+Goal: make saved Ask, Decision Replay, and Weekly Report outputs appear as private future memories in the second-brain graph and timeline.
+
+Acceptance:
+
+- app shell keeps Ask/Replay/Weekly reasoning grounded in original diary/import memories to avoid circular self-citation
+- saved artifact actions are converted into `MemoryRecord`s for display
+- graph, primary nodes, compiled wiki, privacy controls, and memory timeline use the augmented 8-memory display model
+- Cytoscape and Playwright evidence verify 8 memory nodes, 44 graph nodes, 56 edges, and 8 timeline entries
+
+Implemented:
+
+- `src/lib/appShellEvidenceLayout.ts`
+- `src/lib/appShellEvidenceLayout.test.ts`
+- `scripts/verify-playwright-evidence.ts`
+- `docs/superpowers/plans/2026-05-28-saved-artifacts-in-graph-timeline.md`
+
 ## 8. MVP Time Estimate
 
 Assuming focused local development without major dependency or deployment blockers:
@@ -656,7 +675,7 @@ Assuming focused local development without major dependency or deployment blocke
 
 Critical path for the next "나를 아는 AI" jump:
 
-1. Show saved artifacts in the graph/timeline.
+1. Persist saved artifact actions through the local API/backend path.
 2. Wire a live LLM provider through the citation-guarded adapter when secrets/config are available.
 3. Run staging PostgreSQL/pgvector/auth smoke against a chosen deployment target.
 
