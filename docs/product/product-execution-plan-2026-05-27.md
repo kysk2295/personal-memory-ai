@@ -11,6 +11,21 @@ Personal Memory AI is a private memory system that turns diary entries, imported
 
 The product is not a public shared-memory network. "Sharing memory" means a new diary entry and relevant past memories are shown together inside one user's private context.
 
+### Reference Architecture Assumptions
+
+This plan treats LLM Wiki and Career Hacker Alex's Second Brain Architecture as product architecture references, not just visual references.
+
+Architecture concepts to keep:
+
+- canonical memory atoms/thoughts with stable claims, source citations, confidentiality, freshness, and meaning version
+- immutable raw source archive before atomization
+- reversible atomize/dedup/checkpoint/apply ingestion loop
+- append-only typed edge ledger separate from frontmatter
+- vector search and graph traversal kept as different retrieval axes
+- multi-axis retrieval router: semantic, keyword, graph, and temporal signals
+- citation/refusal gates before any answer reaches the user
+- private corpus boundary by default, with explicit export/delete and no public sharing assumption
+
 ## 2. Product Surfaces
 
 ### App Capture
@@ -97,6 +112,9 @@ Status values:
 | Memory Store | Fixture user isolation | `done-foundation` | Tests cover user-scoped records. |
 | Memory Store | PostgreSQL repository | `done-foundation` | Code exists; staging smoke still planned. |
 | Memory Store | pgvector semantic search | `done-foundation` | Store method plus redacted staging smoke contract exist; live staging execution remains gated on secrets/deploy target. |
+| Knowledge Layer | LLM Wiki compiler | `done-foundation` | Local compiler turns `MemoryRecord`s into canonical memory atoms plus source/concept/decision/pattern nodes with citations, freshness, and retain/recall/reflect markers. |
+| Knowledge Layer | Typed edge ledger | `planned` | Move beyond generated UI edges into append-only, typed, confidence-weighted knowledge edges with stale-edge checks. |
+| Knowledge Layer | Raw archive and checkpoint loop | `planned` | Preserve immutable raw diary/import text, then atomize, dedupe, review, and apply changes as reversible memory operations. |
 | Web | Graph-first second brain | `prototype-ui` | `MemoryRecord` data now builds a Cytoscape graph with 5 memory nodes, 34 total graph nodes, and 40 data-derived edges; fallback SVG is hidden after the graph library is ready. |
 | Web | Evidence drawer | `prototype-ui` | Source/date/raw excerpt/why-connected visible. |
 | Web | Individual memory detail page | `planned` | Selected-memory detail inspector exists; full review/edit page remains planned. |
@@ -113,6 +131,7 @@ Status values:
 | Reports | Scheduler/reminders | `planned` | After report engine and app/PWA capture. |
 | Agent | Personal Memory Agent orchestrator | `done-foundation` | Loads store records and returns ask/replay/graph evidence. |
 | Agent | Semantic retrieval/reranking | `done-foundation` | Deterministic retrieval contract ranks user-scoped memories; pgvector path remains a backend task. |
+| Agent | Multi-axis retrieval router | `planned` | Add TEMPR-like routing that fuses semantic, keyword, graph, and temporal axes before citation-constrained generation. |
 | Agent | Citation-constrained generation guard | `done-foundation` | LLM-shaped outputs are rejected unless grounded in supplied citation ids. |
 | Agent | LLM provider adapter | `done-foundation` | Provider-agnostic adapter wraps model outputs in the citation guard before advice can surface. |
 | Agent | User feedback learning loop | `planned` | Needed for agent personalization. |
@@ -168,7 +187,7 @@ No remote push, main merge, production deploy, or secret access is allowed witho
 
 ## 6. Active Next Loops
 
-Next local loop: timeline/detail review pages or saved advice/report artifacts. Production auth, live LLM keys, and deployment wiring stay gated until secrets/deploy target are explicitly available.
+Next local loop: architecture alignment for canonical atoms and typed edges, then timeline/detail review pages or saved advice/report artifacts. Production auth, live LLM keys, and deployment wiring stay gated until secrets/deploy target are explicitly available.
 
 ## 7. Completed Loop Details
 
@@ -484,10 +503,12 @@ Assuming focused local development without major dependency or deployment blocke
 
 Critical path for the next "나를 아는 AI" jump:
 
-1. Persist saved advice/report artifacts so useful answers become future memory.
-2. Add memory detail/search views so the second brain is inspectable like a real vault.
-3. Wire a live LLM provider through the citation-guarded adapter when secrets/config are available.
-4. Run staging PostgreSQL/pgvector/auth smoke against a chosen deployment target.
+1. Promote the current LLM Wiki compiler into a durable canonical atom schema and typed edge ledger.
+2. Add multi-axis retrieval: semantic, keyword, graph traversal, and temporal freshness.
+3. Persist saved advice/report artifacts so useful answers become future memory.
+4. Add memory detail/search views so the second brain is inspectable like a real vault.
+5. Wire a live LLM provider through the citation-guarded adapter when secrets/config are available.
+6. Run staging PostgreSQL/pgvector/auth smoke against a chosen deployment target.
 
 ## 9. Product Quality Rules
 
