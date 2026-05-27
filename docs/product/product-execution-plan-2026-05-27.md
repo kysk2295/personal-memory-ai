@@ -2,7 +2,7 @@
 
 Status: active local execution plan  
 Owner: Ko Yunseo  
-Updated: 2026-05-27, agent retrieval query bridge pass
+Updated: 2026-05-28, saved artifact UI actions pass
 Supersedes for local Codex work: `docs/product/product-master-plan-2026-05-26.md`
 
 ## 1. Product Definition
@@ -122,13 +122,13 @@ Status values:
 | Web | Memory search/detail inspector | `prototype-ui` | Search input dims unmatched nodes, result click selects inspector detail and citation chip. |
 | Ask | Ask My Past Self deterministic contract | `done-foundation` | Citation/insufficient evidence tested. |
 | Ask | LLM answer generation | `done-foundation` | Provider adapter routes outputs through the citation guard; live provider config/secrets still planned. |
-| Ask | Saved advice artifacts | `done-foundation` | Ask answers can become private saved artifacts and future `MemoryRecord`s with citations and graph highlights. |
+| Ask | Saved advice artifacts | `prototype-ui` | Ask answers can become private saved artifacts and future `MemoryRecord`s; the web surface exposes a Save answer action. |
 | Ask | Follow-up conversation | `planned` | Requires session/report memory. |
 | Decision | Decision Replay deterministic contract | `done-foundation` | Past outcome citations tested. |
-| Decision | Decision result save-back | `done-foundation` | Decision replay results can become private saved artifacts and future decision memories; interactive UI save action remains planned. |
+| Decision | Decision result save-back | `prototype-ui` | Decision replay results can become private saved artifacts and future decision memories; the web surface exposes a Save replay action. |
 | Reports | Weekly Pattern Report foundation | `done-foundation` | Weekly report panel and pattern citation panel are visible in the web surface. |
 | Reports | Weekly report engine | `done-foundation` | Date-window report generation aggregates emotions, decisions, outcomes, projects, and pattern citations. |
-| Reports | Saved weekly/monthly reports | `done-foundation` | Weekly reports can become saved artifacts and future pattern memories; monthly report UI remains later. |
+| Reports | Saved weekly/monthly reports | `prototype-ui` | Weekly reports can become saved artifacts and future pattern memories; the web surface exposes a Save report action. |
 | Reports | Scheduler/reminders | `planned` | After report engine and app/PWA capture. |
 | Agent | Personal Memory Agent orchestrator | `done-foundation` | Loads user-scoped retrieved memories and returns ask/replay/graph evidence with retrieval metadata. |
 | Agent | Semantic retrieval/reranking | `done-foundation` | Deterministic retrieval contract ranks user-scoped memories; pgvector path remains a backend task. |
@@ -193,10 +193,11 @@ No remote push, main merge, production deploy, or secret access is allowed witho
 - L24: saved advice/report memory artifacts.
 - L25: memory detail timeline surface.
 - L26: agent retrieval query bridge.
+- L27: saved artifact UI actions.
 
 ## 6. Active Next Loops
 
-Next local loop: UI save actions for advice/report artifacts, then saved artifacts in graph/timeline. Production auth, live LLM keys, and deployment wiring stay gated until secrets/deploy target are explicitly available.
+Next local loop: saved artifacts in graph/timeline, then live LLM provider wiring when secrets/config are available. Production auth, live LLM keys, and deployment wiring stay gated until secrets/deploy target are explicitly available.
 
 ## 7. Completed Loop Details
 
@@ -619,6 +620,29 @@ Implemented:
 - `src/lib/personalMemoryAgent.test.ts`
 - `docs/superpowers/plans/2026-05-27-agent-retrieval-query-bridge.md`
 
+### L27 — Saved Artifact UI Actions
+
+Goal: expose save actions for cited Ask, Decision Replay, and Weekly Report artifacts in the web second-brain surface.
+
+Acceptance:
+
+- Ask, Decision Replay, and Weekly Report each expose a deterministic save action
+- each save action points to a private saved artifact and future `MemoryRecord` source ref
+- the local UI can mark an artifact as saved without requiring a live backend write
+- Playwright verifies the Ask save action state transition
+
+Implemented:
+
+- `src/lib/savedArtifactActions.ts`
+- `src/lib/savedArtifactActions.test.ts`
+- `src/components/SavedArtifactActionButton.tsx`
+- `src/components/AskMyPastSelfPanel.tsx`
+- `src/components/DecisionReplayPanel.tsx`
+- `src/components/WeeklyReportPanel.tsx`
+- `src/App.tsx`
+- `scripts/verify-playwright-evidence.ts`
+- `docs/superpowers/plans/2026-05-28-saved-artifact-ui-actions.md`
+
 ## 8. MVP Time Estimate
 
 Assuming focused local development without major dependency or deployment blockers:
@@ -632,7 +656,7 @@ Assuming focused local development without major dependency or deployment blocke
 
 Critical path for the next "나를 아는 AI" jump:
 
-1. Add UI save actions for advice/report artifacts and show saved artifacts in the graph/timeline.
+1. Show saved artifacts in the graph/timeline.
 2. Wire a live LLM provider through the citation-guarded adapter when secrets/config are available.
 3. Run staging PostgreSQL/pgvector/auth smoke against a chosen deployment target.
 

@@ -48,7 +48,21 @@ describe('buildInitialAppShellEvidenceLayout', () => {
         expect.objectContaining({ id: 'web-graph-workspace', status: 'implemented' }),
         expect.objectContaining({ id: 'weekly-report', status: 'implemented' }),
         expect.objectContaining({ id: 'memory-detail-timeline', status: 'implemented' }),
+        expect.objectContaining({ id: 'saved-artifact-actions', status: 'implemented' }),
       ]),
+    );
+    expect(shell.savedArtifactActions.map((action) => action.kind)).toEqual([
+      'ask_answer',
+      'decision_replay',
+      'weekly_report',
+    ]);
+    expect(shell.savedArtifactActions[0]).toEqual(
+      expect.objectContaining({
+        label: 'Save answer',
+        endpoint: '/api/capture',
+        initialState: 'ready',
+        sourceRef: expect.stringContaining('personal-memory-ai://saved-artifacts/'),
+      }),
     );
     expect(shell.memoryTimeline).toMatchObject({
       summary: {
@@ -112,6 +126,7 @@ describe('buildInitialAppShellEvidenceLayout', () => {
         expect.objectContaining({ id: 'app-capture-native-client', status: 'skeleton' }),
         expect.objectContaining({ id: 'weekly-report', status: 'implemented' }),
         expect.objectContaining({ id: 'memory-detail-timeline', status: 'implemented' }),
+        expect.objectContaining({ id: 'saved-artifact-actions', status: 'implemented' }),
       ]),
     );
     expect(shell.surfaces.map((surface) => surface.status)).toEqual(
@@ -174,6 +189,12 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('data-timeline-memory-id="mem_captured_ship_note"');
     expect(html).toContain('data-timeline-active="true"');
     expect(html).toContain('data-timeline-related-count=');
+    expect(html).toContain('data-save-artifact-action="ask_answer"');
+    expect(html).toContain('data-save-artifact-action="decision_replay"');
+    expect(html).toContain('data-save-artifact-action="weekly_report"');
+    expect(html).toContain('data-artifact-save-state="ready"');
+    expect(html).toContain('data-artifact-save-endpoint="/api/capture"');
+    expect(html).toContain('personal-memory-ai://saved-artifacts/');
     expect(html).toContain('graph-control-panel');
     expect(html).toContain('class="control-row node-spacing-controls"');
     expect(html).toContain('class="control-action rearrange-graph"');

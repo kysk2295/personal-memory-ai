@@ -9,6 +9,7 @@ import type { MemoryRecord } from './memoryRecord';
 import type { MemoryStore } from './memoryStore';
 import { detectRepeatedPatterns, type PatternDetectionStatus } from './patternDetector';
 import { buildPrivacyControlState, type PrivacyControlState } from './privacyControls';
+import { buildSavedArtifactActions, type SavedArtifactAction } from './savedArtifactActions';
 import { generateWeeklyReport, type WeeklyReport } from './weeklyReport';
 
 export type ShellLinkKind = 'emotion' | 'project' | 'decision' | 'outcome' | 'source';
@@ -54,6 +55,7 @@ export interface InitialAppShellEvidenceLayout {
   importPreview: ReturnType<typeof buildImportPreview>;
   compiledWiki: CompiledWikiGraph;
   memoryTimeline: MemoryDetailTimeline;
+  savedArtifactActions: SavedArtifactAction[];
   privacyControls: PrivacyControlState;
   evidenceDrawer: {
     status: PatternDetectionStatus;
@@ -222,6 +224,13 @@ export function buildAppShellEvidenceLayoutFromRecords(records: readonly MemoryR
     generatedAt: '2026-05-27T14:00:00.000Z',
   });
   const memoryTimeline = buildMemoryDetailTimeline(records, 'mem_freeze_vs_feature_addition');
+  const savedArtifactActions = buildSavedArtifactActions({
+    askQuestion,
+    ask,
+    replay,
+    weeklyReport,
+    createdAt: '2026-05-28T00:00:00.000Z',
+  });
 
   return {
     northStar: '나보다 나를 더 잘 아는 개인 기억 AI.',
@@ -291,6 +300,12 @@ export function buildAppShellEvidenceLayoutFromRecords(records: readonly MemoryR
         description: 'Dated diary/import memories are inspectable as source-backed timeline entries linked to the active graph selection.',
       },
       {
+        id: 'saved-artifact-actions',
+        label: 'Saved artifact actions',
+        status: 'implemented',
+        description: 'Ask, Decision Replay, and Weekly Report outputs expose save actions that point to private future MemoryRecords.',
+      },
+      {
         id: 'evidence-drawer',
         label: 'Evidence drawer',
         status: graphEvidence.status,
@@ -310,6 +325,7 @@ export function buildAppShellEvidenceLayoutFromRecords(records: readonly MemoryR
     importPreview,
     compiledWiki,
     memoryTimeline,
+    savedArtifactActions,
     privacyControls,
     evidenceDrawer: {
       status: graphEvidence.status,

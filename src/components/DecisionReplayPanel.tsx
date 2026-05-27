@@ -1,5 +1,6 @@
 import type { InitialAppShellEvidenceLayout } from '../lib/appShellEvidenceLayout';
 import type { DecisionReplayCitation, SimilarPastDecision } from '../lib/decisionReplay';
+import { findSavedArtifactAction, renderSavedArtifactActionButton } from './SavedArtifactActionButton';
 
 function escapeHtml(value: string): string {
   return value
@@ -68,6 +69,7 @@ export function renderDecisionReplayPanel(layout: InitialAppShellEvidenceLayout)
   const replay = layout.replay;
   const currentDecisionHighlightId = `decision:${replay.currentDecision.id}`;
   const pattern = replay.pattern;
+  const saveAction = findSavedArtifactAction(layout.savedArtifactActions, 'decision_replay');
 
   return `<section class="decision-replay-flow" aria-label="Decision Replay cited visual flow" data-replay-highlight="${escapeHtml(
     currentDecisionHighlightId,
@@ -107,6 +109,7 @@ export function renderDecisionReplayPanel(layout: InitialAppShellEvidenceLayout)
           ? `<p><strong>${escapeHtml(pattern.title)}</strong>: ${escapeHtml(pattern.explanation)}</p>`
           : '<p>No sufficient personal pattern is shown without cited support.</p>'
       }
+      ${renderSavedArtifactActionButton(saveAction)}
     </div>
     <div class="similar-decision-list" aria-label="Similar past decisions with citations">
       ${replay.similarPastDecisions.slice(0, 2).map(renderSimilarDecision).join('')}

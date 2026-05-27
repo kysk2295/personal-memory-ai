@@ -1,4 +1,5 @@
 import type { InitialAppShellEvidenceLayout } from '../lib/appShellEvidenceLayout';
+import { findSavedArtifactAction, renderSavedArtifactActionButton } from './SavedArtifactActionButton';
 
 function escapeHtml(value: string): string {
   return value
@@ -22,6 +23,7 @@ export function renderAskMyPastSelfPanel(layout: InitialAppShellEvidenceLayout):
   const answerCitationRefs = layout.ask.citationMemoryIds.map(renderCitationReference).join(' ');
   const visibleBullets = layout.ask.evidenceBullets.slice(0, 2);
   const hasCitations = layout.ask.citationMemoryIds.length > 0;
+  const saveAction = findSavedArtifactAction(layout.savedArtifactActions, 'ask_answer');
 
   return `<section class="ask-flow product-panel" aria-label="Ask My Past Self cited question flow" data-ask-highlight="${escapeHtml(
     questionHighlightId,
@@ -48,6 +50,7 @@ export function renderAskMyPastSelfPanel(layout: InitialAppShellEvidenceLayout):
       <p>${escapeHtml(layout.ask.answer)} ${
         hasCitations ? `Citations: ${answerCitationRefs}` : '근거가 충분하지 않으면 답변을 보류한다.'
       }</p>
+      ${renderSavedArtifactActionButton(saveAction)}
     </article>
     <article class="insufficient-evidence-state" data-insufficient-evidence-state="available">
       <strong>Insufficient evidence state</strong>

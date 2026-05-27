@@ -245,6 +245,22 @@ const APP_SHELL_STYLES = `
     background: #8f80ff;
     font-size: 18px;
   }
+  .save-artifact-action {
+    justify-self: start;
+    min-height: 30px;
+    border: 1px solid rgba(143, 128, 255, 0.24);
+    border-radius: 8px;
+    background: rgba(143, 128, 255, 0.1);
+    color: #6255d7;
+    padding: 7px 10px;
+    font-size: 12px;
+    font-weight: 760;
+  }
+  .save-artifact-action[data-artifact-save-state="saved"] {
+    border-color: rgba(69, 140, 96, 0.28);
+    background: rgba(69, 140, 96, 0.12);
+    color: #3a7a52;
+  }
   .product-value-strip {
     position: relative;
     z-index: 4;
@@ -1199,6 +1215,16 @@ const APP_SHELL_STYLES = `
     background: rgba(255, 255, 255, 0.055);
     color: #f0f0f2;
   }
+  .save-artifact-action {
+    border-color: rgba(214, 31, 60, 0.32);
+    background: rgba(214, 31, 60, 0.11);
+    color: #ff8797;
+  }
+  .save-artifact-action[data-artifact-save-state="saved"] {
+    border-color: rgba(69, 140, 96, 0.38);
+    background: rgba(69, 140, 96, 0.13);
+    color: #85d09e;
+  }
   .status,
   .status-badge {
     border-color: rgba(255, 255, 255, 0.1);
@@ -1533,6 +1559,7 @@ const GRAPH_CONTROL_SCRIPT = `
   const memorySearchResults = Array.from(document.querySelectorAll('[data-search-result="memory"]'));
   const timelinePanel = document.querySelector('[data-memory-timeline-panel="pmi025"]');
   const timelineItems = Array.from(document.querySelectorAll('[data-control="timeline-select-memory"]'));
+  const saveArtifactButtons = Array.from(document.querySelectorAll('[data-control="save-artifact"]'));
   const cytoscapeMount = document.querySelector('[data-graph-library="cytoscape"]');
   const graphPayloadScript = document.querySelector('#memory-graph-elements');
   let cytoscapeGraph = null;
@@ -1832,6 +1859,19 @@ const GRAPH_CONTROL_SCRIPT = `
         shell.setAttribute('data-timeline-selected-memory', citation);
         setInteractionState('timeline-item-selected');
       }
+    });
+  });
+
+  saveArtifactButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      const artifactId = button.getAttribute('data-artifact-id') || '';
+      const futureMemoryId = button.getAttribute('data-future-memory-id') || '';
+      const savedLabel = button.getAttribute('data-artifact-saved-label') || 'Saved';
+      button.setAttribute('data-artifact-save-state', 'saved');
+      button.textContent = savedLabel;
+      shell.setAttribute('data-last-saved-artifact', artifactId);
+      shell.setAttribute('data-last-saved-memory', futureMemoryId);
+      setInteractionState('artifact-saved');
     });
   });
 

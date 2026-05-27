@@ -74,6 +74,8 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   assert((await attribute(page, '#memory-graph-cytoscape', 'data-cytoscape-node-count')) === '34', 'Expected Cytoscape node count to match graph payload');
   assert((await attribute(page, '#memory-graph-cytoscape', 'data-cytoscape-edge-count')) === '40', 'Expected Cytoscape edge count to match graph payload');
   assert((await page.locator('#memory-graph-cytoscape canvas').count()) > 0, 'Expected Cytoscape to render a canvas');
+  assert((await attribute(page, '[data-save-artifact-action="ask_answer"]', 'data-artifact-save-state')) === 'ready', 'Expected Ask saved artifact action to start ready');
+  assert((await attribute(page, '[data-save-artifact-action="weekly_report"]', 'data-artifact-save-endpoint')) === '/api/capture', 'Expected saved artifact action to expose capture endpoint');
   assert((await attribute(page, '[data-memory-timeline-panel="pmi025"]', 'data-timeline-entry-count')) === '5', 'Expected timeline panel to render five private memories');
   assert(
     (await attribute(page, '[data-timeline-memory-id="mem_freeze_vs_feature_addition"]', 'data-timeline-active')) === 'true',
@@ -99,6 +101,13 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   });
 
   await page.screenshot({ path: localScreenshot, fullPage: false });
+
+  const askArtifactId = await attribute(page, '[data-save-artifact-action="ask_answer"]', 'data-artifact-id');
+  assert(askArtifactId, 'Expected Ask save action to expose artifact id');
+  await page.locator('[data-save-artifact-action="ask_answer"]').click();
+  assert((await attribute(page, '[data-save-artifact-action="ask_answer"]', 'data-artifact-save-state')) === 'saved', 'Ask save action should mark artifact saved');
+  assert((await attribute(page, '.second-brain-shell', 'data-last-saved-artifact')) === askArtifactId, 'Shell should expose the last saved artifact id');
+  assert((await attribute(page, '.second-brain-shell', 'data-interaction-state')) === 'artifact-saved', 'Shell should expose artifact saved interaction state');
 
   await page.locator('[data-control="spacing"][data-spacing="wide"]').click();
   assert((await attribute(page, '.second-brain-shell', 'data-spacing')) === 'wide', 'Spacing control should switch graph spacing to wide');
@@ -203,6 +212,7 @@ try {
         verified: [
           'cytoscape data graph ready',
           'data-derived graph stats',
+          'saved artifact action',
           'spacing click',
           'label toggle',
           'filter toggle',

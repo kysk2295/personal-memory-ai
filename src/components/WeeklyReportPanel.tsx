@@ -1,5 +1,6 @@
 import type { InitialAppShellEvidenceLayout } from '../lib/appShellEvidenceLayout';
 import type { WeeklyReportAggregate } from '../lib/weeklyReport';
+import { findSavedArtifactAction, renderSavedArtifactActionButton } from './SavedArtifactActionButton';
 
 function escapeHtml(value: string): string {
   return value
@@ -34,6 +35,7 @@ export function renderWeeklyReportPanel(layout: InitialAppShellEvidenceLayout): 
   const topProjects = report.aggregates.projects.slice(0, 2);
   const topOutcomes = report.aggregates.outcomes.slice(0, 2);
   const patternInsight = report.patternInsights[0];
+  const saveAction = findSavedArtifactAction(layout.savedArtifactActions, 'weekly_report');
 
   return `<section class="weekly-report-flow product-panel" aria-label="Weekly Report cited memory summary" data-weekly-report-id="${escapeHtml(
     report.id,
@@ -50,6 +52,7 @@ export function renderWeeklyReportPanel(layout: InitialAppShellEvidenceLayout): 
       <span>${escapeHtml(report.evidenceLabel)}</span>
       <span>citations <strong>${report.includedMemoryIds.length}</strong></span>
     </div>
+    ${renderSavedArtifactActionButton(saveAction)}
     <ul class="weekly-report-aggregate-list" aria-label="Weekly report cited aggregates">
       ${topEmotions.map((aggregate) => renderAggregate('emotions', aggregate)).join('')}
       ${topDecisions.map((aggregate) => renderAggregate('decisions', aggregate)).join('')}
