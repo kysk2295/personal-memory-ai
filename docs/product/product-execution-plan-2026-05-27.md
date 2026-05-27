@@ -2,7 +2,7 @@
 
 Status: active local execution plan  
 Owner: Ko Yunseo  
-Updated: 2026-05-28, user feedback memory pass
+Updated: 2026-05-28, feedback correction UI pass
 Supersedes for local Codex work: `docs/product/product-master-plan-2026-05-26.md`
 
 ## 1. Product Definition
@@ -136,7 +136,7 @@ Status values:
 | Agent | Korean/user-intent retrieval bridge | `done-foundation` | Korean product-intent questions expand into retrieval terms before the agent filters memory context. |
 | Agent | Citation-constrained generation guard | `done-foundation` | LLM-shaped outputs are rejected unless grounded in supplied citation ids. |
 | Agent | LLM provider adapter | `done-foundation` | Provider-agnostic adapter wraps model outputs in the citation guard before advice can surface. Gemini-first runtime readiness and smoke harness now gate live calls on `GEMINI_API_KEY` + `PMI_LLM_MODEL` without leaking secrets. |
-| Agent | User feedback learning loop | `done-foundation` | User corrections can now become private `mem_api_feedback_*` memories through `/api/feedback`; UI affordance for submitting feedback remains next. |
+| Agent | User feedback learning loop | `prototype-ui` | User corrections can become private `mem_api_feedback_*` memories through `/api/feedback`; the web rail now exposes a visible correction panel that submits feedback when served over HTTP. |
 | Privacy | Private-by-default scope | `done-foundation` | Data model and UI labels exist. |
 | Privacy | Export/delete local UX | `done-foundation` | Owner-only local export, selected delete, and hard-delete confirmation panel are rendered. |
 | Privacy | Auth/private vault boundary | `done-foundation` | Local session owner boundary scopes API calls to one private vault. |
@@ -198,10 +198,11 @@ No remote push, main merge, production deploy, or secret access is allowed witho
 - L29: saved artifact persistence through capture API.
 - L30: Gemini-first LLM provider smoke harness.
 - L31: user feedback/correction memory.
+- L32: feedback correction UI.
 
 ## 6. Active Next Loops
 
-Next local loop: add a visible feedback/correction affordance in the web surface, or run staging PostgreSQL/pgvector/auth smoke harness when deployment secrets are available. Production auth, live LLM keys, and deployment wiring stay gated until secrets/deploy target are explicitly available.
+Next local loop: wire feedback memories into retrieval priority, or run staging PostgreSQL/pgvector/auth smoke harness when deployment secrets are available. Production auth, live LLM keys, and deployment wiring stay gated until secrets/deploy target are explicitly available.
 
 ## 7. Completed Loop Details
 
@@ -725,6 +726,27 @@ Implemented:
 - `src/lib/personalMemoryApi.test.ts`
 - `docs/superpowers/plans/2026-05-28-user-feedback-memory.md`
 
+### L32 — Feedback Correction UI
+
+Goal: make the agent learning loop visible by letting the user submit corrections from the web second-brain rail.
+
+Acceptance:
+
+- web shell renders a correction feedback panel
+- panel targets `/api/feedback`
+- panel carries target memory/artifact metadata
+- static preview can mark feedback submitted locally
+- HTTP-served app posts correction payloads to the feedback API
+- Playwright verifies the feedback interaction state
+
+Implemented:
+
+- `src/components/UserFeedbackPanel.tsx`
+- `src/App.tsx`
+- `src/lib/appShellEvidenceLayout.test.ts`
+- `scripts/verify-playwright-evidence.ts`
+- `docs/superpowers/plans/2026-05-28-feedback-correction-ui.md`
+
 ## 8. MVP Time Estimate
 
 Assuming focused local development without major dependency or deployment blockers:
@@ -738,7 +760,7 @@ Assuming focused local development without major dependency or deployment blocke
 
 Critical path for the next "나를 아는 AI" jump:
 
-1. Add a visible feedback/correction affordance so user edits can create L31 feedback memories.
+1. Wire feedback memories into retrieval priority so corrections influence future answers.
 2. Run staging PostgreSQL/pgvector/auth smoke against the already wired Postgres runtime when deployment secrets are available.
 3. Attach a real Gemini provider implementation behind the L30 smoke harness.
 

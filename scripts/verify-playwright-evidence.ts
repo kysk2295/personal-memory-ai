@@ -80,6 +80,8 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   assert(savedArtifactManifest?.includes('"artifact":{"id":"artifact_'), 'Expected saved artifact manifest to include full artifact payloads');
   assert((await attribute(page, '[data-save-artifact-action="ask_answer"]', 'data-artifact-save-state')) === 'ready', 'Expected Ask saved artifact action to start ready');
   assert((await attribute(page, '[data-save-artifact-action="weekly_report"]', 'data-artifact-save-endpoint')) === '/api/capture', 'Expected saved artifact action to expose capture endpoint');
+  assert((await attribute(page, '[data-feedback-panel="user-correction"]', 'data-feedback-state')) === 'ready', 'Expected feedback panel to start ready');
+  assert((await attribute(page, '[data-feedback-panel="user-correction"]', 'data-feedback-endpoint')) === '/api/feedback', 'Expected feedback panel to target feedback API');
   assert((await attribute(page, '[data-memory-timeline-panel="pmi025"]', 'data-timeline-entry-count')) === '8', 'Expected timeline panel to render eight private memories');
   assert(
     (await page.locator('[data-timeline-memory-id^="mem_api_artifact_"]').count()) === 3,
@@ -116,6 +118,14 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   assert((await attribute(page, '[data-save-artifact-action="ask_answer"]', 'data-artifact-save-state')) === 'saved', 'Ask save action should mark artifact saved');
   assert((await attribute(page, '.second-brain-shell', 'data-last-saved-artifact')) === askArtifactId, 'Shell should expose the last saved artifact id');
   assert((await attribute(page, '.second-brain-shell', 'data-interaction-state')) === 'artifact-saved', 'Shell should expose artifact saved interaction state');
+
+  await page.locator('[data-control="submit-feedback-correction"]').click();
+  assert((await attribute(page, '[data-feedback-panel="user-correction"]', 'data-feedback-state')) === 'submitted', 'Feedback panel should mark correction submitted');
+  assert(
+    (await attribute(page, '.second-brain-shell', 'data-last-feedback-memory-target')) === 'mem_freeze_vs_feature_addition',
+    'Shell should expose the last feedback memory target',
+  );
+  assert((await attribute(page, '.second-brain-shell', 'data-interaction-state')) === 'feedback-submitted', 'Shell should expose feedback submitted state');
 
   await page.locator('[data-control="spacing"][data-spacing="wide"]').click();
   assert((await attribute(page, '.second-brain-shell', 'data-spacing')) === 'wide', 'Spacing control should switch graph spacing to wide');
@@ -222,6 +232,7 @@ try {
           'data-derived graph stats',
           'saved artifact action',
           'saved artifact persistence manifest',
+          'feedback correction action',
           'spacing click',
           'label toggle',
           'filter toggle',

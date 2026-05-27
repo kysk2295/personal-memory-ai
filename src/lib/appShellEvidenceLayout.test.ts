@@ -221,6 +221,12 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('data-save-artifact-action="weekly_report"');
     expect(html).toContain('data-artifact-save-state="ready"');
     expect(html).toContain('data-artifact-save-endpoint="/api/capture"');
+    expect(html).toContain('data-feedback-panel="user-correction"');
+    expect(html).toContain('data-feedback-endpoint="/api/feedback"');
+    expect(html).toContain('data-feedback-state="ready"');
+    expect(html).toContain('data-feedback-target-memory-id="mem_freeze_vs_feature_addition"');
+    expect(html).toContain('data-control="feedback-correction-text"');
+    expect(html).toContain('data-control="submit-feedback-correction"');
     expect(html).toContain('"endpoint":"/api/capture"');
     expect(html).toContain('"artifact":{"id":"artifact_');
     expect(html).toContain('personal-memory-ai://saved-artifacts/');

@@ -5,6 +5,7 @@ import { renderMemoryGraph } from './components/MemoryGraph';
 import { renderMemoryDetailTimelinePanel } from './components/MemoryDetailTimelinePanel';
 import { renderPatternPanel } from './components/PatternPanel';
 import { renderPrivacyControlPanel } from './components/PrivacyControlPanel';
+import { renderUserFeedbackPanel } from './components/UserFeedbackPanel';
 import { renderWeeklyReportPanel } from './components/WeeklyReportPanel';
 import { buildInitialAppShellEvidenceLayout, type ShellPrimaryNode } from './lib/appShellEvidenceLayout';
 import { buildMemoryGraphModel, type MemoryGraphModel } from './lib/memoryGraphModel';
@@ -257,6 +258,58 @@ const APP_SHELL_STYLES = `
     font-weight: 760;
   }
   .save-artifact-action[data-artifact-save-state="saved"] {
+    border-color: rgba(69, 140, 96, 0.28);
+    background: rgba(69, 140, 96, 0.12);
+    color: #3a7a52;
+  }
+  .user-feedback-panel {
+    display: grid;
+    gap: 10px;
+  }
+  .user-feedback-panel label {
+    font-size: 11px;
+    font-weight: 800;
+    color: #8a8f9e;
+    text-transform: uppercase;
+  }
+  .user-feedback-panel textarea {
+    min-height: 84px;
+    resize: vertical;
+    border: 1px solid rgba(97, 102, 125, 0.16);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.72);
+    color: #5a5f71;
+    padding: 10px;
+    font: inherit;
+    font-size: 13px;
+    line-height: 1.45;
+  }
+  .feedback-target-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    color: #8a8f9e;
+    font-size: 12px;
+  }
+  .feedback-target-row code {
+    max-width: 210px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #6255d7;
+  }
+  .feedback-submit-action {
+    justify-self: start;
+    min-height: 32px;
+    border: 1px solid rgba(143, 128, 255, 0.24);
+    border-radius: 8px;
+    background: rgba(143, 128, 255, 0.1);
+    color: #6255d7;
+    padding: 7px 10px;
+    font-size: 12px;
+    font-weight: 760;
+  }
+  .user-feedback-panel[data-feedback-state="submitted"] .feedback-submit-action {
     border-color: rgba(69, 140, 96, 0.28);
     background: rgba(69, 140, 96, 0.12);
     color: #3a7a52;
@@ -1225,6 +1278,21 @@ const APP_SHELL_STYLES = `
     background: rgba(69, 140, 96, 0.13);
     color: #85d09e;
   }
+  .user-feedback-panel textarea {
+    border-color: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.055);
+    color: #f0f0f2;
+  }
+  .feedback-submit-action {
+    border-color: rgba(214, 31, 60, 0.32);
+    background: rgba(214, 31, 60, 0.11);
+    color: #ff8797;
+  }
+  .user-feedback-panel[data-feedback-state="submitted"] .feedback-submit-action {
+    border-color: rgba(69, 140, 96, 0.38);
+    background: rgba(69, 140, 96, 0.13);
+    color: #85d09e;
+  }
   .status,
   .status-badge {
     border-color: rgba(255, 255, 255, 0.1);
@@ -1538,6 +1606,7 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
         <aside class="product-rail" aria-label="Cited memory product rail" data-rail-mode="collapsed-evidence-drawer">
           ${renderAskMyPastSelfPanel(layout)}
           ${renderPrivacyControlPanel(layout)}
+          ${renderUserFeedbackPanel(layout)}
           ${renderWeeklyReportPanel(layout)}
           ${renderMemoryDetailTimelinePanel(layout)}
           ${renderEvidenceDrawer(layout)}
@@ -1575,6 +1644,9 @@ const GRAPH_CONTROL_SCRIPT = `
   const timelinePanel = document.querySelector('[data-memory-timeline-panel="pmi025"]');
   const timelineItems = Array.from(document.querySelectorAll('[data-control="timeline-select-memory"]'));
   const saveArtifactButtons = Array.from(document.querySelectorAll('[data-control="save-artifact"]'));
+  const feedbackPanel = document.querySelector('[data-feedback-panel="user-correction"]');
+  const feedbackSubmit = document.querySelector('[data-control="submit-feedback-correction"]');
+  const feedbackText = document.querySelector('[data-control="feedback-correction-text"]');
   const cytoscapeMount = document.querySelector('[data-graph-library="cytoscape"]');
   const graphPayloadScript = document.querySelector('#memory-graph-elements');
   const savedArtifactPayloadScript = document.querySelector('#saved-artifact-actions');
@@ -1925,6 +1997,40 @@ const GRAPH_CONTROL_SCRIPT = `
       shell.setAttribute('data-last-saved-artifact', artifactId);
       setInteractionState('artifact-saved');
     });
+  });
+
+  feedbackSubmit?.addEventListener('click', async () => {
+    if (!feedbackPanel) return;
+    const endpoint = feedbackPanel.getAttribute('data-feedback-endpoint') || '';
+    const method = feedbackPanel.getAttribute('data-feedback-method') || 'POST';
+    const targetMemoryId = feedbackPanel.getAttribute('data-feedback-target-memory-id') || '';
+    const targetArtifactId = feedbackPanel.getAttribute('data-feedback-target-artifact-id') || '';
+    const correctionText = feedbackText?.value || '';
+    const shouldPersist = Boolean(endpoint && correctionText.trim() && window.location.protocol !== 'file:');
+    feedbackPanel.setAttribute('data-feedback-state', shouldPersist ? 'saving' : 'submitted');
+    if (shouldPersist) {
+      try {
+        const response = await fetch(endpoint, {
+          method,
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            correctionText,
+            targetMemoryIds: targetMemoryId ? [targetMemoryId] : [],
+            targetArtifactId,
+          }),
+        });
+        if (!response.ok) throw new Error('feedback save failed with ' + response.status);
+      } catch (error) {
+        feedbackPanel.setAttribute('data-feedback-state', 'error');
+        shell.setAttribute('data-feedback-error', String(error?.message || error));
+        setInteractionState('feedback-error');
+        return;
+      }
+    }
+    feedbackPanel.setAttribute('data-feedback-state', 'submitted');
+    feedbackSubmit.textContent = feedbackSubmit.getAttribute('data-feedback-submitted-label') || 'Feedback saved';
+    shell.setAttribute('data-last-feedback-memory-target', targetMemoryId);
+    setInteractionState('feedback-submitted');
   });
 
   filterButtons.forEach((button) => {
