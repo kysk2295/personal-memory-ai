@@ -14,7 +14,7 @@ function renderStatus(status: string): string {
 }
 
 export function renderEvidenceDrawer(layout: InitialAppShellEvidenceLayout): string {
-  const items = layout.evidenceDrawer.items.slice(0, 4);
+  const items = layout.evidenceDrawer.items;
   const questionHighlightId = layout.ask.graphHighlightIds[0] ?? '';
 
   return `<aside class="evidence-drawer" aria-label="Graph evidence drawer">

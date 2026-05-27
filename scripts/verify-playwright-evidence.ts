@@ -7,6 +7,7 @@ const outputDir = resolve('artifacts/web-second-brain-product-surface');
 const benchmarkScreenshot = resolve(outputDir, 'benchmark-careerhacker-memory-playwright.png');
 const localScreenshot = resolve(outputDir, 'local-graph-density-playwright.png');
 const interactionScreenshot = resolve(outputDir, 'local-graph-interactions-playwright.png');
+const searchScreenshot = resolve(outputDir, 'local-memory-search-detail-playwright.png');
 
 function assert(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(message);
@@ -66,6 +67,28 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   assert((await attribute(page, '.second-brain-shell', 'data-layout-mode')) === 'rearranged', 'Rearrange should switch graph layout mode');
 
   await page.screenshot({ path: interactionScreenshot, fullPage: false });
+
+  await page.locator('[data-control="reset"]').click();
+  await page.locator('[data-control="memory-search"]').fill('calm');
+  assert((await attribute(page, '.second-brain-shell', 'data-search-query')) === 'calm', 'Search input should expose normalized query');
+  assert((await attribute(page, '[data-search-count]', 'data-search-count-value')) === '1', 'Search should narrow to one matching memory');
+  assert((await page.locator('[data-control="select-memory"][data-search-match="false"]').count()) === 4, 'Search should dim unmatched memory nodes');
+
+  await page.locator('[data-search-citation="mem_unrelated_calm_import"]').click();
+  assert(
+    (await attribute(page, '[data-inspector-panel="pmi015"]', 'data-selected-memory')) === 'mem_unrelated_calm_import',
+    'Search result click should select the matching memory detail',
+  );
+  assert(
+    (await attribute(page, '[data-inspector-citations]', 'data-inspector-selected-citation')) === 'mem_unrelated_calm_import',
+    'Inspector citation chip should follow the selected memory detail',
+  );
+  assert(
+    (await attribute(page, '.second-brain-shell', 'data-search-selected-memory')) === 'mem_unrelated_calm_import',
+    'Shell should expose search-selected memory',
+  );
+
+  await page.screenshot({ path: searchScreenshot, fullPage: false });
 }
 
 await mkdir(outputDir, { recursive: true });
@@ -84,7 +107,17 @@ try {
         benchmarkScreenshot,
         localScreenshot,
         interactionScreenshot,
-        verified: ['graph density markers', 'spacing click', 'label toggle', 'filter toggle', 'node selection', 'rearrange click'],
+        searchScreenshot,
+        verified: [
+          'graph density markers',
+          'spacing click',
+          'label toggle',
+          'filter toggle',
+          'node selection',
+          'rearrange click',
+          'memory search filter',
+          'search result detail selection',
+        ],
       },
       null,
       2,

@@ -5,7 +5,7 @@ import { BENCHMARK_GRAPH_EDGE_COUNT, BENCHMARK_GRAPH_NODE_COUNT, renderMemoryGra
 import { renderPatternPanel } from './components/PatternPanel';
 import { renderPrivacyControlPanel } from './components/PrivacyControlPanel';
 import { renderWeeklyReportPanel } from './components/WeeklyReportPanel';
-import { buildInitialAppShellEvidenceLayout } from './lib/appShellEvidenceLayout';
+import { buildInitialAppShellEvidenceLayout, type ShellPrimaryNode } from './lib/appShellEvidenceLayout';
 
 const APP_SHELL_STYLES = `
   :root {
@@ -99,6 +99,56 @@ const APP_SHELL_STYLES = `
   }
   .graph-meta-line strong { color: #5a5f6f; font-size: 13px; }
   .graph-meta-dot { color: #bec3d1; }
+  .memory-search-control {
+    display: grid;
+    gap: 8px;
+  }
+  .memory-search-control input {
+    width: 100%;
+    min-height: 34px;
+    border: 1px solid rgba(97, 102, 125, 0.14);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.72);
+    color: #555b6e;
+    padding: 7px 9px;
+    font-size: 12px;
+  }
+  .memory-search-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    color: #8b91a1;
+    font-size: 11px;
+  }
+  .memory-search-results {
+    display: grid;
+    gap: 5px;
+    max-height: 118px;
+    overflow: auto;
+  }
+  .memory-search-result {
+    border: 1px solid rgba(97, 102, 125, 0.12);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.66);
+    color: #626879;
+    padding: 7px 8px;
+    text-align: left;
+    font-size: 11px;
+    line-height: 1.3;
+  }
+  .memory-search-result strong {
+    display: block;
+    color: #555b6e;
+    font-size: 11px;
+    line-height: 1.25;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .memory-search-result[data-search-result-active="false"] {
+    display: none;
+  }
   .legend-section { display: flex; flex-direction: column; gap: 10px; }
   .legend-title {
     margin: 0;
@@ -714,6 +764,25 @@ const APP_SHELL_STYLES = `
     min-height: 25px;
     padding: 5px 8px;
   }
+  .memory-search-control input {
+    border-color: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.055);
+    color: #f0f0f2;
+  }
+  .memory-search-control input::placeholder {
+    color: #77777d;
+  }
+  .memory-search-meta {
+    color: #808086;
+  }
+  .memory-search-result {
+    border-color: rgba(255, 255, 255, 0.09);
+    background: rgba(255, 255, 255, 0.055);
+    color: #b9b9bd;
+  }
+  .memory-search-result strong {
+    color: #efeff1;
+  }
   .layout-button,
   .control-action {
     min-height: 28px;
@@ -813,6 +882,9 @@ const APP_SHELL_STYLES = `
     transform-origin: center;
   }
   [data-filter-active="false"] {
+    opacity: 0.12;
+  }
+  .memory-node[data-search-match="false"] {
     opacity: 0.12;
   }
   .obsidian-faded-edge[data-filter-active="false"],
@@ -1161,6 +1233,16 @@ function renderFilter(labelKo: string, labelEn: string, count: number, kind: str
   return `<button type="button" class="filter-chip" data-filter-chip="${escapeHtml(kind)}" aria-pressed="true"><span class="filter-dot ${kind}" aria-hidden="true"></span><span class="filter-name">${labelKo}<span aria-hidden="true"> ${labelEn}</span></span><span class="filter-count">${count}</span></button>`;
 }
 
+function renderMemorySearchResult(node: ShellPrimaryNode): string {
+  const searchText = [node.summary, node.recordType, node.sourceType, node.observedAt, node.recordId].join(' ').toLocaleLowerCase();
+  return `<button type="button" class="memory-search-result" data-search-result="memory" data-search-result-active="true" data-search-citation="${escapeHtml(
+    node.recordId,
+  )}" data-search-text="${escapeHtml(searchText)}">
+    <strong>${escapeHtml(node.summary)}</strong>
+    <span>${escapeHtml(`${node.sourceType} · ${node.recordType} · ${node.observedAt}`)}</span>
+  </button>`;
+}
+
 export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
   const layout = buildInitialAppShellEvidenceLayout();
   const graphNodeCount = BENCHMARK_GRAPH_NODE_COUNT;
@@ -1197,6 +1279,17 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
         <span class="graph-meta-dot">·</span>
         <span>last woven from diary + imports</span>
       </div>
+
+      <section class="memory-search-control" aria-label="Memory search">
+        <input type="search" data-control="memory-search" placeholder="기억 검색" aria-label="기억 검색" autocomplete="off" />
+        <div class="memory-search-meta">
+          <span data-search-count>${layout.primaryNodes.length} / ${layout.primaryNodes.length}</span>
+          <span>private vault</span>
+        </div>
+        <div class="memory-search-results" data-search-results="memory" aria-label="Memory search results">
+          ${layout.primaryNodes.map(renderMemorySearchResult).join('')}
+        </div>
+      </section>
 
       <section class="legend-section" aria-label="Node types">
         <p class="legend-title">노드 유형</p>
@@ -1332,14 +1425,26 @@ const GRAPH_CONTROL_SCRIPT = `
   const inspectorHeadline = inspector?.querySelector('[data-inspector-headline]');
   const inspectorSource = inspector?.querySelector('[data-inspector-source]');
   const inspectorBody = inspector?.querySelector('[data-inspector-body]');
+  const inspectorCitations = inspector?.querySelector('[data-inspector-citations]');
   const citationRefs = Array.from(document.querySelectorAll('[data-citation-ref]'));
   const memoryEdges = Array.from(document.querySelectorAll('.obsidian-spoke-edge[data-edge-from][data-edge-to]'));
   const filterTargets = Array.from(document.querySelectorAll('[data-filter-kind]'));
+  const memorySearchInput = document.querySelector('[data-control="memory-search"]');
+  const memorySearchCount = document.querySelector('[data-search-count]');
+  const memorySearchResults = Array.from(document.querySelectorAll('[data-search-result="memory"]'));
   let layoutVersion = Number(shell.getAttribute('data-layout-version') || '0');
 
   const setInteractionState = (value) => {
     shell.setAttribute('data-interaction-state', value);
   };
+
+  const escapeText = (value) =>
+    String(value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
 
   const selectMemory = (node) => {
     if (!node || !inspectorHeadline || !inspectorBody || !inspectorSource) return;
@@ -1351,6 +1456,17 @@ const GRAPH_CONTROL_SCRIPT = `
     inspectorHeadline.textContent = title;
     inspectorSource.textContent = source;
     inspectorBody.textContent = body;
+    if (inspectorCitations && citation) {
+      inspectorCitations.innerHTML =
+        '<a href="#evidence-' +
+        escapeText(citation) +
+        '" class="citation-ref" data-citation-ref="' +
+        escapeText(citation) +
+        '" data-active="true">[' +
+        escapeText(citation) +
+        ']</a>';
+      inspectorCitations.setAttribute('data-inspector-selected-citation', citation);
+    }
     citationRefs.forEach((ref) => ref.setAttribute('data-active', String(ref.getAttribute('data-citation-ref') === citation)));
     memoryEdges.forEach((edge) => {
       const edgeFrom = edge.getAttribute('data-edge-from');
@@ -1373,8 +1489,48 @@ const GRAPH_CONTROL_SCRIPT = `
     });
   };
 
+  const applyMemorySearch = (query) => {
+    const normalized = String(query || '').trim().toLocaleLowerCase();
+    let matches = 0;
+    memoryNodes.forEach((node) => {
+      const searchText = node.getAttribute('data-search-text') || '';
+      const match = !normalized || searchText.includes(normalized);
+      node.setAttribute('data-search-match', String(match));
+      if (match) matches += 1;
+    });
+    memorySearchResults.forEach((result) => {
+      const searchText = result.getAttribute('data-search-text') || '';
+      const match = !normalized || searchText.includes(normalized);
+      result.setAttribute('data-search-result-active', String(match));
+    });
+    if (memorySearchCount) {
+      memorySearchCount.textContent = matches + ' / ' + memoryNodes.length;
+      memorySearchCount.setAttribute('data-search-count-value', String(matches));
+    }
+    shell.setAttribute('data-search-query', normalized);
+    setInteractionState(normalized ? 'search-active' : 'search-idle');
+  };
+
   spacingButtons.forEach((button) => {
     button.addEventListener('click', () => setSpacing(button.getAttribute('data-spacing') || 'normal'));
+  });
+
+  if (memorySearchInput) {
+    memorySearchInput.addEventListener('input', () => {
+      applyMemorySearch(memorySearchInput.value);
+    });
+  }
+
+  memorySearchResults.forEach((result) => {
+    result.addEventListener('click', () => {
+      const citation = result.getAttribute('data-search-citation') || '';
+      const node = memoryNodes.find((item) => item.getAttribute('data-inspector-citation') === citation);
+      if (node) {
+        selectMemory(node);
+        shell.setAttribute('data-search-selected-memory', citation);
+        setInteractionState('search-result-selected');
+      }
+    });
   });
 
   filterButtons.forEach((button) => {

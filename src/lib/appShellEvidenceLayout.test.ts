@@ -146,6 +146,9 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('class="brain-sidebar"');
     expect(html).toContain('class="brain-canvas"');
     expect(html).toContain('class="graph-meta-line"');
+    expect(html).toContain('data-control="memory-search"');
+    expect(html).toContain('data-search-results="memory"');
+    expect(html).toContain('data-search-count');
     expect(html).toContain('graph-control-panel');
     expect(html).toContain('class="control-row node-spacing-controls"');
     expect(html).toContain('class="control-action rearrange-graph"');
@@ -163,6 +166,8 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('data-filter-kind="semantic"');
     expect(html).toContain('data-filter-kind="thesis"');
     expect(html).toContain('data-filter-active="true"');
+    expect(html).toContain('data-search-text=');
+    expect(html).toContain('data-search-match="true"');
     expect(html).toContain('class="memory-node obsidian-memory-node obsidian-selected-memory');
     expect(html).toContain('class="semantic-edge obsidian-spoke-edge"');
     expect(html).toContain('data-edge-from="mem_freeze_vs_feature_addition"');
@@ -337,6 +342,10 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(documentHtml).toContain('data-wiki-compiler="pmi017"');
     expect(documentHtml).toContain('canonical memory atoms');
     expect(documentHtml).toContain('const selectMemory = (node) =>');
+    expect(documentHtml).toContain('const applyMemorySearch = (query) =>');
+    expect(documentHtml).toContain("node.setAttribute('data-search-match', String(match))");
+    expect(documentHtml).toContain("result.addEventListener('click'");
+    expect(documentHtml).toContain("inspectorCitations.setAttribute('data-inspector-selected-citation', citation)");
     expect(documentHtml).toContain("shell.setAttribute('data-active-memory', citation)");
     expect(documentHtml).toContain("shell.setAttribute('data-filter-' + kind");
     expect(documentHtml).toContain("target.setAttribute('data-filter-active', String(nextActive))");

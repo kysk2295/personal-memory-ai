@@ -257,9 +257,12 @@ function renderMemoryNodes(layout: InitialAppShellEvidenceLayout, highlightedIds
       const labelX = isSelected ? position.x + 28 : position.x + 14;
       const labelY = isSelected ? position.y - 18 : position.y + 4;
       const filterKind = memoryFilterKind(node.recordType);
+      const searchText = [node.summary, node.recordType, node.sourceType, node.observedAt, citationId].join(' ').toLocaleLowerCase();
       return `<g class="memory-node obsidian-memory-node ${isSelected ? 'obsidian-selected-memory' : 'obsidian-secondary-memory'} ${
         isHighlighted ? 'graph-highlight-active' : ''
-      }" ${renderHighlightAttributes(node.id, highlightedIds)} data-filter-kind="${filterKind}" data-filter-active="true" data-control="select-memory" data-selected="${String(
+      }" ${renderHighlightAttributes(node.id, highlightedIds)} data-filter-kind="${filterKind}" data-filter-active="true" data-search-text="${escapeHtml(
+        searchText,
+      )}" data-search-match="true" data-control="select-memory" data-selected="${String(
         isSelected,
       )}" data-inspector-title="${escapeHtml(node.summary)}" data-inspector-source="${escapeHtml(
         `${node.sourceType} · ${node.recordType} · ${node.observedAt}`,

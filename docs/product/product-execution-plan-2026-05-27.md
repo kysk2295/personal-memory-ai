@@ -2,7 +2,7 @@
 
 Status: active local execution plan  
 Owner: Ko Yunseo  
-Updated: 2026-05-27, benchmark graph interaction pass
+Updated: 2026-05-27, memory search detail interaction pass
 Supersedes for local Codex work: `docs/product/product-master-plan-2026-05-26.md`
 
 ## 1. Product Definition
@@ -99,8 +99,9 @@ Status values:
 | Memory Store | pgvector semantic search | `done-foundation` | Store method plus redacted staging smoke contract exist; live staging execution remains gated on secrets/deploy target. |
 | Web | Graph-first second brain | `prototype-ui` | Benchmark-density graph surface exposes 225 nodes/1010 edges and Playwright-verified spacing, labels, filters, node selection, and rearrange interactions. |
 | Web | Evidence drawer | `prototype-ui` | Source/date/raw excerpt/why-connected visible. |
-| Web | Individual memory detail page | `planned` | Needed for real review/edit workflows. |
-| Web | Search/timeline views | `planned` | Needed for second-brain usefulness. |
+| Web | Individual memory detail page | `planned` | Selected-memory detail inspector exists; full review/edit page remains planned. |
+| Web | Search/timeline views | `prototype-ui` | Sidebar memory search filters nodes and selects matching detail; timeline still planned. |
+| Web | Memory search/detail inspector | `prototype-ui` | Search input dims unmatched nodes, result click selects inspector detail and citation chip. |
 | Ask | Ask My Past Self deterministic contract | `done-foundation` | Citation/insufficient evidence tested. |
 | Ask | LLM answer generation | `done-foundation` | Provider adapter routes outputs through the citation guard; live provider config/secrets still planned. |
 | Ask | Follow-up conversation | `planned` | Requires session/report memory. |
@@ -162,10 +163,11 @@ No remote push, main merge, production deploy, or secret access is allowed witho
 - L16: local HTTP API transport.
 - L17: citation-guarded LLM provider adapter.
 - L18: benchmark graph density and Playwright interaction verification.
+- L19: memory search and detail interaction verification.
 
 ## 6. Active Next Loops
 
-Next local loop: memory detail/search views or saved advice/report artifacts. Production auth, live LLM keys, and deployment wiring stay gated until secrets/deploy target are explicitly available.
+Next local loop: saved advice/report artifacts or timeline/detail review pages. Production auth, live LLM keys, and deployment wiring stay gated until secrets/deploy target are explicitly available.
 
 ## 7. Completed Loop Details
 
@@ -425,6 +427,26 @@ Implemented:
 - `artifacts/web-second-brain-product-surface/benchmark-careerhacker-memory-playwright.png`
 - `artifacts/web-second-brain-product-surface/local-graph-density-playwright.png`
 - `artifacts/web-second-brain-product-surface/local-graph-interactions-playwright.png`
+
+### L19 — Memory Search and Detail Interaction
+
+Goal: make the graph workspace searchable and inspectable so it behaves like a second brain, not a static graph image.
+
+Acceptance:
+
+- sidebar search filters memory nodes by query
+- unmatched memory nodes are visually dimmed
+- result count updates from all memories to matching memories
+- clicking a search result selects the corresponding memory inspector detail and citation chip
+- Playwright verifies the search/detail flow and captures screenshot evidence
+
+Implemented:
+
+- `src/App.tsx`
+- `src/components/MemoryGraph.tsx`
+- `src/components/EvidenceDrawer.tsx`
+- `scripts/verify-playwright-evidence.ts`
+- `artifacts/web-second-brain-product-surface/local-memory-search-detail-playwright.png`
 
 ## 8. MVP Time Estimate
 
