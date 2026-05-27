@@ -2189,6 +2189,27 @@ const GRAPH_CONTROL_SCRIPT = `
     }
   };
 
+  const rehydrateAppShellAfterImport = async () => {
+    if (window.location.protocol === 'file:') return;
+    shell.setAttribute('data-graph-rehydrate-state', 'loading');
+    try {
+      const response = await fetch('/api/app-shell', {
+        method: 'GET',
+        headers: { accept: 'application/json' },
+      });
+      if (!response.ok) throw new Error('app shell rehydrate failed with ' + response.status);
+      const body = await response.json();
+      const appShell = body?.appShell || {};
+      shell.setAttribute('data-graph-rehydrate-state', 'ready');
+      shell.setAttribute('data-rehydrated-memory-node-count', String(appShell.primaryNodes?.length || 0));
+      shell.setAttribute('data-rehydrated-graph-node-count', String(appShell.compiledWiki?.nodeCount || 0));
+      shell.setAttribute('data-rehydrated-timeline-entry-count', String(appShell.memoryTimeline?.entries?.length || 0));
+    } catch (error) {
+      shell.setAttribute('data-graph-rehydrate-state', 'error');
+      shell.setAttribute('data-graph-rehydrate-error', String(error?.message || error));
+    }
+  };
+
   importPreviewButton?.addEventListener('click', async () => {
     if (!importUploadPanel) return;
     importUploadPanel.setAttribute('data-import-upload-state', 'reading');
@@ -2258,6 +2279,7 @@ const GRAPH_CONTROL_SCRIPT = `
         const body = await response.json().catch(() => ({}));
         shell.setAttribute('data-last-import-created-count', String(body.createdMemoryIds?.length || 0));
         renderAppliedImportFeedback(body.createdMemoryIds || [], body.graphEvidenceRecords || []);
+        await rehydrateAppShellAfterImport();
       }
       importUploadPanel.setAttribute('data-import-upload-state', 'applied');
       setInteractionState('import-applied');

@@ -233,4 +233,34 @@ describe('local personal memory HTTP transport', () => {
     expect(response.bodyText).toContain('mem_freeze_vs_feature_addition');
     expect(response.bodyText).not.toContain('mem_other_user_http_schedule_guard');
   });
+
+  test('serves owner-scoped app shell rehydration through HTTP auth', async () => {
+    const store = createMemoryStore({ env: {} });
+    await store.create('user-a', personalMemoryRecords[0]);
+    await store.create('user-b', {
+      ...personalMemoryRecords[1],
+      id: 'mem_other_user_http_app_shell_guard',
+      sourceRef: 'obsidian://other-user/http-app-shell-guard',
+    });
+    const handle = createLocalPersonalMemoryHttpHandler({
+      store,
+      authRuntime: createPrivateVaultAuthRuntime({
+        env: {
+          PMI_AUTH_PROVIDER: 'trusted-header',
+        },
+      }),
+    });
+
+    const response = await handle({
+      method: 'GET',
+      path: '/api/app-shell',
+      headers: {
+        'x-pmi-user-id': 'user-a',
+      },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.bodyText).toContain('mem_launch_may_anxiety_scope_delay');
+    expect(response.bodyText).not.toContain('mem_other_user_http_app_shell_guard');
+  });
 });

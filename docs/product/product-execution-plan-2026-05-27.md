@@ -2,7 +2,7 @@
 
 Status: active local execution plan  
 Owner: Ko Yunseo  
-Updated: 2026-05-28, import apply feedback pass
+Updated: 2026-05-28, app shell rehydration pass
 Supersedes for local Codex work: `docs/product/product-master-plan-2026-05-26.md`
 
 ## 1. Product Definition
@@ -115,7 +115,7 @@ Status values:
 | Knowledge Layer | LLM Wiki compiler | `done-foundation` | Local compiler turns `MemoryRecord`s into canonical memory atoms plus source/concept/decision/pattern nodes with citations, freshness, and retain/recall/reflect markers. |
 | Knowledge Layer | Typed edge ledger | `done-foundation` | `memoryKnowledgeLedger` emits typed, confidence-weighted edges for citations, facets, sources, outcomes, and compiled patterns with stale-edge checks. |
 | Knowledge Layer | Raw archive and checkpoint loop | `done-foundation` | Immutable raw diary/import archive entries, canonical thoughts, and an atomize/dedup/apply checkpoint exist as a deterministic local ledger. |
-| Web | Graph-first second brain | `prototype-ui` | `MemoryRecord` data now builds a Cytoscape graph with 8 memory nodes, 44 total graph nodes, and 56 data-derived edges, including saved artifact memories; fallback SVG is hidden after the graph library is ready. |
+| Web | Graph-first second brain | `prototype-ui` | `MemoryRecord` data builds a Cytoscape graph with fixture memory nodes plus saved artifact memories; owner-scoped app shell rehydration can refresh graph/timeline counts after imports persist. |
 | Web | Evidence drawer | `prototype-ui` | Source/date/raw excerpt/why-connected visible. |
 | Web | Individual memory detail page | `prototype-ui` | Selected-memory inspector and timeline detail surface expose source/date/raw excerpts; full review/edit route remains planned. |
 | Web | Search/timeline views | `prototype-ui` | Sidebar search filters nodes and timeline entries show dated private memories, including saved Ask/Decision/Weekly artifacts, with active selection sync. |
@@ -205,10 +205,11 @@ No remote push, main merge, production deploy, or secret access is allowed witho
 - L36: weekly report schedule evaluation.
 - L37: local file upload/import UI.
 - L38: applied import graph/timeline feedback.
+- L39: app shell rehydration API.
 
 ## 6. Active Next Loops
 
-Next local loop: add a full reload/re-hydration path after imports so the Cytoscape graph can rebuild from persisted private memories, or run staging PostgreSQL/pgvector/auth smoke harness when deployment secrets are available. Live LLM keys, hosted identity configuration, and deployment wiring stay gated until secrets/deploy target are explicitly available.
+Next local loop: add explicit graph rebuild from rehydrated app shell payload, or run staging PostgreSQL/pgvector/auth smoke harness when deployment secrets are available. Live LLM keys, hosted identity configuration, and deployment wiring stay gated until secrets/deploy target are explicitly available.
 
 ## 7. Completed Loop Details
 
@@ -879,6 +880,28 @@ Implemented:
 - `scripts/verify-playwright-evidence.ts`
 - `docs/superpowers/plans/2026-05-28-import-apply-feedback.md`
 
+### L39 — App Shell Rehydration API
+
+Goal: add an owner-scoped app shell rehydration path so the web second brain can reload graph/timeline data after imports persist.
+
+Acceptance:
+
+- `GET /api/app-shell` returns app shell data rebuilt from the private owner store
+- HTTP auth keeps rehydration owner-scoped
+- another user's memories do not leak into app shell payloads
+- browser calls app shell rehydration after import apply
+- shell exposes rehydrated memory, graph, and timeline counts for graph rebuild
+
+Implemented:
+
+- `src/lib/personalMemoryApi.ts`
+- `src/lib/personalMemoryApi.test.ts`
+- `src/lib/localHttpTransport.test.ts`
+- `src/App.tsx`
+- `src/lib/appShellEvidenceLayout.test.ts`
+- `scripts/verify-playwright-evidence.ts`
+- `docs/superpowers/plans/2026-05-28-app-shell-rehydration.md`
+
 ## 8. MVP Time Estimate
 
 Assuming focused local development without major dependency or deployment blockers:
@@ -892,7 +915,7 @@ Assuming focused local development without major dependency or deployment blocke
 
 Critical path for the next "나를 아는 AI" jump:
 
-1. Add a full reload/re-hydration path after imports so the Cytoscape graph can rebuild from persisted private memories.
+1. Add explicit graph rebuild from the rehydrated app shell payload.
 2. Run staging PostgreSQL/pgvector/auth smoke against the already wired Postgres/auth runtimes when deployment secrets are available.
 3. Connect hosted identity/OAuth on the deployment target.
 

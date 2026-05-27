@@ -464,5 +464,8 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(documentHtml).toContain('const renderAppliedImportFeedback =');
     expect(documentHtml).toContain("timelinePanel.setAttribute('data-timeline-entry-count'");
     expect(documentHtml).toContain("shell.setAttribute('data-import-applied-memory-ids'");
+    expect(documentHtml).toContain("fetch('/api/app-shell'");
+    expect(documentHtml).toContain("shell.setAttribute('data-graph-rehydrate-state', 'ready')");
+    expect(documentHtml).toContain("shell.setAttribute('data-rehydrated-memory-node-count'");
   });
 });

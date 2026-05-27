@@ -155,6 +155,9 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   assert((await page.locator('[data-import-applied-memory-id]').count()) === 1, 'Applied import feedback should render created memory rows');
   assert((await page.locator('[data-imported-memory="true"]').count()) === 1, 'Applied import should append an imported timeline row');
   assert((await attribute(page, '.second-brain-shell', 'data-graph-import-pending')) === 'true', 'Shell should mark graph import refresh pending after apply');
+  assert((await attribute(page, '.second-brain-shell', 'data-graph-rehydrate-state')) === 'ready', 'Shell should rehydrate app shell data after import apply');
+  const rehydratedMemoryNodeCount = Number(await attribute(page, '.second-brain-shell', 'data-rehydrated-memory-node-count'));
+  assert(rehydratedMemoryNodeCount > 8, 'Rehydrated app shell should include newly imported private memories');
 
   await page.locator('[data-control="spacing"][data-spacing="wide"]').click();
   assert((await attribute(page, '.second-brain-shell', 'data-spacing')) === 'wide', 'Spacing control should switch graph spacing to wide');
@@ -266,6 +269,7 @@ try {
           'local import upload apply',
           'applied import graph feedback',
           'applied import timeline append',
+          'app shell rehydration after import',
           'spacing click',
           'label toggle',
           'filter toggle',

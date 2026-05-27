@@ -1,4 +1,5 @@
 import type { CurrentDecision } from './decisionReplay';
+import { buildAppShellEvidenceLayoutFromMemoryStore } from './appShellEvidenceLayout';
 import type { FastDiaryCaptureFlatInput } from './fastDiaryCapture';
 import { buildImportPreview, type ImportPreview, type ImportPreviewCandidate } from './importPreview';
 import {
@@ -19,6 +20,7 @@ import {
 
 export type PersonalMemoryApiMethod = 'GET' | 'POST';
 export type PersonalMemoryApiPath =
+  | '/api/app-shell'
   | '/api/capture'
   | '/api/import/preview'
   | '/api/import/apply'
@@ -129,6 +131,16 @@ export async function handlePersonalMemoryApiRequest(
   input: HandlePersonalMemoryApiRequestInput,
 ): Promise<PersonalMemoryApiResponse> {
   const { store, userId, request } = input;
+
+  if (request.path === '/api/app-shell') {
+    if (request.method !== 'GET') return methodNotAllowed();
+    return {
+      statusCode: 200,
+      body: {
+        appShell: await buildAppShellEvidenceLayoutFromMemoryStore({ store, userId }),
+      },
+    };
+  }
 
   if (request.path === '/api/capture') {
     if (request.method !== 'POST') return methodNotAllowed();

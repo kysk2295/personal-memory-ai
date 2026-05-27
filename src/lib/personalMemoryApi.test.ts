@@ -360,6 +360,35 @@ describe('personal memory API boundary', () => {
     ]);
   });
 
+  test('returns an owner-scoped app shell layout for rehydrating after imports', async () => {
+    const store = createMemoryStore({ env: {} });
+    await store.create('user-a', personalMemoryRecords[0]);
+    await store.create('user-b', {
+      ...personalMemoryRecords[1],
+      id: 'mem_other_user_app_shell_guard',
+      sourceRef: 'obsidian://other-user/app-shell-guard',
+    });
+
+    const response = await handlePersonalMemoryApiRequest({
+      store,
+      userId: 'user-a',
+      request: {
+        method: 'GET',
+        path: '/api/app-shell',
+      },
+    });
+
+    expect(response.statusCode).toBe(200);
+    const body = response.body as { appShell: { records: MemoryRecord[]; primaryNodes: Array<{ recordId: string }> } };
+    expect(body.appShell.records.map((record) => record.id)).toEqual(
+      expect.arrayContaining(['mem_launch_may_anxiety_scope_delay']),
+    );
+    expect(body.appShell.primaryNodes.map((node) => node.recordId)).toEqual(
+      expect.arrayContaining(['mem_launch_may_anxiety_scope_delay']),
+    );
+    expect(JSON.stringify(response.body)).not.toContain('mem_other_user_app_shell_guard');
+  });
+
   test('persists user feedback corrections inside one private memory scope', async () => {
     const store = createMemoryStore({ env: {} });
     await store.create('user-a', personalMemoryRecords[0]);
