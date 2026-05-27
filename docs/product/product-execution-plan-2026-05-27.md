@@ -2,7 +2,7 @@
 
 Status: active local execution plan  
 Owner: Ko Yunseo  
-Updated: 2026-05-28, weekly report schedule pass
+Updated: 2026-05-28, local import upload UI pass
 Supersedes for local Codex work: `docs/product/product-master-plan-2026-05-26.md`
 
 ## 1. Product Definition
@@ -108,7 +108,7 @@ Status values:
 | Capture | Emotion/project/decision hints | `done-foundation` | Data contract exists; full UI still planned. |
 | Import | Notion/Obsidian/Markdown preview | `done-foundation` | Preview/dedupe contract exists. |
 | Import | Apply/undo import state model | `done-foundation` | Batch state model tracks preview, applied, skipped, graph evidence, and undone states. |
-| Import | File upload/import UI | `planned` | Needed before real personal use. |
+| Import | File upload/import UI | `prototype-ui` | Local Markdown/Text/JSON upload and paste surface can build preview candidates and call owner-scoped preview/apply APIs when served over HTTP. |
 | Memory Store | Fixture user isolation | `done-foundation` | Tests cover user-scoped records. |
 | Memory Store | PostgreSQL repository | `done-foundation` | Runtime factory can select Postgres via `MEMORY_BACKEND_MODE=postgres` and `DATABASE_URL`; live credentials remain a deployment gate. |
 | Memory Store | pgvector semantic search | `done-foundation` | Store method, migration, optional auto-migrate, and safe runtime health metadata exist; live staging execution remains gated on secrets/deploy target. |
@@ -203,10 +203,11 @@ No remote push, main merge, production deploy, or secret access is allowed witho
 - L34: Gemini provider adapter.
 - L35: private vault auth provider runtime.
 - L36: weekly report schedule evaluation.
+- L37: local file upload/import UI.
 
 ## 6. Active Next Loops
 
-Next local loop: add file upload/import UI for real personal memory onboarding, or run staging PostgreSQL/pgvector/auth smoke harness when deployment secrets are available. Live LLM keys, hosted identity configuration, and deployment wiring stay gated until secrets/deploy target are explicitly available.
+Next local loop: add import upload apply feedback into the graph/timeline after persisted imports, or run staging PostgreSQL/pgvector/auth smoke harness when deployment secrets are available. Live LLM keys, hosted identity configuration, and deployment wiring stay gated until secrets/deploy target are explicitly available.
 
 ## 7. Completed Loop Details
 
@@ -834,6 +835,29 @@ Implemented:
 - `src/lib/localHttpTransport.test.ts`
 - `docs/superpowers/plans/2026-05-28-weekly-report-schedule.md`
 
+### L37 — Local File Upload / Import UI
+
+Goal: add a real local file/text import entry point that turns Markdown, JSON, and Obsidian-style exports into private import preview candidates.
+
+Acceptance:
+
+- Markdown/Text files and pasted text become local import candidates
+- JSON object/array exports can preserve source metadata when present
+- empty files are blocked without creating candidates
+- web shell exposes owner-only upload, preview, and apply controls
+- preview/apply calls use existing private-vault import APIs when served over HTTP
+- Playwright verifies preview and apply interaction states
+
+Implemented:
+
+- `src/lib/importUploadDraft.ts`
+- `src/lib/importUploadDraft.test.ts`
+- `src/components/PatternPanel.tsx`
+- `src/App.tsx`
+- `src/lib/appShellEvidenceLayout.test.ts`
+- `scripts/verify-playwright-evidence.ts`
+- `docs/superpowers/plans/2026-05-28-import-upload-ui.md`
+
 ## 8. MVP Time Estimate
 
 Assuming focused local development without major dependency or deployment blockers:
@@ -847,7 +871,7 @@ Assuming focused local development without major dependency or deployment blocke
 
 Critical path for the next "나를 아는 AI" jump:
 
-1. Add file upload/import UI so real Notion/Obsidian/Markdown memories can enter the private graph without hand-coded fixtures.
+1. Add import upload apply feedback into graph/timeline after persisted imports so a user immediately sees new memories join the second brain.
 2. Run staging PostgreSQL/pgvector/auth smoke against the already wired Postgres/auth runtimes when deployment secrets are available.
 3. Connect hosted identity/OAuth on the deployment target.
 

@@ -1647,11 +1647,19 @@ const GRAPH_CONTROL_SCRIPT = `
   const feedbackPanel = document.querySelector('[data-feedback-panel="user-correction"]');
   const feedbackSubmit = document.querySelector('[data-control="submit-feedback-correction"]');
   const feedbackText = document.querySelector('[data-control="feedback-correction-text"]');
+  const importUploadPanel = document.querySelector('[data-import-upload-panel="local-file"]');
+  const importFileInput = document.querySelector('[data-control="local-import-file-input"]');
+  const importPasteText = document.querySelector('[data-control="local-import-paste-text"]');
+  const importPreviewButton = document.querySelector('[data-control="preview-local-import"]');
+  const importApplyButton = document.querySelector('[data-control="apply-local-import"]');
+  const importUploadSummary = document.querySelector('[data-import-upload-summary]');
+  const importUploadPreviewList = document.querySelector('[data-import-upload-preview-list]');
   const cytoscapeMount = document.querySelector('[data-graph-library="cytoscape"]');
   const graphPayloadScript = document.querySelector('#memory-graph-elements');
   const savedArtifactPayloadScript = document.querySelector('#saved-artifact-actions');
   let cytoscapeGraph = null;
   let layoutVersion = Number(shell.getAttribute('data-layout-version') || '0');
+  let lastLocalImportPreview = null;
 
   const setInteractionState = (value) => {
     shell.setAttribute('data-interaction-state', value);
@@ -2031,6 +2039,181 @@ const GRAPH_CONTROL_SCRIPT = `
     feedbackSubmit.textContent = feedbackSubmit.getAttribute('data-feedback-submitted-label') || 'Feedback saved';
     shell.setAttribute('data-last-feedback-memory-target', targetMemoryId);
     setInteractionState('feedback-submitted');
+  });
+
+  const markdownRawText = (text) =>
+    String(text || '')
+      .split('\\n')
+      .filter((line) => !line.trim().startsWith('# '))
+      .join('\\n')
+      .trim();
+
+  const dateFromName = (name) => String(name || '').match(/\\d{4}-\\d{2}-\\d{2}/)?.[0] || new Date().toISOString().slice(0, 10);
+
+  const candidateFromText = (name, text, index) => ({
+    sourceType: 'markdown',
+    sourceRef: 'markdown://' + name + (index ? '#' + (index + 1) : ''),
+    observedAt: dateFromName(name),
+    rawText: markdownRawText(text),
+    provenance: {
+      importer: 'local-file-upload',
+      sourceName: name,
+    },
+  });
+
+  const buildLocalImportCandidates = async () => {
+    const files = Array.from(importFileInput?.files || []);
+    const pastedText = importPasteText?.value || '';
+    const fileEntries = await Promise.all(
+      files.map(async (file) => ({
+        name: file.name,
+        text: await file.text(),
+      })),
+    );
+    if (pastedText.trim()) {
+      fileEntries.push({
+        name: 'pasted-memory-' + new Date().toISOString().slice(0, 10) + '.md',
+        text: pastedText,
+      });
+    }
+
+    const candidates = [];
+    fileEntries.forEach((file) => {
+      if (file.name.toLowerCase().endsWith('.json')) {
+        try {
+          const parsed = JSON.parse(file.text);
+          const rows = Array.isArray(parsed) ? parsed : [parsed];
+          rows.forEach((row, index) => {
+            const rawText = String(row?.rawText || row?.text || '').trim();
+            if (!rawText) return;
+            candidates.push({
+              sourceType: ['notion', 'obsidian', 'markdown'].includes(row?.sourceType) ? row.sourceType : 'markdown',
+              sourceRef: row?.sourceRef || 'markdown://' + file.name + '#' + (index + 1),
+              observedAt: row?.observedAt || dateFromName(file.name),
+              rawText,
+              summary: row?.summary,
+              provenance: {
+                importer: 'local-file-upload',
+                sourceName: file.name,
+              },
+            });
+          });
+          return;
+        } catch {
+          // Invalid JSON falls back to text import below.
+        }
+      }
+      const candidate = candidateFromText(file.name, file.text, 0);
+      if (candidate.rawText) candidates.push(candidate);
+    });
+
+    return {
+      batchId: 'local-upload-' + Date.now(),
+      createdAt: new Date().toISOString(),
+      files: fileEntries,
+      candidates,
+    };
+  };
+
+  const renderImportPreviewRows = (records) => {
+    if (!importUploadPreviewList) return;
+    importUploadPreviewList.innerHTML = (records || [])
+      .slice(0, 4)
+      .map(
+        (record) =>
+          '<article data-local-import-preview-id="' +
+          escapeText(record.id || '') +
+          '" data-import-duplicate-state="' +
+          escapeText(record.duplicate?.state || 'new') +
+          '"><strong>' +
+          escapeText(record.sourceType || 'markdown') +
+          ' ' +
+          escapeText(record.observedDate || '') +
+          '</strong><p>' +
+          escapeText(record.memoryRecord?.summary || record.memoryRecord?.rawText || 'Local import candidate') +
+          '</p><span>' +
+          escapeText(record.duplicate?.state || 'new') +
+          '</span></article>',
+      )
+      .join('');
+  };
+
+  importPreviewButton?.addEventListener('click', async () => {
+    if (!importUploadPanel) return;
+    importUploadPanel.setAttribute('data-import-upload-state', 'reading');
+    const draft = await buildLocalImportCandidates();
+    const importPreviewEndpoint = importUploadPanel.getAttribute('data-import-preview-endpoint') || '';
+    importUploadPanel.setAttribute('data-import-upload-file-count', String(draft.files.length));
+    importUploadPanel.setAttribute('data-import-upload-candidate-count', String(draft.candidates.length));
+    if (importUploadSummary) importUploadSummary.textContent = draft.files.length + ' files · ' + draft.candidates.length + ' candidates';
+
+    if (!draft.candidates.length) {
+      importUploadPanel.setAttribute('data-import-upload-state', 'blocked');
+      setInteractionState('import-upload-blocked');
+      return;
+    }
+
+    try {
+      if (importPreviewEndpoint && window.location.protocol !== 'file:') {
+        const response = await fetch(importPreviewEndpoint, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            batchId: draft.batchId,
+            createdAt: draft.createdAt,
+            candidates: draft.candidates,
+          }),
+        });
+        if (!response.ok) throw new Error('import preview failed with ' + response.status);
+        lastLocalImportPreview = (await response.json()).preview;
+      } else {
+        lastLocalImportPreview = {
+          batchId: draft.batchId,
+          records: draft.candidates.map((candidate, index) => ({
+            id: 'local_preview_' + (index + 1),
+            sourceType: candidate.sourceType,
+            observedDate: candidate.observedAt || draft.createdAt.slice(0, 10),
+            duplicate: { state: 'new', existingRecordIds: [] },
+            memoryRecord: {
+              summary: candidate.summary || candidate.rawText.slice(0, 80),
+              rawText: candidate.rawText,
+            },
+          })),
+        };
+      }
+      renderImportPreviewRows(lastLocalImportPreview.records);
+      importUploadPanel.setAttribute('data-import-upload-state', 'preview-ready');
+      importApplyButton?.removeAttribute('disabled');
+      setInteractionState('import-preview-ready');
+    } catch (error) {
+      importUploadPanel.setAttribute('data-import-upload-state', 'error');
+      shell.setAttribute('data-import-upload-error', String(error?.message || error));
+      setInteractionState('import-preview-error');
+    }
+  });
+
+  importApplyButton?.addEventListener('click', async () => {
+    if (!importUploadPanel || !lastLocalImportPreview) return;
+    const importApplyEndpoint = importUploadPanel.getAttribute('data-import-apply-endpoint') || '';
+    importUploadPanel.setAttribute('data-import-upload-state', 'applying');
+    try {
+      if (importApplyEndpoint && window.location.protocol !== 'file:') {
+        const response = await fetch(importApplyEndpoint, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ preview: lastLocalImportPreview }),
+        });
+        if (!response.ok) throw new Error('import apply failed with ' + response.status);
+        const body = await response.json().catch(() => ({}));
+        shell.setAttribute('data-last-import-created-count', String(body.createdMemoryIds?.length || 0));
+      }
+      importUploadPanel.setAttribute('data-import-upload-state', 'applied');
+      setInteractionState('import-applied');
+    } catch (error) {
+      importUploadPanel.setAttribute('data-import-upload-state', 'error');
+      shell.setAttribute('data-import-upload-error', String(error?.message || error));
+      setInteractionState('import-apply-error');
+    }
   });
 
   filterButtons.forEach((button) => {

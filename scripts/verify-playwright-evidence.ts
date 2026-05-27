@@ -82,6 +82,9 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   assert((await attribute(page, '[data-save-artifact-action="weekly_report"]', 'data-artifact-save-endpoint')) === '/api/capture', 'Expected saved artifact action to expose capture endpoint');
   assert((await attribute(page, '[data-feedback-panel="user-correction"]', 'data-feedback-state')) === 'ready', 'Expected feedback panel to start ready');
   assert((await attribute(page, '[data-feedback-panel="user-correction"]', 'data-feedback-endpoint')) === '/api/feedback', 'Expected feedback panel to target feedback API');
+  assert((await attribute(page, '[data-import-upload-panel="local-file"]', 'data-import-upload-state')) === 'idle', 'Expected local import upload panel to start idle');
+  assert((await attribute(page, '[data-import-upload-panel="local-file"]', 'data-import-preview-endpoint')) === '/api/import/preview', 'Expected local import upload panel to target import preview API');
+  assert((await attribute(page, '[data-import-upload-panel="local-file"]', 'data-import-apply-endpoint')) === '/api/import/apply', 'Expected local import upload panel to target import apply API');
   assert((await attribute(page, '[data-memory-timeline-panel="pmi025"]', 'data-timeline-entry-count')) === '8', 'Expected timeline panel to render eight private memories');
   assert(
     (await page.locator('[data-timeline-memory-id^="mem_api_artifact_"]').count()) === 3,
@@ -115,17 +118,36 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   const askArtifactId = await attribute(page, '[data-save-artifact-action="ask_answer"]', 'data-artifact-id');
   assert(askArtifactId, 'Expected Ask save action to expose artifact id');
   await page.locator('[data-save-artifact-action="ask_answer"]').click();
+  await page.waitForFunction(
+    () => document.querySelector('[data-save-artifact-action="ask_answer"]')?.getAttribute('data-artifact-save-state') === 'saved',
+    null,
+    { timeout: 10_000 },
+  );
   assert((await attribute(page, '[data-save-artifact-action="ask_answer"]', 'data-artifact-save-state')) === 'saved', 'Ask save action should mark artifact saved');
   assert((await attribute(page, '.second-brain-shell', 'data-last-saved-artifact')) === askArtifactId, 'Shell should expose the last saved artifact id');
   assert((await attribute(page, '.second-brain-shell', 'data-interaction-state')) === 'artifact-saved', 'Shell should expose artifact saved interaction state');
 
   await page.locator('[data-control="submit-feedback-correction"]').click();
+  await page.waitForFunction(
+    () => document.querySelector('[data-feedback-panel="user-correction"]')?.getAttribute('data-feedback-state') === 'submitted',
+    null,
+    { timeout: 10_000 },
+  );
   assert((await attribute(page, '[data-feedback-panel="user-correction"]', 'data-feedback-state')) === 'submitted', 'Feedback panel should mark correction submitted');
   assert(
     (await attribute(page, '.second-brain-shell', 'data-last-feedback-memory-target')) === 'mem_freeze_vs_feature_addition',
     'Shell should expose the last feedback memory target',
   );
   assert((await attribute(page, '.second-brain-shell', 'data-interaction-state')) === 'feedback-submitted', 'Shell should expose feedback submitted state');
+
+  await page.locator('[data-control="local-import-paste-text"]').fill('Imported local memory says I should cut scope before adding another visual feature.');
+  await page.locator('[data-control="preview-local-import"]').click();
+  await page.waitForFunction(() => document.querySelector('[data-import-upload-panel="local-file"]')?.getAttribute('data-import-upload-state') === 'preview-ready');
+  assert((await attribute(page, '[data-import-upload-panel="local-file"]', 'data-import-upload-candidate-count')) === '1', 'Local import preview should create one candidate');
+  assert((await page.locator('[data-local-import-preview-id]').count()) >= 1, 'Local import preview should render candidate rows');
+  await page.locator('[data-control="apply-local-import"]').click();
+  await page.waitForFunction(() => document.querySelector('[data-import-upload-panel="local-file"]')?.getAttribute('data-import-upload-state') === 'applied');
+  assert((await attribute(page, '.second-brain-shell', 'data-interaction-state')) === 'import-applied', 'Shell should expose local import apply state');
 
   await page.locator('[data-control="spacing"][data-spacing="wide"]').click();
   assert((await attribute(page, '.second-brain-shell', 'data-spacing')) === 'wide', 'Spacing control should switch graph spacing to wide');
@@ -233,6 +255,8 @@ try {
           'saved artifact action',
           'saved artifact persistence manifest',
           'feedback correction action',
+          'local import upload preview',
+          'local import upload apply',
           'spacing click',
           'label toggle',
           'filter toggle',
