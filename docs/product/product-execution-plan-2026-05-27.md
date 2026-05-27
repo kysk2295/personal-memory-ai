@@ -111,7 +111,7 @@ Status values:
 | Reports | Saved weekly/monthly reports | `planned` | Needs storage and report detail UI. |
 | Reports | Scheduler/reminders | `planned` | After report engine and app/PWA capture. |
 | Agent | Personal Memory Agent orchestrator | `done-foundation` | Loads store records and returns ask/replay/graph evidence. |
-| Agent | Semantic retrieval/reranking | `planned` | Next critical step for "it knows me" quality. |
+| Agent | Semantic retrieval/reranking | `done-foundation` | Deterministic retrieval contract ranks user-scoped memories; pgvector path remains a backend task. |
 | Agent | User feedback learning loop | `planned` | Needed for agent personalization. |
 | Privacy | Private-by-default scope | `done-foundation` | Data model and UI labels exist. |
 | Privacy | Export/delete local UX | `planned` | Store functions exist; user-facing flow incomplete. |
@@ -148,21 +148,9 @@ No remote push, main merge, production deploy, or secret access is allowed witho
 - L6: import apply/undo UI state model.
 - L7: weekly report engine.
 - L8: weekly report product surface.
+- L9: semantic retrieval contract.
 
 ## 6. Active Next Loops
-
-### L9 — Semantic Retrieval Contract
-
-Goal: add a retrieval boundary that can later use embeddings/pgvector, while local tests use deterministic query matching.
-
-Acceptance:
-
-- query returns ranked memories
-- retrieval is user-scoped
-- Ask/Replay/Weekly Report can consume retrieved memories
-- insufficient retrieval stays explicit
-
-Estimated effort: 1-2 days.
 
 ### L10 — LLM Citation-Constrained Generation
 
@@ -323,25 +311,39 @@ Implemented:
 - `layout.weeklyReport`
 - `artifacts/web-second-brain-product-surface/weekly-report-surface.png`
 
+### L9 — Semantic Retrieval Contract
+
+Goal: add a retrieval boundary that can later use embeddings/pgvector, while local tests use deterministic query matching.
+
+Acceptance:
+
+- query returns ranked memories
+- retrieval is user-scoped
+- Ask/Replay/Weekly Report can consume retrieved memories
+- insufficient retrieval stays explicit
+
+Implemented:
+
+- `src/lib/memoryRetrieval.ts`
+- `src/lib/memoryRetrieval.test.ts`
+
 ## 8. MVP Time Estimate
 
 Assuming focused local development without major dependency or deployment blockers:
 
 | Target | Remaining effort |
 |---|---:|
-| Local prototype with real weekly report engine and retrieval contract | 3-6 days |
+| Local prototype with real weekly report engine and retrieval contract | completed locally |
 | Usable one-person local MVP with import/capture/ask/replay/report | 1-2 weeks |
 | Private beta with API, DB, LLM, export/delete, and basic auth | 6-10 weeks |
 | Product-grade app + web + agent + backend | 4-6 months |
 
 Critical path for "나를 아는 AI" feeling:
 
-1. Weekly Report Engine.
-2. Semantic Retrieval Contract.
-3. Citation-constrained LLM generation.
-4. API endpoints.
-5. PWA/app capture surface.
-6. Private vault/auth.
+1. Citation-constrained LLM generation.
+2. API endpoints.
+3. PWA/app capture surface.
+4. Private vault/auth.
 
 ## 9. Product Quality Rules
 
