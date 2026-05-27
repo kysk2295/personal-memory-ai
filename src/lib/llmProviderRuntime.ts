@@ -1,4 +1,5 @@
 import type { CitationConstrainedTask } from './citationConstrainedGeneration';
+import { createGeminiCitationGuardedProvider, type GeminiProviderFetch } from './geminiProvider';
 import {
   generateWithCitationGuardedProvider,
   type CitationGuardedLlmProvider,
@@ -61,6 +62,21 @@ export interface RunCitationGuardedLlmSmokeInput {
   userInput: string;
   memories: readonly MemoryRecord[];
   provider?: CitationGuardedLlmProvider;
+}
+
+export function createGeminiProviderFromRuntimeConfig(
+  config: LlmProviderRuntimeConfig,
+  env: LlmProviderRuntimeEnv,
+  fetch?: GeminiProviderFetch,
+): CitationGuardedLlmProvider | null {
+  const apiKey = env.GEMINI_API_KEY ?? env.GOOGLE_API_KEY;
+  if (config.providerName !== 'gemini' || !config.canRunLiveSmoke || !apiKey || !config.model) return null;
+  return createGeminiCitationGuardedProvider({
+    apiKey,
+    model: config.model,
+    baseUrl: config.baseUrl,
+    fetch,
+  });
 }
 
 const GEMINI_REQUIRED_ENV_VARS = ['GEMINI_API_KEY', 'PMI_LLM_MODEL'];

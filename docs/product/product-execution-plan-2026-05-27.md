@@ -2,7 +2,7 @@
 
 Status: active local execution plan  
 Owner: Ko Yunseo  
-Updated: 2026-05-28, feedback retrieval priority pass
+Updated: 2026-05-28, Gemini provider adapter pass
 Supersedes for local Codex work: `docs/product/product-master-plan-2026-05-26.md`
 
 ## 1. Product Definition
@@ -135,7 +135,7 @@ Status values:
 | Agent | Multi-axis retrieval router | `done-foundation` | Deterministic router fuses keyword, semantic, knowledge-ledger graph traversal, temporal freshness, and user feedback corrections; legacy retrieval delegates to it. |
 | Agent | Korean/user-intent retrieval bridge | `done-foundation` | Korean product-intent questions expand into retrieval terms before the agent filters memory context. |
 | Agent | Citation-constrained generation guard | `done-foundation` | LLM-shaped outputs are rejected unless grounded in supplied citation ids. |
-| Agent | LLM provider adapter | `done-foundation` | Provider-agnostic adapter wraps model outputs in the citation guard before advice can surface. Gemini-first runtime readiness and smoke harness now gate live calls on `GEMINI_API_KEY` + `PMI_LLM_MODEL` without leaking secrets. |
+| Agent | LLM provider adapter | `done-foundation` | Provider-agnostic adapter wraps model outputs in the citation guard before advice can surface. Gemini REST provider can now call `generateContent` through the L30 smoke harness when `GEMINI_API_KEY` + `PMI_LLM_MODEL` are present. |
 | Agent | User feedback learning loop | `prototype-ui` | User corrections can become private `mem_api_feedback_*` memories through `/api/feedback`; the web rail now exposes a visible correction panel that submits feedback when served over HTTP. |
 | Privacy | Private-by-default scope | `done-foundation` | Data model and UI labels exist. |
 | Privacy | Export/delete local UX | `done-foundation` | Owner-only local export, selected delete, and hard-delete confirmation panel are rendered. |
@@ -200,10 +200,11 @@ No remote push, main merge, production deploy, or secret access is allowed witho
 - L31: user feedback/correction memory.
 - L32: feedback correction UI.
 - L33: feedback retrieval priority.
+- L34: Gemini provider adapter.
 
 ## 6. Active Next Loops
 
-Next local loop: run staging PostgreSQL/pgvector/auth smoke harness when deployment secrets are available, or attach a real Gemini provider behind the L30 smoke harness. Production auth, live LLM keys, and deployment wiring stay gated until secrets/deploy target are explicitly available.
+Next local loop: run staging PostgreSQL/pgvector/auth smoke harness when deployment secrets are available, or add production auth provider scaffolding locally. Production auth, live LLM keys, and deployment wiring stay gated until secrets/deploy target are explicitly available.
 
 ## 7. Completed Loop Details
 
@@ -766,6 +767,27 @@ Implemented:
 - `src/lib/multiAxisMemoryRetrieval.test.ts`
 - `docs/superpowers/plans/2026-05-28-feedback-retrieval-priority.md`
 
+### L34 — Gemini Provider Adapter
+
+Goal: attach a real Gemini REST provider implementation behind the existing citation-guarded LLM adapter.
+
+Acceptance:
+
+- provider sends Gemini `generateContent` requests with `x-goog-api-key`
+- request includes citation instructions, allowed citation ids, and evidence text
+- response parser reads JSON from `candidates[].content.parts[].text`
+- fenced JSON is supported
+- API key values are not returned in provider output
+- runtime config can create a Gemini provider only when ready
+
+Implemented:
+
+- `src/lib/geminiProvider.ts`
+- `src/lib/geminiProvider.test.ts`
+- `src/lib/llmProviderRuntime.ts`
+- `src/lib/llmProviderRuntime.test.ts`
+- `docs/superpowers/plans/2026-05-28-gemini-provider-adapter.md`
+
 ## 8. MVP Time Estimate
 
 Assuming focused local development without major dependency or deployment blockers:
@@ -780,8 +802,8 @@ Assuming focused local development without major dependency or deployment blocke
 Critical path for the next "나를 아는 AI" jump:
 
 1. Run staging PostgreSQL/pgvector/auth smoke against the already wired Postgres runtime when deployment secrets are available.
-2. Attach a real Gemini provider implementation behind the L30 smoke harness.
-3. Add production auth/private vault provider for multi-user beta.
+2. Add production auth/private vault provider for multi-user beta.
+3. Add recurring weekly report generation and notification scheduling.
 
 ## 9. Product Quality Rules
 

@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vitest';
 import { personalMemoryRecords } from './__fixtures__/personalMemoryRecords';
 import {
   buildLlmProviderSmokePlan,
+  createGeminiProviderFromRuntimeConfig,
   resolveLlmProviderRuntimeConfig,
   runCitationGuardedLlmSmoke,
 } from './llmProviderRuntime';
@@ -145,5 +146,37 @@ describe('LLM provider runtime smoke harness', () => {
         rejectionReason: 'Output must include at least one citation id.',
       }),
     );
+  });
+
+  test('attaches a Gemini provider from ready runtime config without exposing the secret', async () => {
+    const env = {
+      GEMINI_API_KEY: 'gemini-live-secret-should-not-leak',
+      PMI_LLM_MODEL: 'gemini-test-memory',
+    };
+    const config = resolveLlmProviderRuntimeConfig(env);
+    const provider = createGeminiProviderFromRuntimeConfig(config, env, async () =>
+      new Response(
+        JSON.stringify({
+          candidates: [
+            {
+              content: {
+                parts: [
+                  {
+                    text: JSON.stringify({
+                      answer: 'Use the cited memory. [mem_launch_may_anxiety_scope_delay]',
+                      citationMemoryIds: ['mem_launch_may_anxiety_scope_delay'],
+                    }),
+                  },
+                ],
+              },
+            },
+          ],
+        }),
+        { status: 200 },
+      ),
+    );
+
+    expect(provider).toEqual(expect.objectContaining({ name: 'gemini', model: 'gemini-test-memory' }));
+    expect(JSON.stringify(provider)).not.toContain('gemini-live-secret-should-not-leak');
   });
 });
