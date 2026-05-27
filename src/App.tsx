@@ -3,6 +3,7 @@ import { renderDecisionReplayPanel } from './components/DecisionReplayPanel';
 import { renderEvidenceDrawer } from './components/EvidenceDrawer';
 import { renderMemoryGraph } from './components/MemoryGraph';
 import { renderPatternPanel } from './components/PatternPanel';
+import { renderWeeklyReportPanel } from './components/WeeklyReportPanel';
 import { buildInitialAppShellEvidenceLayout } from './lib/appShellEvidenceLayout';
 
 const APP_SHELL_STYLES = `
@@ -407,6 +408,7 @@ const APP_SHELL_STYLES = `
   }
   .ask-flow,
   .decision-replay-flow,
+  .weekly-report-flow,
   .evidence-drawer,
   .analysis-panels {
     display: flex;
@@ -414,9 +416,11 @@ const APP_SHELL_STYLES = `
     gap: 12px;
   }
   .ask-flow { max-height: 500px; overflow: auto; }
+  .weekly-report-flow { max-height: 470px; overflow: auto; }
   .evidence-drawer { max-height: 390px; overflow: auto; }
   .ask-flow,
   .decision-replay-flow,
+  .weekly-report-flow,
   .evidence-drawer,
   .analysis-panels .panel {
     padding: 14px;
@@ -506,6 +510,7 @@ const APP_SHELL_STYLES = `
   .ask-citations,
   .decision-citations,
   .pattern-memory-list,
+  .weekly-report-aggregate-list,
   .privacy-action-list,
   .decision-tag-list,
   .surface-list,
@@ -517,12 +522,15 @@ const APP_SHELL_STYLES = `
   .ask-citations,
   .similar-decision-list,
   .drawer-list,
+  .weekly-report-aggregate-list,
   .analysis-lead {
     display: grid;
     gap: 9px;
   }
   .ask-citations li,
-  .decision-citations li {
+  .decision-citations li,
+  .weekly-report-aggregate-list li,
+  .weekly-report-pattern {
     display: grid;
     gap: 5px;
     border-top: 1px solid rgba(117, 122, 143, 0.1);
@@ -540,6 +548,7 @@ const APP_SHELL_STYLES = `
     gap: 8px;
   }
   .decision-columns span,
+  .weekly-report-aggregate-list strong,
   .panel-topline span:first-child,
   .drawer-current-question strong,
   .insufficient-evidence-state strong,
@@ -814,6 +823,7 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
 
         <aside class="product-rail" aria-label="Cited memory product rail">
           ${renderAskMyPastSelfPanel(layout)}
+          ${renderWeeklyReportPanel(layout)}
           ${renderEvidenceDrawer(layout)}
           ${renderDecisionReplayPanel(layout)}
           ${renderPatternPanel(layout)}

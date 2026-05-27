@@ -106,7 +106,7 @@ Status values:
 | Ask | Follow-up conversation | `planned` | Requires session/report memory. |
 | Decision | Decision Replay deterministic contract | `done-foundation` | Past outcome citations tested. |
 | Decision | Decision result save-back | `planned` | Current decisions should become future memories. |
-| Reports | Weekly Pattern Report foundation | `prototype-ui` | Current panel shows pattern citations. |
+| Reports | Weekly Pattern Report foundation | `done-foundation` | Weekly report panel and pattern citation panel are visible in the web surface. |
 | Reports | Weekly report engine | `done-foundation` | Date-window report generation aggregates emotions, decisions, outcomes, projects, and pattern citations. |
 | Reports | Saved weekly/monthly reports | `planned` | Needs storage and report detail UI. |
 | Reports | Scheduler/reminders | `planned` | After report engine and app/PWA capture. |
@@ -147,21 +147,9 @@ No remote push, main merge, production deploy, or secret access is allowed witho
 - L5: store-backed app shell data builder.
 - L6: import apply/undo UI state model.
 - L7: weekly report engine.
+- L8: weekly report product surface.
 
 ## 6. Active Next Loops
-
-### L8 — Weekly Report Product Surface
-
-Goal: expose the weekly report as a first-class web product section/detail surface.
-
-Acceptance:
-
-- visible weekly report card
-- report detail structure with citations
-- empty/insufficient state
-- screenshot evidence
-
-Estimated effort: 0.5-1 day.
 
 ### L9 — Semantic Retrieval Contract
 
@@ -318,6 +306,22 @@ Implemented:
 
 - `src/lib/weeklyReport.ts`
 - `src/lib/weeklyReport.test.ts`
+
+### L8 — Weekly Report Product Surface
+
+Goal: expose the weekly report as a first-class web product section/detail surface.
+
+Acceptance:
+
+- visible weekly report panel
+- report date window, aggregate citations, pattern citation, and insufficient state render in the web surface
+- screenshot evidence is captured locally
+
+Implemented:
+
+- `src/components/WeeklyReportPanel.tsx`
+- `layout.weeklyReport`
+- `artifacts/web-second-brain-product-surface/weekly-report-surface.png`
 
 ## 8. MVP Time Estimate
 

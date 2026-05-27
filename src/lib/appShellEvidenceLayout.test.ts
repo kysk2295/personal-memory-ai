@@ -46,9 +46,19 @@ describe('buildInitialAppShellEvidenceLayout', () => {
       expect.arrayContaining([
         expect.objectContaining({ id: 'app-quick-diary-capture', status: 'partial' }),
         expect.objectContaining({ id: 'web-graph-workspace', status: 'implemented' }),
-        expect.objectContaining({ id: 'weekly-report', status: 'planned' }),
+        expect.objectContaining({ id: 'weekly-report', status: 'implemented' }),
       ]),
     );
+    expect(shell.weeklyReport).toMatchObject({
+      id: 'weekly_report_2026-05-01_2026-05-20',
+      status: 'implemented',
+      evidenceLabel: 'sufficient_evidence',
+      includedMemoryIds: [
+        'mem_launch_may_anxiety_scope_delay',
+        'mem_launch_june_anxiety_scope_delay',
+        'mem_freeze_vs_feature_addition',
+      ],
+    });
     expect(shell.evidenceDrawer.items.length).toBeGreaterThan(0);
     expect(shell.compiledWiki.nodeCount).toBeGreaterThan(10);
     expect(shell.compiledWiki.atomCount).toBe(5);
@@ -75,11 +85,11 @@ describe('buildInitialAppShellEvidenceLayout', () => {
       expect.arrayContaining([
         expect.objectContaining({ id: 'seed-memory-fixtures', status: 'fake/sample' }),
         expect.objectContaining({ id: 'app-capture-native-client', status: 'skeleton' }),
-        expect.objectContaining({ id: 'weekly-report', status: 'planned' }),
+        expect.objectContaining({ id: 'weekly-report', status: 'implemented' }),
       ]),
     );
     expect(shell.surfaces.map((surface) => surface.status)).toEqual(
-      expect.arrayContaining(['implemented', 'partial', 'skeleton', 'fake/sample', 'planned']),
+      expect.arrayContaining(['implemented', 'partial', 'skeleton', 'fake/sample']),
     );
   });
 
@@ -230,6 +240,13 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('data-replay-citation-id="mem_launch_may_anxiety_scope_delay"');
 
     expect(html).toContain('Weekly Pattern Report');
+    expect(html).toContain('aria-label="Weekly Report cited memory summary"');
+    expect(html).toContain('data-weekly-report-id="weekly_report_2026-05-01_2026-05-20"');
+    expect(html).toContain('2026-05-01 to 2026-05-20');
+    expect(html).toContain('data-weekly-aggregate-kind="emotions"');
+    expect(html).toContain('data-weekly-aggregate-value="anxiety"');
+    expect(html).toContain('data-weekly-pattern-id="pattern_anxiety_scope_expansion_launch_delay"');
+    expect(html).toContain('Need at least 2 MemoryRecord citations in the weekly window.');
     expect(html).toContain('data-pattern-memory-id="mem_launch_may_anxiety_scope_delay"');
     expect(html).toContain('data-pattern-memory-id="mem_launch_june_anxiety_scope_delay"');
 

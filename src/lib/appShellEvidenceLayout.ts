@@ -7,6 +7,7 @@ import { personalMemoryRecords } from './__fixtures__/personalMemoryRecords';
 import type { MemoryRecord } from './memoryRecord';
 import type { MemoryStore } from './memoryStore';
 import { detectRepeatedPatterns, type PatternDetectionStatus } from './patternDetector';
+import { generateWeeklyReport, type WeeklyReport } from './weeklyReport';
 
 export type ShellLinkKind = 'emotion' | 'project' | 'decision' | 'outcome' | 'source';
 
@@ -47,6 +48,7 @@ export interface InitialAppShellEvidenceLayout {
   ask: ReturnType<typeof askMyPastSelf>;
   patterns: ReturnType<typeof detectRepeatedPatterns>;
   replay: ReturnType<typeof replayDecision>;
+  weeklyReport: WeeklyReport;
   importPreview: ReturnType<typeof buildImportPreview>;
   compiledWiki: CompiledWikiGraph;
   evidenceDrawer: {
@@ -164,6 +166,12 @@ export function buildAppShellEvidenceLayoutFromRecords(records: readonly MemoryR
     patterns: patterns.patterns,
   });
   const compiledWiki = compileMemoryRecordsToWikiGraph(records);
+  const weeklyReport = generateWeeklyReport({
+    records,
+    startDate: '2026-05-01',
+    endDate: '2026-05-20',
+    generatedAt: '2026-05-27T11:00:00.000Z',
+  });
   const graphEvidence = buildGraphEvidence({
     currentQuery: {
       id: 'ask_current_more_features',
@@ -262,8 +270,8 @@ export function buildAppShellEvidenceLayoutFromRecords(records: readonly MemoryR
       {
         id: 'weekly-report',
         label: 'Weekly report',
-        status: 'planned',
-        description: 'Visible roadmap item only; no weekly synthesis is claimed in this cycle.',
+        status: weeklyReport.status,
+        description: 'Weekly synthesis is generated from dated MemoryRecord citations and rendered as a private report surface.',
       },
       {
         id: 'evidence-drawer',
@@ -275,6 +283,7 @@ export function buildAppShellEvidenceLayoutFromRecords(records: readonly MemoryR
     ask,
     patterns,
     replay,
+    weeklyReport,
     importPreview,
     compiledWiki,
     evidenceDrawer: {
