@@ -2,7 +2,7 @@
 
 Status: active local execution plan  
 Owner: Ko Yunseo  
-Updated: 2026-05-27  
+Updated: 2026-05-27, expanded roadmap pass
 Supersedes for local Codex work: `docs/product/product-master-plan-2026-05-26.md`
 
 ## 1. Product Definition
@@ -24,6 +24,8 @@ Required capabilities:
 - optional emotion, project, people, and decision hints
 - conversion into `MemoryRecord`
 - private-by-default scope
+- offline/local-first capture direction
+- sync boundary into the web second-brain memory store
 
 ### Web Second Brain
 
@@ -38,6 +40,9 @@ Required capabilities:
 - Evidence Drawer
 - import preview and undo
 - export/delete commitments
+- saved weekly/monthly reports
+- timeline and search views
+- source/detail pages for individual memories
 
 ### Personal Memory Agent
 
@@ -51,6 +56,10 @@ Required capabilities:
 - replay decisions against past outcomes
 - return graph/evidence payload for UI highlighting
 - never produce generic advice as if it were memory-grounded
+- retrieval/reranking over relevant memories
+- LLM generation constrained by citations
+- feedback loop from user corrections
+- saved advice/report artifacts
 
 ### Durable Private Backend
 
@@ -64,8 +73,56 @@ Required capabilities:
 - export
 - hard delete
 - staging smoke without secret leakage
+- API endpoints for capture, import, ask, replay, reports, export, delete
+- auth/private vault boundary
 
-## 3. Execution Loop
+## 3. Complete Feature Inventory
+
+Status values:
+
+- `done-foundation`: implemented as local deterministic foundation.
+- `prototype-ui`: visible in static/local web surface.
+- `planned`: required, not implemented.
+- `later`: product-scale work after MVP.
+
+| Area | Feature | Status | Notes |
+|---|---|---|---|
+| Capture | Fast diary to `MemoryRecord` | `done-foundation` | `fastDiaryCapture` and ingestion loop exist. |
+| Capture | Mobile/PWA capture UI | `planned` | Current web shows prototype only, not real app capture. |
+| Capture | Voice capture | `later` | In PRD direction, not MVP-critical. |
+| Capture | Emotion/project/decision hints | `done-foundation` | Data contract exists; full UI still planned. |
+| Import | Notion/Obsidian/Markdown preview | `done-foundation` | Preview/dedupe contract exists. |
+| Import | Apply/undo import state model | `partial` | Domain apply/undo exists; richer state model is next. |
+| Import | File upload/import UI | `planned` | Needed before real personal use. |
+| Memory Store | Fixture user isolation | `done-foundation` | Tests cover user-scoped records. |
+| Memory Store | PostgreSQL repository | `done-foundation` | Code exists; staging smoke still planned. |
+| Memory Store | pgvector semantic search | `planned` | Store method exists; retrieval boundary not complete. |
+| Web | Graph-first second brain | `prototype-ui` | Static graph/evidence surface exists. |
+| Web | Evidence drawer | `prototype-ui` | Source/date/raw excerpt/why-connected visible. |
+| Web | Individual memory detail page | `planned` | Needed for real review/edit workflows. |
+| Web | Search/timeline views | `planned` | Needed for second-brain usefulness. |
+| Ask | Ask My Past Self deterministic contract | `done-foundation` | Citation/insufficient evidence tested. |
+| Ask | LLM answer generation | `planned` | Must be constrained by citations. |
+| Ask | Follow-up conversation | `planned` | Requires session/report memory. |
+| Decision | Decision Replay deterministic contract | `done-foundation` | Past outcome citations tested. |
+| Decision | Decision result save-back | `planned` | Current decisions should become future memories. |
+| Reports | Weekly Pattern Report foundation | `prototype-ui` | Current panel shows pattern citations. |
+| Reports | Weekly report engine | `planned` | Needs date windows, aggregation, evidence thresholds. |
+| Reports | Saved weekly/monthly reports | `planned` | Needs storage and report detail UI. |
+| Reports | Scheduler/reminders | `planned` | After report engine and app/PWA capture. |
+| Agent | Personal Memory Agent orchestrator | `done-foundation` | Loads store records and returns ask/replay/graph evidence. |
+| Agent | Semantic retrieval/reranking | `planned` | Next critical step for "it knows me" quality. |
+| Agent | User feedback learning loop | `planned` | Needed for agent personalization. |
+| Privacy | Private-by-default scope | `done-foundation` | Data model and UI labels exist. |
+| Privacy | Export/delete local UX | `planned` | Store functions exist; user-facing flow incomplete. |
+| Privacy | Auth/private vault | `planned` | Required before multi-user beta. |
+| Backend/API | Capture/import endpoints | `planned` | Needed after local domain contracts. |
+| Backend/API | Ask/replay/report endpoints | `planned` | Needed before usable web/app integration. |
+| Backend/API | Staging readiness | `planned` | Must not leak secrets. |
+| Release | Visual evidence gates | `done-foundation` | Local screenshots exist; staging review still planned. |
+| Release | PR/release checklist | `planned` | Needed before remote/main workflow. |
+
+## 4. Execution Loop
 
 Every internal loop follows this sequence:
 
@@ -80,7 +137,7 @@ Every internal loop follows this sequence:
 
 No remote push, main merge, production deploy, or secret access is allowed without explicit user instruction.
 
-## 4. Current Completed Local Loops
+## 5. Current Completed Local Loops
 
 - L0: product reset around source of truth.
 - L1: web second-brain product surface.
@@ -89,7 +146,7 @@ No remote push, main merge, production deploy, or secret access is allowed witho
 - L4: personal memory agent orchestrator.
 - L5: store-backed app shell data builder.
 
-## 5. Active Next Loops
+## 6. Active Next Loops
 
 ### L6 — Import Apply/Undo UI State Model
 
@@ -102,7 +159,36 @@ Acceptance:
 - duplicate rows are skipped by default
 - tests cover state transitions
 
-### L7 — Semantic Retrieval Contract
+Estimated effort: 0.5-1 day.
+
+### L7 — Weekly Report Engine
+
+Goal: create real weekly report generation from dated `MemoryRecord`s, not just a pattern panel label.
+
+Acceptance:
+
+- report uses an explicit date window
+- repeated emotions, decisions, outcomes, and projects are aggregated
+- every insight cites supporting memory ids
+- insufficient weekly evidence is explicit
+- report output can be saved or rendered by the web surface later
+
+Estimated effort: 1-2 days.
+
+### L8 — Weekly Report Product Surface
+
+Goal: expose the weekly report as a first-class web product section/detail surface.
+
+Acceptance:
+
+- visible weekly report card
+- report detail structure with citations
+- empty/insufficient state
+- screenshot evidence
+
+Estimated effort: 0.5-1 day.
+
+### L9 — Semantic Retrieval Contract
 
 Goal: add a retrieval boundary that can later use embeddings/pgvector, while local tests use deterministic query matching.
 
@@ -110,10 +196,38 @@ Acceptance:
 
 - query returns ranked memories
 - retrieval is user-scoped
-- Ask/Replay can consume retrieved memories
+- Ask/Replay/Weekly Report can consume retrieved memories
 - insufficient retrieval stays explicit
 
-### L8 — Privacy Export/Delete UX
+Estimated effort: 1-2 days.
+
+### L10 — LLM Citation-Constrained Generation
+
+Goal: add the LLM boundary for Ask/Replay/Report while forcing citation grounding.
+
+Acceptance:
+
+- prompt input contains only retrieved/cited memory evidence
+- output schema requires citations
+- missing citations cause fallback to insufficient evidence
+- tests cover invalid/generic answer rejection
+
+Estimated effort: 2-4 days.
+
+### L11 — API Endpoints
+
+Goal: expose capture, import, ask, replay, report, export, and delete through user-scoped API boundaries.
+
+Acceptance:
+
+- no secrets logged
+- user id boundary is explicit
+- endpoints call existing domain services
+- tests cover success and insufficient evidence paths
+
+Estimated effort: 2-4 days.
+
+### L12 — Privacy Export/Delete UX
 
 Goal: expose user-facing local export/delete behavior beyond labels.
 
@@ -122,8 +236,24 @@ Acceptance:
 - export returns user memory payload
 - delete removes user data
 - UI shows private/local/skeleton status honestly
+- tests cover batch delete and hard-delete guardrails
 
-### L9 — Staging Backend Readiness
+Estimated effort: 0.5-1 day.
+
+### L13 — PWA/App Capture Surface
+
+Goal: make capture usable from mobile without requiring the full web graph.
+
+Acceptance:
+
+- mobile-first capture screen
+- quick save
+- local/private status
+- saved capture appears in store-backed second-brain graph
+
+Estimated effort: 3-7 days.
+
+### L14 — Staging Backend Readiness
 
 Goal: verify PostgreSQL/pgvector staging without leaking secrets or mutating production data.
 
@@ -133,7 +263,22 @@ Acceptance:
 - pgvector smoke covers extension, insert, search, delete
 - per-user isolation is demonstrated in staging-only smoke
 
-## 6. Completed Loop Details
+Estimated effort: 1-3 days.
+
+### L15 — Auth / Private Vault
+
+Goal: ensure each user's second brain is accessible only to that user.
+
+Acceptance:
+
+- authenticated user identity boundary
+- private vault/user id mapping
+- no cross-user memory access
+- export/delete scoped to one user
+
+Estimated effort: 1-3 weeks depending on auth provider and deployment target.
+
+## 7. Completed Loop Details
 
 ### L4 — Personal Memory Agent Orchestrator
 
@@ -166,7 +311,27 @@ Implemented:
 - `buildAppShellEvidenceLayoutFromRecords(records)`
 - `buildAppShellEvidenceLayoutFromMemoryStore({ store, userId })`
 
-## 7. Product Quality Rules
+## 8. MVP Time Estimate
+
+Assuming focused local development without major dependency or deployment blockers:
+
+| Target | Remaining effort |
+|---|---:|
+| Local prototype with real weekly report engine and retrieval contract | 3-6 days |
+| Usable one-person local MVP with import/capture/ask/replay/report | 1-2 weeks |
+| Private beta with API, DB, LLM, export/delete, and basic auth | 6-10 weeks |
+| Product-grade app + web + agent + backend | 4-6 months |
+
+Critical path for "나를 아는 AI" feeling:
+
+1. Weekly Report Engine.
+2. Semantic Retrieval Contract.
+3. Citation-constrained LLM generation.
+4. API endpoints.
+5. PWA/app capture surface.
+6. Private vault/auth.
+
+## 9. Product Quality Rules
 
 - The graph is evidence UI, not the product by itself.
 - Every AI answer must cite memories or say insufficient evidence.
