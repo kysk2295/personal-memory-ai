@@ -1,11 +1,12 @@
 import { renderAskMyPastSelfPanel } from './components/AskMyPastSelfPanel';
 import { renderDecisionReplayPanel } from './components/DecisionReplayPanel';
 import { renderEvidenceDrawer } from './components/EvidenceDrawer';
-import { BENCHMARK_GRAPH_EDGE_COUNT, BENCHMARK_GRAPH_NODE_COUNT, renderMemoryGraph } from './components/MemoryGraph';
+import { renderMemoryGraph } from './components/MemoryGraph';
 import { renderPatternPanel } from './components/PatternPanel';
 import { renderPrivacyControlPanel } from './components/PrivacyControlPanel';
 import { renderWeeklyReportPanel } from './components/WeeklyReportPanel';
 import { buildInitialAppShellEvidenceLayout, type ShellPrimaryNode } from './lib/appShellEvidenceLayout';
+import { buildMemoryGraphModel, type MemoryGraphModel } from './lib/memoryGraphModel';
 
 const APP_SHELL_STYLES = `
   :root {
@@ -304,6 +305,23 @@ const APP_SHELL_STYLES = `
     margin-top: 0;
     display: grid;
     place-items: center;
+  }
+  .cytoscape-memory-graph {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    transition: opacity 180ms ease;
+  }
+  .second-brain-shell[data-graph-renderer="cytoscape"] .cytoscape-memory-graph {
+    opacity: 1;
+  }
+  .second-brain-shell[data-graph-renderer="cytoscape"] .graph-workspace {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
   }
   .graph-stage::before {
     content: "";
@@ -1227,6 +1245,10 @@ function escapeHtml(value: string): string {
     .replace(/'/g, '&#39;');
 }
 
+function escapeJsonScript(value: string): string {
+  return value.replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026');
+}
+
 export type RenderVariant = 'full' | 'plain' | 'topbar-only' | 'no-svg' | 'svg-only' | 'debug-text';
 
 function renderFilter(labelKo: string, labelEn: string, count: number, kind: string): string {
@@ -1243,10 +1265,16 @@ function renderMemorySearchResult(node: ShellPrimaryNode): string {
   </button>`;
 }
 
+function renderMemoryGraphPayload(graph: MemoryGraphModel): string {
+  return `<script type="application/json" id="memory-graph-elements">${escapeJsonScript(JSON.stringify(graph))}</script>`;
+}
+
 export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
   const layout = buildInitialAppShellEvidenceLayout();
-  const graphNodeCount = BENCHMARK_GRAPH_NODE_COUNT;
-  const graphEdgeCount = BENCHMARK_GRAPH_EDGE_COUNT;
+  const memoryGraph = buildMemoryGraphModel(layout.records);
+  const graphNodeCount = memoryGraph.stats.graphNodeCount;
+  const graphEdgeCount = memoryGraph.stats.edgeCount;
+  const memoryNodeCount = memoryGraph.stats.memoryNodeCount;
   const citationLinks = layout.ask.citationMemoryIds
     .slice(0, 3)
     .map((citationId) => `<a href="#evidence-${escapeHtml(citationId)}" class="citation-ref" data-citation-ref="${escapeHtml(citationId)}">[${escapeHtml(citationId)}]</a>`)
@@ -1256,7 +1284,7 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
     return `<main class="second-brain-shell"><aside class="brain-sidebar"><section class="brain-title"><p class="eyebrow">지식 그래프</p><h1>Second Brain</h1><p>${escapeHtml(layout.northStar)}</p></section></aside></main>`;
   }
 
-  return `<main class="second-brain-shell" data-labels="visible" data-spacing="normal" data-layout-mode="free" data-layout-version="0" data-filter-semantic="on" data-filter-reflective="on" data-filter-procedural="on" data-filter-episodic="on" data-filter-thesis="on" data-filter-source="on" data-benchmark-reference="https://www.careerhackeralex.com/memory" data-benchmark-node-count="${graphNodeCount}" data-benchmark-edge-count="${graphEdgeCount}" data-surface-mode="graph-first" data-rail-mode="collapsed-evidence-drawer" data-interaction-contract="filter-select-space-rearrange">
+  return `<main class="second-brain-shell" data-labels="visible" data-spacing="normal" data-layout-mode="free" data-layout-version="0" data-filter-semantic="on" data-filter-reflective="on" data-filter-procedural="on" data-filter-episodic="on" data-filter-thesis="on" data-filter-source="on" data-graph-renderer="cytoscape-pending" data-benchmark-reference="https://www.careerhackeralex.com/memory" data-memory-node-count="${memoryNodeCount}" data-graph-node-count="${graphNodeCount}" data-graph-edge-count="${graphEdgeCount}" data-surface-mode="graph-first" data-rail-mode="collapsed-evidence-drawer" data-interaction-contract="filter-select-space-rearrange">
     <aside class="brain-sidebar" aria-label="Second Brain graph controls">
       <div class="sidebar-topline">
         <a class="home-button" href="/" aria-label="home">←</a>
@@ -1273,9 +1301,11 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
       </section>
 
       <div class="graph-meta-line" aria-label="Memory graph scale">
-        <span><strong>${graphNodeCount}</strong> 노드</span>
+        <span><strong>${memoryNodeCount}</strong> memories</span>
         <span class="graph-meta-dot">·</span>
-        <span><strong>${graphEdgeCount}</strong> 엣지</span>
+        <span><strong>${graphNodeCount}</strong> graph nodes</span>
+        <span class="graph-meta-dot">·</span>
+        <span><strong>${graphEdgeCount}</strong> edges</span>
         <span class="graph-meta-dot">·</span>
         <span>last woven from diary + imports</span>
       </div>
@@ -1367,6 +1397,8 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
 
       <div class="product-main-grid">
         <div class="graph-stage">
+          <div id="memory-graph-cytoscape" class="cytoscape-memory-graph" data-graph-library="cytoscape" data-memory-node-count="${memoryNodeCount}" data-graph-node-count="${graphNodeCount}" data-graph-edge-count="${graphEdgeCount}" aria-label="Cytoscape data-driven personal memory graph"></div>
+          ${renderMemoryGraphPayload(memoryGraph)}
           ${variant === 'no-svg' ? '' : renderMemoryGraph(layout)}
           <aside class="wiki-compiler-strip" aria-label="LLM Wiki compiler preview" data-wiki-compiler="pmi017">
             <span><strong>${layout.compiledWiki.atomCount}</strong> canonical memory atoms</span>
@@ -1432,6 +1464,9 @@ const GRAPH_CONTROL_SCRIPT = `
   const memorySearchInput = document.querySelector('[data-control="memory-search"]');
   const memorySearchCount = document.querySelector('[data-search-count]');
   const memorySearchResults = Array.from(document.querySelectorAll('[data-search-result="memory"]'));
+  const cytoscapeMount = document.querySelector('[data-graph-library="cytoscape"]');
+  const graphPayloadScript = document.querySelector('#memory-graph-elements');
+  let cytoscapeGraph = null;
   let layoutVersion = Number(shell.getAttribute('data-layout-version') || '0');
 
   const setInteractionState = (value) => {
@@ -1445,6 +1480,20 @@ const GRAPH_CONTROL_SCRIPT = `
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#39;');
+
+  const findMemoryNodeByCitation = (citation) =>
+    memoryNodes.find((item) => item.getAttribute('data-inspector-citation') === citation);
+
+  const markCytoscapeSelection = (citation) => {
+    if (!cytoscapeGraph || !citation) return;
+    cytoscapeGraph.elements().removeClass('selected-memory selected-edge');
+    const selectedNode = cytoscapeGraph.getElementById('memory:' + citation);
+    if (selectedNode && selectedNode.length) {
+      selectedNode.addClass('selected-memory');
+      selectedNode.connectedEdges().addClass('selected-edge');
+      cytoscapeGraph.center(selectedNode);
+    }
+  };
 
   const selectMemory = (node) => {
     if (!node || !inspectorHeadline || !inspectorBody || !inspectorSource) return;
@@ -1476,7 +1525,162 @@ const GRAPH_CONTROL_SCRIPT = `
     });
     inspector.setAttribute('data-selected-memory', citation);
     shell.setAttribute('data-active-memory', citation);
+    markCytoscapeSelection(citation);
     setInteractionState('memory-selected');
+  };
+
+  const selectMemoryByCitation = (citation) => {
+    const node = findMemoryNodeByCitation(citation);
+    if (node) selectMemory(node);
+  };
+
+  const setCytoscapeLabelVisibility = (hidden) => {
+    if (!cytoscapeGraph) return;
+    cytoscapeGraph.nodes().toggleClass('labels-hidden', hidden);
+  };
+
+  const initializeCytoscapeGraph = () => {
+    if (!cytoscapeMount || !graphPayloadScript || typeof window.cytoscape !== 'function') return;
+    const payload = JSON.parse(graphPayloadScript.textContent || '{}');
+    cytoscapeGraph = window.cytoscape({
+      container: cytoscapeMount,
+      elements: payload.elements || [],
+      minZoom: 0.45,
+      maxZoom: 2.2,
+      wheelSensitivity: 0.16,
+      style: [
+        {
+          selector: 'node',
+          style: {
+            label: 'data(graphLabel)',
+            color: '#b9b9bd',
+            'font-size': 8,
+            'text-wrap': 'wrap',
+            'text-max-width': 150,
+            'text-outline-width': 2,
+            'text-outline-color': '#080808',
+            'text-valign': 'center',
+            'text-halign': 'right',
+            'text-margin-x': 8,
+            'background-color': '#a9a9ad',
+            width: 7,
+            height: 7,
+          },
+        },
+        {
+          selector: 'node[kind = "memory"]',
+          style: {
+            label: '',
+            'background-color': '#eeeeef',
+            color: '#f1f1f3',
+            width: 14,
+            height: 14,
+            'font-size': 10,
+            'font-weight': 700,
+            'text-max-width': 220,
+          },
+        },
+        {
+          selector: 'node[kind = "emotion"], node[kind = "decision"], node[kind = "outcome"]',
+          style: {
+            'background-color': '#e11d3f',
+            color: '#ffffff',
+            width: 12,
+            height: 12,
+          },
+        },
+        {
+          selector: 'node[kind = "source"]',
+          style: {
+            'background-color': '#8b8d98',
+            color: '#9b9ca3',
+            width: 8,
+            height: 8,
+          },
+        },
+        {
+          selector: 'edge',
+          style: {
+            width: 0.8,
+            'line-color': '#303036',
+            opacity: 0.44,
+            'curve-style': 'bezier',
+          },
+        },
+        {
+          selector: 'edge[kind = "outcome"], edge[kind = "decision"]',
+          style: {
+            'line-color': '#7a1d2e',
+            width: 1.05,
+            opacity: 0.72,
+          },
+        },
+        {
+          selector: '.selected-memory',
+          style: {
+            label: 'data(graphLabel)',
+            'background-color': '#e11d3f',
+            width: 42,
+            height: 42,
+            'border-color': '#ff6076',
+            'border-width': 2,
+            color: '#ffffff',
+            'font-size': 14,
+            'text-max-width': 260,
+            'z-index': 20,
+          },
+        },
+        {
+          selector: '.labels-hidden',
+          style: {
+            label: '',
+          },
+        },
+        {
+          selector: '.selected-edge',
+          style: {
+            'line-color': '#e11d3f',
+            width: 1.7,
+            opacity: 0.95,
+            'z-index': 18,
+          },
+        },
+        {
+          selector: '.filtered-out, .search-dimmed',
+          style: {
+            opacity: 0.11,
+          },
+        },
+      ],
+      layout: {
+        name: 'cose',
+        animate: false,
+        randomize: false,
+        padding: 54,
+        nodeRepulsion: 9500,
+        idealEdgeLength: 92,
+        edgeElasticity: 80,
+        numIter: 500,
+      },
+    });
+
+    cytoscapeMount.setAttribute('data-cytoscape-ready', 'true');
+    cytoscapeMount.setAttribute('data-cytoscape-node-count', String(cytoscapeGraph.nodes().length));
+    cytoscapeMount.setAttribute('data-cytoscape-edge-count', String(cytoscapeGraph.edges().length));
+    shell.setAttribute('data-graph-renderer', 'cytoscape');
+    window.__personalMemoryGraph = {
+      library: 'cytoscape',
+      stats: payload.stats,
+      cy: cytoscapeGraph,
+    };
+
+    cytoscapeGraph.on('tap', 'node[kind = "memory"]', (event) => {
+      const citation = event.target.data('recordId');
+      if (citation) selectMemoryByCitation(citation);
+    });
+
+    const selected = document.querySelector('[data-control="select-memory"][data-selected="true"]') || memoryNodes[2];
+    if (selected) markCytoscapeSelection(selected.getAttribute('data-inspector-citation') || '');
   };
 
   const setSpacing = (value) => {
@@ -1503,6 +1707,13 @@ const GRAPH_CONTROL_SCRIPT = `
       const match = !normalized || searchText.includes(normalized);
       result.setAttribute('data-search-result-active', String(match));
     });
+    if (cytoscapeGraph) {
+      cytoscapeGraph.nodes('[kind = "memory"]').forEach((cyNode) => {
+        const searchText = cyNode.data('searchText') || '';
+        const match = !normalized || String(searchText).includes(normalized);
+        cyNode.toggleClass('search-dimmed', !match);
+      });
+    }
     if (memorySearchCount) {
       memorySearchCount.textContent = matches + ' / ' + memoryNodes.length;
       memorySearchCount.setAttribute('data-search-count-value', String(matches));
@@ -1542,6 +1753,11 @@ const GRAPH_CONTROL_SCRIPT = `
       filterTargets
         .filter((target) => target.getAttribute('data-filter-kind') === kind)
         .forEach((target) => target.setAttribute('data-filter-active', String(nextActive)));
+      if (cytoscapeGraph) {
+        cytoscapeGraph.elements().forEach((element) => {
+          if (element.data('filterKind') === kind) element.toggleClass('filtered-out', !nextActive);
+        });
+      }
       setInteractionState('filter-' + kind + '-' + (nextActive ? 'on' : 'off'));
     });
   });
@@ -1556,6 +1772,7 @@ const GRAPH_CONTROL_SCRIPT = `
     });
   });
   if (memoryNodes[2]) selectMemory(memoryNodes[2]);
+  initializeCytoscapeGraph();
 
   if (toggleLabels) {
     toggleLabels.addEventListener('click', () => {
@@ -1563,6 +1780,7 @@ const GRAPH_CONTROL_SCRIPT = `
       shell.setAttribute('data-labels', hidden ? 'visible' : 'hidden');
       toggleLabels.setAttribute('aria-pressed', String(!hidden));
       toggleLabels.textContent = hidden ? '라벨 숨기기' : '라벨 보이기';
+      setCytoscapeLabelVisibility(!hidden);
       setInteractionState(hidden ? 'labels-visible' : 'labels-hidden');
     });
   }
@@ -1591,12 +1809,14 @@ const GRAPH_CONTROL_SCRIPT = `
   if (reset) {
     reset.addEventListener('click', () => {
       shell.setAttribute('data-labels', 'visible');
+      setCytoscapeLabelVisibility(false);
       if (toggleLabels) {
         toggleLabels.setAttribute('aria-pressed', 'false');
         toggleLabels.textContent = '라벨 숨기기';
       }
       filterButtons.forEach((button) => button.setAttribute('aria-pressed', 'true'));
       filterTargets.forEach((target) => target.setAttribute('data-filter-active', 'true'));
+      if (cytoscapeGraph) cytoscapeGraph.elements().removeClass('filtered-out search-dimmed');
       ['semantic', 'reflective', 'procedural', 'episodic', 'thesis', 'source'].forEach((kind) => {
         shell.setAttribute('data-filter-' + kind, 'on');
       });
@@ -1617,6 +1837,6 @@ export function renderAppShellDocument(variant: RenderVariant = 'full'): string 
     <title>Personal Memory AI Second Brain</title>
     <style>${APP_SHELL_STYLES}</style>
   </head>
-  <body>${renderAppShellHtml(variant)}<script data-graph-control-script="pmi019">${GRAPH_CONTROL_SCRIPT}</script></body>
+  <body>${renderAppShellHtml(variant)}<script src="vendor/cytoscape.min.js"></script><script data-graph-control-script="pmi019">${GRAPH_CONTROL_SCRIPT}</script></body>
 </html>`;
 }

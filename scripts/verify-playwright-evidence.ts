@@ -17,6 +17,21 @@ async function attribute(page: Page, selector: string, name: string): Promise<st
   return page.locator(selector).first().getAttribute(name);
 }
 
+async function clickCytoscapeNode(page: Page, nodeId: string): Promise<void> {
+  const renderedPosition = await page.evaluate((targetNodeId) => {
+    const graph = (window as any).__personalMemoryGraph;
+    const node = graph?.cy?.getElementById(targetNodeId);
+    if (!node || node.empty()) return null;
+    const position = node.renderedPosition();
+    return { x: position.x, y: position.y };
+  }, nodeId);
+  assert(renderedPosition, `Expected Cytoscape node ${nodeId} to exist`);
+
+  const graphBox = await page.locator('#memory-graph-cytoscape').boundingBox();
+  assert(graphBox, 'Expected Cytoscape graph mount to have a bounding box');
+  await page.mouse.click(graphBox.x + renderedPosition.x, graphBox.y + renderedPosition.y);
+}
+
 async function captureBenchmark(page: Page): Promise<void> {
   await page.goto('https://www.careerhackeralex.com/memory', {
     waitUntil: 'domcontentloaded',
@@ -29,12 +44,34 @@ async function captureBenchmark(page: Page): Promise<void> {
 async function verifyLocalInteractions(page: Page): Promise<void> {
   const localUrl = process.env.PMI_LOCAL_URL ?? pathToFileURL(resolve('dist/index.html')).href;
   await page.goto(localUrl, { waitUntil: 'load', timeout: 30_000 });
-  await page.locator('.obsidian-memory-graph').waitFor({ timeout: 10_000 });
+  await page.locator('.obsidian-memory-graph').waitFor({ state: 'attached', timeout: 10_000 });
+  await page.locator('[data-graph-library="cytoscape"][data-cytoscape-ready="true"]').waitFor({ timeout: 10_000 });
 
-  assert((await attribute(page, '.second-brain-shell', 'data-benchmark-node-count')) === '225', 'Expected benchmark node count marker');
-  assert((await attribute(page, '.second-brain-shell', 'data-benchmark-edge-count')) === '1010', 'Expected benchmark edge count marker');
-  assert((await page.locator('.obsidian-background-node').count()) === 225, 'Expected 225 visible ambient graph nodes');
-  assert((await page.locator('.ghost-memory-edge').count()) === 1010, 'Expected 1010 visible ambient graph edges');
+  assert((await attribute(page, '.second-brain-shell', 'data-graph-renderer')) === 'cytoscape', 'Expected Cytoscape renderer to become active');
+  assert((await attribute(page, '.second-brain-shell', 'data-memory-node-count')) === '5', 'Expected data-derived memory count marker');
+  assert((await attribute(page, '.second-brain-shell', 'data-graph-node-count')) === '34', 'Expected data-derived graph node count marker');
+  assert((await attribute(page, '.second-brain-shell', 'data-graph-edge-count')) === '40', 'Expected data-derived graph edge count marker');
+  assert((await attribute(page, '#memory-graph-cytoscape', 'data-cytoscape-node-count')) === '34', 'Expected Cytoscape node count to match graph payload');
+  assert((await attribute(page, '#memory-graph-cytoscape', 'data-cytoscape-edge-count')) === '40', 'Expected Cytoscape edge count to match graph payload');
+  assert((await page.locator('#memory-graph-cytoscape canvas').count()) > 0, 'Expected Cytoscape to render a canvas');
+
+  const graphStats = await page.evaluate(() => {
+    const graph = (window as any).__personalMemoryGraph;
+    return graph?.stats;
+  });
+  assert(graphStats?.memoryNodeCount === 5, 'Expected browser graph stats to include five real memory nodes');
+  assert(graphStats?.graphNodeCount === 34, 'Expected browser graph stats to include data-derived graph nodes');
+  assert(graphStats?.edgeCount === 40, 'Expected browser graph stats to include data-derived graph edges');
+  await page.waitForFunction(() => {
+    const graph = document.querySelector('#memory-graph-cytoscape');
+    const fallback = document.querySelector('.graph-workspace');
+    return (
+      graph &&
+      fallback &&
+      Number.parseFloat(getComputedStyle(graph).opacity) > 0.98 &&
+      getComputedStyle(fallback).visibility === 'hidden'
+    );
+  });
 
   await page.screenshot({ path: localScreenshot, fullPage: false });
 
@@ -43,6 +80,27 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
 
   await page.locator('[data-control="toggle-labels"]').click();
   assert((await attribute(page, '.second-brain-shell', 'data-labels')) === 'hidden', 'Label toggle should hide graph labels');
+  const cytoscapeHiddenLabelCount = await page.evaluate(() => {
+    const graph = (window as any).__personalMemoryGraph;
+    return graph?.cy?.nodes('.labels-hidden').length ?? 0;
+  });
+  assert(cytoscapeHiddenLabelCount === 34, 'Label toggle should hide Cytoscape node labels');
+
+  const firstCitation = await page.evaluate(() => {
+    const graph = (window as any).__personalMemoryGraph;
+    return graph?.cy?.nodes('[kind = "memory"]').first().data('recordId');
+  });
+  assert(firstCitation, 'Expected selectable memory node citation');
+  await clickCytoscapeNode(page, `memory:${firstCitation}`);
+  await page.waitForFunction(
+    (citation) => document.querySelector('[data-inspector-panel="pmi015"]')?.getAttribute('data-selected-memory') === citation,
+    firstCitation,
+  );
+  assert(
+    (await attribute(page, '[data-inspector-panel="pmi015"]', 'data-selected-memory')) === firstCitation,
+    'Cytoscape memory node click should update inspector selection',
+  );
+  assert((await attribute(page, '.second-brain-shell', 'data-active-memory')) === firstCitation, 'Shell should expose active memory after Cytoscape node selection');
 
   await page.locator('[data-filter-chip="semantic"]').click();
   assert((await attribute(page, '[data-filter-chip="semantic"]', 'aria-pressed')) === 'false', 'Semantic filter chip should toggle off');
@@ -51,16 +109,11 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
     (await attribute(page, '[data-filter-kind="semantic"]', 'data-filter-active')) === 'false',
     'Semantic graph targets should become visually inactive',
   );
-
-  const firstMemoryNode = page.locator('[data-control="select-memory"]').first();
-  const firstCitation = await firstMemoryNode.getAttribute('data-inspector-citation');
-  assert(firstCitation, 'Expected selectable memory node citation');
-  await firstMemoryNode.click();
-  assert(
-    (await attribute(page, '[data-inspector-panel="pmi015"]', 'data-selected-memory')) === firstCitation,
-    'Memory node click should update inspector selection',
-  );
-  assert((await attribute(page, '.second-brain-shell', 'data-active-memory')) === firstCitation, 'Shell should expose active memory after node selection');
+  const cytoscapeFilteredCount = await page.evaluate(() => {
+    const graph = (window as any).__personalMemoryGraph;
+    return graph?.cy?.elements('.filtered-out').length ?? 0;
+  });
+  assert(cytoscapeFilteredCount > 0, 'Semantic filter should mark Cytoscape graph elements inactive');
 
   await page.locator('[data-control="rearrange"]').click();
   assert((await attribute(page, '.second-brain-shell', 'data-layout-version')) === '1', 'Rearrange should advance layout version');
@@ -73,6 +126,11 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   assert((await attribute(page, '.second-brain-shell', 'data-search-query')) === 'calm', 'Search input should expose normalized query');
   assert((await attribute(page, '[data-search-count]', 'data-search-count-value')) === '1', 'Search should narrow to one matching memory');
   assert((await page.locator('[data-control="select-memory"][data-search-match="false"]').count()) === 4, 'Search should dim unmatched memory nodes');
+  const cytoscapeDimmedCount = await page.evaluate(() => {
+    const graph = (window as any).__personalMemoryGraph;
+    return graph?.cy?.nodes('.search-dimmed').length ?? 0;
+  });
+  assert(cytoscapeDimmedCount === 4, 'Search should dim unmatched Cytoscape memory nodes');
 
   await page.locator('[data-search-citation="mem_unrelated_calm_import"]').click();
   assert(
@@ -87,6 +145,11 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
     (await attribute(page, '.second-brain-shell', 'data-search-selected-memory')) === 'mem_unrelated_calm_import',
     'Shell should expose search-selected memory',
   );
+  const selectedCytoscapeMemoryId = await page.evaluate(() => {
+    const graph = (window as any).__personalMemoryGraph;
+    return graph?.cy?.nodes('.selected-memory').first().id();
+  });
+  assert(selectedCytoscapeMemoryId === 'memory:mem_unrelated_calm_import', 'Search result click should select the matching Cytoscape memory node');
 
   await page.screenshot({ path: searchScreenshot, fullPage: false });
 }
@@ -109,7 +172,8 @@ try {
         interactionScreenshot,
         searchScreenshot,
         verified: [
-          'graph density markers',
+          'cytoscape data graph ready',
+          'data-derived graph stats',
           'spacing click',
           'label toggle',
           'filter toggle',

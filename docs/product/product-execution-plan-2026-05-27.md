@@ -2,7 +2,7 @@
 
 Status: active local execution plan  
 Owner: Ko Yunseo  
-Updated: 2026-05-27, memory search detail interaction pass
+Updated: 2026-05-27, Cytoscape data-driven graph pass
 Supersedes for local Codex work: `docs/product/product-master-plan-2026-05-26.md`
 
 ## 1. Product Definition
@@ -97,7 +97,7 @@ Status values:
 | Memory Store | Fixture user isolation | `done-foundation` | Tests cover user-scoped records. |
 | Memory Store | PostgreSQL repository | `done-foundation` | Code exists; staging smoke still planned. |
 | Memory Store | pgvector semantic search | `done-foundation` | Store method plus redacted staging smoke contract exist; live staging execution remains gated on secrets/deploy target. |
-| Web | Graph-first second brain | `prototype-ui` | Benchmark-density graph surface exposes 225 nodes/1010 edges and Playwright-verified spacing, labels, filters, node selection, and rearrange interactions. |
+| Web | Graph-first second brain | `prototype-ui` | `MemoryRecord` data now builds a Cytoscape graph with 5 memory nodes, 34 total graph nodes, and 40 data-derived edges; fallback SVG is hidden after the graph library is ready. |
 | Web | Evidence drawer | `prototype-ui` | Source/date/raw excerpt/why-connected visible. |
 | Web | Individual memory detail page | `planned` | Selected-memory detail inspector exists; full review/edit page remains planned. |
 | Web | Search/timeline views | `prototype-ui` | Sidebar memory search filters nodes and selects matching detail; timeline still planned. |
@@ -124,7 +124,7 @@ Status values:
 | Backend/API | Ask/replay/report endpoints | `done-foundation` | User-scoped API dispatcher handles ask, replay, weekly report, export, and delete boundaries. |
 | Backend/API | Local HTTP transport | `done-foundation` | `npm start` serves static UI and private-vault `/api/*` JSON routes locally. |
 | Backend/API | Staging readiness | `done-foundation` | Redacted env presence and pgvector staging smoke plan exist without secret leakage. |
-| Release | Visual evidence gates | `done-foundation` | Playwright captures benchmark, local density, and local interaction screenshots; staging review still planned. |
+| Release | Visual evidence gates | `done-foundation` | Playwright verifies Cytoscape readiness, data-derived graph stats, search/filter/selection interactions, and captures benchmark/local screenshots; staging review still planned. |
 | Release | PR/release checklist | `planned` | Needed before remote/main workflow. |
 
 ## 4. Execution Loop
@@ -164,10 +164,11 @@ No remote push, main merge, production deploy, or secret access is allowed witho
 - L17: citation-guarded LLM provider adapter.
 - L18: benchmark graph density and Playwright interaction verification.
 - L19: memory search and detail interaction verification.
+- L20: data-driven Cytoscape memory graph renderer.
 
 ## 6. Active Next Loops
 
-Next local loop: saved advice/report artifacts or timeline/detail review pages. Production auth, live LLM keys, and deployment wiring stay gated until secrets/deploy target are explicitly available.
+Next local loop: timeline/detail review pages or saved advice/report artifacts. Production auth, live LLM keys, and deployment wiring stay gated until secrets/deploy target are explicitly available.
 
 ## 7. Completed Loop Details
 
@@ -447,6 +448,28 @@ Implemented:
 - `src/components/EvidenceDrawer.tsx`
 - `scripts/verify-playwright-evidence.ts`
 - `artifacts/web-second-brain-product-surface/local-memory-search-detail-playwright.png`
+
+### L20 — Data-Driven Cytoscape Memory Graph
+
+Goal: make the graph library render actual private memory data instead of a decorative benchmark-density SVG layer.
+
+Acceptance:
+
+- every `MemoryRecord` becomes a memory node
+- emotion, topic, project, decision, outcome, and source facets become connected graph nodes
+- graph stats come from real generated elements
+- Cytoscape is vendored locally and becomes the active renderer after load
+- search, filters, label hiding, node selection, and inspector focus update Cytoscape state
+- fallback SVG remains only as a no-library fallback and is hidden once Cytoscape is ready
+
+Implemented:
+
+- `src/lib/memoryGraphModel.ts`
+- `src/lib/memoryGraphModel.test.ts`
+- Cytoscape render mount and graph payload in `src/App.tsx`
+- Cytoscape vendor copy in `scripts/render-static.ts`
+- Playwright Cytoscape assertions in `scripts/verify-playwright-evidence.ts`
+- updated graph screenshots under `artifacts/web-second-brain-product-surface/`
 
 ## 8. MVP Time Estimate
 
