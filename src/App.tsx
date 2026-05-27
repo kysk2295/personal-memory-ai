@@ -455,14 +455,22 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
 
       <div class="graph-stage">
         ${variant === 'no-svg' ? '' : renderMemoryGraph(layout)}
-        <aside class="wiki-compiler-strip" aria-label="LLM Wiki compiler preview" data-wiki-compiler="pmi016">
+        <aside class="wiki-compiler-strip" aria-label="LLM Wiki compiler preview" data-wiki-compiler="pmi017">
+          <span><strong>${layout.compiledWiki.atomCount}</strong> canonical memory atoms</span>
           <span><strong>${layout.compiledWiki.nodeCount}</strong> compiled wiki nodes</span>
           <span><strong>${layout.compiledWiki.citationCount}</strong> citations</span>
+          <span data-memory-ops="retain-recall-reflect">retain ${layout.compiledWiki.operationCounts.retain} · recall ${layout.compiledWiki.operationCounts.recall} · reflect ${layout.compiledWiki.operationCounts.reflect}</span>
+          <span data-memory-freshness="strengthening-stable-stale">freshness ${layout.compiledWiki.freshnessCounts.strengthening}/${layout.compiledWiki.freshnessCounts.stable}/${layout.compiledWiki.freshnessCounts.stale}</span>
           ${layout.compiledWiki.nodes
             .filter((node) => node.type === 'pattern' || node.type === 'concept')
             .sort((left, right) => (left.type === right.type ? left.id.localeCompare(right.id) : left.type === 'pattern' ? -1 : 1))
-            .slice(0, 3)
+            .slice(0, 2)
             .map((node) => `<span class="wiki-node-chip" data-wiki-node-id="${escapeHtml(node.id)}">${escapeHtml(node.title)}</span>`)
+            .join('')}
+          ${layout.compiledWiki.atoms
+            .filter((atom) => atom.freshness === 'strengthening')
+            .slice(0, 1)
+            .map((atom) => `<span class="wiki-node-chip subtle" data-memory-atom-id="${escapeHtml(atom.id)}">${escapeHtml(atom.canonicalClaim)}</span>`)
             .join('')}
         </aside>
       </div>

@@ -46,6 +46,15 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     );
     expect(shell.evidenceDrawer.items.length).toBeGreaterThan(0);
     expect(shell.compiledWiki.nodeCount).toBeGreaterThan(10);
+    expect(shell.compiledWiki.atomCount).toBe(5);
+    expect(shell.compiledWiki.operationCounts).toEqual({ retain: 5, recall: 5, reflect: 3 });
+    expect(shell.compiledWiki.freshnessCounts).toEqual({ strengthening: 2, stable: 2, stale: 1 });
+    expect(shell.compiledWiki.atoms).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: 'atom:mem_freeze_vs_feature_addition', origin: 'synthesized', freshness: 'stable' }),
+        expect.objectContaining({ id: 'atom:mem_captured_ship_note', origin: 'captured', operations: ['retain', 'recall'] }),
+      ]),
+    );
     expect(shell.compiledWiki.nodes).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ id: 'pattern:launch-delay-from-feature-expansion', type: 'pattern' }),
@@ -84,8 +93,12 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('data-control="select-memory"');
     expect(html).toContain('data-inspector-title=');
     expect(html).toContain('data-inspector-panel="pmi015"');
-    expect(html).toContain('data-wiki-compiler="pmi016"');
+    expect(html).toContain('data-wiki-compiler="pmi017"');
+    expect(html).toContain('canonical memory atoms');
     expect(html).toContain('compiled wiki nodes');
+    expect(html).toContain('data-memory-ops="retain-recall-reflect"');
+    expect(html).toContain('data-memory-freshness="strengthening-stable-stale"');
+    expect(html).toContain('data-memory-atom-id="atom:mem_captured_ship_note"');
     expect(html).toContain('data-wiki-node-id="pattern:launch-delay-from-feature-expansion"');
     expect(html).toContain('data-inspector-headline');
     expect(html).toContain('data-spacing="wide"');
@@ -177,6 +190,8 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(documentHtml).toContain('Personal Memory AI Second Brain');
     expect(documentHtml).toContain('data-graph-control-script="pmi014"');
     expect(documentHtml).toContain('data-inspector-panel="pmi015"');
+    expect(documentHtml).toContain('data-wiki-compiler="pmi017"');
+    expect(documentHtml).toContain('canonical memory atoms');
     expect(documentHtml).toContain('const selectMemory = (node) =>');
     expect(documentHtml).toContain("inspector.setAttribute('data-selected-memory', citation)");
     expect(documentHtml).toContain("shell.setAttribute('data-labels', hidden ? 'visible' : 'hidden')");

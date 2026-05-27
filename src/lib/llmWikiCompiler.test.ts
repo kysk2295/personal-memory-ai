@@ -9,8 +9,15 @@ const nodeById = (id: string) => {
   return node;
 };
 
+const atomById = (id: string) => {
+  const graph = compileMemoryRecordsToWikiGraph(personalMemoryRecords);
+  const atom = graph.atoms.find((candidate) => candidate.id === id);
+  if (!atom) throw new Error(`Missing compiled atom ${id}`);
+  return atom;
+};
+
 describe('compileMemoryRecordsToWikiGraph', () => {
-  test('compiles deterministic wiki-like nodes from MemoryRecords', () => {
+  test('compiles deterministic wiki-like nodes and canonical memory atoms from MemoryRecords', () => {
     const first = compileMemoryRecordsToWikiGraph(personalMemoryRecords);
     const second = compileMemoryRecordsToWikiGraph([...personalMemoryRecords].reverse());
 
@@ -18,8 +25,12 @@ describe('compileMemoryRecordsToWikiGraph', () => {
     expect(first.corpusId).toBe('personal-memory-ai-fixture-corpus');
     expect(first.rawSourceCount).toBe(5);
     expect(first.nodeCount).toBeGreaterThan(10);
+    expect(first.atomCount).toBe(5);
     expect(first.citationCount).toBe(5);
+    expect(first.operationCounts).toEqual({ retain: 5, recall: 5, reflect: 3 });
+    expect(first.freshnessCounts).toEqual({ strengthening: 2, stable: 2, stale: 1 });
     expect(first.nodes.map((node) => node.id)).toEqual([...first.nodes.map((node) => node.id)].sort());
+    expect(first.atoms.map((atom) => atom.id)).toEqual([...first.atoms.map((atom) => atom.id)].sort());
   });
 
   test('creates source, concept, decision, and pattern nodes with citations', () => {
@@ -54,6 +65,35 @@ describe('compileMemoryRecordsToWikiGraph', () => {
           'mem_launch_june_anxiety_scope_delay',
           'mem_launch_may_anxiety_scope_delay',
         ]),
+      }),
+    );
+  });
+
+  test('preserves provenance, freshness, and retain/recall/reflect markers on canonical atoms', () => {
+    expect(atomById('atom:mem_launch_may_anxiety_scope_delay')).toMatchObject({
+      canonicalClaim: 'Anxiety before the memory import demo led to graph filter scope expansion and a two-day launch delay.',
+      origin: 'imported',
+      meaningVersion: 1,
+      confidentiality: 'private',
+      freshness: 'stale',
+      operations: ['retain', 'recall', 'reflect'],
+      sourceRefs: ['notion://launch-journal/may'],
+      citationIds: ['mem_launch_may_anxiety_scope_delay'],
+    });
+
+    expect(atomById('atom:mem_freeze_vs_feature_addition')).toMatchObject({
+      origin: 'synthesized',
+      meaningVersion: 2,
+      freshness: 'stable',
+      operations: ['retain', 'recall', 'reflect'],
+    });
+
+    expect(atomById('atom:mem_captured_ship_note')).toEqual(
+      expect.objectContaining({
+        origin: 'captured',
+        freshness: 'strengthening',
+        operations: ['retain', 'recall'],
+        claimFingerprint: expect.stringMatching(/^sha-/),
       }),
     );
   });
