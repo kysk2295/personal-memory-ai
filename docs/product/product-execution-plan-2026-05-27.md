@@ -2,7 +2,7 @@
 
 Status: active local execution plan  
 Owner: Ko Yunseo  
-Updated: 2026-05-27, LLM provider adapter pass
+Updated: 2026-05-27, benchmark graph interaction pass
 Supersedes for local Codex work: `docs/product/product-master-plan-2026-05-26.md`
 
 ## 1. Product Definition
@@ -97,7 +97,7 @@ Status values:
 | Memory Store | Fixture user isolation | `done-foundation` | Tests cover user-scoped records. |
 | Memory Store | PostgreSQL repository | `done-foundation` | Code exists; staging smoke still planned. |
 | Memory Store | pgvector semantic search | `done-foundation` | Store method plus redacted staging smoke contract exist; live staging execution remains gated on secrets/deploy target. |
-| Web | Graph-first second brain | `prototype-ui` | Static graph/evidence surface exists. |
+| Web | Graph-first second brain | `prototype-ui` | Benchmark-density graph surface exposes 225 nodes/1010 edges and Playwright-verified spacing, labels, filters, node selection, and rearrange interactions. |
 | Web | Evidence drawer | `prototype-ui` | Source/date/raw excerpt/why-connected visible. |
 | Web | Individual memory detail page | `planned` | Needed for real review/edit workflows. |
 | Web | Search/timeline views | `planned` | Needed for second-brain usefulness. |
@@ -123,7 +123,7 @@ Status values:
 | Backend/API | Ask/replay/report endpoints | `done-foundation` | User-scoped API dispatcher handles ask, replay, weekly report, export, and delete boundaries. |
 | Backend/API | Local HTTP transport | `done-foundation` | `npm start` serves static UI and private-vault `/api/*` JSON routes locally. |
 | Backend/API | Staging readiness | `done-foundation` | Redacted env presence and pgvector staging smoke plan exist without secret leakage. |
-| Release | Visual evidence gates | `done-foundation` | Local screenshots exist; staging review still planned. |
+| Release | Visual evidence gates | `done-foundation` | Playwright captures benchmark, local density, and local interaction screenshots; staging review still planned. |
 | Release | PR/release checklist | `planned` | Needed before remote/main workflow. |
 
 ## 4. Execution Loop
@@ -161,10 +161,11 @@ No remote push, main merge, production deploy, or secret access is allowed witho
 - L15: auth/private vault boundary.
 - L16: local HTTP API transport.
 - L17: citation-guarded LLM provider adapter.
+- L18: benchmark graph density and Playwright interaction verification.
 
 ## 6. Active Next Loops
 
-Next local loop: saved advice/report artifacts or memory detail/search views. Production auth, live LLM keys, and deployment wiring stay gated until secrets/deploy target are explicitly available.
+Next local loop: memory detail/search views or saved advice/report artifacts. Production auth, live LLM keys, and deployment wiring stay gated until secrets/deploy target are explicitly available.
 
 ## 7. Completed Loop Details
 
@@ -403,6 +404,27 @@ Implemented:
 
 - `src/lib/llmProviderAdapter.ts`
 - `src/lib/llmProviderAdapter.test.ts`
+
+### L18 — Benchmark Graph Density and Interactions
+
+Goal: move the web first screen from a static graph-like surface toward a real second-brain workspace benchmarked against `https://www.careerhackeralex.com/memory`.
+
+Acceptance:
+
+- graph scale reads as 225 nodes / 1010 edges
+- deterministic SVG graph renders 225 ambient nodes and 1010 ambient edges
+- spacing, label visibility, semantic filter, memory node selection, and rearrange controls mutate DOM state
+- Playwright captures benchmark, local graph density, and local interaction screenshots
+
+Implemented:
+
+- `src/components/MemoryGraph.tsx`
+- `src/App.tsx`
+- `scripts/verify-playwright-evidence.ts`
+- `npm run evidence:playwright`
+- `artifacts/web-second-brain-product-surface/benchmark-careerhacker-memory-playwright.png`
+- `artifacts/web-second-brain-product-surface/local-graph-density-playwright.png`
+- `artifacts/web-second-brain-product-surface/local-graph-interactions-playwright.png`
 
 ## 8. MVP Time Estimate
 

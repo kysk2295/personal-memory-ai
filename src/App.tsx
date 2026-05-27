@@ -1,7 +1,7 @@
 import { renderAskMyPastSelfPanel } from './components/AskMyPastSelfPanel';
 import { renderDecisionReplayPanel } from './components/DecisionReplayPanel';
 import { renderEvidenceDrawer } from './components/EvidenceDrawer';
-import { renderMemoryGraph } from './components/MemoryGraph';
+import { BENCHMARK_GRAPH_EDGE_COUNT, BENCHMARK_GRAPH_NODE_COUNT, renderMemoryGraph } from './components/MemoryGraph';
 import { renderPatternPanel } from './components/PatternPanel';
 import { renderPrivacyControlPanel } from './components/PrivacyControlPanel';
 import { renderWeeklyReportPanel } from './components/WeeklyReportPanel';
@@ -796,6 +796,29 @@ const APP_SHELL_STYLES = `
     height: 100%;
     transform: none;
   }
+  .graph-workspace,
+  .memory-graph,
+  [data-filter-kind] {
+    transition: opacity 160ms ease, transform 180ms ease, stroke-opacity 160ms ease;
+  }
+  .second-brain-shell[data-layout-mode="rearranged"] .graph-workspace {
+    transform: translateX(-1.2%) translateY(1.2%) scale(1.025);
+  }
+  .second-brain-shell[data-spacing="tight"] .memory-graph {
+    transform: scale(0.96);
+    transform-origin: center;
+  }
+  .second-brain-shell[data-spacing="wide"] .memory-graph {
+    transform: scale(1.055);
+    transform-origin: center;
+  }
+  [data-filter-active="false"] {
+    opacity: 0.12;
+  }
+  .obsidian-faded-edge[data-filter-active="false"],
+  .obsidian-spoke-edge[data-filter-active="false"] {
+    stroke-opacity: 0.08;
+  }
   .memory-graph {
     width: 100%;
     height: 100%;
@@ -1140,8 +1163,8 @@ function renderFilter(labelKo: string, labelEn: string, count: number, kind: str
 
 export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
   const layout = buildInitialAppShellEvidenceLayout();
-  const memoryCount = layout.primaryNodes.length;
-  const relationshipCount = layout.links.length;
+  const graphNodeCount = BENCHMARK_GRAPH_NODE_COUNT;
+  const graphEdgeCount = BENCHMARK_GRAPH_EDGE_COUNT;
   const citationLinks = layout.ask.citationMemoryIds
     .slice(0, 3)
     .map((citationId) => `<a href="#evidence-${escapeHtml(citationId)}" class="citation-ref" data-citation-ref="${escapeHtml(citationId)}">[${escapeHtml(citationId)}]</a>`)
@@ -1151,7 +1174,7 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
     return `<main class="second-brain-shell"><aside class="brain-sidebar"><section class="brain-title"><p class="eyebrow">지식 그래프</p><h1>Second Brain</h1><p>${escapeHtml(layout.northStar)}</p></section></aside></main>`;
   }
 
-  return `<main class="second-brain-shell" data-labels="visible" data-spacing="normal" data-benchmark-reference="https://www.careerhackeralex.com/memory" data-surface-mode="graph-first" data-rail-mode="collapsed-evidence-drawer">
+  return `<main class="second-brain-shell" data-labels="visible" data-spacing="normal" data-layout-mode="free" data-layout-version="0" data-filter-semantic="on" data-filter-reflective="on" data-filter-procedural="on" data-filter-episodic="on" data-filter-thesis="on" data-filter-source="on" data-benchmark-reference="https://www.careerhackeralex.com/memory" data-benchmark-node-count="${graphNodeCount}" data-benchmark-edge-count="${graphEdgeCount}" data-surface-mode="graph-first" data-rail-mode="collapsed-evidence-drawer" data-interaction-contract="filter-select-space-rearrange">
     <aside class="brain-sidebar" aria-label="Second Brain graph controls">
       <div class="sidebar-topline">
         <a class="home-button" href="/" aria-label="home">←</a>
@@ -1168,9 +1191,9 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
       </section>
 
       <div class="graph-meta-line" aria-label="Memory graph scale">
-        <span><strong>${memoryCount}</strong> 기억 노드</span>
+        <span><strong>${graphNodeCount}</strong> 노드</span>
         <span class="graph-meta-dot">·</span>
-        <span><strong>${relationshipCount}</strong> 근거 엣지</span>
+        <span><strong>${graphEdgeCount}</strong> 엣지</span>
         <span class="graph-meta-dot">·</span>
         <span>last woven from diary + imports</span>
       </div>
@@ -1311,6 +1334,12 @@ const GRAPH_CONTROL_SCRIPT = `
   const inspectorBody = inspector?.querySelector('[data-inspector-body]');
   const citationRefs = Array.from(document.querySelectorAll('[data-citation-ref]'));
   const memoryEdges = Array.from(document.querySelectorAll('.obsidian-spoke-edge[data-edge-from][data-edge-to]'));
+  const filterTargets = Array.from(document.querySelectorAll('[data-filter-kind]'));
+  let layoutVersion = Number(shell.getAttribute('data-layout-version') || '0');
+
+  const setInteractionState = (value) => {
+    shell.setAttribute('data-interaction-state', value);
+  };
 
   const selectMemory = (node) => {
     if (!node || !inspectorHeadline || !inspectorBody || !inspectorSource) return;
@@ -1330,10 +1359,13 @@ const GRAPH_CONTROL_SCRIPT = `
       edge.setAttribute('data-edge-active', String(active));
     });
     inspector.setAttribute('data-selected-memory', citation);
+    shell.setAttribute('data-active-memory', citation);
+    setInteractionState('memory-selected');
   };
 
   const setSpacing = (value) => {
     shell.setAttribute('data-spacing', value);
+    setInteractionState('spacing-' + value);
     spacingButtons.forEach((button) => {
       const active = button.getAttribute('data-spacing') === value;
       button.classList.toggle('active', active);
@@ -1347,8 +1379,14 @@ const GRAPH_CONTROL_SCRIPT = `
 
   filterButtons.forEach((button) => {
     button.addEventListener('click', () => {
-      const active = button.getAttribute('aria-pressed') !== 'false';
-      button.setAttribute('aria-pressed', String(!active));
+      const kind = button.getAttribute('data-filter-chip') || '';
+      const nextActive = button.getAttribute('aria-pressed') === 'false';
+      button.setAttribute('aria-pressed', String(nextActive));
+      shell.setAttribute('data-filter-' + kind, nextActive ? 'on' : 'off');
+      filterTargets
+        .filter((target) => target.getAttribute('data-filter-kind') === kind)
+        .forEach((target) => target.setAttribute('data-filter-active', String(nextActive)));
+      setInteractionState('filter-' + kind + '-' + (nextActive ? 'on' : 'off'));
     });
   });
 
@@ -1369,19 +1407,24 @@ const GRAPH_CONTROL_SCRIPT = `
       shell.setAttribute('data-labels', hidden ? 'visible' : 'hidden');
       toggleLabels.setAttribute('aria-pressed', String(!hidden));
       toggleLabels.textContent = hidden ? '라벨 숨기기' : '라벨 보이기';
+      setInteractionState(hidden ? 'labels-visible' : 'labels-hidden');
     });
   }
 
   if (rearrange) {
     rearrange.addEventListener('click', () => {
-      const next = shell.getAttribute('data-spacing') === 'wide' ? 'tight' : 'wide';
-      setSpacing(next);
+      layoutVersion += 1;
+      const nextMode = shell.getAttribute('data-layout-mode') === 'rearranged' ? 'free' : 'rearranged';
+      shell.setAttribute('data-layout-mode', nextMode);
+      shell.setAttribute('data-layout-version', String(layoutVersion));
+      setInteractionState('layout-' + nextMode);
     });
   }
 
   if (focusSelected) {
     focusSelected.addEventListener('click', () => {
       shell.setAttribute('data-labels', 'visible');
+      shell.setAttribute('data-focus-mode', 'selected');
       setSpacing('normal');
       const selected = document.querySelector('[data-control="select-memory"][data-selected="true"]') || memoryNodes[2];
       if (selected) selectMemory(selected);
@@ -1397,7 +1440,13 @@ const GRAPH_CONTROL_SCRIPT = `
         toggleLabels.textContent = '라벨 숨기기';
       }
       filterButtons.forEach((button) => button.setAttribute('aria-pressed', 'true'));
+      filterTargets.forEach((target) => target.setAttribute('data-filter-active', 'true'));
+      ['semantic', 'reflective', 'procedural', 'episodic', 'thesis', 'source'].forEach((kind) => {
+        shell.setAttribute('data-filter-' + kind, 'on');
+      });
+      shell.setAttribute('data-layout-mode', 'free');
       setSpacing('normal');
+      setInteractionState('reset');
     });
   }
 })();
