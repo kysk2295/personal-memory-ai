@@ -16,7 +16,7 @@ export interface LocalPersonalMemoryHttpRequest {
 
 export interface LocalPersonalMemoryHttpResponse {
   statusCode: number;
-  headers: { 'content-type': 'application/json; charset=utf-8' };
+  headers: Record<string, string>;
   bodyText: string;
 }
 
@@ -30,10 +30,14 @@ export type LocalPersonalMemoryHttpHandler = (
   request: LocalPersonalMemoryHttpRequest,
 ) => Promise<LocalPersonalMemoryHttpResponse>;
 
-function jsonResponse(statusCode: number, body: unknown): LocalPersonalMemoryHttpResponse {
+function jsonResponse(
+  statusCode: number,
+  body: unknown,
+  headers: Record<string, string> = {},
+): LocalPersonalMemoryHttpResponse {
   return {
     statusCode,
-    headers: { 'content-type': 'application/json; charset=utf-8' },
+    headers: { 'content-type': 'application/json; charset=utf-8', ...headers },
     bodyText: JSON.stringify(body),
   };
 }
@@ -75,6 +79,6 @@ export function createLocalPersonalMemoryHttpHandler(
       },
     });
 
-    return jsonResponse(apiResponse.statusCode, apiResponse.body);
+    return jsonResponse(apiResponse.statusCode, apiResponse.body, apiResponse.headers);
   };
 }

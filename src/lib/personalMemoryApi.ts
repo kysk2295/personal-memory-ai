@@ -31,6 +31,7 @@ export type PersonalMemoryApiPath =
   | '/api/app-shell'
   | '/api/capture'
   | '/api/memory/detail'
+  | '/api/memory/provenance-download'
   | '/api/memory/provenance-export'
   | '/api/memory/review-history'
   | '/api/memory/update'
@@ -66,6 +67,7 @@ export interface HandlePrivateVaultMemoryApiRequestInput {
 
 export interface PersonalMemoryApiResponse<Body = unknown> {
   statusCode: number;
+  headers?: Record<string, string>;
   body: Body;
 }
 
@@ -246,6 +248,28 @@ export async function handlePersonalMemoryApiRequest(
       : null;
     if (!exportBundle) return { statusCode: 404, body: { error: 'memory_not_found' } };
     return { statusCode: 200, body: { export: exportBundle } };
+  }
+
+  if (request.path === '/api/memory/provenance-download') {
+    if (request.method !== 'GET') return methodNotAllowed();
+    const body = readBody<MemoryProvenanceExportBody>(request.body);
+    const memoryId = sanitizeOptionalText(body?.memoryId);
+    const exportBundle = memoryId
+      ? buildMemoryProvenanceExport({
+          records: await store.listByUser(userId),
+          memoryId,
+          exportedAt: sanitizeOptionalText(body?.exportedAt),
+        })
+      : null;
+    if (!exportBundle) return { statusCode: 404, body: { error: 'memory_not_found' } };
+    return {
+      statusCode: 200,
+      headers: {
+        'content-type': 'application/json; charset=utf-8',
+        'content-disposition': `attachment; filename="${exportBundle.filename}"`,
+      },
+      body: exportBundle,
+    };
   }
 
   if (request.path === '/api/memory/update') {

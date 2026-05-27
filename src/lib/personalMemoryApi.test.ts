@@ -476,6 +476,49 @@ describe('personal memory API boundary', () => {
     expect(JSON.stringify(exported.body)).not.toContain('obsidian://other-user/provenance-export-guard');
   });
 
+  test('returns owner-scoped memory provenance download with attachment headers', async () => {
+    const store = createMemoryStore({ env: {} });
+    await store.create('user-a', personalMemoryRecords[2]);
+    await store.create('user-b', {
+      ...personalMemoryRecords[2],
+      id: 'mem_freeze_vs_feature_addition',
+      sourceRef: 'obsidian://other-user/provenance-download-guard',
+      summary: 'Other user provenance download guard.',
+    });
+
+    const downloaded = await handlePersonalMemoryApiRequest({
+      store,
+      userId: 'user-a',
+      request: {
+        method: 'GET',
+        path: '/api/memory/provenance-download',
+        body: {
+          memoryId: 'mem_freeze_vs_feature_addition',
+          exportedAt: '2026-05-28T07:20:00.000Z',
+        },
+      },
+    });
+
+    const headers = (downloaded as { headers?: Record<string, string> }).headers;
+    expect(downloaded.statusCode).toBe(200);
+    expect(headers?.['content-type']).toBe('application/json; charset=utf-8');
+    expect(headers?.['content-disposition']).toBe(
+      'attachment; filename="memory-provenance-mem_freeze_vs_feature_addition-2026-05-28.json"',
+    );
+    expect(downloaded.body).toEqual(
+      expect.objectContaining({
+        exportType: 'memory_provenance',
+        filename: 'memory-provenance-mem_freeze_vs_feature_addition-2026-05-28.json',
+        memory: expect.objectContaining({
+          id: 'mem_freeze_vs_feature_addition',
+          sourceRef: 'markdown://retros/freezing-vs-features.md',
+        }),
+      }),
+    );
+    expect(JSON.stringify(downloaded.body)).not.toContain('Other user provenance download guard.');
+    expect(JSON.stringify(downloaded.body)).not.toContain('obsidian://other-user/provenance-download-guard');
+  });
+
   test('handles ask, replay, and weekly report without leaking another user memory', async () => {
     const store = createMemoryStore({ env: {} });
     for (const record of personalMemoryRecords.slice(0, 3)) {

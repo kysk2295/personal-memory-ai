@@ -212,10 +212,11 @@ No remote push, main merge, production deploy, or secret access is allowed witho
 - L43: memory edit review ledger.
 - L44: memory review history timeline.
 - L45: memory provenance export affordance.
+- L46: provenance export download wiring.
 
 ## 6. Active Next Loops
 
-Next local loop: run staging PostgreSQL/pgvector/auth smoke harness when deployment secrets are available, or continue the local private-vault polish path with provenance export download wiring and richer review-history comparison UX. Live LLM keys, hosted identity configuration, and deployment wiring stay gated until secrets/deploy target are explicitly available.
+Next local loop: run staging PostgreSQL/pgvector/auth smoke harness when deployment secrets are available, or continue the local private-vault polish path with richer review-history comparison UX. Live LLM keys, hosted identity configuration, and deployment wiring stay gated until secrets/deploy target are explicitly available.
 
 ## 7. Completed Loop Details
 
@@ -949,6 +950,25 @@ Implemented:
 - `src/App.tsx`
 - `src/lib/appShellEvidenceLayout.test.ts`
 - `docs/superpowers/plans/2026-05-28-durable-import-undo-api-http.md`
+
+### L46 — Provenance Export Download Wiring
+
+Goal: make the selected-memory provenance export a concrete owner-scoped JSON download path, not only export metadata.
+
+Acceptance:
+
+- `GET /api/memory/provenance-download` returns the selected memory provenance bundle body
+- response headers include JSON content type and attachment filename
+- local HTTP transport preserves download headers
+- timeline detail panel exposes the download endpoint, deterministic filename, and button metadata
+- cross-user memory and review ledger records do not leak into the download
+
+Implemented:
+
+- `src/lib/personalMemoryApi.ts`
+- `src/lib/localHttpTransport.ts`
+- `src/components/MemoryDetailTimelinePanel.tsx`
+- `docs/superpowers/plans/2026-05-28-provenance-export-download-wiring.md`
 
 ## 8. MVP Time Estimate
 

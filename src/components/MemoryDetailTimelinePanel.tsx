@@ -67,6 +67,8 @@ export function renderMemoryDetailTimelinePanel(layout: InitialAppShellEvidenceL
       selectedEntry
         ? `<article class="memory-review-panel" aria-label="Source-backed memory review" data-memory-review-panel="source-edit" data-memory-detail-endpoint="/api/memory/detail" data-memory-update-endpoint="/api/memory/update" data-memory-review-history-endpoint="/api/memory/review-history" data-memory-provenance-export-endpoint="/api/memory/provenance-export" data-memory-provenance-export-filename="${escapeHtml(
             buildMemoryProvenanceExportFilename(selectedEntry.memoryId, '2026-05-27T00:00:00.000Z'),
+          )}" data-memory-provenance-download-endpoint="/api/memory/provenance-download" data-memory-provenance-download-filename="${escapeHtml(
+            buildMemoryProvenanceExportFilename(selectedEntry.memoryId, '2026-05-27T00:00:00.000Z'),
           )}" data-memory-review-selected-id="${escapeHtml(
             selectedEntry.memoryId,
           )}" data-memory-review-state="ready" data-memory-review-ledger="pending" data-memory-review-revision="${escapeHtml(
@@ -87,6 +89,9 @@ export function renderMemoryDetailTimelinePanel(layout: InitialAppShellEvidenceL
       </div>
       <button type="button" data-control="save-memory-edit">Save memory edit</button>
       <button type="button" data-control="export-memory-provenance">Export provenance</button>
+      <button type="button" data-control="download-memory-provenance" data-download-endpoint="/api/memory/provenance-download" data-download-filename="${escapeHtml(
+        buildMemoryProvenanceExportFilename(selectedEntry.memoryId, '2026-05-27T00:00:00.000Z'),
+      )}">Download provenance JSON</button>
       ${renderReviewHistory(selectedEntry)}
     </article>`
         : ''
