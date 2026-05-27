@@ -123,6 +123,9 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     const html = renderAppShellHtml();
 
     expect(html).toContain('class="second-brain-shell"');
+    expect(html).toContain('data-benchmark-reference="https://www.careerhackeralex.com/memory"');
+    expect(html).toContain('data-surface-mode="graph-first"');
+    expect(html).toContain('data-rail-mode="collapsed-evidence-drawer"');
     expect(html).toContain('class="brain-sidebar"');
     expect(html).toContain('class="brain-canvas"');
     expect(html).toContain('class="graph-meta-line"');
@@ -133,6 +136,8 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('data-control="toggle-labels"');
     expect(html).toContain('data-control="select-memory"');
     expect(html).toContain('class="memory-node obsidian-memory-node');
+    expect(html).toContain('data-ambient-node-count="96"');
+    expect(html).toContain('data-graph-density="benchmark-dense"');
     expect(html).toContain('class="memory-node obsidian-memory-node obsidian-selected-memory');
     expect(html).toContain('class="semantic-edge obsidian-spoke-edge"');
     expect(html).toContain('data-edge-from="mem_freeze_vs_feature_addition"');
@@ -285,6 +290,9 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(documentHtml).toContain('<!doctype html>');
     expect(documentHtml).toContain('<meta name="viewport" content="width=device-width, initial-scale=1" />');
     expect(documentHtml).toContain('.second-brain-shell');
+    expect(documentHtml).toContain('background: #080808;');
+    expect(documentHtml).toContain('data-rail-mode="collapsed-evidence-drawer"');
+    expect(documentHtml).toContain('transform: translateY(calc(100% - 52px));');
     expect(documentHtml).toContain('Personal Memory AI Second Brain');
     expect(documentHtml).toContain('data-graph-control-script="pmi019"');
     expect(documentHtml).toContain('data-inspector-panel="pmi015"');

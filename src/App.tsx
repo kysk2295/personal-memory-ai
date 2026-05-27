@@ -8,13 +8,13 @@ import { buildInitialAppShellEvidenceLayout } from './lib/appShellEvidenceLayout
 
 const APP_SHELL_STYLES = `
   :root {
-    color: #4b4b57;
-    background: #f7f7fa;
+    color: #e7e7ea;
+    background: #080808;
     font-family:
       Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   }
   * { box-sizing: border-box; }
-  body { margin: 0; min-width: 320px; background: #f3f3f8; }
+  body { margin: 0; min-width: 320px; background: #080808; }
   button, input { font: inherit; }
   .second-brain-shell {
     min-height: 100vh;
@@ -643,14 +643,432 @@ const APP_SHELL_STYLES = `
     font-size: 10px;
     overflow-wrap: anywhere;
   }
+  html,
+  body {
+    background: #080808;
+  }
+  .second-brain-shell {
+    grid-template-columns: 260px minmax(0, 1fr);
+    background: #080808;
+  }
+  .brain-sidebar {
+    padding: 18px 16px;
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+    background: #101010;
+    gap: 12px;
+    overflow: auto;
+  }
+  .home-button,
+  .locale-toggle button,
+  .filter-chip,
+  .layout-button,
+  .control-pill,
+  .control-action,
+  .ask-submit {
+    border-color: rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.055);
+    color: #b9b9bd;
+  }
+  .locale-toggle button[aria-pressed="true"],
+  .layout-button.active,
+  .control-pill.active {
+    color: #ffffff;
+    background: #d61f3c;
+    border-color: rgba(214, 31, 60, 0.82);
+  }
+  .eyebrow,
+  .legend-title,
+  .control-label,
+  .control-hint,
+  .sidebar-footer,
+  .graph-meta-line {
+    color: #808086;
+  }
+  .brain-title h1 {
+    color: #f3f3f1;
+    font-size: 34px;
+    line-height: 0.96;
+    letter-spacing: 0;
+  }
+  .brain-title p {
+    margin-top: 10px;
+    font-size: 12px;
+    line-height: 1.45;
+  }
+  .graph-meta-line {
+    gap: 5px 8px;
+    font-size: 11px;
+  }
+  .legend-section {
+    gap: 7px;
+  }
+  .filter-list {
+    gap: 5px;
+  }
+  .brain-title p,
+  .graph-meta-line strong {
+    color: #c4c4c8;
+  }
+  .filter-chip {
+    min-height: 25px;
+    padding: 5px 8px;
+  }
+  .layout-button,
+  .control-action {
+    min-height: 28px;
+  }
+  .control-hint,
+  .sidebar-footer {
+    display: none;
+  }
+  .filter-chip[aria-pressed="false"] {
+    background: transparent;
+    border-color: rgba(255, 255, 255, 0.05);
+  }
+  .filter-dot.thesis,
+  .filter-dot.semantic {
+    background: #d61f3c;
+    box-shadow: 0 0 12px rgba(214, 31, 60, 0.32);
+  }
+  .filter-count {
+    color: #77777d;
+  }
+  .brain-canvas {
+    padding: 18px 22px 20px;
+    gap: 0;
+    background: #080808;
+  }
+  .ask-memory-bar {
+    position: absolute;
+    top: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(780px, calc(100% - 48px));
+    min-height: 50px;
+    border-color: rgba(255, 255, 255, 0.12);
+    background: rgba(18, 18, 18, 0.9);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.36);
+  }
+  .ask-lock {
+    color: #828288;
+  }
+  .ask-memory-bar input {
+    color: #f2f2f2;
+  }
+  .ask-memory-bar input::placeholder {
+    color: #77777d;
+  }
+  .ask-submit {
+    background: #d61f3c;
+    border-color: rgba(214, 31, 60, 0.9);
+  }
+  .product-value-strip {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+  .product-main-grid {
+    width: 100%;
+    margin: 0;
+    display: block;
+    min-height: calc(100vh - 38px);
+  }
+  .graph-stage {
+    min-height: calc(100vh - 38px);
+    height: calc(100vh - 38px);
+    display: block;
+    overflow: hidden;
+  }
+  .graph-stage::before {
+    display: none;
+  }
+  .graph-workspace,
+  .second-brain-shell[data-spacing="tight"] .graph-workspace,
+  .second-brain-shell[data-spacing="wide"] .graph-workspace {
+    width: 100%;
+    height: 100%;
+    transform: none;
+  }
+  .memory-graph {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    filter: none;
+  }
+  .memory-graph rect:first-child {
+    fill: #080808;
+    stroke: rgba(255, 255, 255, 0.035);
+  }
+  .obsidian-faded-edge {
+    stroke: rgba(255, 255, 255, 0.13);
+    stroke-width: 0.75;
+  }
+  .obsidian-background-node {
+    fill: rgba(168, 168, 172, 0.92);
+    stroke: rgba(240, 240, 240, 0.34);
+    stroke-width: 0.75;
+  }
+  .ghost-memory-label {
+    fill: #8e8e94;
+    font-size: 8px;
+    font-weight: 520;
+  }
+  .obsidian-node-core {
+    fill: #eeeeec;
+    stroke: rgba(255, 255, 255, 0.72);
+    stroke-width: 0.9;
+  }
+  .obsidian-node-ring {
+    fill: none;
+    stroke: transparent;
+  }
+  .memory-node[data-selected="true"] .obsidian-node-core,
+  .obsidian-selected-memory .obsidian-node-core {
+    fill: #d61f3c;
+    stroke: #ff6076;
+    stroke-opacity: 0.9;
+    stroke-width: 1.4px;
+  }
+  .memory-node[data-selected="true"] .obsidian-node-ring {
+    stroke: rgba(214, 31, 60, 0.42);
+    stroke-width: 1.6;
+  }
+  .obsidian-spoke-edge {
+    stroke: rgba(255, 255, 255, 0.19);
+    stroke-width: 1;
+  }
+  .obsidian-spoke-edge[data-edge-active="true"] {
+    stroke: rgba(214, 31, 60, 0.92);
+    stroke-width: 1.45;
+  }
+  .obsidian-spoke-edge[data-edge-active="false"] {
+    stroke: rgba(255, 255, 255, 0.1);
+  }
+  .memory-node .node-title,
+  .node-source,
+  .hub-title,
+  .satellite-label,
+  .obsidian-decision-chip text,
+  .obsidian-echo-node text {
+    fill: #b9b9bd;
+  }
+  .obsidian-selected-memory .obsidian-node-label {
+    fill: #ffffff;
+    font-size: 17px;
+    font-weight: 520;
+  }
+  .obsidian-secondary-memory .obsidian-node-label {
+    fill: #d4d4d6;
+    font-size: 10px;
+  }
+  .selected-node-halo {
+    stroke: rgba(214, 31, 60, 0.42);
+    stroke-width: 1.2;
+  }
+  .selected-node-handle,
+  .obsidian-decision-chip circle,
+  .obsidian-echo-node circle {
+    fill: #d61f3c;
+    stroke: rgba(255, 255, 255, 0.54);
+  }
+  .obsidian-question-pill rect {
+    fill: rgba(16, 16, 16, 0.82);
+    stroke: rgba(255, 255, 255, 0.1);
+  }
+  .obsidian-question-pill text {
+    fill: #d9d9dc;
+  }
+  .wiki-compiler-strip {
+    left: 20px;
+    bottom: 24px;
+    max-width: 420px;
+    color: #8c8c92;
+  }
+  .wiki-compiler-strip strong,
+  .wiki-node-chip {
+    color: #d8d8db;
+  }
+  .wiki-node-chip {
+    border-color: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.055);
+  }
+  .memory-inspector {
+    right: 22px;
+    bottom: 82px;
+    width: min(330px, calc(100% - 44px));
+    max-height: 330px;
+    overflow: auto;
+    border-color: rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    background: rgba(14, 14, 14, 0.82);
+    box-shadow: 0 20px 48px rgba(0, 0, 0, 0.32);
+  }
+  .memory-inspector h2 {
+    color: #f1f1f1;
+    font-size: 16px;
+    letter-spacing: 0;
+  }
+  .memory-inspector p,
+  .memory-inspector-source {
+    color: #adadb3;
+  }
+  .citation-row a,
+  .citation-ref[data-active="true"] {
+    border-color: rgba(214, 31, 60, 0.36);
+    background: rgba(214, 31, 60, 0.12);
+    color: #ff8797;
+  }
+  .pill-red,
+  .citation-ref,
+  .pattern-memory-list a {
+    color: #ff8797;
+  }
+  .product-rail {
+    position: absolute;
+    right: 22px;
+    bottom: 18px;
+    z-index: 5;
+    width: min(420px, calc(100vw - 330px));
+    max-height: min(560px, calc(100vh - 144px));
+    overflow: auto;
+    padding: 0 8px 10px;
+    border: 1px solid rgba(214, 31, 60, 0.3);
+    border-radius: 8px;
+    background: rgba(12, 12, 12, 0.9);
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.46);
+    transform: translateY(calc(100% - 52px));
+    transition: transform 180ms ease, background 180ms ease, border-color 180ms ease;
+  }
+  .product-rail:hover,
+  .product-rail:focus-within {
+    transform: translateY(0);
+    background: rgba(13, 13, 13, 0.96);
+  }
+  .product-rail::before {
+    content: "Evidence drawer / reports";
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    display: block;
+    min-height: 50px;
+    margin: 0 -8px 10px;
+    padding: 17px 14px 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(18, 18, 18, 0.98);
+    color: #f0f0f1;
+    font-size: 12px;
+    font-weight: 780;
+    letter-spacing: 0;
+  }
+  .product-panel,
+  .evidence-drawer,
+  .ask-flow,
+  .decision-replay-flow,
+  .analysis-panels .panel {
+    border-color: rgba(255, 255, 255, 0.1);
+    background: rgba(22, 22, 24, 0.92);
+    box-shadow: none;
+  }
+  .section-header h2,
+  .panel h3,
+  .ask-answer-cited h3,
+  .decision-recommendation h3,
+  .evidence-drawer h2,
+  .import-preview-list strong {
+    color: #ececef;
+  }
+  .section-intro,
+  .drawer-principle,
+  .ask-answer-cited p,
+  .decision-recommendation p,
+  .similar-decision p,
+  .panel p,
+  .drawer-item p,
+  .insufficient-evidence-state p {
+    color: #b0b0b6;
+  }
+  .ask-question-row,
+  .decision-current-card,
+  .drawer-current-question,
+  .ask-answer-cited,
+  .decision-recommendation,
+  .insufficient-evidence-state,
+  .similar-decision,
+  .drawer-item,
+  .capture-meta span,
+  .import-preview-list article,
+  .decision-tag-list li,
+  .pattern-memory-list li,
+  .privacy-action-list li,
+  .entrypoint-grid a,
+  .entrypoint-grid button {
+    border-color: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.04);
+    color: #c3c3c8;
+  }
+  .ask-question-row input,
+  .decision-current-card input,
+  .capture-prototype textarea {
+    border-color: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.055);
+    color: #f0f0f2;
+  }
+  .status,
+  .status-badge {
+    border-color: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.055);
+    color: #a8a8ae;
+  }
   @media (max-width: 980px) {
     .second-brain-shell { grid-template-columns: 1fr; overflow: auto; }
-    .brain-sidebar { min-height: auto; border-right: 0; border-bottom: 1px solid rgba(255,255,255,0.08); }
-    .brain-canvas { min-height: 760px; }
+    .brain-sidebar {
+      min-height: auto;
+      max-height: 280px;
+      border-right: 0;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      overflow: auto;
+    }
+    .brain-canvas {
+      min-height: 720px;
+      padding: 0 10px 20px;
+    }
+    .ask-memory-bar {
+      top: 12px;
+      width: calc(100% - 22px);
+    }
     .product-main-grid { grid-template-columns: 1fr; }
-    .product-rail { max-height: none; overflow: visible; }
-    .graph-stage { min-height: 560px; }
-    .memory-inspector { position: relative; right: auto; bottom: auto; margin: 18px auto 0; width: 100%; }
+    .graph-stage {
+      min-height: 520px;
+      height: 520px;
+      padding-top: 74px;
+    }
+    .memory-graph {
+      height: 420px;
+    }
+    .product-rail {
+      position: relative;
+      right: auto;
+      bottom: auto;
+      width: calc(100% - 20px);
+      max-height: 360px;
+      margin: 12px auto 0;
+      overflow: auto;
+      transform: none;
+    }
+    .memory-inspector {
+      position: absolute;
+      right: 12px;
+      bottom: 70px;
+      width: calc(100% - 24px);
+      max-height: 210px;
+    }
+    .wiki-compiler-strip { display: none; }
   }
   @media (max-width: 640px) {
     .brain-sidebar { padding: 18px 14px; }
@@ -692,7 +1110,7 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
     return `<main class="second-brain-shell"><aside class="brain-sidebar"><section class="brain-title"><p class="eyebrow">지식 그래프</p><h1>Second Brain</h1><p>${escapeHtml(layout.northStar)}</p></section></aside></main>`;
   }
 
-  return `<main class="second-brain-shell" data-labels="visible" data-spacing="normal">
+  return `<main class="second-brain-shell" data-labels="visible" data-spacing="normal" data-benchmark-reference="https://www.careerhackeralex.com/memory" data-surface-mode="graph-first" data-rail-mode="collapsed-evidence-drawer">
     <aside class="brain-sidebar" aria-label="Second Brain graph controls">
       <div class="sidebar-topline">
         <a class="home-button" href="/" aria-label="home">←</a>
@@ -821,7 +1239,7 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
           </article>
         </div>
 
-        <aside class="product-rail" aria-label="Cited memory product rail">
+        <aside class="product-rail" aria-label="Cited memory product rail" data-rail-mode="collapsed-evidence-drawer">
           ${renderAskMyPastSelfPanel(layout)}
           ${renderWeeklyReportPanel(layout)}
           ${renderEvidenceDrawer(layout)}
