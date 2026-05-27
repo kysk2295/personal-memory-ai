@@ -2,7 +2,7 @@
 
 Status: active local execution plan  
 Owner: Ko Yunseo  
-Updated: 2026-05-27, memory detail timeline pass
+Updated: 2026-05-27, agent retrieval query bridge pass
 Supersedes for local Codex work: `docs/product/product-master-plan-2026-05-26.md`
 
 ## 1. Product Definition
@@ -130,9 +130,10 @@ Status values:
 | Reports | Weekly report engine | `done-foundation` | Date-window report generation aggregates emotions, decisions, outcomes, projects, and pattern citations. |
 | Reports | Saved weekly/monthly reports | `done-foundation` | Weekly reports can become saved artifacts and future pattern memories; monthly report UI remains later. |
 | Reports | Scheduler/reminders | `planned` | After report engine and app/PWA capture. |
-| Agent | Personal Memory Agent orchestrator | `done-foundation` | Loads store records and returns ask/replay/graph evidence. |
+| Agent | Personal Memory Agent orchestrator | `done-foundation` | Loads user-scoped retrieved memories and returns ask/replay/graph evidence with retrieval metadata. |
 | Agent | Semantic retrieval/reranking | `done-foundation` | Deterministic retrieval contract ranks user-scoped memories; pgvector path remains a backend task. |
 | Agent | Multi-axis retrieval router | `done-foundation` | Deterministic router fuses keyword, semantic, knowledge-ledger graph traversal, and temporal freshness; legacy retrieval delegates to it. |
+| Agent | Korean/user-intent retrieval bridge | `done-foundation` | Korean product-intent questions expand into retrieval terms before the agent filters memory context. |
 | Agent | Citation-constrained generation guard | `done-foundation` | LLM-shaped outputs are rejected unless grounded in supplied citation ids. |
 | Agent | LLM provider adapter | `done-foundation` | Provider-agnostic adapter wraps model outputs in the citation guard before advice can surface. |
 | Agent | User feedback learning loop | `planned` | Needed for agent personalization. |
@@ -191,10 +192,11 @@ No remote push, main merge, production deploy, or secret access is allowed witho
 - L23: multi-axis memory retrieval router.
 - L24: saved advice/report memory artifacts.
 - L25: memory detail timeline surface.
+- L26: agent retrieval query bridge.
 
 ## 6. Active Next Loops
 
-Next local loop: agent retrieval integration with multilingual query bridging, then UI save actions for advice/report artifacts. Production auth, live LLM keys, and deployment wiring stay gated until secrets/deploy target are explicitly available.
+Next local loop: UI save actions for advice/report artifacts, then saved artifacts in graph/timeline. Production auth, live LLM keys, and deployment wiring stay gated until secrets/deploy target are explicitly available.
 
 ## 7. Completed Loop Details
 
@@ -597,6 +599,26 @@ Implemented:
 - `scripts/verify-playwright-evidence.ts`
 - `docs/superpowers/plans/2026-05-27-memory-detail-timeline.md`
 
+### L26 — Agent Retrieval Query Bridge
+
+Goal: make the personal memory agent use multi-axis retrieval even when the user asks in Korean or product-intent language that does not directly match stored memory text.
+
+Acceptance:
+
+- Korean feature-addition questions expand into retrieval terms such as feature addition, scope expansion, launch, anxiety, delay, and freeze
+- current decision prompt, emotions, choices, and topic tags are included in the retrieval query
+- the agent filters same-user memories through multi-axis retrieval before pattern detection, Ask, Replay, and graph evidence
+- unrelated same-user memories are not loaded into the agent context
+- insufficient retrieval remains explicit and prevents generic advice
+
+Implemented:
+
+- `src/lib/memoryQueryBridge.ts`
+- `src/lib/memoryQueryBridge.test.ts`
+- `src/lib/personalMemoryAgent.ts`
+- `src/lib/personalMemoryAgent.test.ts`
+- `docs/superpowers/plans/2026-05-27-agent-retrieval-query-bridge.md`
+
 ## 8. MVP Time Estimate
 
 Assuming focused local development without major dependency or deployment blockers:
@@ -610,10 +632,9 @@ Assuming focused local development without major dependency or deployment blocke
 
 Critical path for the next "나를 아는 AI" jump:
 
-1. Bridge Korean/user-intent queries into retrieval before filtering the agent's memory context.
-2. Add UI save actions for advice/report artifacts and show saved artifacts in the graph/timeline.
-3. Wire a live LLM provider through the citation-guarded adapter when secrets/config are available.
-4. Run staging PostgreSQL/pgvector/auth smoke against a chosen deployment target.
+1. Add UI save actions for advice/report artifacts and show saved artifacts in the graph/timeline.
+2. Wire a live LLM provider through the citation-guarded adapter when secrets/config are available.
+3. Run staging PostgreSQL/pgvector/auth smoke against a chosen deployment target.
 
 ## 9. Product Quality Rules
 

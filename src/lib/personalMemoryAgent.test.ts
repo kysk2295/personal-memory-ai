@@ -62,6 +62,20 @@ describe('answerPersonalMemoryQuestion', () => {
       await store.create('user-a', record);
     }
     await store.create(
+      'user-a',
+      memory({
+        id: 'mem_agent_same_user_calm_unrelated',
+        sourceType: 'markdown',
+        sourceRef: 'markdown://daily/calm-unrelated.md',
+        observedAt: '2026-06-03',
+        rawText: 'Calm note about a walk and lunch after sending email.',
+        summary: 'Calm walk and lunch note.',
+        memoryType: 'diary',
+        emotionTags: ['calm'],
+        topicTags: ['walk', 'lunch'],
+      }),
+    );
+    await store.create(
       'user-b',
       memory({
         ...sufficientMemories[0],
@@ -87,7 +101,10 @@ describe('answerPersonalMemoryQuestion', () => {
 
     expect(result.privacyScope).toBe('private');
     expect(result.loadedMemoryIds.sort()).toEqual(['mem_agent_june_scope_delay', 'mem_agent_may_scope_delay']);
+    expect(result.loadedMemoryIds).not.toContain('mem_agent_same_user_calm_unrelated');
     expect(result.loadedMemoryIds).not.toContain('mem_other_user_should_not_leak');
+    expect(result.retrievalQuery.expandedQuery).toContain('feature addition');
+    expect(result.retrieval.retrievedMemoryIds.slice().sort()).toEqual(result.loadedMemoryIds.slice().sort());
     expect(result.ask.evidenceLabel).toBe('sufficient_evidence');
     expect(result.ask.citationMemoryIds.sort()).toEqual(result.loadedMemoryIds.slice().sort());
     expect(result.replay?.evidenceLabel).toBe('sufficient_evidence');
@@ -122,6 +139,8 @@ describe('answerPersonalMemoryQuestion', () => {
     });
 
     expect(result.ask.evidenceLabel).toBe('insufficient_evidence');
+    expect(result.retrieval.evidenceLabel).toBe('insufficient_evidence');
+    expect(result.loadedMemoryIds).toEqual([]);
     expect(result.ask.answer).toContain('insufficient evidence');
     expect(result.ask.answer).toContain('No generic advice was generated.');
     expect(result.replay).toBeUndefined();
