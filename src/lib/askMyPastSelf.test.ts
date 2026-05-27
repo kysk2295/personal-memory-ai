@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vitest';
 import {
   insufficientPatternMemoryRecords,
   personalMemoryRecords,
+  singleSourceRepeatedMemoryRecords,
 } from './__fixtures__/personalMemoryRecords';
 import { askMyPastSelf } from './askMyPastSelf';
 import { detectRepeatedPatterns } from './patternDetector';
@@ -79,10 +80,12 @@ describe('askMyPastSelf', () => {
     expect(result.status).toBe('implemented');
     expect(result.evidenceLabel).toBe('insufficient_evidence');
     expect(result.recommendation).toBe(
-      '아직 답변할 만큼의 개인 기억 근거가 부족합니다. 관련 기억을 더 가져온 뒤 다시 물어보세요.',
+      '근거 부족: 개인 기억 citation이 2개 이상이고 서로 다른 source 2개 이상에서 반복 확인되기 전에는 추천하지 않습니다.',
     );
     expect(result.answer).toContain('insufficient evidence');
+    expect(result.answer).toContain('필요 최소치: citation 2개 / source 2개');
     expect(result.answer).not.toContain('일반적으로');
+    expect(result.answer).not.toContain('freeze하고 사용자 피드백을 먼저 받으세요');
     expect(result.citationMemoryIds).toEqual(['mem_single_anxiety_scope_delay']);
     expect(result.evidenceBullets).toEqual([
       expect.objectContaining({
@@ -96,6 +99,27 @@ describe('askMyPastSelf', () => {
       'decision:chosen',
       'outcome:one-launch-was-delayed',
     ]);
+    expect(result.confidence).toBe(0);
+  });
+
+  test('returns insufficient evidence when repeated citations come from only one source type', () => {
+    const patterns = detectRepeatedPatterns(singleSourceRepeatedMemoryRecords).patterns;
+
+    const result = askMyPastSelf({
+      question: '이번에도 기능을 더 넣어야 할까?',
+      memories: singleSourceRepeatedMemoryRecords,
+      patterns,
+    });
+
+    expect(patterns[0]?.evidenceLabel).toBe('sufficient_evidence');
+    expect(result.evidenceLabel).toBe('insufficient_evidence');
+    expect(result.recommendation).toContain('source 2개 이상');
+    expect(result.citationMemoryIds).toEqual([
+      'mem_same_source_repeat_one',
+      'mem_same_source_repeat_two',
+    ]);
+    expect(result.answer).toContain('현재 source 수: 1');
+    expect(result.answer).not.toContain('freeze하고 사용자 피드백을 먼저 받으세요');
     expect(result.confidence).toBe(0);
   });
 

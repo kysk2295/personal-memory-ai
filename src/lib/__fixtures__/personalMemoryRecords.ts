@@ -103,3 +103,73 @@ export const insufficientPatternMemoryRecords: MemoryRecord[] = [
     extractionStatus: 'ready',
   }),
 ];
+
+export const repeatedPatternWithoutOutcomeRecords: MemoryRecord[] = [
+  normalizeMemoryRecord({
+    id: 'mem_repeat_without_outcome_one',
+    sourceType: 'notion',
+    sourceRef: 'notion://launch-journal/no-outcome-1',
+    createdAt: '2026-05-25T08:00:00.000Z',
+    observedAt: '2026-05-25',
+    rawText:
+      'Anxiety before shipping made me expand scope with more replay controls and the launch slipped again.',
+    summary: 'Anxiety led to scope expansion and another delayed launch, but the concrete outcome was not captured.',
+    memoryType: 'decision',
+    emotionTags: ['anxiety', 'pressure'],
+    topicTags: ['launch', 'scope expansion', 'Decision Replay'],
+    projectTags: ['personal-memory-ai'],
+    decisionSignal: 'chosen',
+    extractionStatus: 'ready',
+  }),
+  normalizeMemoryRecord({
+    id: 'mem_repeat_without_outcome_two',
+    sourceType: 'obsidian',
+    sourceRef: 'obsidian://daily/2026-05-26-no-outcome',
+    createdAt: '2026-05-26T08:00:00.000Z',
+    observedAt: '2026-05-26',
+    rawText:
+      'The same anxiety pattern showed up again: I added more onboarding, expanded scope, and the launch delayed again, but I failed to record the result cleanly.',
+    summary: 'Repeated anxiety, scope expansion, and delayed launch pattern without a preserved outcome citation.',
+    memoryType: 'reflection',
+    emotionTags: ['anxiety'],
+    topicTags: ['launch', 'feature addition', 'scope expansion'],
+    projectTags: ['personal-memory-ai'],
+    decisionSignal: 'chosen',
+    extractionStatus: 'ready',
+  }),
+];
+
+export const singleSourceRepeatedMemoryRecords: MemoryRecord[] = [
+  normalizeMemoryRecord({
+    id: 'mem_same_source_repeat_one',
+    sourceType: 'markdown',
+    sourceRef: 'markdown://repeat-1.md',
+    createdAt: '2026-05-18T08:00:00.000Z',
+    observedAt: '2026-05-18',
+    rawText: 'Anxiety about launch made me add features and delay shipping again.',
+    summary: 'Launch anxiety turned into feature addition and shipping delay.',
+    memoryType: 'reflection',
+    emotionTags: ['anxiety'],
+    topicTags: ['feature addition', 'launch delay'],
+    projectTags: ['personal-memory-ai'],
+    decisionSignal: 'chosen',
+    outcomeText: 'Shipping slipped after adding more features.',
+    extractionStatus: 'ready',
+  }),
+  normalizeMemoryRecord({
+    id: 'mem_same_source_repeat_two',
+    sourceType: 'markdown',
+    sourceRef: 'markdown://repeat-2.md',
+    createdAt: '2026-05-19T08:00:00.000Z',
+    observedAt: '2026-05-19',
+    rawText: 'The same anxiety pattern caused expanded scope and another delayed launch.',
+    summary: 'Repeated anxiety scope expansion pattern delayed launch again.',
+    memoryType: 'reflection',
+    emotionTags: ['anxiety', 'pressure'],
+    topicTags: ['scope expansion', 'launch delay'],
+    projectTags: ['personal-memory-ai'],
+    decisionSignal: 'chosen',
+    outcomeText: 'Launch delayed again after scope expansion.',
+    extractionStatus: 'ready',
+  }),
+];

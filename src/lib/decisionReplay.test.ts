@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vitest';
 import {
   insufficientPatternMemoryRecords,
   personalMemoryRecords,
+  repeatedPatternWithoutOutcomeRecords,
 } from './__fixtures__/personalMemoryRecords';
 import { replayDecision } from './decisionReplay';
 import { detectRepeatedPatterns } from './patternDetector';
@@ -158,6 +159,63 @@ describe('replayDecision', () => {
       'memory:mem_single_anxiety_scope_delay',
       'decision:chosen',
       'outcome:one-launch-was-delayed',
+    ]);
+  });
+
+  test('returns insufficient evidence when repeated decisions lack cited past outcomes', () => {
+    const patterns = detectRepeatedPatterns(repeatedPatternWithoutOutcomeRecords).patterns;
+
+    const result = replayDecision({
+      currentDecision: {
+        id: 'decision_current_missing_outcome_support',
+        prompt: 'Should I add more replay polish before review?',
+        emotions: ['anxiety'],
+        choices: ['add polish', 'freeze for review'],
+        topicTags: ['launch', 'Decision Replay'],
+      },
+      memories: repeatedPatternWithoutOutcomeRecords,
+      patterns,
+    });
+
+    expect(result.status).toBe('implemented');
+    expect(result.evidenceLabel).toBe('insufficient_evidence');
+    expect(result.pattern).toBeUndefined();
+    expect(result.recommendation).toBe(
+      'Insufficient cited personal memory to recommend a choice. Import or capture more relevant decisions first.',
+    );
+    expect(result.uncertainty).toContain('cited outcomes: 0');
+    expect(result.similarPastDecisions).toEqual([
+      expect.objectContaining({
+        memoryId: 'mem_repeat_without_outcome_one',
+        outcome: undefined,
+      }),
+      expect.objectContaining({
+        memoryId: 'mem_repeat_without_outcome_two',
+        outcome: undefined,
+      }),
+    ]);
+    expect(result.outcomes).toEqual([]);
+    expect(result.citations).toEqual([
+      expect.objectContaining({
+        citationId: 'mem_repeat_without_outcome_one',
+        text: expect.not.stringContaining('Outcome:'),
+      }),
+      expect.objectContaining({
+        citationId: 'mem_repeat_without_outcome_two',
+        text: expect.not.stringContaining('Outcome:'),
+      }),
+    ]);
+    expect(result.confidence).toBe(0);
+    expect(result.graphHighlightIds).toEqual([
+      'decision:decision_current_missing_outcome_support',
+      'emotion:anxiety',
+      'choice:add-polish',
+      'choice:freeze-for-review',
+      'topic:launch',
+      'topic:decision-replay',
+      'memory:mem_repeat_without_outcome_one',
+      'memory:mem_repeat_without_outcome_two',
+      'decision:chosen',
     ]);
   });
 });
