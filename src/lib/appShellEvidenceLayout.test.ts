@@ -211,6 +211,13 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('data-search-count');
     expect(html).toContain('data-memory-timeline-panel="pmi025"');
     expect(html).toContain('data-timeline-entry-count="8"');
+    expect(html).toContain('data-memory-review-panel="source-edit"');
+    expect(html).toContain('data-memory-detail-endpoint="/api/memory/detail"');
+    expect(html).toContain('data-memory-update-endpoint="/api/memory/update"');
+    expect(html).toContain('data-memory-review-selected-id="mem_freeze_vs_feature_addition"');
+    expect(html).toContain('data-control="memory-edit-summary"');
+    expect(html).toContain('data-control="memory-edit-raw-text"');
+    expect(html).toContain('data-control="save-memory-edit"');
     expect(html).toContain('data-timeline-memory-id="mem_api_artifact_ask_answer_sha-');
     expect(html).toContain('data-timeline-memory-id="mem_api_artifact_weekly_report_sha-');
     expect(html).toContain('data-timeline-memory-id="mem_captured_ship_note"');

@@ -29,6 +29,7 @@ function renderTimelineEntry(entry: MemoryDetailTimelineEntry): string {
 
 export function renderMemoryDetailTimelinePanel(layout: InitialAppShellEvidenceLayout): string {
   const timeline = layout.memoryTimeline;
+  const selectedEntry = timeline.entries.find((entry) => entry.active) ?? timeline.entries[0];
 
   return `<section class="memory-timeline-flow product-panel" aria-label="Memory detail timeline" data-memory-timeline-panel="pmi025" data-timeline-entry-count="${timeline.summary.totalMemoryCount}" data-timeline-active-memory="${escapeHtml(
     timeline.summary.selectedMemoryId ?? '',
@@ -43,5 +44,27 @@ export function renderMemoryDetailTimelinePanel(layout: InitialAppShellEvidenceL
     <div class="timeline-list" aria-label="Private memory timeline entries">
       ${timeline.entries.map(renderTimelineEntry).join('')}
     </div>
+    ${
+      selectedEntry
+        ? `<article class="memory-review-panel" aria-label="Source-backed memory review" data-memory-review-panel="source-edit" data-memory-detail-endpoint="/api/memory/detail" data-memory-update-endpoint="/api/memory/update" data-memory-review-selected-id="${escapeHtml(
+            selectedEntry.memoryId,
+          )}" data-memory-review-state="ready">
+      <div class="panel-topline">
+        <span>${escapeHtml(selectedEntry.sourceLabel)}</span>
+        <span>${escapeHtml(selectedEntry.privacyScope)}</span>
+      </div>
+      <label for="memory-edit-summary">Summary</label>
+      <textarea id="memory-edit-summary" data-control="memory-edit-summary">${escapeHtml(selectedEntry.title)}</textarea>
+      <label for="memory-edit-raw-text">Source excerpt</label>
+      <textarea id="memory-edit-raw-text" data-control="memory-edit-raw-text">${escapeHtml(selectedEntry.rawExcerpt)}</textarea>
+      <div class="capture-meta">
+        <span data-memory-review-date>${escapeHtml(selectedEntry.observedAt)}</span>
+        <span data-memory-review-type>${escapeHtml(selectedEntry.memoryType)}</span>
+        <span data-memory-review-related-count>${selectedEntry.relatedMemoryIds.length} related</span>
+      </div>
+      <button type="button" data-control="save-memory-edit">Save memory edit</button>
+    </article>`
+        : ''
+    }
   </section>`;
 }

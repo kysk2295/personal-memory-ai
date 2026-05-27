@@ -215,6 +215,98 @@ describe('personal memory API boundary', () => {
     ]);
   });
 
+  test('reviews and updates one owner-scoped memory without crossing users', async () => {
+    const store = createMemoryStore({ env: {} });
+    await store.create('user-a', personalMemoryRecords[2]);
+    await store.create('user-b', {
+      ...personalMemoryRecords[2],
+      id: 'mem_freeze_vs_feature_addition',
+      sourceRef: 'obsidian://other-user/source-review-guard',
+      summary: 'Other user private source review guard.',
+    });
+
+    const detail = await handlePersonalMemoryApiRequest({
+      store,
+      userId: 'user-a',
+      request: {
+        method: 'GET',
+        path: '/api/memory/detail',
+        body: {
+          memoryId: 'mem_freeze_vs_feature_addition',
+        },
+      },
+    });
+
+    expect(detail.statusCode).toBe(200);
+    expect(detail.body).toEqual({
+      memory: expect.objectContaining({
+        id: 'mem_freeze_vs_feature_addition',
+        sourceRef: 'markdown://retros/freezing-vs-features.md',
+        privacyScope: 'private',
+      }),
+    });
+
+    const updated = await handlePersonalMemoryApiRequest({
+      store,
+      userId: 'user-a',
+      request: {
+        method: 'POST',
+        path: '/api/memory/update',
+        body: {
+          memoryId: 'mem_freeze_vs_feature_addition',
+          summary: 'Edited source-backed freeze decision.',
+          rawText: 'Edited raw source text that keeps citation provenance.',
+          observedAt: '2026-05-19',
+          emotionTags: ['resolve', 'trust'],
+          topicTags: ['launch', 'review'],
+        },
+      },
+    });
+
+    expect(updated.statusCode).toBe(200);
+    expect(updated.body).toEqual({
+      memory: expect.objectContaining({
+        id: 'mem_freeze_vs_feature_addition',
+        summary: 'Edited source-backed freeze decision.',
+        rawText: 'Edited raw source text that keeps citation provenance.',
+        observedAt: '2026-05-19',
+        emotionTags: ['resolve', 'trust'],
+        topicTags: ['launch', 'review'],
+        sourceRef: 'markdown://retros/freezing-vs-features.md',
+      }),
+    });
+    expect(await store.getById('user-a', 'mem_freeze_vs_feature_addition')).toEqual(
+      expect.objectContaining({
+        summary: 'Edited source-backed freeze decision.',
+        rawText: 'Edited raw source text that keeps citation provenance.',
+      }),
+    );
+    expect(await store.getById('user-b', 'mem_freeze_vs_feature_addition')).toEqual(
+      expect.objectContaining({
+        sourceRef: 'obsidian://other-user/source-review-guard',
+        summary: 'Other user private source review guard.',
+      }),
+    );
+
+    const missing = await handlePersonalMemoryApiRequest({
+      store,
+      userId: 'user-a',
+      request: {
+        method: 'POST',
+        path: '/api/memory/update',
+        body: {
+          memoryId: 'mem_missing_source_review',
+          summary: 'Should not create a missing memory.',
+        },
+      },
+    });
+
+    expect(missing).toEqual({
+      statusCode: 404,
+      body: { error: 'memory_not_found' },
+    });
+  });
+
   test('handles ask, replay, and weekly report without leaking another user memory', async () => {
     const store = createMemoryStore({ env: {} });
     for (const record of personalMemoryRecords.slice(0, 3)) {

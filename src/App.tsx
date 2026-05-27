@@ -1675,6 +1675,10 @@ const GRAPH_CONTROL_SCRIPT = `
   const importUploadPreviewList = document.querySelector('[data-import-upload-preview-list]');
   const importAppliedFeedback = document.querySelector('[data-import-applied-feedback="local-upload"]');
   const importAppliedMemoryList = document.querySelector('[data-import-applied-memory-list]');
+  const memoryReviewPanel = document.querySelector('[data-memory-review-panel="source-edit"]');
+  const memoryEditSummary = document.querySelector('[data-control="memory-edit-summary"]');
+  const memoryEditRawText = document.querySelector('[data-control="memory-edit-raw-text"]');
+  const saveMemoryEdit = document.querySelector('[data-control="save-memory-edit"]');
   const cytoscapeMount = document.querySelector('[data-graph-library="cytoscape"]');
   const graphPayloadScript = document.querySelector('#memory-graph-elements');
   const savedArtifactPayloadScript = document.querySelector('#saved-artifact-actions');
@@ -1719,6 +1723,16 @@ const GRAPH_CONTROL_SCRIPT = `
     });
   };
 
+  const updateMemoryReviewSelection = (citation, title, body, source) => {
+    if (!memoryReviewPanel || !citation) return;
+    memoryReviewPanel.setAttribute('data-memory-review-selected-id', citation);
+    memoryReviewPanel.setAttribute('data-memory-review-state', 'ready');
+    if (memoryEditSummary) memoryEditSummary.value = title || '';
+    if (memoryEditRawText) memoryEditRawText.value = body || '';
+    const sourceLabel = memoryReviewPanel.querySelector('.panel-topline span');
+    if (sourceLabel && source) sourceLabel.textContent = source;
+  };
+
   const markCytoscapeSelection = (citation) => {
     if (!cytoscapeGraph || !citation) return;
     cytoscapeGraph.elements().removeClass('selected-memory selected-edge');
@@ -1740,6 +1754,7 @@ const GRAPH_CONTROL_SCRIPT = `
     inspectorHeadline.textContent = title;
     inspectorSource.textContent = source;
     inspectorBody.textContent = body;
+    updateMemoryReviewSelection(citation, title, body, source);
     if (inspectorCitations && citation) {
       inspectorCitations.innerHTML =
         '<a href="#evidence-' +
@@ -2444,6 +2459,37 @@ const GRAPH_CONTROL_SCRIPT = `
       shell.setAttribute('data-import-upload-error', String(error?.message || error));
       setInteractionState('import-undo-error');
     }
+  });
+
+  saveMemoryEdit?.addEventListener('click', async () => {
+    if (!memoryReviewPanel) return;
+    const memoryId = memoryReviewPanel.getAttribute('data-memory-review-selected-id') || '';
+    const endpoint = memoryReviewPanel.getAttribute('data-memory-update-endpoint') || '';
+    const shouldPersist = Boolean(memoryId && endpoint && window.location.protocol !== 'file:');
+    memoryReviewPanel.setAttribute('data-memory-review-state', shouldPersist ? 'saving' : 'saved');
+    if (shouldPersist) {
+      try {
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            memoryId,
+            summary: memoryEditSummary?.value || '',
+            rawText: memoryEditRawText?.value || '',
+          }),
+        });
+        if (!response.ok) throw new Error('memory update failed with ' + response.status);
+        await rehydrateAppShellAfterImport();
+      } catch (error) {
+        memoryReviewPanel.setAttribute('data-memory-review-state', 'error');
+        shell.setAttribute('data-memory-review-error', String(error?.message || error));
+        setInteractionState('memory-review-error');
+        return;
+      }
+    }
+    memoryReviewPanel.setAttribute('data-memory-review-state', 'saved');
+    shell.setAttribute('data-last-edited-memory', memoryId);
+    setInteractionState('memory-review-saved');
   });
 
   filterButtons.forEach((button) => {

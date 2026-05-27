@@ -178,6 +178,68 @@ describe('local personal memory HTTP transport', () => {
     expect(exported.bodyText).not.toContain('mem_other_user_http_import_undo_guard');
   });
 
+  test('reviews and updates memories through HTTP without crossing private vaults', async () => {
+    const store = createMemoryStore({ env: {} });
+    await store.create('user-a', personalMemoryRecords[2]);
+    await store.create('user-b', {
+      ...personalMemoryRecords[2],
+      id: 'mem_user_b_source_review_guard',
+      sourceRef: 'obsidian://other-user/http-source-review-guard',
+      summary: 'Other private source should stay hidden.',
+    });
+    const handle = createLocalPersonalMemoryHttpHandler({
+      store,
+      authRuntime: createPrivateVaultAuthRuntime({
+        env: {
+          PMI_AUTH_PROVIDER: 'trusted-header',
+        },
+      }),
+    });
+
+    const detail = await handle({
+      method: 'GET',
+      path: '/api/memory/detail',
+      headers: {
+        'x-pmi-user-id': 'user-a',
+      },
+      bodyText: JSON.stringify({
+        memoryId: 'mem_freeze_vs_feature_addition',
+      }),
+    });
+
+    expect(detail.statusCode).toBe(200);
+    expect(detail.bodyText).toContain('markdown://retros/freezing-vs-features.md');
+    expect(detail.bodyText).not.toContain('mem_user_b_source_review_guard');
+
+    const updated = await handle({
+      method: 'POST',
+      path: '/api/memory/update',
+      headers: {
+        'x-pmi-user-id': 'user-a',
+      },
+      bodyText: JSON.stringify({
+        memoryId: 'mem_freeze_vs_feature_addition',
+        summary: 'HTTP edited review summary.',
+        rawText: 'HTTP edited raw source text.',
+      }),
+    });
+
+    expect(updated.statusCode).toBe(200);
+    expect(updated.bodyText).toContain('HTTP edited review summary.');
+    expect(updated.bodyText).not.toContain('mem_user_b_source_review_guard');
+    expect(await store.getById('user-a', 'mem_freeze_vs_feature_addition')).toEqual(
+      expect.objectContaining({
+        summary: 'HTTP edited review summary.',
+        rawText: 'HTTP edited raw source text.',
+      }),
+    );
+    expect(await store.getById('user-b', 'mem_user_b_source_review_guard')).toEqual(
+      expect.objectContaining({
+        summary: 'Other private source should stay hidden.',
+      }),
+    );
+  });
+
   test('returns safe JSON errors for invalid request bodies', async () => {
     const handle = createLocalPersonalMemoryHttpHandler({
       store: createMemoryStore({ env: {} }),

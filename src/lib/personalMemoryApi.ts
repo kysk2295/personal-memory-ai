@@ -24,6 +24,8 @@ export type PersonalMemoryApiMethod = 'GET' | 'POST';
 export type PersonalMemoryApiPath =
   | '/api/app-shell'
   | '/api/capture'
+  | '/api/memory/detail'
+  | '/api/memory/update'
   | '/api/import/preview'
   | '/api/import/apply'
   | '/api/import/undo'
@@ -72,6 +74,21 @@ interface ImportApplyBody {
 
 interface ImportUndoBody {
   appliedMemoryRecordIds?: string[];
+}
+
+interface MemoryDetailBody {
+  memoryId?: string;
+}
+
+interface MemoryUpdateBody {
+  memoryId?: string;
+  summary?: string;
+  rawText?: string;
+  observedAt?: string;
+  emotionTags?: string[];
+  topicTags?: string[];
+  projectTags?: string[];
+  peopleTags?: string[];
 }
 
 interface AskBody {
@@ -127,6 +144,20 @@ function isSavedArtifactCaptureBody(body: unknown): body is SavedArtifactCapture
   );
 }
 
+function sanitizeOptionalText(value: unknown): string | undefined {
+  if (typeof value !== 'string') return undefined;
+  const trimmed = value.trim();
+  return trimmed || undefined;
+}
+
+function sanitizeOptionalStringList(value: unknown): string[] | undefined {
+  if (!Array.isArray(value)) return undefined;
+  return value
+    .filter((item): item is string => typeof item === 'string')
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
 function methodNotAllowed(): PersonalMemoryApiResponse<{ error: string }> {
   return {
     statusCode: 405,
@@ -167,6 +198,36 @@ export async function handlePersonalMemoryApiRequest(
       input: readBody<FastDiaryCaptureFlatInput>(request.body),
     });
     return { statusCode: 201, body: result };
+  }
+
+  if (request.path === '/api/memory/detail') {
+    if (request.method !== 'GET') return methodNotAllowed();
+    const body = readBody<MemoryDetailBody>(request.body);
+    const memoryId = sanitizeOptionalText(body?.memoryId);
+    const memory = memoryId ? await store.getById(userId, memoryId) : null;
+    if (!memory) return { statusCode: 404, body: { error: 'memory_not_found' } };
+    return { statusCode: 200, body: { memory } };
+  }
+
+  if (request.path === '/api/memory/update') {
+    if (request.method !== 'POST') return methodNotAllowed();
+    const body = readBody<MemoryUpdateBody>(request.body);
+    const memoryId = sanitizeOptionalText(body?.memoryId);
+    const existing = memoryId ? await store.getById(userId, memoryId) : null;
+    if (!existing) return { statusCode: 404, body: { error: 'memory_not_found' } };
+
+    const updated = {
+      ...existing,
+      summary: sanitizeOptionalText(body.summary) ?? existing.summary,
+      rawText: sanitizeOptionalText(body.rawText) ?? existing.rawText,
+      observedAt: sanitizeOptionalText(body.observedAt) ?? existing.observedAt,
+      emotionTags: sanitizeOptionalStringList(body.emotionTags) ?? existing.emotionTags,
+      topicTags: sanitizeOptionalStringList(body.topicTags) ?? existing.topicTags,
+      projectTags: sanitizeOptionalStringList(body.projectTags) ?? existing.projectTags,
+      peopleTags: sanitizeOptionalStringList(body.peopleTags) ?? existing.peopleTags,
+    };
+    await store.update(userId, updated);
+    return { statusCode: 200, body: { memory: updated } };
   }
 
   if (request.path === '/api/import/preview') {
