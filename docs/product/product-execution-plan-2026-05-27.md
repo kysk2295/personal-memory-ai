@@ -2,7 +2,7 @@
 
 Status: active local execution plan  
 Owner: Ko Yunseo  
-Updated: 2026-05-27, app capture PWA pass
+Updated: 2026-05-27, staging readiness pass
 Supersedes for local Codex work: `docs/product/product-master-plan-2026-05-26.md`
 
 ## 1. Product Definition
@@ -96,7 +96,7 @@ Status values:
 | Import | File upload/import UI | `planned` | Needed before real personal use. |
 | Memory Store | Fixture user isolation | `done-foundation` | Tests cover user-scoped records. |
 | Memory Store | PostgreSQL repository | `done-foundation` | Code exists; staging smoke still planned. |
-| Memory Store | pgvector semantic search | `planned` | Store method exists; retrieval boundary not complete. |
+| Memory Store | pgvector semantic search | `done-foundation` | Store method plus redacted staging smoke contract exist; live staging execution remains gated on secrets/deploy target. |
 | Web | Graph-first second brain | `prototype-ui` | Static graph/evidence surface exists. |
 | Web | Evidence drawer | `prototype-ui` | Source/date/raw excerpt/why-connected visible. |
 | Web | Individual memory detail page | `planned` | Needed for real review/edit workflows. |
@@ -119,7 +119,7 @@ Status values:
 | Privacy | Auth/private vault | `planned` | Required before multi-user beta. |
 | Backend/API | Capture/import endpoints | `done-foundation` | User-scoped API dispatcher handles capture, import preview, and import apply. |
 | Backend/API | Ask/replay/report endpoints | `done-foundation` | User-scoped API dispatcher handles ask, replay, weekly report, export, and delete boundaries. |
-| Backend/API | Staging readiness | `planned` | Must not leak secrets. |
+| Backend/API | Staging readiness | `done-foundation` | Redacted env presence and pgvector staging smoke plan exist without secret leakage. |
 | Release | Visual evidence gates | `done-foundation` | Local screenshots exist; staging review still planned. |
 | Release | PR/release checklist | `planned` | Needed before remote/main workflow. |
 
@@ -154,20 +154,9 @@ No remote push, main merge, production deploy, or secret access is allowed witho
 - L11: personal memory API boundary.
 - L12: privacy export/delete UX.
 - L13: PWA/app capture surface.
+- L14: staging backend readiness.
 
 ## 6. Active Next Loops
-
-### L14 — Staging Backend Readiness
-
-Goal: verify PostgreSQL/pgvector staging without leaking secrets or mutating production data.
-
-Acceptance:
-
-- env presence report uses present/missing only
-- pgvector smoke covers extension, insert, search, delete
-- per-user isolation is demonstrated in staging-only smoke
-
-Estimated effort: 1-3 days.
 
 ### L15 — Auth / Private Vault
 
@@ -350,6 +339,23 @@ Implemented:
 - `/capture/` static route
 - `dist/manifest.webmanifest` generation
 - `artifacts/web-second-brain-product-surface/pwa-app-capture-surface.png`
+
+### L14 — Staging Backend Readiness
+
+Goal: verify PostgreSQL/pgvector staging without leaking secrets or mutating production data.
+
+Acceptance:
+
+- env presence report uses present/missing only
+- pgvector smoke covers extension, insert, search, delete
+- per-user isolation is demonstrated in staging-only smoke
+
+Implemented:
+
+- `src/lib/stagingReadiness.ts`
+- `src/lib/stagingReadiness.test.ts`
+- redacted env presence report contract
+- staging-only pgvector smoke plan
 
 ## 8. MVP Time Estimate
 
