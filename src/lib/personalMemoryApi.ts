@@ -8,6 +8,7 @@ import {
   undoAppliedMemoryRecords,
 } from './memoryIngestion';
 import { buildMemoryGraphModel } from './memoryGraphModel';
+import { buildMemoryReviewLedgerEntry } from './memoryReviewLedger';
 import type { MemoryStore } from './memoryStore';
 import { answerPersonalMemoryQuestion } from './personalMemoryAgent';
 import { resolvePrivateVaultAccess, type PrivateVaultSession } from './privateVault';
@@ -227,7 +228,12 @@ export async function handlePersonalMemoryApiRequest(
       peopleTags: sanitizeOptionalStringList(body.peopleTags) ?? existing.peopleTags,
     };
     await store.update(userId, updated);
-    return { statusCode: 200, body: { memory: updated } };
+    const reviewLedgerEntry = buildMemoryReviewLedgerEntry({
+      userId,
+      before: existing,
+      after: updated,
+    });
+    return { statusCode: 200, body: { memory: updated, reviewLedgerEntry } };
   }
 
   if (request.path === '/api/import/preview') {

@@ -48,7 +48,7 @@ export function renderMemoryDetailTimelinePanel(layout: InitialAppShellEvidenceL
       selectedEntry
         ? `<article class="memory-review-panel" aria-label="Source-backed memory review" data-memory-review-panel="source-edit" data-memory-detail-endpoint="/api/memory/detail" data-memory-update-endpoint="/api/memory/update" data-memory-review-selected-id="${escapeHtml(
             selectedEntry.memoryId,
-          )}" data-memory-review-state="ready">
+          )}" data-memory-review-state="ready" data-memory-review-ledger="pending" data-memory-review-revision="">
       <div class="panel-topline">
         <span>${escapeHtml(selectedEntry.sourceLabel)}</span>
         <span>${escapeHtml(selectedEntry.privacyScope)}</span>

@@ -2479,6 +2479,10 @@ const GRAPH_CONTROL_SCRIPT = `
           }),
         });
         if (!response.ok) throw new Error('memory update failed with ' + response.status);
+        const body = await response.json().catch(() => ({}));
+        const revisionId = body?.reviewLedgerEntry?.id || '';
+        memoryReviewPanel.setAttribute('data-memory-review-ledger', revisionId ? 'recorded' : 'pending');
+        memoryReviewPanel.setAttribute('data-memory-review-revision', revisionId);
         await rehydrateAppShellAfterImport();
       } catch (error) {
         memoryReviewPanel.setAttribute('data-memory-review-state', 'error');

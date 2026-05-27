@@ -274,6 +274,15 @@ describe('personal memory API boundary', () => {
         topicTags: ['launch', 'review'],
         sourceRef: 'markdown://retros/freezing-vs-features.md',
       }),
+      reviewLedgerEntry: expect.objectContaining({
+        id: expect.stringMatching(/^memory_review_mem_freeze_vs_feature_addition_/),
+        userId: 'user-a',
+        memoryId: 'mem_freeze_vs_feature_addition',
+        changedFields: ['summary', 'rawText', 'observedAt', 'emotionTags', 'topicTags'],
+        beforeSummary: 'Anxiety creates a freeze-vs-feature-addition choice, and feature addition postpones launches.',
+        afterSummary: 'Edited source-backed freeze decision.',
+        sourceRef: 'markdown://retros/freezing-vs-features.md',
+      }),
     });
     expect(await store.getById('user-a', 'mem_freeze_vs_feature_addition')).toEqual(
       expect.objectContaining({
