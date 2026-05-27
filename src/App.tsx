@@ -2,6 +2,7 @@ import { renderAskMyPastSelfPanel } from './components/AskMyPastSelfPanel';
 import { renderDecisionReplayPanel } from './components/DecisionReplayPanel';
 import { renderEvidenceDrawer } from './components/EvidenceDrawer';
 import { renderMemoryGraph } from './components/MemoryGraph';
+import { renderMemoryDetailTimelinePanel } from './components/MemoryDetailTimelinePanel';
 import { renderPatternPanel } from './components/PatternPanel';
 import { renderPrivacyControlPanel } from './components/PrivacyControlPanel';
 import { renderWeeklyReportPanel } from './components/WeeklyReportPanel';
@@ -478,6 +479,7 @@ const APP_SHELL_STYLES = `
   .ask-flow,
   .decision-replay-flow,
   .weekly-report-flow,
+  .memory-timeline-flow,
   .evidence-drawer,
   .analysis-panels {
     display: flex;
@@ -486,10 +488,12 @@ const APP_SHELL_STYLES = `
   }
   .ask-flow { max-height: 500px; overflow: auto; }
   .weekly-report-flow { max-height: 470px; overflow: auto; }
+  .memory-timeline-flow { max-height: 430px; overflow: auto; }
   .evidence-drawer { max-height: 390px; overflow: auto; }
   .ask-flow,
   .decision-replay-flow,
   .weekly-report-flow,
+  .memory-timeline-flow,
   .evidence-drawer,
   .analysis-panels .panel {
     padding: 14px;
@@ -704,6 +708,50 @@ const APP_SHELL_STYLES = `
   .drawer-list {
     max-height: 380px;
     overflow: auto;
+  }
+  .timeline-list {
+    display: grid;
+    gap: 8px;
+  }
+  .timeline-memory-item {
+    width: 100%;
+    display: grid;
+    gap: 5px;
+    border: 1px solid rgba(117, 122, 143, 0.12);
+    border-radius: 8px;
+    background: rgba(250, 251, 255, 0.78);
+    padding: 10px;
+    color: #687084;
+    text-align: left;
+  }
+  .timeline-memory-item[data-timeline-active="true"] {
+    border-color: rgba(143, 128, 255, 0.34);
+    background: rgba(143, 128, 255, 0.08);
+  }
+  .timeline-memory-item strong {
+    color: #53586a;
+    font-size: 12px;
+    line-height: 1.35;
+  }
+  .timeline-date,
+  .timeline-source,
+  .timeline-excerpt {
+    color: #73798c;
+    font-size: 11px;
+    line-height: 1.45;
+  }
+  .timeline-facets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+  .timeline-facets span {
+    border: 1px solid rgba(117, 122, 143, 0.12);
+    border-radius: 999px;
+    padding: 4px 6px;
+    color: #7a728d;
+    background: rgba(255,255,255,0.6);
+    font-size: 10px;
   }
   .drawer-item code,
   .ask-citations code,
@@ -1115,6 +1163,7 @@ const APP_SHELL_STYLES = `
   .insufficient-evidence-state,
   .similar-decision,
   .drawer-item,
+  .timeline-memory-item,
   .capture-meta span,
   .import-preview-list article,
   .decision-tag-list li,
@@ -1125,6 +1174,23 @@ const APP_SHELL_STYLES = `
     border-color: rgba(255, 255, 255, 0.08);
     background: rgba(255, 255, 255, 0.04);
     color: #c3c3c8;
+  }
+  .timeline-memory-item[data-timeline-active="true"] {
+    border-color: rgba(214, 31, 60, 0.44);
+    background: rgba(214, 31, 60, 0.1);
+  }
+  .timeline-memory-item strong {
+    color: #ececef;
+  }
+  .timeline-date,
+  .timeline-source,
+  .timeline-excerpt {
+    color: #b0b0b6;
+  }
+  .timeline-facets span {
+    border-color: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.055);
+    color: #d0d0d4;
   }
   .ask-question-row input,
   .decision-current-card input,
@@ -1432,6 +1498,7 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
           ${renderAskMyPastSelfPanel(layout)}
           ${renderPrivacyControlPanel(layout)}
           ${renderWeeklyReportPanel(layout)}
+          ${renderMemoryDetailTimelinePanel(layout)}
           ${renderEvidenceDrawer(layout)}
           ${renderDecisionReplayPanel(layout)}
           ${renderPatternPanel(layout)}
@@ -1464,6 +1531,8 @@ const GRAPH_CONTROL_SCRIPT = `
   const memorySearchInput = document.querySelector('[data-control="memory-search"]');
   const memorySearchCount = document.querySelector('[data-search-count]');
   const memorySearchResults = Array.from(document.querySelectorAll('[data-search-result="memory"]'));
+  const timelinePanel = document.querySelector('[data-memory-timeline-panel="pmi025"]');
+  const timelineItems = Array.from(document.querySelectorAll('[data-control="timeline-select-memory"]'));
   const cytoscapeMount = document.querySelector('[data-graph-library="cytoscape"]');
   const graphPayloadScript = document.querySelector('#memory-graph-elements');
   let cytoscapeGraph = null;
@@ -1483,6 +1552,15 @@ const GRAPH_CONTROL_SCRIPT = `
 
   const findMemoryNodeByCitation = (citation) =>
     memoryNodes.find((item) => item.getAttribute('data-inspector-citation') === citation);
+
+  const updateTimelineSelection = (citation) => {
+    if (!citation) return;
+    shell.setAttribute('data-timeline-active-memory', citation);
+    if (timelinePanel) timelinePanel.setAttribute('data-timeline-active-memory', citation);
+    timelineItems.forEach((item) => {
+      item.setAttribute('data-timeline-active', String(item.getAttribute('data-timeline-memory-id') === citation));
+    });
+  };
 
   const markCytoscapeSelection = (citation) => {
     if (!cytoscapeGraph || !citation) return;
@@ -1525,6 +1603,7 @@ const GRAPH_CONTROL_SCRIPT = `
     });
     inspector.setAttribute('data-selected-memory', citation);
     shell.setAttribute('data-active-memory', citation);
+    updateTimelineSelection(citation);
     markCytoscapeSelection(citation);
     setInteractionState('memory-selected');
   };
@@ -1740,6 +1819,18 @@ const GRAPH_CONTROL_SCRIPT = `
         selectMemory(node);
         shell.setAttribute('data-search-selected-memory', citation);
         setInteractionState('search-result-selected');
+      }
+    });
+  });
+
+  timelineItems.forEach((item) => {
+    item.addEventListener('click', () => {
+      const citation = item.getAttribute('data-timeline-memory-id') || '';
+      const node = findMemoryNodeByCitation(citation);
+      if (node) {
+        selectMemory(node);
+        shell.setAttribute('data-timeline-selected-memory', citation);
+        setInteractionState('timeline-item-selected');
       }
     });
   });

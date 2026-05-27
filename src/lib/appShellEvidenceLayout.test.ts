@@ -47,7 +47,19 @@ describe('buildInitialAppShellEvidenceLayout', () => {
         expect.objectContaining({ id: 'app-quick-diary-capture', status: 'partial' }),
         expect.objectContaining({ id: 'web-graph-workspace', status: 'implemented' }),
         expect.objectContaining({ id: 'weekly-report', status: 'implemented' }),
+        expect.objectContaining({ id: 'memory-detail-timeline', status: 'implemented' }),
       ]),
+    );
+    expect(shell.memoryTimeline).toMatchObject({
+      summary: {
+        totalMemoryCount: 5,
+        startDate: '2026-05-01',
+        endDate: '2026-05-23',
+        selectedMemoryId: 'mem_freeze_vs_feature_addition',
+      },
+    });
+    expect(shell.memoryTimeline.entries.find((entry) => entry.memoryId === 'mem_freeze_vs_feature_addition')).toEqual(
+      expect.objectContaining({ active: true, relatedMemoryIds: expect.arrayContaining(['mem_launch_june_anxiety_scope_delay']) }),
     );
     expect(shell.weeklyReport).toMatchObject({
       id: 'weekly_report_2026-05-01_2026-05-20',
@@ -99,6 +111,7 @@ describe('buildInitialAppShellEvidenceLayout', () => {
         expect.objectContaining({ id: 'seed-memory-fixtures', status: 'fake/sample' }),
         expect.objectContaining({ id: 'app-capture-native-client', status: 'skeleton' }),
         expect.objectContaining({ id: 'weekly-report', status: 'implemented' }),
+        expect.objectContaining({ id: 'memory-detail-timeline', status: 'implemented' }),
       ]),
     );
     expect(shell.surfaces.map((surface) => surface.status)).toEqual(
@@ -156,6 +169,11 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('data-control="memory-search"');
     expect(html).toContain('data-search-results="memory"');
     expect(html).toContain('data-search-count');
+    expect(html).toContain('data-memory-timeline-panel="pmi025"');
+    expect(html).toContain('data-timeline-entry-count="5"');
+    expect(html).toContain('data-timeline-memory-id="mem_captured_ship_note"');
+    expect(html).toContain('data-timeline-active="true"');
+    expect(html).toContain('data-timeline-related-count=');
     expect(html).toContain('graph-control-panel');
     expect(html).toContain('class="control-row node-spacing-controls"');
     expect(html).toContain('class="control-action rearrange-graph"');

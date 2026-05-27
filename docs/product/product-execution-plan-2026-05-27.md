@@ -2,7 +2,7 @@
 
 Status: active local execution plan  
 Owner: Ko Yunseo  
-Updated: 2026-05-27, saved artifacts pass
+Updated: 2026-05-27, memory detail timeline pass
 Supersedes for local Codex work: `docs/product/product-master-plan-2026-05-26.md`
 
 ## 1. Product Definition
@@ -117,8 +117,8 @@ Status values:
 | Knowledge Layer | Raw archive and checkpoint loop | `done-foundation` | Immutable raw diary/import archive entries, canonical thoughts, and an atomize/dedup/apply checkpoint exist as a deterministic local ledger. |
 | Web | Graph-first second brain | `prototype-ui` | `MemoryRecord` data now builds a Cytoscape graph with 5 memory nodes, 34 total graph nodes, and 40 data-derived edges; fallback SVG is hidden after the graph library is ready. |
 | Web | Evidence drawer | `prototype-ui` | Source/date/raw excerpt/why-connected visible. |
-| Web | Individual memory detail page | `planned` | Selected-memory detail inspector exists; full review/edit page remains planned. |
-| Web | Search/timeline views | `prototype-ui` | Sidebar memory search filters nodes and selects matching detail; timeline still planned. |
+| Web | Individual memory detail page | `prototype-ui` | Selected-memory inspector and timeline detail surface expose source/date/raw excerpts; full review/edit route remains planned. |
+| Web | Search/timeline views | `prototype-ui` | Sidebar search filters nodes and timeline entries show dated private memories with active selection sync. |
 | Web | Memory search/detail inspector | `prototype-ui` | Search input dims unmatched nodes, result click selects inspector detail and citation chip. |
 | Ask | Ask My Past Self deterministic contract | `done-foundation` | Citation/insufficient evidence tested. |
 | Ask | LLM answer generation | `done-foundation` | Provider adapter routes outputs through the citation guard; live provider config/secrets still planned. |
@@ -190,10 +190,11 @@ No remote push, main merge, production deploy, or secret access is allowed witho
 - L22: canonical memory knowledge ledger.
 - L23: multi-axis memory retrieval router.
 - L24: saved advice/report memory artifacts.
+- L25: memory detail timeline surface.
 
 ## 6. Active Next Loops
 
-Next local loop: memory detail/timeline surfaces, then agent retrieval integration with multilingual query bridging. Production auth, live LLM keys, and deployment wiring stay gated until secrets/deploy target are explicitly available.
+Next local loop: agent retrieval integration with multilingual query bridging, then UI save actions for advice/report artifacts. Production auth, live LLM keys, and deployment wiring stay gated until secrets/deploy target are explicitly available.
 
 ## 7. Completed Loop Details
 
@@ -574,6 +575,28 @@ Implemented:
 - `src/lib/savedMemoryArtifact.test.ts`
 - `docs/superpowers/plans/2026-05-27-saved-memory-artifacts.md`
 
+### L25 — Memory Detail Timeline Surface
+
+Goal: make private memories inspectable as dated source-backed timeline entries synchronized with graph/search selection.
+
+Acceptance:
+
+- timeline model sorts memories newest-first and keeps source/date/privacy/raw excerpt metadata
+- related memories are derived from shared emotions, topics, projects, decisions, and sources
+- app shell exposes `memoryTimeline` and renders five data-derived timeline entries
+- graph/search selection updates the active timeline item
+- Playwright verifies timeline count and search-to-timeline selection
+
+Implemented:
+
+- `src/lib/memoryDetailTimeline.ts`
+- `src/lib/memoryDetailTimeline.test.ts`
+- `src/components/MemoryDetailTimelinePanel.tsx`
+- `src/lib/appShellEvidenceLayout.ts`
+- `src/App.tsx`
+- `scripts/verify-playwright-evidence.ts`
+- `docs/superpowers/plans/2026-05-27-memory-detail-timeline.md`
+
 ## 8. MVP Time Estimate
 
 Assuming focused local development without major dependency or deployment blockers:
@@ -587,11 +610,10 @@ Assuming focused local development without major dependency or deployment blocke
 
 Critical path for the next "나를 아는 AI" jump:
 
-1. Add memory detail/timeline views so the second brain is inspectable like a real vault.
-2. Bridge Korean/user-intent queries into retrieval before filtering the agent's memory context.
-3. Add UI save actions for advice/report artifacts and show saved artifacts in the graph/timeline.
-4. Wire a live LLM provider through the citation-guarded adapter when secrets/config are available.
-5. Run staging PostgreSQL/pgvector/auth smoke against a chosen deployment target.
+1. Bridge Korean/user-intent queries into retrieval before filtering the agent's memory context.
+2. Add UI save actions for advice/report artifacts and show saved artifacts in the graph/timeline.
+3. Wire a live LLM provider through the citation-guarded adapter when secrets/config are available.
+4. Run staging PostgreSQL/pgvector/auth smoke against a chosen deployment target.
 
 ## 9. Product Quality Rules
 

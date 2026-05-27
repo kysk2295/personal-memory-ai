@@ -3,6 +3,7 @@ import { replayDecision } from './decisionReplay';
 import { buildGraphEvidence, type EvidenceDrawerItem } from './graphEvidence';
 import { buildImportPreview } from './importPreview';
 import { compileMemoryRecordsToWikiGraph, type CompiledWikiGraph } from './llmWikiCompiler';
+import { buildMemoryDetailTimeline, type MemoryDetailTimeline } from './memoryDetailTimeline';
 import { personalMemoryRecords } from './__fixtures__/personalMemoryRecords';
 import type { MemoryRecord } from './memoryRecord';
 import type { MemoryStore } from './memoryStore';
@@ -52,6 +53,7 @@ export interface InitialAppShellEvidenceLayout {
   weeklyReport: WeeklyReport;
   importPreview: ReturnType<typeof buildImportPreview>;
   compiledWiki: CompiledWikiGraph;
+  memoryTimeline: MemoryDetailTimeline;
   privacyControls: PrivacyControlState;
   evidenceDrawer: {
     status: PatternDetectionStatus;
@@ -219,6 +221,7 @@ export function buildAppShellEvidenceLayoutFromRecords(records: readonly MemoryR
     selectedMemoryIds: ['mem_freeze_vs_feature_addition'],
     generatedAt: '2026-05-27T14:00:00.000Z',
   });
+  const memoryTimeline = buildMemoryDetailTimeline(records, 'mem_freeze_vs_feature_addition');
 
   return {
     northStar: '나보다 나를 더 잘 아는 개인 기억 AI.',
@@ -282,6 +285,12 @@ export function buildAppShellEvidenceLayoutFromRecords(records: readonly MemoryR
         description: 'Weekly synthesis is generated from dated MemoryRecord citations and rendered as a private report surface.',
       },
       {
+        id: 'memory-detail-timeline',
+        label: 'Memory detail timeline',
+        status: 'implemented',
+        description: 'Dated diary/import memories are inspectable as source-backed timeline entries linked to the active graph selection.',
+      },
+      {
         id: 'evidence-drawer',
         label: 'Evidence drawer',
         status: graphEvidence.status,
@@ -300,6 +309,7 @@ export function buildAppShellEvidenceLayoutFromRecords(records: readonly MemoryR
     weeklyReport,
     importPreview,
     compiledWiki,
+    memoryTimeline,
     privacyControls,
     evidenceDrawer: {
       status: graphEvidence.status,

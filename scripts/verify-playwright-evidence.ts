@@ -32,6 +32,26 @@ async function clickCytoscapeNode(page: Page, nodeId: string): Promise<void> {
   await page.mouse.click(graphBox.x + renderedPosition.x, graphBox.y + renderedPosition.y);
 }
 
+async function clickableCytoscapeMemoryCitation(page: Page): Promise<string> {
+  const citation = await page.evaluate(() => {
+    const graph = (window as any).__personalMemoryGraph;
+    const graphElement = document.querySelector('#memory-graph-cytoscape');
+    const graphBox = graphElement?.getBoundingClientRect();
+    if (!graph?.cy || !graphBox) return null;
+
+    const memoryNodes = graph.cy.nodes('[kind = "memory"]').toArray();
+    for (const node of memoryNodes) {
+      const position = node.renderedPosition();
+      const hitTarget = document.elementFromPoint(graphBox.x + position.x, graphBox.y + position.y);
+      if (hitTarget?.closest('#memory-graph-cytoscape')) return node.data('recordId');
+    }
+
+    return memoryNodes[0]?.data('recordId') ?? null;
+  });
+  assert(citation, 'Expected at least one clickable Cytoscape memory node citation');
+  return citation;
+}
+
 async function captureBenchmark(page: Page): Promise<void> {
   await page.goto('https://www.careerhackeralex.com/memory', {
     waitUntil: 'domcontentloaded',
@@ -54,6 +74,11 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   assert((await attribute(page, '#memory-graph-cytoscape', 'data-cytoscape-node-count')) === '34', 'Expected Cytoscape node count to match graph payload');
   assert((await attribute(page, '#memory-graph-cytoscape', 'data-cytoscape-edge-count')) === '40', 'Expected Cytoscape edge count to match graph payload');
   assert((await page.locator('#memory-graph-cytoscape canvas').count()) > 0, 'Expected Cytoscape to render a canvas');
+  assert((await attribute(page, '[data-memory-timeline-panel="pmi025"]', 'data-timeline-entry-count')) === '5', 'Expected timeline panel to render five private memories');
+  assert(
+    (await attribute(page, '[data-timeline-memory-id="mem_freeze_vs_feature_addition"]', 'data-timeline-active')) === 'true',
+    'Expected default selected memory to be active in the timeline',
+  );
 
   const graphStats = await page.evaluate(() => {
     const graph = (window as any).__personalMemoryGraph;
@@ -86,11 +111,7 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   });
   assert(cytoscapeHiddenLabelCount === 34, 'Label toggle should hide Cytoscape node labels');
 
-  const firstCitation = await page.evaluate(() => {
-    const graph = (window as any).__personalMemoryGraph;
-    return graph?.cy?.nodes('[kind = "memory"]').first().data('recordId');
-  });
-  assert(firstCitation, 'Expected selectable memory node citation');
+  const firstCitation = await clickableCytoscapeMemoryCitation(page);
   await clickCytoscapeNode(page, `memory:${firstCitation}`);
   await page.waitForFunction(
     (citation) => document.querySelector('[data-inspector-panel="pmi015"]')?.getAttribute('data-selected-memory') === citation,
@@ -145,6 +166,14 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
     (await attribute(page, '.second-brain-shell', 'data-search-selected-memory')) === 'mem_unrelated_calm_import',
     'Shell should expose search-selected memory',
   );
+  assert(
+    (await attribute(page, '[data-memory-timeline-panel="pmi025"]', 'data-timeline-active-memory')) === 'mem_unrelated_calm_import',
+    'Search result click should update the active memory timeline panel',
+  );
+  assert(
+    (await attribute(page, '[data-timeline-memory-id="mem_unrelated_calm_import"]', 'data-timeline-active')) === 'true',
+    'Search result click should mark the matching timeline entry active',
+  );
   const selectedCytoscapeMemoryId = await page.evaluate(() => {
     const graph = (window as any).__personalMemoryGraph;
     return graph?.cy?.nodes('.selected-memory').first().id();
@@ -181,6 +210,7 @@ try {
           'rearrange click',
           'memory search filter',
           'search result detail selection',
+          'memory detail timeline selection',
         ],
       },
       null,
