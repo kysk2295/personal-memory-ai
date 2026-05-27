@@ -112,6 +112,7 @@ Status values:
 | Reports | Scheduler/reminders | `planned` | After report engine and app/PWA capture. |
 | Agent | Personal Memory Agent orchestrator | `done-foundation` | Loads store records and returns ask/replay/graph evidence. |
 | Agent | Semantic retrieval/reranking | `done-foundation` | Deterministic retrieval contract ranks user-scoped memories; pgvector path remains a backend task. |
+| Agent | Citation-constrained generation guard | `done-foundation` | LLM-shaped outputs are rejected unless grounded in supplied citation ids. |
 | Agent | User feedback learning loop | `planned` | Needed for agent personalization. |
 | Privacy | Private-by-default scope | `done-foundation` | Data model and UI labels exist. |
 | Privacy | Export/delete local UX | `planned` | Store functions exist; user-facing flow incomplete. |
@@ -149,21 +150,9 @@ No remote push, main merge, production deploy, or secret access is allowed witho
 - L7: weekly report engine.
 - L8: weekly report product surface.
 - L9: semantic retrieval contract.
+- L10: citation-constrained generation guard.
 
 ## 6. Active Next Loops
-
-### L10 — LLM Citation-Constrained Generation
-
-Goal: add the LLM boundary for Ask/Replay/Report while forcing citation grounding.
-
-Acceptance:
-
-- prompt input contains only retrieved/cited memory evidence
-- output schema requires citations
-- missing citations cause fallback to insufficient evidence
-- tests cover invalid/generic answer rejection
-
-Estimated effort: 2-4 days.
 
 ### L11 — API Endpoints
 
@@ -327,6 +316,22 @@ Implemented:
 - `src/lib/memoryRetrieval.ts`
 - `src/lib/memoryRetrieval.test.ts`
 
+### L10 — Citation-Constrained Generation Guard
+
+Goal: add the LLM boundary for Ask/Replay/Report while forcing citation grounding before any provider integration.
+
+Acceptance:
+
+- prompt payload contains only supplied cited memory evidence
+- output schema requires answer and citation ids
+- missing, unknown, or text-unreferenced citations cause fallback to insufficient evidence
+- generic uncited output is rejected
+
+Implemented:
+
+- `src/lib/citationConstrainedGeneration.ts`
+- `src/lib/citationConstrainedGeneration.test.ts`
+
 ## 8. MVP Time Estimate
 
 Assuming focused local development without major dependency or deployment blockers:
@@ -340,8 +345,8 @@ Assuming focused local development without major dependency or deployment blocke
 
 Critical path for "나를 아는 AI" feeling:
 
-1. Citation-constrained LLM generation.
-2. API endpoints.
+1. API endpoints.
+2. LLM provider adapter behind the citation guard.
 3. PWA/app capture surface.
 4. Private vault/auth.
 
