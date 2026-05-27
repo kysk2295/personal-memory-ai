@@ -9,6 +9,7 @@ import type { MemoryStore } from './memoryStore';
 import { answerPersonalMemoryQuestion } from './personalMemoryAgent';
 import { resolvePrivateVaultAccess, type LocalPrivateVaultSession } from './privateVault';
 import { saveArtifactAsMemoryRecord, type SavedMemoryArtifact } from './savedMemoryArtifact';
+import { saveUserFeedbackMemory, type UserFeedbackMemoryInput } from './userFeedbackMemory';
 import { generateWeeklyReport } from './weeklyReport';
 
 export type PersonalMemoryApiMethod = 'GET' | 'POST';
@@ -19,6 +20,7 @@ export type PersonalMemoryApiPath =
   | '/api/ask'
   | '/api/replay'
   | '/api/report/weekly'
+  | '/api/feedback'
   | '/api/export'
   | '/api/delete';
 
@@ -196,6 +198,16 @@ export async function handlePersonalMemoryApiRequest(
       generatedAt: body.generatedAt,
     });
     return { statusCode: 200, body: { weeklyReport } };
+  }
+
+  if (request.path === '/api/feedback') {
+    if (request.method !== 'POST') return methodNotAllowed();
+    const result = await saveUserFeedbackMemory({
+      store,
+      userId,
+      input: readBody<UserFeedbackMemoryInput>(request.body),
+    });
+    return { statusCode: 201, body: result };
   }
 
   if (request.path === '/api/export') {

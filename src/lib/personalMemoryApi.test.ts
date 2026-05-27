@@ -281,6 +281,47 @@ describe('personal memory API boundary', () => {
     ]);
   });
 
+  test('persists user feedback corrections inside one private memory scope', async () => {
+    const store = createMemoryStore({ env: {} });
+    await store.create('user-a', personalMemoryRecords[0]);
+    await store.create('user-b', {
+      ...personalMemoryRecords[1],
+      id: 'mem_other_user_feedback_guard',
+      sourceRef: 'obsidian://other-user/feedback-guard',
+    });
+
+    const feedback = await handlePersonalMemoryApiRequest({
+      store,
+      userId: 'user-a',
+      request: {
+        method: 'POST',
+        path: '/api/feedback',
+        body: {
+          feedbackId: 'api-feedback-001',
+          createdAt: '2026-05-28T03:10:00.000Z',
+          correctionText: '내가 원하는 건 답변보다 근거 기억을 먼저 보는 것이다.',
+          targetMemoryIds: ['mem_launch_may_anxiety_scope_delay'],
+          targetArtifactId: 'artifact_ask_answer_sha-api',
+        },
+      },
+    });
+
+    expect(feedback.statusCode).toBe(201);
+    expect(feedback.body).toEqual(
+      expect.objectContaining({
+        createdMemoryIds: [expect.stringMatching(/^mem_api_feedback_/)],
+        record: expect.objectContaining({
+          sourceRef: 'personal-memory-ai://feedback/api-feedback-001',
+          memoryType: 'reflection',
+        }),
+      }),
+    );
+    expect((await store.listByUser('user-a')).map((record) => record.id)).toEqual(
+      expect.arrayContaining(['mem_launch_may_anxiety_scope_delay', expect.stringMatching(/^mem_api_feedback_/)]),
+    );
+    expect((await store.listByUser('user-b')).map((record) => record.id)).toEqual(['mem_other_user_feedback_guard']);
+  });
+
   test('handles API requests through the private vault session owner and ignores caller supplied user ids', async () => {
     const store = createMemoryStore({ env: {} });
     await store.create('user-a', personalMemoryRecords[0]);

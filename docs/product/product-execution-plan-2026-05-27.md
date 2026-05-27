@@ -2,7 +2,7 @@
 
 Status: active local execution plan  
 Owner: Ko Yunseo  
-Updated: 2026-05-28, Gemini-first LLM provider smoke harness pass
+Updated: 2026-05-28, user feedback memory pass
 Supersedes for local Codex work: `docs/product/product-master-plan-2026-05-26.md`
 
 ## 1. Product Definition
@@ -136,13 +136,13 @@ Status values:
 | Agent | Korean/user-intent retrieval bridge | `done-foundation` | Korean product-intent questions expand into retrieval terms before the agent filters memory context. |
 | Agent | Citation-constrained generation guard | `done-foundation` | LLM-shaped outputs are rejected unless grounded in supplied citation ids. |
 | Agent | LLM provider adapter | `done-foundation` | Provider-agnostic adapter wraps model outputs in the citation guard before advice can surface. Gemini-first runtime readiness and smoke harness now gate live calls on `GEMINI_API_KEY` + `PMI_LLM_MODEL` without leaking secrets. |
-| Agent | User feedback learning loop | `planned` | Needed for agent personalization. |
+| Agent | User feedback learning loop | `done-foundation` | User corrections can now become private `mem_api_feedback_*` memories through `/api/feedback`; UI affordance for submitting feedback remains next. |
 | Privacy | Private-by-default scope | `done-foundation` | Data model and UI labels exist. |
 | Privacy | Export/delete local UX | `done-foundation` | Owner-only local export, selected delete, and hard-delete confirmation panel are rendered. |
 | Privacy | Auth/private vault boundary | `done-foundation` | Local session owner boundary scopes API calls to one private vault. |
 | Privacy | Production auth provider | `planned` | Required before multi-user beta. |
 | Backend/API | Capture/import endpoints | `done-foundation` | User-scoped API dispatcher handles fast diary capture, saved artifact capture, import preview, and import apply. |
-| Backend/API | Ask/replay/report endpoints | `done-foundation` | User-scoped API dispatcher handles ask, replay, weekly report, export, and delete boundaries. |
+| Backend/API | Ask/replay/report endpoints | `done-foundation` | User-scoped API dispatcher handles ask, replay, weekly report, feedback memory, export, and delete boundaries. |
 | Backend/API | Local HTTP transport | `done-foundation` | `npm start` serves static UI and private-vault `/api/*` JSON routes locally. |
 | Backend/API | Runtime backend selection | `done-foundation` | `server.ts` now uses the memory runtime to select fixture/Postgres, seed fixture data only in fixture mode, and expose safe health metadata. |
 | Backend/API | Staging readiness | `done-foundation` | Redacted env presence and pgvector staging smoke plan exist without secret leakage. |
@@ -197,10 +197,11 @@ No remote push, main merge, production deploy, or secret access is allowed witho
 - L28: saved artifacts in graph/timeline.
 - L29: saved artifact persistence through capture API.
 - L30: Gemini-first LLM provider smoke harness.
+- L31: user feedback/correction memory.
 
 ## 6. Active Next Loops
 
-Next local loop: staging PostgreSQL/pgvector/auth smoke harness against the already wired Postgres runtime when deployment secrets are available; otherwise add user feedback/correction memory locally. Production auth, live LLM keys, and deployment wiring stay gated until secrets/deploy target are explicitly available.
+Next local loop: add a visible feedback/correction affordance in the web surface, or run staging PostgreSQL/pgvector/auth smoke harness when deployment secrets are available. Production auth, live LLM keys, and deployment wiring stay gated until secrets/deploy target are explicitly available.
 
 ## 7. Completed Loop Details
 
@@ -704,6 +705,26 @@ Implemented:
 - `src/lib/llmProviderRuntime.test.ts`
 - `docs/superpowers/plans/2026-05-28-llm-provider-smoke-harness.md`
 
+### L31 — User Feedback/Correction Memory
+
+Goal: let user corrections become private memories so the agent can learn from mistakes and preference edits.
+
+Acceptance:
+
+- correction text becomes a private `MemoryRecord`
+- feedback ids use `mem_api_feedback_*`
+- source refs use `personal-memory-ai://feedback/...`
+- target memory ids and artifact ids are preserved in raw text
+- `/api/feedback` persists feedback memories inside the request user's private scope
+
+Implemented:
+
+- `src/lib/userFeedbackMemory.ts`
+- `src/lib/userFeedbackMemory.test.ts`
+- `src/lib/personalMemoryApi.ts`
+- `src/lib/personalMemoryApi.test.ts`
+- `docs/superpowers/plans/2026-05-28-user-feedback-memory.md`
+
 ## 8. MVP Time Estimate
 
 Assuming focused local development without major dependency or deployment blockers:
@@ -717,9 +738,9 @@ Assuming focused local development without major dependency or deployment blocke
 
 Critical path for the next "나를 아는 AI" jump:
 
-1. Run staging PostgreSQL/pgvector/auth smoke against the already wired Postgres runtime when deployment secrets are available.
-2. Attach a real Gemini provider implementation behind the L30 smoke harness.
-3. Add feedback/correction memory so the agent learns from user edits.
+1. Add a visible feedback/correction affordance so user edits can create L31 feedback memories.
+2. Run staging PostgreSQL/pgvector/auth smoke against the already wired Postgres runtime when deployment secrets are available.
+3. Attach a real Gemini provider implementation behind the L30 smoke harness.
 
 ## 9. Product Quality Rules
 
