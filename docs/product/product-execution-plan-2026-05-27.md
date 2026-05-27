@@ -207,10 +207,11 @@ No remote push, main merge, production deploy, or secret access is allowed witho
 - L38: applied import graph/timeline feedback.
 - L39: app shell rehydration API.
 - L40: Cytoscape graph rebuild after import.
+- L41: durable import undo through API/HTTP.
 
 ## 6. Active Next Loops
 
-Next local loop: add durable import undo through API/HTTP so uploaded memories can be rolled back from the private graph, or run staging PostgreSQL/pgvector/auth smoke harness when deployment secrets are available. Live LLM keys, hosted identity configuration, and deployment wiring stay gated until secrets/deploy target are explicitly available.
+Next local loop: run staging PostgreSQL/pgvector/auth smoke harness when deployment secrets are available, or continue the local private-vault polish path with source review/edit detail surfaces. Live LLM keys, hosted identity configuration, and deployment wiring stay gated until secrets/deploy target are explicitly available.
 
 ## 7. Completed Loop Details
 
@@ -924,6 +925,27 @@ Implemented:
 - `scripts/verify-playwright-evidence.ts`
 - `docs/superpowers/plans/2026-05-28-cytoscape-rebuild-after-import.md`
 
+### L41 — Durable Import Undo Through API/HTTP
+
+Goal: expose durable import undo through the private API/HTTP path so uploaded memories can be rolled back from the owner-scoped graph after import apply.
+
+Acceptance:
+
+- `POST /api/import/undo` deletes only the active private vault user's applied memory ids
+- local HTTP transport can call undo without leaking another user's records
+- local import UI exposes an undo endpoint/control after apply
+- undo updates shell state and rehydrates graph/timeline over HTTP
+
+Implemented:
+
+- `src/lib/personalMemoryApi.ts`
+- `src/lib/personalMemoryApi.test.ts`
+- `src/lib/localHttpTransport.test.ts`
+- `src/components/PatternPanel.tsx`
+- `src/App.tsx`
+- `src/lib/appShellEvidenceLayout.test.ts`
+- `docs/superpowers/plans/2026-05-28-durable-import-undo-api-http.md`
+
 ## 8. MVP Time Estimate
 
 Assuming focused local development without major dependency or deployment blockers:
@@ -937,8 +959,8 @@ Assuming focused local development without major dependency or deployment blocke
 
 Critical path for the next "나를 아는 AI" jump:
 
-1. Add durable import undo through API/HTTP so uploaded memories can be rolled back from the private graph.
-2. Run staging PostgreSQL/pgvector/auth smoke against the already wired Postgres/auth runtimes when deployment secrets are available.
+1. Run staging PostgreSQL/pgvector/auth smoke against the already wired Postgres/auth runtimes when deployment secrets are available.
+2. Add source review/edit detail surfaces for individual memories.
 3. Connect hosted identity/OAuth on the deployment target.
 
 ## 9. Product Quality Rules

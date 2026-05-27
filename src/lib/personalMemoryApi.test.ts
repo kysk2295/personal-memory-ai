@@ -2,7 +2,7 @@ import { describe, expect, test } from 'vitest';
 import { personalMemoryRecords } from './__fixtures__/personalMemoryRecords';
 import { createMemoryStore } from './createMemoryStore';
 import type { ImportPreview } from './importPreview';
-import type { ApplyImportPreviewResult } from './memoryIngestion';
+import type { ApplyImportPreviewResult, UndoAppliedMemoryRecordsResult } from './memoryIngestion';
 import type { MemoryRecord } from './memoryRecord';
 import { handlePersonalMemoryApiRequest, handlePrivateVaultMemoryApiRequest } from './personalMemoryApi';
 import type { PersonalMemoryAgentResult } from './personalMemoryAgent';
@@ -85,6 +85,81 @@ describe('personal memory API boundary', () => {
     const appliedBody = applied.body as ApplyImportPreviewResult;
     expect(appliedBody.createdMemoryIds).toHaveLength(1);
     expect(appliedBody.skippedPreviewRecordIds).toEqual(['import_preview_api-import_1']);
+  });
+
+  test('undoes applied imports through the private API without crossing users', async () => {
+    const store = createMemoryStore({ env: {} });
+    await store.create('user-b', {
+      ...personalMemoryRecords[2],
+      id: 'mem_import_undo_shared',
+      sourceRef: 'obsidian://other-user/import-undo-guard',
+    });
+
+    const preview = await handlePersonalMemoryApiRequest({
+      store,
+      userId: 'user-a',
+      request: {
+        method: 'POST',
+        path: '/api/import/preview',
+        body: {
+          batchId: 'api-import-undo',
+          createdAt: '2026-05-28T04:00:00.000Z',
+          candidates: [
+            {
+              sourceType: 'markdown',
+              sourceRef: 'markdown://api/undo.md',
+              observedAt: '2026-05-28',
+              rawText: 'Undoable imports should disappear from the private memory graph.',
+              summary: 'Undoable import memory.',
+            },
+          ],
+        },
+      },
+    });
+    const previewBody = preview.body as { preview: ImportPreview };
+    const applied = await handlePersonalMemoryApiRequest({
+      store,
+      userId: 'user-a',
+      request: {
+        method: 'POST',
+        path: '/api/import/apply',
+        body: {
+          preview: previewBody.preview,
+        },
+      },
+    });
+    const appliedBody = applied.body as ApplyImportPreviewResult;
+    expect(appliedBody.createdMemoryIds).toHaveLength(1);
+    await store.create('user-b', {
+      ...personalMemoryRecords[1],
+      id: appliedBody.createdMemoryIds[0],
+      sourceRef: 'obsidian://other-user/same-applied-id',
+    });
+
+    const undone = await handlePersonalMemoryApiRequest({
+      store,
+      userId: 'user-a',
+      request: {
+        method: 'POST',
+        path: '/api/import/undo',
+        body: {
+          appliedMemoryRecordIds: appliedBody.createdMemoryIds,
+        },
+      },
+    });
+
+    expect(undone.statusCode).toBe(200);
+    const undoneBody = undone.body as UndoAppliedMemoryRecordsResult;
+    expect(undoneBody).toEqual({
+      deletedCount: 1,
+      appliedMemoryRecordIds: appliedBody.createdMemoryIds,
+    });
+    expect((await store.listByUser('user-a')).map((record) => record.id)).not.toContain(
+      appliedBody.createdMemoryIds[0],
+    );
+    expect((await store.listByUser('user-b')).map((record) => record.id)).toEqual(
+      expect.arrayContaining(['mem_import_undo_shared', appliedBody.createdMemoryIds[0]]),
+    );
   });
 
   test('persists saved artifacts through the capture endpoint as private memories', async () => {

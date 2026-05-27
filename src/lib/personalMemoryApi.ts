@@ -5,6 +5,7 @@ import { buildImportPreview, type ImportPreview, type ImportPreviewCandidate } f
 import {
   applyImportPreviewToMemoryStore,
   ingestFastDiaryCaptureToMemoryStore,
+  undoAppliedMemoryRecords,
 } from './memoryIngestion';
 import { buildMemoryGraphModel } from './memoryGraphModel';
 import type { MemoryStore } from './memoryStore';
@@ -25,6 +26,7 @@ export type PersonalMemoryApiPath =
   | '/api/capture'
   | '/api/import/preview'
   | '/api/import/apply'
+  | '/api/import/undo'
   | '/api/ask'
   | '/api/replay'
   | '/api/report/weekly'
@@ -66,6 +68,10 @@ interface ImportPreviewBody {
 interface ImportApplyBody {
   preview: ImportPreview;
   includeDuplicateRecords?: boolean;
+}
+
+interface ImportUndoBody {
+  appliedMemoryRecordIds?: string[];
 }
 
 interface AskBody {
@@ -185,6 +191,17 @@ export async function handlePersonalMemoryApiRequest(
       includeDuplicateRecords: body.includeDuplicateRecords,
     });
     return { statusCode: 201, body: result };
+  }
+
+  if (request.path === '/api/import/undo') {
+    if (request.method !== 'POST') return methodNotAllowed();
+    const body = readBody<ImportUndoBody>(request.body);
+    const result = await undoAppliedMemoryRecords({
+      store,
+      userId,
+      appliedMemoryRecordIds: body.appliedMemoryRecordIds ?? [],
+    });
+    return { statusCode: 200, body: result };
   }
 
   if (request.path === '/api/ask') {

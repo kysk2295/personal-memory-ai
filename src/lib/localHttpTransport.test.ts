@@ -3,6 +3,7 @@ import { personalMemoryRecords } from './__fixtures__/personalMemoryRecords';
 import { createPrivateVaultAuthRuntime } from './authProviderRuntime';
 import { createMemoryStore } from './createMemoryStore';
 import { createLocalPersonalMemoryHttpHandler } from './localHttpTransport';
+import type { ApplyImportPreviewResult } from './memoryIngestion';
 import type { MemoryRecord } from './memoryRecord';
 import { createLocalPrivateVaultSession } from './privateVault';
 import { createSavedAskArtifact } from './savedMemoryArtifact';
@@ -110,6 +111,71 @@ describe('local personal memory HTTP transport', () => {
     expect(exported.bodyText).toContain('personal-memory-ai://saved-artifacts/');
     expect(exported.bodyText).toContain('Save this answer as private memory.');
     expect(exported.bodyText).not.toContain('mem_other_user_http_saved_artifact_guard');
+  });
+
+  test('undoes applied imports through HTTP without crossing private vaults', async () => {
+    const store = createMemoryStore({ env: {} });
+    await store.create('other-user', {
+      ...personalMemoryRecords[1],
+      id: 'mem_other_user_http_import_undo_guard',
+      sourceRef: 'obsidian://other-user/http-import-undo-guard',
+    });
+    const handle = createLocalPersonalMemoryHttpHandler({
+      store,
+      session: createLocalPrivateVaultSession({
+        userId: 'local-user',
+        sessionId: 'session-local-http-import-undo',
+        createdAt: '2026-05-28T04:10:00.000Z',
+      }),
+    });
+
+    const preview = await handle({
+      method: 'POST',
+      path: '/api/import/preview',
+      bodyText: JSON.stringify({
+        batchId: 'http-import-undo',
+        createdAt: '2026-05-28T04:10:00.000Z',
+        candidates: [
+          {
+            sourceType: 'markdown',
+            sourceRef: 'markdown://http/undo.md',
+            observedAt: '2026-05-28',
+            rawText: 'HTTP imported memory should be removable through undo.',
+            summary: 'HTTP undo import memory.',
+          },
+        ],
+      }),
+    });
+    const applied = await handle({
+      method: 'POST',
+      path: '/api/import/apply',
+      bodyText: JSON.stringify({
+        preview: JSON.parse(preview.bodyText).preview,
+      }),
+    });
+    const appliedBody = JSON.parse(applied.bodyText) as ApplyImportPreviewResult;
+    expect(appliedBody.createdMemoryIds).toHaveLength(1);
+
+    const undone = await handle({
+      method: 'POST',
+      path: '/api/import/undo',
+      bodyText: JSON.stringify({
+        appliedMemoryRecordIds: appliedBody.createdMemoryIds,
+      }),
+    });
+
+    expect(undone.statusCode).toBe(200);
+    expect(JSON.parse(undone.bodyText)).toEqual({
+      deletedCount: 1,
+      appliedMemoryRecordIds: appliedBody.createdMemoryIds,
+    });
+    const exported = await handle({
+      method: 'GET',
+      path: '/api/export',
+    });
+    expect(exported.statusCode).toBe(200);
+    expect(exported.bodyText).not.toContain('HTTP undo import memory.');
+    expect(exported.bodyText).not.toContain('mem_other_user_http_import_undo_guard');
   });
 
   test('returns safe JSON errors for invalid request bodies', async () => {

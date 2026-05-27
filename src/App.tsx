@@ -131,6 +131,8 @@ const APP_SHELL_STYLES = `
     overflow: auto;
   }
   .memory-search-result {
+    width: 100%;
+    min-width: 0;
     border: 1px solid rgba(97, 102, 125, 0.12);
     border-radius: 8px;
     background: rgba(255, 255, 255, 0.66);
@@ -139,6 +141,13 @@ const APP_SHELL_STYLES = `
     text-align: left;
     font-size: 11px;
     line-height: 1.3;
+  }
+  .memory-search-result span {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .memory-search-result strong {
     display: block;
@@ -223,7 +232,7 @@ const APP_SHELL_STYLES = `
     background: rgba(255, 255, 255, 0.88);
     box-shadow: 0 18px 44px rgba(167, 172, 198, 0.18);
     display: grid;
-    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-columns: auto auto minmax(0, 1fr) auto;
     gap: 12px;
     align-items: center;
     padding: 10px 11px 10px 18px;
@@ -957,6 +966,12 @@ const APP_SHELL_STYLES = `
   .ask-lock {
     color: #828288;
   }
+  .benchmark-signin-cta {
+    color: #b9b9bd;
+    font-size: 12px;
+    font-weight: 760;
+    white-space: nowrap;
+  }
   .ask-memory-bar input {
     color: #f2f2f2;
   }
@@ -1005,7 +1020,7 @@ const APP_SHELL_STYLES = `
   [data-filter-kind] {
     transition: opacity 160ms ease, transform 180ms ease, stroke-opacity 160ms ease;
   }
-  .second-brain-shell[data-layout-mode="rearranged"] .graph-workspace {
+  .second-brain-shell[data-layout-mode="constellation"] .graph-workspace {
     transform: translateX(-1.2%) translateY(1.2%) scale(1.025);
   }
   .second-brain-shell[data-spacing="tight"] .memory-graph {
@@ -1182,7 +1197,7 @@ const APP_SHELL_STYLES = `
     background: rgba(13, 13, 13, 0.96);
   }
   .product-rail::before {
-    content: "Evidence drawer / reports";
+    content: attr(data-benchmark-drawer-tab);
     position: sticky;
     top: 0;
     z-index: 2;
@@ -1356,6 +1371,7 @@ const APP_SHELL_STYLES = `
       top: 12px;
       width: calc(100% - 22px);
     }
+    .benchmark-signin-cta { display: none; }
     .product-main-grid { grid-template-columns: 1fr; }
     .graph-stage {
       min-height: 520px;
@@ -1458,7 +1474,7 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
     return `<main class="second-brain-shell"><aside class="brain-sidebar"><section class="brain-title"><p class="eyebrow">지식 그래프</p><h1>Second Brain</h1><p>${escapeHtml(layout.northStar)}</p></section></aside></main>`;
   }
 
-  return `<main class="second-brain-shell" data-labels="visible" data-spacing="normal" data-layout-mode="free" data-layout-version="0" data-filter-semantic="on" data-filter-reflective="on" data-filter-procedural="on" data-filter-episodic="on" data-filter-thesis="on" data-filter-source="on" data-graph-renderer="cytoscape-pending" data-benchmark-reference="https://www.careerhackeralex.com/memory" data-memory-node-count="${memoryNodeCount}" data-graph-node-count="${graphNodeCount}" data-graph-edge-count="${graphEdgeCount}" data-surface-mode="graph-first" data-rail-mode="collapsed-evidence-drawer" data-interaction-contract="filter-select-space-rearrange">
+  return `<main class="second-brain-shell" data-labels="visible" data-spacing="normal" data-layout-mode="free" data-layout-explainer="Free mode keeps the graph organic for open-ended memory exploration." data-layout-version="0" data-filter-semantic="on" data-filter-reflective="on" data-filter-procedural="on" data-filter-episodic="on" data-filter-thesis="on" data-filter-source="on" data-graph-renderer="cytoscape-pending" data-benchmark-reference="https://www.careerhackeralex.com/memory" data-memory-node-count="${memoryNodeCount}" data-graph-node-count="${graphNodeCount}" data-graph-edge-count="${graphEdgeCount}" data-surface-mode="graph-first" data-rail-mode="collapsed-evidence-drawer" data-first-screen-contract="benchmark-graph-dominant" data-panel-visibility="secondary-drawer" data-interaction-contract="filter-select-space-rearrange">
     <aside class="brain-sidebar" aria-label="Second Brain graph controls">
       <div class="sidebar-topline">
         <a class="home-button" href="/" aria-label="home">←</a>
@@ -1519,10 +1535,10 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
       <section class="legend-section" aria-label="Graph layout modes">
         <p class="legend-title">레이아웃</p>
         <div class="layout-modes">
-          <button type="button" class="layout-button active">자유</button>
-          <button type="button" class="layout-button">주장별</button>
-          <button type="button" class="layout-button">계층</button>
-          <button type="button" class="layout-button">시간순</button>
+          <button type="button" class="layout-button active" data-layout-choice="free" aria-pressed="true">Free</button>
+          <button type="button" class="layout-button" data-layout-choice="constellation" aria-pressed="false">Constellation</button>
+          <button type="button" class="layout-button" data-layout-choice="hierarchy" aria-pressed="false">Hierarchy</button>
+          <button type="button" class="layout-button" data-layout-choice="timeline" aria-pressed="false">Timeline</button>
         </div>
       </section>
 
@@ -1551,6 +1567,7 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
     <section class="brain-canvas" aria-label="Personal Memory AI Second Brain canvas">
       <form class="ask-memory-bar" aria-label="Ask Second Brain">
         <span class="ask-lock" aria-hidden="true">⌘</span>
+        <span class="benchmark-signin-cta" data-auth-cta="private-second-brain">Sign in to ask the Second Brain</span>
         <input id="ask-memory-bar-question" name="question" value="${escapeHtml(layout.askQuestion)}" aria-label="Ask My Past Self question" />
         <button class="ask-submit" type="button" aria-label="Ask">→</button>
       </form>
@@ -1603,7 +1620,7 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
           </article>
         </div>
 
-        <aside class="product-rail" aria-label="Cited memory product rail" data-rail-mode="collapsed-evidence-drawer">
+        <aside class="product-rail" aria-label="Cited memory product rail" data-rail-mode="collapsed-evidence-drawer" data-benchmark-drawer-tab="evidence-reports">
           ${renderAskMyPastSelfPanel(layout)}
           ${renderPrivacyControlPanel(layout)}
           ${renderUserFeedbackPanel(layout)}
@@ -1625,6 +1642,7 @@ const GRAPH_CONTROL_SCRIPT = `
 
   const spacingButtons = Array.from(document.querySelectorAll('[data-control="spacing"]'));
   const filterButtons = Array.from(document.querySelectorAll('[data-filter-chip]'));
+  const layoutButtons = Array.from(document.querySelectorAll('[data-layout-choice]'));
   const toggleLabels = document.querySelector('[data-control="toggle-labels"]');
   const reset = document.querySelector('[data-control="reset"]');
   const rearrange = document.querySelector('[data-control="rearrange"]');
@@ -1652,6 +1670,7 @@ const GRAPH_CONTROL_SCRIPT = `
   const importPasteText = document.querySelector('[data-control="local-import-paste-text"]');
   const importPreviewButton = document.querySelector('[data-control="preview-local-import"]');
   const importApplyButton = document.querySelector('[data-control="apply-local-import"]');
+  const importUndoButton = document.querySelector('[data-control="undo-local-import"]');
   const importUploadSummary = document.querySelector('[data-import-upload-summary]');
   const importUploadPreviewList = document.querySelector('[data-import-upload-preview-list]');
   const importAppliedFeedback = document.querySelector('[data-import-applied-feedback="local-upload"]');
@@ -1662,6 +1681,7 @@ const GRAPH_CONTROL_SCRIPT = `
   let cytoscapeGraph = null;
   let layoutVersion = Number(shell.getAttribute('data-layout-version') || '0');
   let lastLocalImportPreview = null;
+  let lastLocalImportUndoAction = null;
 
   const setInteractionState = (value) => {
     shell.setAttribute('data-interaction-state', value);
@@ -1909,6 +1929,65 @@ const GRAPH_CONTROL_SCRIPT = `
     });
   };
 
+  const layoutExplainers = {
+    free: 'Free mode keeps the graph organic for open-ended memory exploration.',
+    constellation: 'Constellation pins decision and thesis nodes around the selected memory.',
+    hierarchy: 'Hierarchy stacks memories under source, pattern, decision, and outcome nodes.',
+    timeline: 'Timeline stretches the graph from old diary traces to recent imports.',
+  };
+
+  const runCytoscapeLayoutMode = (mode) => {
+    if (!cytoscapeGraph) return;
+    const optionsByMode = {
+      free: {
+        name: 'cose',
+        animate: false,
+        randomize: false,
+        padding: 54,
+        nodeRepulsion: 9500,
+        idealEdgeLength: 92,
+        edgeElasticity: 80,
+        numIter: 500,
+      },
+      constellation: {
+        name: 'circle',
+        animate: false,
+        padding: 70,
+        radius: Math.min(cytoscapeMount?.clientWidth || 760, cytoscapeMount?.clientHeight || 620) * 0.32,
+      },
+      hierarchy: {
+        name: 'breadthfirst',
+        animate: false,
+        directed: true,
+        padding: 70,
+        spacingFactor: 1.18,
+      },
+      timeline: {
+        name: 'grid',
+        animate: false,
+        padding: 70,
+        rows: 4,
+      },
+    };
+    cytoscapeGraph.layout(optionsByMode[mode] || optionsByMode.free).run();
+    const selectedCitation = shell.getAttribute('data-active-memory') || 'mem_freeze_vs_feature_addition';
+    markCytoscapeSelection(selectedCitation);
+  };
+
+  const setLayoutMode = (mode) => {
+    layoutVersion += 1;
+    shell.setAttribute('data-layout-mode', mode);
+    shell.setAttribute('data-layout-explainer', layoutExplainers[mode] || layoutExplainers.free);
+    shell.setAttribute('data-layout-version', String(layoutVersion));
+    layoutButtons.forEach((button) => {
+      const active = button.getAttribute('data-layout-choice') === mode;
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-pressed', String(active));
+    });
+    runCytoscapeLayoutMode(mode);
+    setInteractionState('layout-' + mode);
+  };
+
   const applyMemorySearch = (query) => {
     const normalized = String(query || '').trim().toLocaleLowerCase();
     let matches = 0;
@@ -1940,6 +2019,10 @@ const GRAPH_CONTROL_SCRIPT = `
 
   spacingButtons.forEach((button) => {
     button.addEventListener('click', () => setSpacing(button.getAttribute('data-spacing') || 'normal'));
+  });
+
+  layoutButtons.forEach((button) => {
+    button.addEventListener('click', () => setLayoutMode(button.getAttribute('data-layout-choice') || 'free'));
   });
 
   if (memorySearchInput) {
@@ -2189,6 +2272,15 @@ const GRAPH_CONTROL_SCRIPT = `
     }
   };
 
+  const renderUndoneImportFeedback = (deletedCount) => {
+    shell.setAttribute('data-import-undone-count', String(deletedCount || 0));
+    shell.setAttribute('data-import-applied-memory-ids', '');
+    shell.setAttribute('data-graph-import-pending', 'false');
+    if (importAppliedFeedback) importAppliedFeedback.setAttribute('data-import-applied-count', '0');
+    if (importAppliedMemoryList) importAppliedMemoryList.innerHTML = '';
+    if (importUndoButton) importUndoButton.setAttribute('disabled', '');
+  };
+
   const rehydrateAppShellAfterImport = async () => {
     if (window.location.protocol === 'file:') return;
     shell.setAttribute('data-graph-rehydrate-state', 'loading');
@@ -2309,7 +2401,9 @@ const GRAPH_CONTROL_SCRIPT = `
         if (!response.ok) throw new Error('import apply failed with ' + response.status);
         const body = await response.json().catch(() => ({}));
         shell.setAttribute('data-last-import-created-count', String(body.createdMemoryIds?.length || 0));
+        lastLocalImportUndoAction = body.undoAction || null;
         renderAppliedImportFeedback(body.createdMemoryIds || [], body.graphEvidenceRecords || []);
+        if (lastLocalImportUndoAction?.enabled) importUndoButton?.removeAttribute('disabled');
         await rehydrateAppShellAfterImport();
       }
       importUploadPanel.setAttribute('data-import-upload-state', 'applied');
@@ -2318,6 +2412,37 @@ const GRAPH_CONTROL_SCRIPT = `
       importUploadPanel.setAttribute('data-import-upload-state', 'error');
       shell.setAttribute('data-import-upload-error', String(error?.message || error));
       setInteractionState('import-apply-error');
+    }
+  });
+
+  importUndoButton?.addEventListener('click', async () => {
+    if (!importUploadPanel || !lastLocalImportUndoAction?.appliedMemoryRecordIds?.length) return;
+    const importUndoEndpoint = importUploadPanel.getAttribute('data-import-undo-endpoint') || '';
+    importUploadPanel.setAttribute('data-import-upload-state', 'undoing');
+    try {
+      if (importUndoEndpoint && window.location.protocol !== 'file:') {
+        const response = await fetch(importUndoEndpoint, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            appliedMemoryRecordIds: lastLocalImportUndoAction.appliedMemoryRecordIds,
+          }),
+        });
+        if (!response.ok) throw new Error('import undo failed with ' + response.status);
+        const body = await response.json().catch(() => ({}));
+        renderUndoneImportFeedback(body.deletedCount || 0);
+        lastLocalImportUndoAction = null;
+        await rehydrateAppShellAfterImport();
+      } else {
+        renderUndoneImportFeedback(lastLocalImportUndoAction.appliedMemoryRecordIds.length);
+        lastLocalImportUndoAction = null;
+      }
+      importUploadPanel.setAttribute('data-import-upload-state', 'undone');
+      setInteractionState('import-undone');
+    } catch (error) {
+      importUploadPanel.setAttribute('data-import-upload-state', 'error');
+      shell.setAttribute('data-import-upload-error', String(error?.message || error));
+      setInteractionState('import-undo-error');
     }
   });
 
@@ -2364,11 +2489,8 @@ const GRAPH_CONTROL_SCRIPT = `
 
   if (rearrange) {
     rearrange.addEventListener('click', () => {
-      layoutVersion += 1;
-      const nextMode = shell.getAttribute('data-layout-mode') === 'rearranged' ? 'free' : 'rearranged';
-      shell.setAttribute('data-layout-mode', nextMode);
-      shell.setAttribute('data-layout-version', String(layoutVersion));
-      setInteractionState('layout-' + nextMode);
+      const nextMode = shell.getAttribute('data-layout-mode') === 'constellation' ? 'free' : 'constellation';
+      setLayoutMode(nextMode);
     });
   }
 
@@ -2397,7 +2519,7 @@ const GRAPH_CONTROL_SCRIPT = `
       ['semantic', 'reflective', 'procedural', 'episodic', 'thesis', 'source'].forEach((kind) => {
         shell.setAttribute('data-filter-' + kind, 'on');
       });
-      shell.setAttribute('data-layout-mode', 'free');
+      setLayoutMode('free');
       setSpacing('normal');
       setInteractionState('reset');
     });

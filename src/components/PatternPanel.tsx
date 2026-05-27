@@ -60,7 +60,7 @@ export function renderPatternPanel(layout: InitialAppShellEvidenceLayout): strin
           <p>이 영역은 네이티브 앱이 아니라, 앱에서 들어온 일기가 MemoryRecord로 바뀌는 로컬 프로토타입 계약을 보여준다.</p>
         </section>
         <section class="import-preview-actions" aria-label="Import preview apply undo">
-          <section class="local-import-upload" aria-label="Local file import upload" data-import-upload-panel="local-file" data-import-preview-endpoint="/api/import/preview" data-import-apply-endpoint="/api/import/apply" data-import-upload-state="idle" data-import-upload-file-count="0" data-import-upload-candidate-count="0">
+          <section class="local-import-upload" aria-label="Local file import upload" data-import-upload-panel="local-file" data-import-preview-endpoint="/api/import/preview" data-import-apply-endpoint="/api/import/apply" data-import-undo-endpoint="/api/import/undo" data-import-upload-state="idle" data-import-upload-file-count="0" data-import-upload-candidate-count="0">
             <div class="panel-topline">
               <span>Markdown, JSON, Obsidian export</span>
               <span class="status-badge">local import</span>
@@ -72,6 +72,7 @@ export function renderPatternPanel(layout: InitialAppShellEvidenceLayout): strin
             <div class="entrypoint-grid" aria-label="Local import upload actions">
               <button type="button" data-control="preview-local-import">Preview local import</button>
               <button type="button" data-control="apply-local-import" disabled>Apply local import</button>
+              <button type="button" data-control="undo-local-import" disabled>Undo import</button>
             </div>
             <output data-import-upload-summary>0 files · 0 candidates</output>
             <div data-import-upload-preview-list aria-label="Local import preview results"></div>

@@ -282,6 +282,30 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).not.toContain('status-fake-sample');
   });
 
+  test('constrains benchmark graph controls to the left rail and keeps product panels secondary', () => {
+    const documentHtml = renderAppShellDocument();
+
+    expect(documentHtml).toContain('data-first-screen-contract="benchmark-graph-dominant"');
+    expect(documentHtml).toContain('data-panel-visibility="secondary-drawer"');
+    expect(documentHtml).toContain('.memory-search-result {');
+    expect(documentHtml).toContain('width: 100%;');
+    expect(documentHtml).toContain('min-width: 0;');
+    expect(documentHtml).toContain('.memory-search-result span {');
+    expect(documentHtml).toContain('overflow: hidden;');
+    expect(documentHtml).toContain('text-overflow: ellipsis;');
+    expect(documentHtml).toContain('data-layout-choice="constellation"');
+    expect(documentHtml).toContain('data-layout-choice="hierarchy"');
+    expect(documentHtml).toContain('data-layout-choice="timeline"');
+    expect(documentHtml).toContain('Sign in to ask the Second Brain');
+    expect(documentHtml).toContain('grid-template-columns: auto auto minmax(0, 1fr) auto;');
+    expect(documentHtml).toContain('data-benchmark-drawer-tab="evidence-reports"');
+    expect(documentHtml).toContain("shell.setAttribute('data-layout-mode', mode)");
+    expect(documentHtml).toContain("shell.setAttribute('data-layout-explainer'");
+    expect(documentHtml).toContain('Constellation pins decision and thesis nodes around the selected memory.');
+    expect(documentHtml).toContain('Hierarchy stacks memories under source, pattern, decision, and outcome nodes.');
+    expect(documentHtml).toContain('Timeline stretches the graph from old diary traces to recent imports.');
+  });
+
   test('renders Ask My Past Self as a cited path over the graph with evidence drawer trace', () => {
     const shell = buildInitialAppShellEvidenceLayout();
     const html = renderAppShellHtml();
@@ -342,12 +366,14 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('data-import-upload-panel="local-file"');
     expect(html).toContain('data-import-preview-endpoint="/api/import/preview"');
     expect(html).toContain('data-import-apply-endpoint="/api/import/apply"');
+    expect(html).toContain('data-import-undo-endpoint="/api/import/undo"');
     expect(html).toContain('data-import-upload-state="idle"');
     expect(html).toContain('id="local-memory-import-files"');
     expect(html).toContain('data-control="local-import-file-input"');
     expect(html).toContain('data-control="local-import-paste-text"');
     expect(html).toContain('data-control="preview-local-import"');
     expect(html).toContain('data-control="apply-local-import"');
+    expect(html).toContain('data-control="undo-local-import"');
     expect(html).toContain('data-import-upload-file-count="0"');
     expect(html).toContain('data-import-upload-candidate-count="0"');
     expect(html).toContain('data-import-applied-feedback="local-upload"');
@@ -461,9 +487,13 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(documentHtml).toContain("importUploadPanel.setAttribute('data-import-upload-state', 'preview-ready')");
     expect(documentHtml).toContain("fetch(importPreviewEndpoint");
     expect(documentHtml).toContain("fetch(importApplyEndpoint");
+    expect(documentHtml).toContain("fetch(importUndoEndpoint");
     expect(documentHtml).toContain('const renderAppliedImportFeedback =');
+    expect(documentHtml).toContain('const renderUndoneImportFeedback =');
     expect(documentHtml).toContain("timelinePanel.setAttribute('data-timeline-entry-count'");
     expect(documentHtml).toContain("shell.setAttribute('data-import-applied-memory-ids'");
+    expect(documentHtml).toContain("shell.setAttribute('data-import-undone-count'");
+    expect(documentHtml).toContain("importUploadPanel.setAttribute('data-import-upload-state', 'undone')");
     expect(documentHtml).toContain("fetch('/api/app-shell'");
     expect(documentHtml).toContain("shell.setAttribute('data-graph-rehydrate-state', 'ready')");
     expect(documentHtml).toContain("shell.setAttribute('data-rehydrated-memory-node-count'");
