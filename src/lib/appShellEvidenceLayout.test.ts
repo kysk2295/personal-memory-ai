@@ -5,6 +5,7 @@ import {
   buildInitialAppShellEvidenceLayout,
 } from './appShellEvidenceLayout';
 import { createMemoryStore } from './createMemoryStore';
+import { buildMemoryReviewLedgerEntry, buildMemoryReviewLedgerRecord } from './memoryReviewLedger';
 import { personalMemoryRecords } from './__fixtures__/personalMemoryRecords';
 
 describe('buildInitialAppShellEvidenceLayout', () => {
@@ -184,6 +185,43 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(shell.evidenceDrawer.items.map((item) => item.citation).join(' ')).not.toContain('mem_other_user_hidden_from_shell');
   });
 
+  test('excludes review ledger records from normal graph and exposes timeline history metadata', async () => {
+    const store = createMemoryStore({ env: {} });
+    const edited = {
+      ...personalMemoryRecords[2],
+      summary: 'Edited source-backed freeze decision.',
+    };
+    const entry = buildMemoryReviewLedgerEntry({
+      userId: 'user-a',
+      before: personalMemoryRecords[2],
+      after: edited,
+      reviewedAt: '2026-05-28T06:00:00.000Z',
+    });
+    await store.create('user-a', personalMemoryRecords[2]);
+    await store.create('user-a', buildMemoryReviewLedgerRecord(entry));
+
+    const shell = await buildAppShellEvidenceLayoutFromMemoryStore({
+      store,
+      userId: 'user-a',
+    });
+
+    expect(shell.records.map((record) => record.id)).toEqual([
+      'mem_freeze_vs_feature_addition',
+      expect.stringMatching(/^mem_api_artifact_ask_answer_sha-/),
+      expect.stringMatching(/^mem_api_artifact_decision_replay_sha-/),
+      expect.stringMatching(/^mem_api_artifact_weekly_report_sha-/),
+    ]);
+    expect(shell.primaryNodes.map((node) => node.recordId)).not.toContain(entry.id);
+    expect(shell.memoryTimeline.summary.totalMemoryCount).toBe(4);
+    expect(shell.memoryTimeline.entries.find((item) => item.memoryId === 'mem_freeze_vs_feature_addition')).toEqual(
+      expect.objectContaining({
+        reviewHistoryCount: 1,
+        latestReviewRevisionId: entry.id,
+        reviewHistory: [entry],
+      }),
+    );
+  });
+
   test('renders a benchmark-like second-brain graph workspace instead of a dashboard shell', () => {
     const html = renderAppShellHtml();
 
@@ -214,9 +252,12 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('data-memory-review-panel="source-edit"');
     expect(html).toContain('data-memory-detail-endpoint="/api/memory/detail"');
     expect(html).toContain('data-memory-update-endpoint="/api/memory/update"');
+    expect(html).toContain('data-memory-review-history-endpoint="/api/memory/review-history"');
     expect(html).toContain('data-memory-review-selected-id="mem_freeze_vs_feature_addition"');
     expect(html).toContain('data-memory-review-ledger="pending"');
     expect(html).toContain('data-memory-review-revision=""');
+    expect(html).toContain('data-memory-review-history-count="0"');
+    expect(html).toContain('data-memory-review-history-state="empty"');
     expect(html).toContain('data-control="memory-edit-summary"');
     expect(html).toContain('data-control="memory-edit-raw-text"');
     expect(html).toContain('data-control="save-memory-edit"');

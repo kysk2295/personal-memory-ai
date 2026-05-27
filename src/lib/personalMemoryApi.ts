@@ -8,7 +8,11 @@ import {
   undoAppliedMemoryRecords,
 } from './memoryIngestion';
 import { buildMemoryGraphModel } from './memoryGraphModel';
-import { buildMemoryReviewLedgerEntry } from './memoryReviewLedger';
+import {
+  buildMemoryReviewLedgerEntry,
+  buildMemoryReviewLedgerRecord,
+  listMemoryReviewLedgerEntries,
+} from './memoryReviewLedger';
 import type { MemoryStore } from './memoryStore';
 import { answerPersonalMemoryQuestion } from './personalMemoryAgent';
 import { resolvePrivateVaultAccess, type PrivateVaultSession } from './privateVault';
@@ -26,6 +30,7 @@ export type PersonalMemoryApiPath =
   | '/api/app-shell'
   | '/api/capture'
   | '/api/memory/detail'
+  | '/api/memory/review-history'
   | '/api/memory/update'
   | '/api/import/preview'
   | '/api/import/apply'
@@ -207,7 +212,18 @@ export async function handlePersonalMemoryApiRequest(
     const memoryId = sanitizeOptionalText(body?.memoryId);
     const memory = memoryId ? await store.getById(userId, memoryId) : null;
     if (!memory) return { statusCode: 404, body: { error: 'memory_not_found' } };
-    return { statusCode: 200, body: { memory } };
+    const reviewHistory = listMemoryReviewLedgerEntries(await store.listByUser(userId), memory.id);
+    return { statusCode: 200, body: { memory, reviewHistory } };
+  }
+
+  if (request.path === '/api/memory/review-history') {
+    if (request.method !== 'GET') return methodNotAllowed();
+    const body = readBody<MemoryDetailBody>(request.body);
+    const memoryId = sanitizeOptionalText(body?.memoryId);
+    const memory = memoryId ? await store.getById(userId, memoryId) : null;
+    if (!memory) return { statusCode: 404, body: { error: 'memory_not_found' } };
+    const reviewHistory = listMemoryReviewLedgerEntries(await store.listByUser(userId), memory.id);
+    return { statusCode: 200, body: { reviewHistory } };
   }
 
   if (request.path === '/api/memory/update') {
@@ -233,7 +249,9 @@ export async function handlePersonalMemoryApiRequest(
       before: existing,
       after: updated,
     });
-    return { statusCode: 200, body: { memory: updated, reviewLedgerEntry } };
+    await store.create(userId, buildMemoryReviewLedgerRecord(reviewLedgerEntry));
+    const reviewHistory = listMemoryReviewLedgerEntries(await store.listByUser(userId), updated.id);
+    return { statusCode: 200, body: { memory: updated, reviewLedgerEntry, reviewHistory } };
   }
 
   if (request.path === '/api/import/preview') {

@@ -1,4 +1,9 @@
 import type { MemoryRecord } from './memoryRecord';
+import {
+  isMemoryReviewLedgerRecord,
+  listMemoryReviewLedgerEntries,
+  type MemoryReviewLedgerEntry,
+} from './memoryReviewLedger';
 
 export interface MemoryDetailTimelineEntry {
   memoryId: string;
@@ -10,6 +15,9 @@ export interface MemoryDetailTimelineEntry {
   memoryType: MemoryRecord['memoryType'];
   facetLabels: string[];
   relatedMemoryIds: string[];
+  reviewHistory: MemoryReviewLedgerEntry[];
+  reviewHistoryCount: number;
+  latestReviewRevisionId?: string;
   active: boolean;
 }
 
@@ -79,7 +87,8 @@ export function buildMemoryDetailTimeline(
   records: readonly MemoryRecord[],
   selectedMemoryId?: string,
 ): MemoryDetailTimeline {
-  const orderedRecords = [...records].sort(compareNewestFirst);
+  const memoryRecords = records.filter((record) => !isMemoryReviewLedgerRecord(record));
+  const orderedRecords = [...memoryRecords].sort(compareNewestFirst);
   const dates = orderedRecords.map(recordDate).sort((left, right) => left.localeCompare(right));
 
   return {
@@ -89,17 +98,23 @@ export function buildMemoryDetailTimeline(
       endDate: dates[dates.length - 1] ?? '',
       selectedMemoryId,
     },
-    entries: orderedRecords.map((record) => ({
-      memoryId: record.id,
-      observedAt: recordDate(record),
-      sourceLabel: `${record.sourceType} · ${record.sourceRef}`,
-      title: record.summary,
-      rawExcerpt: compactExcerpt(record.rawText),
-      privacyScope: record.privacyScope,
-      memoryType: record.memoryType,
-      facetLabels: facetLabelsForRecord(record),
-      relatedMemoryIds: relatedMemoryIdsForRecord(record, records),
-      active: record.id === selectedMemoryId,
-    })),
+    entries: orderedRecords.map((record) => {
+      const reviewHistory = listMemoryReviewLedgerEntries(records, record.id);
+      return {
+        memoryId: record.id,
+        observedAt: recordDate(record),
+        sourceLabel: `${record.sourceType} · ${record.sourceRef}`,
+        title: record.summary,
+        rawExcerpt: compactExcerpt(record.rawText),
+        privacyScope: record.privacyScope,
+        memoryType: record.memoryType,
+        facetLabels: facetLabelsForRecord(record),
+        relatedMemoryIds: relatedMemoryIdsForRecord(record, memoryRecords),
+        reviewHistory,
+        reviewHistoryCount: reviewHistory.length,
+        latestReviewRevisionId: reviewHistory[0]?.id,
+        active: record.id === selectedMemoryId,
+      };
+    }),
   };
 }

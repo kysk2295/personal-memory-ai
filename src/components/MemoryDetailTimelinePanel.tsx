@@ -27,6 +27,24 @@ function renderTimelineEntry(entry: MemoryDetailTimelineEntry): string {
   </button>`;
 }
 
+function renderReviewHistory(entry: MemoryDetailTimelineEntry): string {
+  if (!entry.reviewHistory.length) {
+    return '<div class="memory-review-history-empty" data-memory-review-history-state="empty">No review history yet</div>';
+  }
+
+  return `<ol class="memory-review-history-list" data-memory-review-history-state="ready">
+    ${entry.reviewHistory
+      .map(
+        (review) => `<li data-memory-review-history-entry="${escapeHtml(review.id)}">
+          <span>${escapeHtml(review.reviewedAt)}</span>
+          <strong>${escapeHtml(review.changedFields.length ? review.changedFields.join(', ') : 'no field changes')}</strong>
+          <p>${escapeHtml(review.beforeSummary)} → ${escapeHtml(review.afterSummary)}</p>
+        </li>`,
+      )
+      .join('')}
+  </ol>`;
+}
+
 export function renderMemoryDetailTimelinePanel(layout: InitialAppShellEvidenceLayout): string {
   const timeline = layout.memoryTimeline;
   const selectedEntry = timeline.entries.find((entry) => entry.active) ?? timeline.entries[0];
@@ -46,9 +64,11 @@ export function renderMemoryDetailTimelinePanel(layout: InitialAppShellEvidenceL
     </div>
     ${
       selectedEntry
-        ? `<article class="memory-review-panel" aria-label="Source-backed memory review" data-memory-review-panel="source-edit" data-memory-detail-endpoint="/api/memory/detail" data-memory-update-endpoint="/api/memory/update" data-memory-review-selected-id="${escapeHtml(
+        ? `<article class="memory-review-panel" aria-label="Source-backed memory review" data-memory-review-panel="source-edit" data-memory-detail-endpoint="/api/memory/detail" data-memory-update-endpoint="/api/memory/update" data-memory-review-history-endpoint="/api/memory/review-history" data-memory-review-selected-id="${escapeHtml(
             selectedEntry.memoryId,
-          )}" data-memory-review-state="ready" data-memory-review-ledger="pending" data-memory-review-revision="">
+          )}" data-memory-review-state="ready" data-memory-review-ledger="pending" data-memory-review-revision="${escapeHtml(
+            selectedEntry.latestReviewRevisionId ?? '',
+          )}" data-memory-review-history-count="${selectedEntry.reviewHistoryCount}">
       <div class="panel-topline">
         <span>${escapeHtml(selectedEntry.sourceLabel)}</span>
         <span>${escapeHtml(selectedEntry.privacyScope)}</span>
@@ -63,6 +83,7 @@ export function renderMemoryDetailTimelinePanel(layout: InitialAppShellEvidenceL
         <span data-memory-review-related-count>${selectedEntry.relatedMemoryIds.length} related</span>
       </div>
       <button type="button" data-control="save-memory-edit">Save memory edit</button>
+      ${renderReviewHistory(selectedEntry)}
     </article>`
         : ''
     }

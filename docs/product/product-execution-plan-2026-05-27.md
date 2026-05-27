@@ -2,7 +2,7 @@
 
 Status: active local execution plan  
 Owner: Ko Yunseo  
-Updated: 2026-05-28, memory edit review ledger pass
+Updated: 2026-05-28, memory review history timeline pass
 Supersedes for local Codex work: `docs/product/product-master-plan-2026-05-26.md`
 
 ## 1. Product Definition
@@ -117,7 +117,7 @@ Status values:
 | Knowledge Layer | Raw archive and checkpoint loop | `done-foundation` | Immutable raw diary/import archive entries, canonical thoughts, and an atomize/dedup/apply checkpoint exist as a deterministic local ledger. |
 | Web | Graph-first second brain | `prototype-ui` | `MemoryRecord` data builds a Cytoscape graph with fixture memory nodes plus saved artifact memories; owner-scoped app shell rehydration can rebuild Cytoscape elements after imports persist. |
 | Web | Evidence drawer | `prototype-ui` | Source/date/raw excerpt/why-connected visible. |
-| Web | Individual memory detail page | `prototype-ui` | Selected-memory inspector and timeline detail surface expose source/date/raw excerpts, owner-scoped review/edit controls, and edit review ledger state through the private API. |
+| Web | Individual memory detail page | `prototype-ui` | Selected-memory inspector and timeline detail surface expose source/date/raw excerpts, owner-scoped review/edit controls, and persisted edit review history through the private API. |
 | Web | Search/timeline views | `prototype-ui` | Sidebar search filters nodes and timeline entries show dated private memories, including saved Ask/Decision/Weekly artifacts, with active selection sync. |
 | Web | Memory search/detail inspector | `prototype-ui` | Search input dims unmatched nodes, result click selects inspector detail and citation chip. |
 | Ask | Ask My Past Self deterministic contract | `done-foundation` | Citation/insufficient evidence tested. |
@@ -210,10 +210,11 @@ No remote push, main merge, production deploy, or secret access is allowed witho
 - L41: durable import undo through API/HTTP.
 - L42: source review/edit detail surface.
 - L43: memory edit review ledger.
+- L44: memory review history timeline.
 
 ## 6. Active Next Loops
 
-Next local loop: run staging PostgreSQL/pgvector/auth smoke harness when deployment secrets are available, or continue the local private-vault polish path with richer review history persistence and review timeline rendering. Live LLM keys, hosted identity configuration, and deployment wiring stay gated until secrets/deploy target are explicitly available.
+Next local loop: run staging PostgreSQL/pgvector/auth smoke harness when deployment secrets are available, or continue the local private-vault polish path with deeper review-history UX and provenance export affordances. Live LLM keys, hosted identity configuration, and deployment wiring stay gated until secrets/deploy target are explicitly available.
 
 ## 7. Completed Loop Details
 

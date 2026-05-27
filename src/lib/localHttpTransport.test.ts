@@ -226,7 +226,22 @@ describe('local personal memory HTTP transport', () => {
 
     expect(updated.statusCode).toBe(200);
     expect(updated.bodyText).toContain('HTTP edited review summary.');
+    expect(updated.bodyText).toContain('reviewHistory');
     expect(updated.bodyText).not.toContain('mem_user_b_source_review_guard');
+    const history = await handle({
+      method: 'GET',
+      path: '/api/memory/review-history',
+      headers: {
+        'x-pmi-user-id': 'user-a',
+      },
+      bodyText: JSON.stringify({
+        memoryId: 'mem_freeze_vs_feature_addition',
+      }),
+    });
+
+    expect(history.statusCode).toBe(200);
+    expect(history.bodyText).toContain('HTTP edited review summary.');
+    expect(history.bodyText).not.toContain('Other private source should stay hidden.');
     expect(await store.getById('user-a', 'mem_freeze_vs_feature_addition')).toEqual(
       expect.objectContaining({
         summary: 'HTTP edited review summary.',

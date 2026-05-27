@@ -4,6 +4,7 @@ import { buildGraphEvidence, type EvidenceDrawerItem } from './graphEvidence';
 import { buildImportPreview } from './importPreview';
 import { compileMemoryRecordsToWikiGraph, type CompiledWikiGraph } from './llmWikiCompiler';
 import { buildMemoryDetailTimeline, type MemoryDetailTimeline } from './memoryDetailTimeline';
+import { isMemoryReviewLedgerRecord } from './memoryReviewLedger';
 import { personalMemoryRecords } from './__fixtures__/personalMemoryRecords';
 import type { MemoryRecord } from './memoryRecord';
 import type { MemoryStore } from './memoryStore';
@@ -154,7 +155,8 @@ function buildRecordLinks(records: readonly MemoryRecord[]): ShellLink[] {
 }
 
 export function buildAppShellEvidenceLayoutFromRecords(records: readonly MemoryRecord[]): InitialAppShellEvidenceLayout {
-  const baseRecords = [...records];
+  const allRecords = [...records];
+  const baseRecords = allRecords.filter((record) => !isMemoryReviewLedgerRecord(record));
   const patterns = detectRepeatedPatterns(records);
   const askQuestion = '이번에도 기능을 더 넣어야 할까?';
   const ask = askMyPastSelf({
@@ -234,7 +236,10 @@ export function buildAppShellEvidenceLayoutFromRecords(records: readonly MemoryR
     selectedMemoryIds: ['mem_freeze_vs_feature_addition'],
     generatedAt: '2026-05-27T14:00:00.000Z',
   });
-  const memoryTimeline = buildMemoryDetailTimeline(displayRecords, 'mem_freeze_vs_feature_addition');
+  const memoryTimeline = buildMemoryDetailTimeline(
+    [...displayRecords, ...allRecords.filter(isMemoryReviewLedgerRecord)],
+    'mem_freeze_vs_feature_addition',
+  );
 
   return {
     northStar: '나보다 나를 더 잘 아는 개인 기억 AI.',

@@ -244,6 +244,7 @@ describe('personal memory API boundary', () => {
         sourceRef: 'markdown://retros/freezing-vs-features.md',
         privacyScope: 'private',
       }),
+      reviewHistory: [],
     });
 
     const updated = await handlePersonalMemoryApiRequest({
@@ -283,7 +284,23 @@ describe('personal memory API boundary', () => {
         afterSummary: 'Edited source-backed freeze decision.',
         sourceRef: 'markdown://retros/freezing-vs-features.md',
       }),
+      reviewHistory: [
+        expect.objectContaining({
+          userId: 'user-a',
+          memoryId: 'mem_freeze_vs_feature_addition',
+          changedFields: ['summary', 'rawText', 'observedAt', 'emotionTags', 'topicTags'],
+        }),
+      ],
     });
+    const userARecords = await store.listByUser('user-a');
+    expect(userARecords).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: expect.stringMatching(/^memory_review_mem_freeze_vs_feature_addition_/),
+          sourceRef: expect.stringContaining('personal-memory-ai://memory-review-ledger/'),
+        }),
+      ]),
+    );
     expect(await store.getById('user-a', 'mem_freeze_vs_feature_addition')).toEqual(
       expect.objectContaining({
         summary: 'Edited source-backed freeze decision.',
@@ -314,6 +331,85 @@ describe('personal memory API boundary', () => {
       statusCode: 404,
       body: { error: 'memory_not_found' },
     });
+  });
+
+  test('returns owner-scoped memory review history from detail and history endpoints', async () => {
+    const store = createMemoryStore({ env: {} });
+    await store.create('user-a', personalMemoryRecords[2]);
+    await store.create('user-b', {
+      ...personalMemoryRecords[2],
+      id: 'mem_freeze_vs_feature_addition',
+      sourceRef: 'obsidian://other-user/review-history-guard',
+      summary: 'Other user private review history guard.',
+    });
+
+    const first = await handlePersonalMemoryApiRequest({
+      store,
+      userId: 'user-a',
+      request: {
+        method: 'POST',
+        path: '/api/memory/update',
+        body: {
+          memoryId: 'mem_freeze_vs_feature_addition',
+          summary: 'First review history edit.',
+        },
+      },
+    });
+    expect(first.statusCode).toBe(200);
+
+    const second = await handlePersonalMemoryApiRequest({
+      store,
+      userId: 'user-a',
+      request: {
+        method: 'POST',
+        path: '/api/memory/update',
+        body: {
+          memoryId: 'mem_freeze_vs_feature_addition',
+          summary: 'Second review history edit.',
+        },
+      },
+    });
+    expect(second.statusCode).toBe(200);
+
+    const detail = await handlePersonalMemoryApiRequest({
+      store,
+      userId: 'user-a',
+      request: {
+        method: 'GET',
+        path: '/api/memory/detail',
+        body: {
+          memoryId: 'mem_freeze_vs_feature_addition',
+        },
+      },
+    });
+    const history = await handlePersonalMemoryApiRequest({
+      store,
+      userId: 'user-a',
+      request: {
+        method: 'GET',
+        path: '/api/memory/review-history',
+        body: {
+          memoryId: 'mem_freeze_vs_feature_addition',
+        },
+      },
+    });
+
+    expect(detail.statusCode).toBe(200);
+    expect(detail.body).toEqual({
+      memory: expect.objectContaining({ summary: 'Second review history edit.' }),
+      reviewHistory: [
+        expect.objectContaining({ afterSummary: 'Second review history edit.' }),
+        expect.objectContaining({ afterSummary: 'First review history edit.' }),
+      ],
+    });
+    expect(history.statusCode).toBe(200);
+    expect(history.body).toEqual({
+      reviewHistory: [
+        expect.objectContaining({ userId: 'user-a', afterSummary: 'Second review history edit.' }),
+        expect.objectContaining({ userId: 'user-a', afterSummary: 'First review history edit.' }),
+      ],
+    });
+    expect(JSON.stringify(history.body)).not.toContain('Other user private review history guard.');
   });
 
   test('handles ask, replay, and weekly report without leaking another user memory', async () => {
