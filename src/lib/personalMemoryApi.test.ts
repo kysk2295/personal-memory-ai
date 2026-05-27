@@ -412,6 +412,70 @@ describe('personal memory API boundary', () => {
     expect(JSON.stringify(history.body)).not.toContain('Other user private review history guard.');
   });
 
+  test('returns owner-scoped memory provenance export for one selected memory', async () => {
+    const store = createMemoryStore({ env: {} });
+    await store.create('user-a', personalMemoryRecords[2]);
+    await store.create('user-b', {
+      ...personalMemoryRecords[2],
+      id: 'mem_freeze_vs_feature_addition',
+      sourceRef: 'obsidian://other-user/provenance-export-guard',
+      summary: 'Other user provenance export guard.',
+    });
+
+    const updated = await handlePersonalMemoryApiRequest({
+      store,
+      userId: 'user-a',
+      request: {
+        method: 'POST',
+        path: '/api/memory/update',
+        body: {
+          memoryId: 'mem_freeze_vs_feature_addition',
+          summary: 'Edited before provenance export.',
+        },
+      },
+    });
+    expect(updated.statusCode).toBe(200);
+
+    const exported = await handlePersonalMemoryApiRequest({
+      store,
+      userId: 'user-a',
+      request: {
+        method: 'GET',
+        path: '/api/memory/provenance-export',
+        body: {
+          memoryId: 'mem_freeze_vs_feature_addition',
+          exportedAt: '2026-05-28T07:10:00.000Z',
+        },
+      },
+    });
+
+    expect(exported.statusCode).toBe(200);
+    expect(exported.body).toEqual({
+      export: expect.objectContaining({
+        exportType: 'memory_provenance',
+        exportedAt: '2026-05-28T07:10:00.000Z',
+        filename: 'memory-provenance-mem_freeze_vs_feature_addition-2026-05-28.json',
+        memory: expect.objectContaining({
+          id: 'mem_freeze_vs_feature_addition',
+          summary: 'Edited before provenance export.',
+          sourceRef: 'markdown://retros/freezing-vs-features.md',
+        }),
+        reviewHistory: [
+          expect.objectContaining({
+            userId: 'user-a',
+            afterSummary: 'Edited before provenance export.',
+          }),
+        ],
+        evidence: expect.objectContaining({
+          citationMemoryIds: ['mem_freeze_vs_feature_addition'],
+          sourceRefs: ['markdown://retros/freezing-vs-features.md'],
+        }),
+      }),
+    });
+    expect(JSON.stringify(exported.body)).not.toContain('Other user provenance export guard.');
+    expect(JSON.stringify(exported.body)).not.toContain('obsidian://other-user/provenance-export-guard');
+  });
+
   test('handles ask, replay, and weekly report without leaking another user memory', async () => {
     const store = createMemoryStore({ env: {} });
     for (const record of personalMemoryRecords.slice(0, 3)) {

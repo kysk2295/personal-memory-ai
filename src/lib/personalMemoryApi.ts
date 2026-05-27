@@ -13,6 +13,7 @@ import {
   buildMemoryReviewLedgerRecord,
   listMemoryReviewLedgerEntries,
 } from './memoryReviewLedger';
+import { buildMemoryProvenanceExport } from './memoryProvenanceExport';
 import type { MemoryStore } from './memoryStore';
 import { answerPersonalMemoryQuestion } from './personalMemoryAgent';
 import { resolvePrivateVaultAccess, type PrivateVaultSession } from './privateVault';
@@ -30,6 +31,7 @@ export type PersonalMemoryApiPath =
   | '/api/app-shell'
   | '/api/capture'
   | '/api/memory/detail'
+  | '/api/memory/provenance-export'
   | '/api/memory/review-history'
   | '/api/memory/update'
   | '/api/import/preview'
@@ -84,6 +86,11 @@ interface ImportUndoBody {
 
 interface MemoryDetailBody {
   memoryId?: string;
+}
+
+interface MemoryProvenanceExportBody {
+  memoryId?: string;
+  exportedAt?: string;
 }
 
 interface MemoryUpdateBody {
@@ -224,6 +231,21 @@ export async function handlePersonalMemoryApiRequest(
     if (!memory) return { statusCode: 404, body: { error: 'memory_not_found' } };
     const reviewHistory = listMemoryReviewLedgerEntries(await store.listByUser(userId), memory.id);
     return { statusCode: 200, body: { reviewHistory } };
+  }
+
+  if (request.path === '/api/memory/provenance-export') {
+    if (request.method !== 'GET') return methodNotAllowed();
+    const body = readBody<MemoryProvenanceExportBody>(request.body);
+    const memoryId = sanitizeOptionalText(body?.memoryId);
+    const exportBundle = memoryId
+      ? buildMemoryProvenanceExport({
+          records: await store.listByUser(userId),
+          memoryId,
+          exportedAt: sanitizeOptionalText(body?.exportedAt),
+        })
+      : null;
+    if (!exportBundle) return { statusCode: 404, body: { error: 'memory_not_found' } };
+    return { statusCode: 200, body: { export: exportBundle } };
   }
 
   if (request.path === '/api/memory/update') {

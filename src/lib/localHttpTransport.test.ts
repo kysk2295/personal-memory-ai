@@ -255,6 +255,44 @@ describe('local personal memory HTTP transport', () => {
     );
   });
 
+  test('exports selected memory provenance through HTTP without crossing private vaults', async () => {
+    const store = createMemoryStore({ env: {} });
+    await store.create('user-a', personalMemoryRecords[2]);
+    await store.create('user-b', {
+      ...personalMemoryRecords[2],
+      id: 'mem_freeze_vs_feature_addition',
+      sourceRef: 'obsidian://other-user/http-provenance-export-guard',
+      summary: 'Other private provenance export guard.',
+    });
+    const handle = createLocalPersonalMemoryHttpHandler({
+      store,
+      authRuntime: createPrivateVaultAuthRuntime({
+        env: {
+          PMI_AUTH_PROVIDER: 'trusted-header',
+        },
+      }),
+    });
+
+    const response = await handle({
+      method: 'GET',
+      path: '/api/memory/provenance-export',
+      headers: {
+        'x-pmi-user-id': 'user-a',
+      },
+      bodyText: JSON.stringify({
+        memoryId: 'mem_freeze_vs_feature_addition',
+        exportedAt: '2026-05-28T07:15:00.000Z',
+      }),
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.bodyText).toContain('"exportType":"memory_provenance"');
+    expect(response.bodyText).toContain('"filename":"memory-provenance-mem_freeze_vs_feature_addition-2026-05-28.json"');
+    expect(response.bodyText).toContain('markdown://retros/freezing-vs-features.md');
+    expect(response.bodyText).not.toContain('Other private provenance export guard.');
+    expect(response.bodyText).not.toContain('obsidian://other-user/http-provenance-export-guard');
+  });
+
   test('returns safe JSON errors for invalid request bodies', async () => {
     const handle = createLocalPersonalMemoryHttpHandler({
       store: createMemoryStore({ env: {} }),
