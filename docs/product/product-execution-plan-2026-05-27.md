@@ -2,7 +2,7 @@
 
 Status: active local execution plan  
 Owner: Ko Yunseo  
-Updated: 2026-05-28, direct Notion database import preview
+Updated: 2026-05-28, Notion source discovery
 Supersedes for local Codex work: `docs/product/product-master-plan-2026-05-26.md`
 
 ## 1. Product Definition
@@ -106,7 +106,7 @@ Status values:
 | Capture | Mobile/PWA capture UI | `done-foundation` | `/capture/` renders a mobile-first local/private quick diary capture surface. |
 | Capture | Voice capture | `later` | In PRD direction, not MVP-critical. |
 | Capture | Emotion/project/decision hints | `done-foundation` | Data contract exists; full UI still planned. |
-| Import | Notion/Obsidian/Markdown preview | `done-foundation` | Preview/dedupe contract exists. Local files support Markdown/Text/JSON/Obsidian-style exports, and the web/API now expose a direct Notion database preview path gated by the user's Notion integration token. |
+| Import | Notion/Obsidian/Markdown preview | `done-foundation` | Preview/dedupe contract exists. Local files support Markdown/Text/JSON/Obsidian-style exports, and the web/API now expose direct Notion source discovery plus database preview paths gated by the user's Notion integration token. |
 | Import | Apply/undo import state model | `done-foundation` | Batch state model tracks preview, applied, skipped, graph evidence, and undone states. |
 | Import | File upload/import UI | `prototype-ui` | Local Markdown/Text/JSON upload and paste surface can build preview candidates, call owner-scoped preview/apply APIs, and show applied memories in graph/timeline feedback without reload. |
 | Memory Store | Fixture user isolation | `done-foundation` | Tests cover user-scoped records. |
@@ -218,6 +218,7 @@ No remote push, main merge, production deploy, or secret access is allowed witho
 - L49: provenance controls client workflow.
 - L50: source review drawer mode polish.
 - L51: direct Notion database import preview.
+- L52: Notion import source discovery.
 
 ## 6. Active Next Loops
 
@@ -1038,6 +1039,30 @@ Implemented:
 - `src/lib/appShellEvidenceLayout.test.ts`
 - `server.ts`
 - `docs/superpowers/plans/2026-05-28-direct-notion-database-import-preview.md`
+
+### L52 — Notion Import Source Discovery
+
+Goal: let the web import panel find accessible Notion databases/data sources instead of requiring the user to paste an id first.
+
+Acceptance:
+
+- Notion search results map into safe source descriptors
+- API route `/api/import/notion/sources` lists accessible data sources/databases with the token kept server-side
+- source list does not include pages or expose the integration token
+- import panel exposes a Find sources action and selectable source rows
+- selecting a source fills the Database ID field for preview/apply
+
+Implemented:
+
+- `src/lib/notionImport.ts`
+- `src/lib/notionImport.test.ts`
+- `src/lib/personalMemoryApi.ts`
+- `src/lib/personalMemoryApi.test.ts`
+- `src/components/PatternPanel.tsx`
+- `src/App.tsx`
+- `src/lib/appShellEvidenceLayout.test.ts`
+- `src/lib/localHttpTransport.test.ts`
+- `docs/superpowers/plans/2026-05-28-notion-import-source-picker.md`
 
 ## 8. MVP Time Estimate
 

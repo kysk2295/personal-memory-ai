@@ -30,6 +30,18 @@ export interface QueryNotionDatabaseImportCandidatesInput {
   fetchNotion?: NotionFetch;
 }
 
+export interface NotionImportSource {
+  id: string;
+  title: string;
+  object: 'data_source' | 'database';
+  url?: string;
+}
+
+export interface QueryNotionImportSourcesInput {
+  notionToken: string;
+  fetchNotion?: NotionFetch;
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
@@ -152,4 +164,39 @@ export async function queryNotionDatabaseImportCandidates(
     createdAt: input.createdAt,
     pages: pages.filter((page): page is NotionImportPage => isRecord(page)),
   });
+}
+
+function titleFromNotionTitleArray(value: unknown): string | undefined {
+  const text = plainTextList(value).join(' ').trim();
+  return text || undefined;
+}
+
+function sourceFromSearchResult(result: unknown): NotionImportSource | null {
+  if (!isRecord(result)) return null;
+  if (result.object !== 'data_source' && result.object !== 'database') return null;
+  if (typeof result.id !== 'string') return null;
+  const title = titleFromNotionTitleArray(result.title) ?? `${result.object} ${result.id}`;
+  return {
+    id: result.id,
+    title,
+    object: result.object,
+    ...(typeof result.url === 'string' ? { url: result.url } : {}),
+  };
+}
+
+export async function queryNotionImportSources(input: QueryNotionImportSourcesInput): Promise<NotionImportSource[]> {
+  const fetchNotion = input.fetchNotion ?? fetch;
+  const response = await fetchNotion('https://api.notion.com/v1/search', {
+    method: 'POST',
+    headers: {
+      authorization: `Bearer ${input.notionToken}`,
+      'notion-version': '2025-09-03',
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({ page_size: 50 }),
+  });
+  if (!response.ok) throw new Error(`notion_search_failed:${response.status}`);
+  const body = await response.json();
+  const results = isRecord(body) && Array.isArray(body.results) ? body.results : [];
+  return results.map(sourceFromSearchResult).filter((source): source is NotionImportSource => Boolean(source));
 }

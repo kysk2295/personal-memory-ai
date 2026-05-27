@@ -145,6 +145,47 @@ describe('personal memory API boundary', () => {
     });
   });
 
+  test('lists Notion import sources through the private API without storing the token', async () => {
+    const notionFetch = async () => ({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        results: [
+          {
+            object: 'data_source',
+            id: 'source_private_journal',
+            title: [{ plain_text: 'Private journal' }],
+            url: 'https://www.notion.so/source_private_journal',
+          },
+        ],
+      }),
+    });
+
+    const response = await handlePersonalMemoryApiRequest({
+      store: createMemoryStore({ env: {} }),
+      userId: 'user-a',
+      notionToken: 'secret_live_token',
+      notionFetch,
+      request: {
+        method: 'GET',
+        path: '/api/import/notion/sources',
+      },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.body).toEqual({
+      sources: [
+        {
+          id: 'source_private_journal',
+          title: 'Private journal',
+          object: 'data_source',
+          url: 'https://www.notion.so/source_private_journal',
+        },
+      ],
+    });
+    expect(JSON.stringify(response.body)).not.toContain('secret_live_token');
+  });
+
   test('returns an explicit configuration error when Notion import is requested without a token', async () => {
     const response = await handlePersonalMemoryApiRequest({
       store: createMemoryStore({ env: {} }),

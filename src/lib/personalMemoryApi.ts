@@ -15,7 +15,7 @@ import {
 } from './memoryReviewLedger';
 import { buildMemoryProvenanceExport } from './memoryProvenanceExport';
 import type { MemoryStore } from './memoryStore';
-import { queryNotionDatabaseImportCandidates, type NotionFetch } from './notionImport';
+import { queryNotionDatabaseImportCandidates, queryNotionImportSources, type NotionFetch } from './notionImport';
 import { answerPersonalMemoryQuestion } from './personalMemoryAgent';
 import { resolvePrivateVaultAccess, type PrivateVaultSession } from './privateVault';
 import { saveArtifactAsMemoryRecord, type SavedMemoryArtifact } from './savedMemoryArtifact';
@@ -38,6 +38,7 @@ export type PersonalMemoryApiPath =
   | '/api/memory/update'
   | '/api/import/preview'
   | '/api/import/notion/preview'
+  | '/api/import/notion/sources'
   | '/api/import/apply'
   | '/api/import/undo'
   | '/api/ask'
@@ -347,6 +348,20 @@ export async function handlePersonalMemoryApiRequest(
       return { statusCode: 200, body: { preview } };
     } catch (error) {
       return { statusCode: 502, body: { error: 'notion_query_failed', message: String(error) } };
+    }
+  }
+
+  if (request.path === '/api/import/notion/sources') {
+    if (request.method !== 'GET' && request.method !== 'POST') return methodNotAllowed();
+    if (!input.notionToken) return { statusCode: 424, body: { error: 'notion_token_missing' } };
+    try {
+      const sources = await queryNotionImportSources({
+        notionToken: input.notionToken,
+        fetchNotion: input.notionFetch,
+      });
+      return { statusCode: 200, body: { sources } };
+    } catch (error) {
+      return { statusCode: 502, body: { error: 'notion_search_failed', message: String(error) } };
     }
   }
 

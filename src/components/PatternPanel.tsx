@@ -76,7 +76,7 @@ export function renderPatternPanel(layout: InitialAppShellEvidenceLayout): strin
             </div>
             <output data-import-upload-summary>0 files · 0 candidates</output>
             <div data-import-upload-preview-list aria-label="Local import preview results"></div>
-            <section class="notion-import-direct" aria-label="Direct Notion database import" data-notion-import-panel="database" data-notion-import-endpoint="/api/import/notion/preview" data-notion-import-state="idle" data-notion-import-candidate-count="0">
+            <section class="notion-import-direct" aria-label="Direct Notion database import" data-notion-import-panel="database" data-notion-import-endpoint="/api/import/notion/preview" data-notion-sources-endpoint="/api/import/notion/sources" data-notion-import-state="idle" data-notion-sources-state="idle" data-notion-import-candidate-count="0">
               <div class="panel-topline">
                 <span>Notion database</span>
                 <span class="status-badge">direct import</span>
@@ -84,9 +84,11 @@ export function renderPatternPanel(layout: InitialAppShellEvidenceLayout): strin
               <label for="notion-database-id">Database ID</label>
               <input id="notion-database-id" data-control="notion-database-id" placeholder="Notion database/data source id" />
               <div class="entrypoint-grid" aria-label="Notion import actions">
+                <button type="button" data-control="list-notion-sources">Find sources</button>
                 <button type="button" data-control="preview-notion-import">Preview Notion import</button>
               </div>
               <output data-notion-import-summary>0 Notion candidates</output>
+              <div data-notion-source-list aria-label="Accessible Notion import sources"></div>
             </section>
             <section class="import-applied-feedback" aria-label="Applied import graph feedback" data-import-applied-feedback="local-upload" data-import-applied-count="0">
               <strong>Applied imports join the private graph</strong>

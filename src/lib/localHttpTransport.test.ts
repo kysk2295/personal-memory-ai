@@ -224,6 +224,86 @@ describe('local personal memory HTTP transport', () => {
     expect(response.bodyText).not.toContain('secret_notion_token');
   });
 
+  test('lists Notion import sources through HTTP without exposing the integration token', async () => {
+    const store = createMemoryStore({ env: {} });
+    const handle = createLocalPersonalMemoryHttpHandler({
+      store,
+      notionToken: 'secret_notion_token',
+      notionFetch: async () => ({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          results: [
+            {
+              object: 'data_source',
+              id: 'source_http_journal',
+              title: [{ plain_text: 'HTTP journal source' }],
+              url: 'https://www.notion.so/source_http_journal',
+            },
+          ],
+        }),
+      }),
+      session: createLocalPrivateVaultSession({
+        userId: 'local-user',
+        sessionId: 'session-local-http-notion-sources',
+        createdAt: '2026-05-28T07:50:00.000Z',
+      }),
+    });
+
+    const response = await handle({
+      method: 'GET',
+      path: '/api/import/notion/sources',
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(JSON.parse(response.bodyText)).toEqual({
+      sources: [
+        {
+          id: 'source_http_journal',
+          title: 'HTTP journal source',
+          object: 'data_source',
+          url: 'https://www.notion.so/source_http_journal',
+        },
+      ],
+    });
+    expect(response.bodyText).not.toContain('secret_notion_token');
+  });
+
+  test('lists Notion import sources through HTTP without exposing the integration token', async () => {
+    const handle = createLocalPersonalMemoryHttpHandler({
+      store: createMemoryStore({ env: {} }),
+      notionToken: 'secret_notion_token',
+      notionFetch: async () => ({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          results: [
+            {
+              object: 'data_source',
+              id: 'source_http_journal',
+              title: [{ plain_text: 'HTTP journal source' }],
+              url: 'https://www.notion.so/source_http_journal',
+            },
+          ],
+        }),
+      }),
+      session: createLocalPrivateVaultSession({
+        userId: 'local-user',
+        sessionId: 'session-local-http-notion-sources',
+      }),
+    });
+
+    const response = await handle({
+      method: 'GET',
+      path: '/api/import/notion/sources',
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.bodyText).toContain('source_http_journal');
+    expect(response.bodyText).toContain('HTTP journal source');
+    expect(response.bodyText).not.toContain('secret_notion_token');
+  });
+
   test('reviews and updates memories through HTTP without crossing private vaults', async () => {
     const store = createMemoryStore({ env: {} });
     await store.create('user-a', personalMemoryRecords[2]);

@@ -767,6 +767,26 @@ const APP_SHELL_STYLES = `
   .notion-import-direct input {
     min-height: 34px;
   }
+  [data-notion-source-list] {
+    display: grid;
+    gap: 6px;
+  }
+  [data-notion-source-list] button {
+    display: grid;
+    gap: 3px;
+    width: 100%;
+    border: 1px solid rgba(117, 122, 143, 0.12);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.72);
+    color: #687084;
+    padding: 7px;
+    text-align: left;
+    font-size: 11px;
+  }
+  [data-notion-source-list] button strong {
+    color: #53586a;
+    font-size: 12px;
+  }
   .capture-meta,
   .import-preview-list {
     display: grid;
@@ -1428,6 +1448,14 @@ const APP_SHELL_STYLES = `
     background: rgba(214, 31, 60, 0.11);
     color: #ff8797;
   }
+  [data-notion-source-list] button {
+    border-color: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.055);
+    color: #d0d0d4;
+  }
+  [data-notion-source-list] button strong {
+    color: #ececef;
+  }
   .user-feedback-panel[data-feedback-state="submitted"] .feedback-submit-action {
     border-color: rgba(69, 140, 96, 0.38);
     background: rgba(69, 140, 96, 0.13);
@@ -1800,8 +1828,10 @@ const GRAPH_CONTROL_SCRIPT = `
   const importUploadPreviewList = document.querySelector('[data-import-upload-preview-list]');
   const notionImportPanel = document.querySelector('[data-notion-import-panel="database"]');
   const notionDatabaseId = document.querySelector('[data-control="notion-database-id"]');
+  const notionSourcesButton = document.querySelector('[data-control="list-notion-sources"]');
   const notionImportPreviewButton = document.querySelector('[data-control="preview-notion-import"]');
   const notionImportSummary = document.querySelector('[data-notion-import-summary]');
+  const notionSourceList = document.querySelector('[data-notion-source-list]');
   const importAppliedFeedback = document.querySelector('[data-import-applied-feedback="local-upload"]');
   const importAppliedMemoryList = document.querySelector('[data-import-applied-memory-list]');
   const memoryReviewPanel = document.querySelector('[data-memory-review-panel="source-edit"]');
@@ -2535,6 +2565,29 @@ const GRAPH_CONTROL_SCRIPT = `
       .join('');
   };
 
+  const renderNotionSourceRows = (sources) => {
+    if (!notionSourceList) return;
+    notionSourceList.innerHTML = (sources || [])
+      .slice(0, 5)
+      .map(
+        (source) =>
+          '<button type="button" data-control="select-notion-source" data-notion-source-id="' +
+          escapeText(source.id || '') +
+          '"><strong>' +
+          escapeText(source.title || source.id || 'Untitled source') +
+          '</strong><span>' +
+          escapeText(source.object || 'data_source') +
+          '</span></button>',
+      )
+      .join('');
+    Array.from(notionSourceList.querySelectorAll('[data-control="select-notion-source"]')).forEach((button) => {
+      button.addEventListener('click', () => {
+        if (notionDatabaseId) notionDatabaseId.value = button.getAttribute('data-notion-source-id') || '';
+        setInteractionState('notion-source-selected');
+      });
+    });
+  };
+
   const renderAppliedImportFeedback = (createdMemoryIds, graphEvidenceRecords) => {
     const records = Array.isArray(graphEvidenceRecords) ? graphEvidenceRecords : [];
     const ids = Array.isArray(createdMemoryIds) ? createdMemoryIds : [];
@@ -2644,6 +2697,40 @@ const GRAPH_CONTROL_SCRIPT = `
       cytoscapeMount.setAttribute('data-cytoscape-edge-count', String(memoryGraph.stats?.edgeCount || 0));
     }
   };
+
+  notionSourcesButton?.addEventListener('click', async () => {
+    if (!notionImportPanel) return;
+    const endpoint = notionImportPanel.getAttribute('data-notion-sources-endpoint') || '';
+    notionImportPanel.setAttribute('data-notion-sources-state', 'loading');
+    try {
+      if (!endpoint || window.location.protocol === 'file:') {
+        renderNotionSourceRows([]);
+      } else {
+        const response = await fetch(endpoint, {
+          method: 'GET',
+          headers: { accept: 'application/json' },
+        });
+        if (response.status === 424) {
+          notionImportPanel.setAttribute('data-notion-sources-state', 'token-required');
+          if (notionImportSummary) notionImportSummary.textContent = 'Notion token required';
+          setInteractionState('notion-import-token-required');
+          return;
+        }
+        if (!response.ok) throw new Error('notion source search failed with ' + response.status);
+        const body = await response.json();
+        const sources = body?.sources || [];
+        renderNotionSourceRows(sources);
+        notionImportPanel.setAttribute('data-notion-sources-state', 'ready');
+        notionImportPanel.setAttribute('data-notion-source-count', String(sources.length));
+        if (notionImportSummary) notionImportSummary.textContent = sources.length + ' Notion sources';
+      }
+      setInteractionState('notion-sources-ready');
+    } catch (error) {
+      notionImportPanel.setAttribute('data-notion-sources-state', 'error');
+      shell.setAttribute('data-notion-sources-error', String(error?.message || error));
+      setInteractionState('notion-sources-error');
+    }
+  });
 
   notionImportPreviewButton?.addEventListener('click', async () => {
     if (!notionImportPanel) return;

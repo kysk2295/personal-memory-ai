@@ -423,10 +423,14 @@ describe('buildInitialAppShellEvidenceLayout', () => {
 
     expect(documentHtml).toContain('data-notion-import-panel="database"');
     expect(documentHtml).toContain('data-notion-import-endpoint="/api/import/notion/preview"');
+    expect(documentHtml).toContain('data-notion-sources-endpoint="/api/import/notion/sources"');
     expect(documentHtml).toContain('data-control="notion-database-id"');
+    expect(documentHtml).toContain('data-control="list-notion-sources"');
     expect(documentHtml).toContain('data-control="preview-notion-import"');
+    expect(documentHtml).toContain('data-notion-source-list');
     expect(documentHtml).toContain('data-notion-import-summary');
     expect(documentHtml).toContain("setInteractionState('notion-import-token-required')");
+    expect(documentHtml).toContain("setInteractionState('notion-sources-ready')");
   });
 
   test('renders Ask My Past Self as a cited path over the graph with evidence drawer trace', () => {

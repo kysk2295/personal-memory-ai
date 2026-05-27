@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { buildNotionImportCandidates, queryNotionDatabaseImportCandidates } from './notionImport';
+import { buildNotionImportCandidates, queryNotionDatabaseImportCandidates, queryNotionImportSources } from './notionImport';
 
 const notionQueryResponse = {
   results: [
@@ -90,5 +90,58 @@ describe('notion import connector', () => {
     });
     expect(JSON.stringify(candidates)).not.toContain('secret_live_token');
     expect(candidates[0]?.sourceRef).toBe('notion://data-source/db_launch/page/page-1');
+  });
+
+  test('lists accessible Notion import sources without exposing the token', async () => {
+    const calls: Array<{ url: string; init: { method?: string; headers?: Record<string, string>; body?: string } }> = [];
+    const fetchNotion = async (url: string, init: { method?: string; headers?: Record<string, string>; body?: string }) => {
+      calls.push({ url, init });
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          results: [
+            {
+              object: 'data_source',
+              id: 'source_journal',
+              title: [{ plain_text: 'Journal database' }],
+              url: 'https://www.notion.so/source_journal',
+            },
+            {
+              object: 'page',
+              id: 'page_ignore',
+              properties: { title: { title: [{ plain_text: 'Regular page' }] } },
+            },
+            {
+              object: 'database',
+              id: 'database_legacy',
+              title: [{ plain_text: 'Legacy database' }],
+              url: 'https://www.notion.so/database_legacy',
+            },
+          ],
+        }),
+      };
+    };
+
+    const sources = await queryNotionImportSources({
+      notionToken: 'secret_live_token',
+      fetchNotion,
+    });
+
+    expect(calls[0]).toEqual({
+      url: 'https://api.notion.com/v1/search',
+      init: expect.objectContaining({
+        method: 'POST',
+        headers: expect.objectContaining({
+          authorization: 'Bearer secret_live_token',
+          'notion-version': '2025-09-03',
+        }),
+      }),
+    });
+    expect(sources).toEqual([
+      { id: 'source_journal', title: 'Journal database', object: 'data_source', url: 'https://www.notion.so/source_journal' },
+      { id: 'database_legacy', title: 'Legacy database', object: 'database', url: 'https://www.notion.so/database_legacy' },
+    ]);
+    expect(JSON.stringify(sources)).not.toContain('secret_live_token');
   });
 });
