@@ -107,7 +107,7 @@ Status values:
 | Decision | Decision Replay deterministic contract | `done-foundation` | Past outcome citations tested. |
 | Decision | Decision result save-back | `planned` | Current decisions should become future memories. |
 | Reports | Weekly Pattern Report foundation | `prototype-ui` | Current panel shows pattern citations. |
-| Reports | Weekly report engine | `planned` | Needs date windows, aggregation, evidence thresholds. |
+| Reports | Weekly report engine | `done-foundation` | Date-window report generation aggregates emotions, decisions, outcomes, projects, and pattern citations. |
 | Reports | Saved weekly/monthly reports | `planned` | Needs storage and report detail UI. |
 | Reports | Scheduler/reminders | `planned` | After report engine and app/PWA capture. |
 | Agent | Personal Memory Agent orchestrator | `done-foundation` | Loads store records and returns ask/replay/graph evidence. |
@@ -146,22 +146,9 @@ No remote push, main merge, production deploy, or secret access is allowed witho
 - L4: personal memory agent orchestrator.
 - L5: store-backed app shell data builder.
 - L6: import apply/undo UI state model.
+- L7: weekly report engine.
 
 ## 6. Active Next Loops
-
-### L7 — Weekly Report Engine
-
-Goal: create real weekly report generation from dated `MemoryRecord`s, not just a pattern panel label.
-
-Acceptance:
-
-- report uses an explicit date window
-- repeated emotions, decisions, outcomes, and projects are aggregated
-- every insight cites supporting memory ids
-- insufficient weekly evidence is explicit
-- report output can be saved or rendered by the web surface later
-
-Estimated effort: 1-2 days.
 
 ### L8 — Weekly Report Product Surface
 
@@ -314,6 +301,23 @@ Implemented:
 
 - `src/lib/importBatchState.ts`
 - `src/lib/importBatchState.test.ts`
+
+### L7 — Weekly Report Engine
+
+Goal: create real weekly report generation from dated `MemoryRecord`s, not just a pattern panel label.
+
+Acceptance:
+
+- report uses an explicit date window
+- emotions, decisions, outcomes, and projects are aggregated
+- every aggregate and pattern insight cites supporting memory ids
+- insufficient weekly evidence is explicit
+- report output is renderable by the web surface later
+
+Implemented:
+
+- `src/lib/weeklyReport.ts`
+- `src/lib/weeklyReport.test.ts`
 
 ## 8. MVP Time Estimate
 
