@@ -87,6 +87,83 @@ describe('personal memory API boundary', () => {
     expect(appliedBody.skippedPreviewRecordIds).toEqual(['import_preview_api-import_1']);
   });
 
+  test('builds import preview from a live Notion database connector without storing the token', async () => {
+    const store = createMemoryStore({ env: {} });
+    const fetchCalls: Array<{ url: string; init: { headers?: Record<string, string> } }> = [];
+    const notionFetch = async (url: string, init: { headers?: Record<string, string> }) => {
+      fetchCalls.push({ url, init });
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          results: [
+            {
+              id: 'page-memory-1',
+              url: 'https://www.notion.so/page-memory-1',
+              created_time: '2026-05-20T01:00:00.000Z',
+              last_edited_time: '2026-05-22T03:00:00.000Z',
+              properties: {
+                Name: { type: 'title', title: [{ plain_text: 'Notion journal memory' }] },
+                Date: { type: 'date', date: { start: '2026-05-21' } },
+                Text: { type: 'rich_text', rich_text: [{ plain_text: 'Notion database records should become private memories.' }] },
+              },
+            },
+          ],
+        }),
+      };
+    };
+
+    const response = await handlePersonalMemoryApiRequest({
+      store,
+      userId: 'user-a',
+      notionToken: 'secret_live_token',
+      notionFetch,
+      request: {
+        method: 'POST',
+        path: '/api/import/notion/preview',
+        body: {
+          databaseId: 'notion_database_1',
+          createdAt: '2026-05-28T00:00:00.000Z',
+        },
+      },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(fetchCalls[0]?.url).toBe('https://api.notion.com/v1/data_sources/notion_database_1/query');
+    expect(JSON.stringify(response.body)).not.toContain('secret_live_token');
+    expect(response.body).toEqual({
+      preview: expect.objectContaining({
+        batchId: 'notion_database_1',
+        records: [
+          expect.objectContaining({
+            sourceType: 'notion',
+            sourceRef: 'notion://data-source/notion_database_1/page/page-memory-1',
+            observedDate: '2026-05-21',
+          }),
+        ],
+      }),
+    });
+  });
+
+  test('returns an explicit configuration error when Notion import is requested without a token', async () => {
+    const response = await handlePersonalMemoryApiRequest({
+      store: createMemoryStore({ env: {} }),
+      userId: 'user-a',
+      request: {
+        method: 'POST',
+        path: '/api/import/notion/preview',
+        body: {
+          databaseId: 'notion_database_1',
+        },
+      },
+    });
+
+    expect(response).toEqual({
+      statusCode: 424,
+      body: { error: 'notion_token_missing' },
+    });
+  });
+
   test('undoes applied imports through the private API without crossing users', async () => {
     const store = createMemoryStore({ env: {} });
     await store.create('user-b', {

@@ -418,6 +418,17 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(documentHtml).toContain("setInteractionState('memory-review-mode-' + mode)");
   });
 
+  test('renders a direct Notion database import preview entry point', () => {
+    const documentHtml = renderAppShellDocument();
+
+    expect(documentHtml).toContain('data-notion-import-panel="database"');
+    expect(documentHtml).toContain('data-notion-import-endpoint="/api/import/notion/preview"');
+    expect(documentHtml).toContain('data-control="notion-database-id"');
+    expect(documentHtml).toContain('data-control="preview-notion-import"');
+    expect(documentHtml).toContain('data-notion-import-summary');
+    expect(documentHtml).toContain("setInteractionState('notion-import-token-required')");
+  });
+
   test('renders Ask My Past Self as a cited path over the graph with evidence drawer trace', () => {
     const shell = buildInitialAppShellEvidenceLayout();
     const html = renderAppShellHtml();

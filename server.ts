@@ -51,6 +51,7 @@ const memoryRuntime = await createMemoryStoreRuntime({
 const apiHandler = createLocalPersonalMemoryHttpHandler({
   store: memoryRuntime.store,
   authRuntime: createPrivateVaultAuthRuntime({ env: process.env }),
+  notionToken: process.env.NOTION_API_TOKEN || process.env.NOTION_API_KEY,
 });
 
 const server = createServer(async (req, res) => {

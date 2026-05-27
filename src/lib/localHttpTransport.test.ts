@@ -178,6 +178,52 @@ describe('local personal memory HTTP transport', () => {
     expect(exported.bodyText).not.toContain('mem_other_user_http_import_undo_guard');
   });
 
+  test('previews Notion database imports through HTTP without exposing the integration token', async () => {
+    const store = createMemoryStore({ env: {} });
+    const handle = createLocalPersonalMemoryHttpHandler({
+      store,
+      notionToken: 'secret_notion_token',
+      notionFetch: async () => ({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          results: [
+            {
+              id: 'page-http-1',
+              url: 'https://www.notion.so/page-http-1',
+              created_time: '2026-05-20T01:00:00.000Z',
+              last_edited_time: '2026-05-22T03:00:00.000Z',
+              properties: {
+                Name: { type: 'title', title: [{ plain_text: 'HTTP Notion memory' }] },
+                Date: { type: 'date', date: { start: '2026-05-21' } },
+                Text: { type: 'rich_text', rich_text: [{ plain_text: 'HTTP Notion import should become a private preview.' }] },
+              },
+            },
+          ],
+        }),
+      }),
+      session: createLocalPrivateVaultSession({
+        userId: 'local-user',
+        sessionId: 'session-local-http-notion-import',
+        createdAt: '2026-05-28T07:35:00.000Z',
+      }),
+    });
+
+    const response = await handle({
+      method: 'POST',
+      path: '/api/import/notion/preview',
+      bodyText: JSON.stringify({
+        databaseId: 'db_http_notion',
+        createdAt: '2026-05-28T07:35:00.000Z',
+      }),
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.bodyText).toContain('notion://data-source/db_http_notion/page/page-http-1');
+    expect(response.bodyText).toContain('HTTP Notion import should become a private preview.');
+    expect(response.bodyText).not.toContain('secret_notion_token');
+  });
+
   test('reviews and updates memories through HTTP without crossing private vaults', async () => {
     const store = createMemoryStore({ env: {} });
     await store.create('user-a', personalMemoryRecords[2]);

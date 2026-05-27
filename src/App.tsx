@@ -730,21 +730,26 @@ const APP_SHELL_STYLES = `
     text-decoration: none;
   }
   .capture-prototype,
+  .local-import-upload,
+  .notion-import-direct,
   .import-preview-actions {
     display: grid;
     gap: 8px;
     border-top: 1px solid rgba(117, 122, 143, 0.1);
     padding-top: 10px;
   }
-  .capture-prototype label {
+  .capture-prototype label,
+  .local-import-upload label,
+  .notion-import-direct label {
     color: #8a90a2;
     font-size: 11px;
     font-weight: 780;
   }
-  .capture-prototype textarea {
+  .capture-prototype textarea,
+  .local-import-upload textarea,
+  .local-import-upload input,
+  .notion-import-direct input {
     width: 100%;
-    min-height: 84px;
-    resize: none;
     border: 1px solid rgba(117, 122, 143, 0.14);
     border-radius: 8px;
     background: #ffffff;
@@ -752,6 +757,15 @@ const APP_SHELL_STYLES = `
     padding: 8px 9px;
     font-size: 12px;
     line-height: 1.45;
+  }
+  .capture-prototype textarea,
+  .local-import-upload textarea {
+    min-height: 84px;
+    resize: none;
+  }
+  .local-import-upload input,
+  .notion-import-direct input {
+    min-height: 34px;
   }
   .capture-meta,
   .import-preview-list {
@@ -1386,7 +1400,10 @@ const APP_SHELL_STYLES = `
   }
   .ask-question-row input,
   .decision-current-card input,
-  .capture-prototype textarea {
+  .capture-prototype textarea,
+  .local-import-upload textarea,
+  .local-import-upload input,
+  .notion-import-direct input {
     border-color: rgba(255, 255, 255, 0.1);
     background: rgba(255, 255, 255, 0.055);
     color: #f0f0f2;
@@ -1781,6 +1798,10 @@ const GRAPH_CONTROL_SCRIPT = `
   const importUndoButton = document.querySelector('[data-control="undo-local-import"]');
   const importUploadSummary = document.querySelector('[data-import-upload-summary]');
   const importUploadPreviewList = document.querySelector('[data-import-upload-preview-list]');
+  const notionImportPanel = document.querySelector('[data-notion-import-panel="database"]');
+  const notionDatabaseId = document.querySelector('[data-control="notion-database-id"]');
+  const notionImportPreviewButton = document.querySelector('[data-control="preview-notion-import"]');
+  const notionImportSummary = document.querySelector('[data-notion-import-summary]');
   const importAppliedFeedback = document.querySelector('[data-import-applied-feedback="local-upload"]');
   const importAppliedMemoryList = document.querySelector('[data-import-applied-memory-list]');
   const memoryReviewPanel = document.querySelector('[data-memory-review-panel="source-edit"]');
@@ -2623,6 +2644,54 @@ const GRAPH_CONTROL_SCRIPT = `
       cytoscapeMount.setAttribute('data-cytoscape-edge-count', String(memoryGraph.stats?.edgeCount || 0));
     }
   };
+
+  notionImportPreviewButton?.addEventListener('click', async () => {
+    if (!notionImportPanel) return;
+    const databaseId = notionDatabaseId?.value?.trim() || '';
+    const endpoint = notionImportPanel.getAttribute('data-notion-import-endpoint') || '';
+    if (!databaseId) {
+      notionImportPanel.setAttribute('data-notion-import-state', 'blocked');
+      setInteractionState('notion-import-blocked');
+      return;
+    }
+    notionImportPanel.setAttribute('data-notion-import-state', 'loading');
+    try {
+      if (!endpoint || window.location.protocol === 'file:') {
+        lastLocalImportPreview = {
+          batchId: databaseId,
+          records: [],
+        };
+      } else {
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            databaseId,
+            createdAt: new Date().toISOString(),
+          }),
+        });
+        if (response.status === 424) {
+          notionImportPanel.setAttribute('data-notion-import-state', 'token-required');
+          if (notionImportSummary) notionImportSummary.textContent = 'Notion token required';
+          setInteractionState('notion-import-token-required');
+          return;
+        }
+        if (!response.ok) throw new Error('notion import preview failed with ' + response.status);
+        lastLocalImportPreview = (await response.json()).preview;
+      }
+      const records = lastLocalImportPreview?.records || [];
+      renderImportPreviewRows(records);
+      notionImportPanel.setAttribute('data-notion-import-state', 'preview-ready');
+      notionImportPanel.setAttribute('data-notion-import-candidate-count', String(records.length));
+      if (notionImportSummary) notionImportSummary.textContent = records.length + ' Notion candidates';
+      importApplyButton?.removeAttribute('disabled');
+      setInteractionState('notion-import-preview-ready');
+    } catch (error) {
+      notionImportPanel.setAttribute('data-notion-import-state', 'error');
+      shell.setAttribute('data-notion-import-error', String(error?.message || error));
+      setInteractionState('notion-import-error');
+    }
+  });
 
   importPreviewButton?.addEventListener('click', async () => {
     if (!importUploadPanel) return;

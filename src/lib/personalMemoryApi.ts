@@ -15,6 +15,7 @@ import {
 } from './memoryReviewLedger';
 import { buildMemoryProvenanceExport } from './memoryProvenanceExport';
 import type { MemoryStore } from './memoryStore';
+import { queryNotionDatabaseImportCandidates, type NotionFetch } from './notionImport';
 import { answerPersonalMemoryQuestion } from './personalMemoryAgent';
 import { resolvePrivateVaultAccess, type PrivateVaultSession } from './privateVault';
 import { saveArtifactAsMemoryRecord, type SavedMemoryArtifact } from './savedMemoryArtifact';
@@ -36,6 +37,7 @@ export type PersonalMemoryApiPath =
   | '/api/memory/review-history'
   | '/api/memory/update'
   | '/api/import/preview'
+  | '/api/import/notion/preview'
   | '/api/import/apply'
   | '/api/import/undo'
   | '/api/ask'
@@ -56,6 +58,8 @@ export interface HandlePersonalMemoryApiRequestInput {
   store: MemoryStore;
   userId: string;
   request: PersonalMemoryApiRequest;
+  notionToken?: string;
+  notionFetch?: NotionFetch;
 }
 
 export interface HandlePrivateVaultMemoryApiRequestInput {
@@ -63,6 +67,8 @@ export interface HandlePrivateVaultMemoryApiRequestInput {
   session: PrivateVaultSession;
   request: PersonalMemoryApiRequest;
   requestedUserId?: string;
+  notionToken?: string;
+  notionFetch?: NotionFetch;
 }
 
 export interface PersonalMemoryApiResponse<Body = unknown> {
@@ -75,6 +81,12 @@ interface ImportPreviewBody {
   batchId: string;
   createdAt?: string;
   candidates: ImportPreviewCandidate[];
+}
+
+interface NotionImportPreviewBody {
+  databaseId?: string;
+  createdAt?: string;
+  pageSize?: number;
 }
 
 interface ImportApplyBody {
@@ -312,6 +324,32 @@ export async function handlePersonalMemoryApiRequest(
     return { statusCode: 200, body: { preview } };
   }
 
+  if (request.path === '/api/import/notion/preview') {
+    if (request.method !== 'POST') return methodNotAllowed();
+    if (!input.notionToken) return { statusCode: 424, body: { error: 'notion_token_missing' } };
+    const body = readBody<NotionImportPreviewBody>(request.body);
+    const databaseId = sanitizeOptionalText(body?.databaseId);
+    if (!databaseId) return { statusCode: 400, body: { error: 'notion_database_id_required' } };
+    try {
+      const candidates = await queryNotionDatabaseImportCandidates({
+        databaseId,
+        notionToken: input.notionToken,
+        createdAt: sanitizeOptionalText(body.createdAt) ?? new Date().toISOString(),
+        pageSize: typeof body.pageSize === 'number' ? body.pageSize : undefined,
+        fetchNotion: input.notionFetch,
+      });
+      const preview = buildImportPreview({
+        batchId: databaseId,
+        createdAt: body.createdAt,
+        existingRecords: await store.listByUser(userId),
+        candidates,
+      });
+      return { statusCode: 200, body: { preview } };
+    } catch (error) {
+      return { statusCode: 502, body: { error: 'notion_query_failed', message: String(error) } };
+    }
+  }
+
   if (request.path === '/api/import/apply') {
     if (request.method !== 'POST') return methodNotAllowed();
     const body = readBody<ImportApplyBody>(request.body);
@@ -450,5 +488,7 @@ export async function handlePrivateVaultMemoryApiRequest(
     store: input.store,
     userId: access.userId,
     request: input.request,
+    notionToken: input.notionToken,
+    notionFetch: input.notionFetch,
   });
 }

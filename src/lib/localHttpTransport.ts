@@ -1,5 +1,6 @@
 import type { PrivateVaultAuthRuntime } from './authProviderRuntime';
 import type { MemoryStore } from './memoryStore';
+import type { NotionFetch } from './notionImport';
 import {
   handlePrivateVaultMemoryApiRequest,
   type PersonalMemoryApiMethod,
@@ -24,6 +25,8 @@ export interface CreateLocalPersonalMemoryHttpHandlerInput {
   store: MemoryStore;
   session?: PrivateVaultSession;
   authRuntime?: PrivateVaultAuthRuntime;
+  notionToken?: string;
+  notionFetch?: NotionFetch;
 }
 
 export type LocalPersonalMemoryHttpHandler = (
@@ -77,6 +80,8 @@ export function createLocalPersonalMemoryHttpHandler(
         path: request.path as PersonalMemoryApiPath,
         body,
       },
+      notionToken: input.notionToken,
+      notionFetch: input.notionFetch,
     });
 
     return jsonResponse(apiResponse.statusCode, apiResponse.body, apiResponse.headers);
