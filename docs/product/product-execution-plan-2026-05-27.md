@@ -2,7 +2,7 @@
 
 Status: active local execution plan  
 Owner: Ko Yunseo  
-Updated: 2026-05-28, saved artifact persistence pass
+Updated: 2026-05-28, Gemini-first LLM provider smoke harness pass
 Supersedes for local Codex work: `docs/product/product-master-plan-2026-05-26.md`
 
 ## 1. Product Definition
@@ -135,7 +135,7 @@ Status values:
 | Agent | Multi-axis retrieval router | `done-foundation` | Deterministic router fuses keyword, semantic, knowledge-ledger graph traversal, and temporal freshness; legacy retrieval delegates to it. |
 | Agent | Korean/user-intent retrieval bridge | `done-foundation` | Korean product-intent questions expand into retrieval terms before the agent filters memory context. |
 | Agent | Citation-constrained generation guard | `done-foundation` | LLM-shaped outputs are rejected unless grounded in supplied citation ids. |
-| Agent | LLM provider adapter | `done-foundation` | Provider-agnostic adapter wraps model outputs in the citation guard before advice can surface. |
+| Agent | LLM provider adapter | `done-foundation` | Provider-agnostic adapter wraps model outputs in the citation guard before advice can surface. Gemini-first runtime readiness and smoke harness now gate live calls on `GEMINI_API_KEY` + `PMI_LLM_MODEL` without leaking secrets. |
 | Agent | User feedback learning loop | `planned` | Needed for agent personalization. |
 | Privacy | Private-by-default scope | `done-foundation` | Data model and UI labels exist. |
 | Privacy | Export/delete local UX | `done-foundation` | Owner-only local export, selected delete, and hard-delete confirmation panel are rendered. |
@@ -196,10 +196,11 @@ No remote push, main merge, production deploy, or secret access is allowed witho
 - L27: saved artifact UI actions.
 - L28: saved artifacts in graph/timeline.
 - L29: saved artifact persistence through capture API.
+- L30: Gemini-first LLM provider smoke harness.
 
 ## 6. Active Next Loops
 
-Next local loop: live LLM provider configuration harness and secret-gated smoke path, then staging PostgreSQL/pgvector/auth smoke when deployment secrets are available. Production auth, live LLM keys, and deployment wiring stay gated until secrets/deploy target are explicitly available.
+Next local loop: staging PostgreSQL/pgvector/auth smoke harness against the already wired Postgres runtime when deployment secrets are available; otherwise add user feedback/correction memory locally. Production auth, live LLM keys, and deployment wiring stay gated until secrets/deploy target are explicitly available.
 
 ## 7. Completed Loop Details
 
@@ -685,6 +686,24 @@ Implemented:
 - `scripts/verify-playwright-evidence.ts`
 - `docs/superpowers/plans/2026-05-28-saved-artifact-persistence.md`
 
+### L30 — Gemini-First LLM Provider Smoke Harness
+
+Goal: make live model wiring verifiable without leaking keys or letting uncited output become personal advice.
+
+Acceptance:
+
+- missing `GEMINI_API_KEY` and `PMI_LLM_MODEL` reports blocked readiness and skipped smoke
+- present Gemini env reports ready readiness while redacting secret values
+- smoke runner calls the existing citation-guarded provider adapter only when config is ready and a provider is attached
+- uncited provider output is still rejected as insufficient evidence
+- Postgres runtime remains separate and unchanged; it continues to use `MEMORY_BACKEND_MODE=postgres` and `DATABASE_URL`
+
+Implemented:
+
+- `src/lib/llmProviderRuntime.ts`
+- `src/lib/llmProviderRuntime.test.ts`
+- `docs/superpowers/plans/2026-05-28-llm-provider-smoke-harness.md`
+
 ## 8. MVP Time Estimate
 
 Assuming focused local development without major dependency or deployment blockers:
@@ -698,8 +717,8 @@ Assuming focused local development without major dependency or deployment blocke
 
 Critical path for the next "나를 아는 AI" jump:
 
-1. Wire a live LLM provider through the citation-guarded adapter when secrets/config are available.
-2. Run staging PostgreSQL/pgvector/auth smoke against a chosen deployment target.
+1. Run staging PostgreSQL/pgvector/auth smoke against the already wired Postgres runtime when deployment secrets are available.
+2. Attach a real Gemini provider implementation behind the L30 smoke harness.
 3. Add feedback/correction memory so the agent learns from user edits.
 
 ## 9. Product Quality Rules
