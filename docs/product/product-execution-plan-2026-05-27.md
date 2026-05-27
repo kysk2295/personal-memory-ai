@@ -2,7 +2,7 @@
 
 Status: active local execution plan  
 Owner: Ko Yunseo  
-Updated: 2026-05-27, multi-axis retrieval pass
+Updated: 2026-05-27, saved artifacts pass
 Supersedes for local Codex work: `docs/product/product-master-plan-2026-05-26.md`
 
 ## 1. Product Definition
@@ -122,12 +122,13 @@ Status values:
 | Web | Memory search/detail inspector | `prototype-ui` | Search input dims unmatched nodes, result click selects inspector detail and citation chip. |
 | Ask | Ask My Past Self deterministic contract | `done-foundation` | Citation/insufficient evidence tested. |
 | Ask | LLM answer generation | `done-foundation` | Provider adapter routes outputs through the citation guard; live provider config/secrets still planned. |
+| Ask | Saved advice artifacts | `done-foundation` | Ask answers can become private saved artifacts and future `MemoryRecord`s with citations and graph highlights. |
 | Ask | Follow-up conversation | `planned` | Requires session/report memory. |
 | Decision | Decision Replay deterministic contract | `done-foundation` | Past outcome citations tested. |
-| Decision | Decision result save-back | `planned` | Current decisions should become future memories. |
+| Decision | Decision result save-back | `done-foundation` | Decision replay results can become private saved artifacts and future decision memories; interactive UI save action remains planned. |
 | Reports | Weekly Pattern Report foundation | `done-foundation` | Weekly report panel and pattern citation panel are visible in the web surface. |
 | Reports | Weekly report engine | `done-foundation` | Date-window report generation aggregates emotions, decisions, outcomes, projects, and pattern citations. |
-| Reports | Saved weekly/monthly reports | `planned` | Needs storage and report detail UI. |
+| Reports | Saved weekly/monthly reports | `done-foundation` | Weekly reports can become saved artifacts and future pattern memories; monthly report UI remains later. |
 | Reports | Scheduler/reminders | `planned` | After report engine and app/PWA capture. |
 | Agent | Personal Memory Agent orchestrator | `done-foundation` | Loads store records and returns ask/replay/graph evidence. |
 | Agent | Semantic retrieval/reranking | `done-foundation` | Deterministic retrieval contract ranks user-scoped memories; pgvector path remains a backend task. |
@@ -188,10 +189,11 @@ No remote push, main merge, production deploy, or secret access is allowed witho
 - L21: Postgres/pgvector runtime backend selection.
 - L22: canonical memory knowledge ledger.
 - L23: multi-axis memory retrieval router.
+- L24: saved advice/report memory artifacts.
 
 ## 6. Active Next Loops
 
-Next local loop: saved advice/report artifacts, then memory detail/timeline surfaces and agent retrieval integration with multilingual query bridging. Production auth, live LLM keys, and deployment wiring stay gated until secrets/deploy target are explicitly available.
+Next local loop: memory detail/timeline surfaces, then agent retrieval integration with multilingual query bridging. Production auth, live LLM keys, and deployment wiring stay gated until secrets/deploy target are explicitly available.
 
 ## 7. Completed Loop Details
 
@@ -554,6 +556,24 @@ Implemented:
 - `src/lib/memoryRetrieval.ts`
 - `docs/superpowers/plans/2026-05-27-multi-axis-retrieval.md`
 
+### L24 — Saved Advice and Report Memory Artifacts
+
+Goal: let useful AI answers, decision replays, and weekly reports become private saved artifacts that can later be recalled as future memories.
+
+Acceptance:
+
+- Ask artifacts preserve question, answer, recommendation, evidence label, confidence, citations, and graph highlights
+- Decision replay artifacts preserve the current decision, recommendation, uncertainty, choices, outcomes, and citations
+- Weekly report artifacts preserve window, included memories, pattern titles, aggregate summaries, and report metadata
+- artifacts convert into private `MemoryRecord`s with `personal-memory-ai://saved-artifacts/...` source refs
+- saving through `MemoryStore` remains user-scoped
+
+Implemented:
+
+- `src/lib/savedMemoryArtifact.ts`
+- `src/lib/savedMemoryArtifact.test.ts`
+- `docs/superpowers/plans/2026-05-27-saved-memory-artifacts.md`
+
 ## 8. MVP Time Estimate
 
 Assuming focused local development without major dependency or deployment blockers:
@@ -567,9 +587,9 @@ Assuming focused local development without major dependency or deployment blocke
 
 Critical path for the next "나를 아는 AI" jump:
 
-1. Persist saved advice/report artifacts so useful answers become future memory.
-2. Add memory detail/timeline views so the second brain is inspectable like a real vault.
-3. Bridge Korean/user-intent queries into retrieval before filtering the agent's memory context.
+1. Add memory detail/timeline views so the second brain is inspectable like a real vault.
+2. Bridge Korean/user-intent queries into retrieval before filtering the agent's memory context.
+3. Add UI save actions for advice/report artifacts and show saved artifacts in the graph/timeline.
 4. Wire a live LLM provider through the citation-guarded adapter when secrets/config are available.
 5. Run staging PostgreSQL/pgvector/auth smoke against a chosen deployment target.
 
