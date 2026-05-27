@@ -18,6 +18,10 @@ function resolvePath(urlPath) {
   const candidate = join(root, cleanPath === '/' ? 'index.html' : cleanPath);
   if (!candidate.startsWith(root)) return join(root, 'index.html');
   if (existsSync(candidate) && statSync(candidate).isFile()) return candidate;
+  if (existsSync(candidate) && statSync(candidate).isDirectory()) {
+    const indexCandidate = join(candidate, 'index.html');
+    if (existsSync(indexCandidate) && statSync(indexCandidate).isFile()) return indexCandidate;
+  }
   return join(root, 'index.html');
 }
 

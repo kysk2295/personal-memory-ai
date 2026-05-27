@@ -1,0 +1,73 @@
+import { describe, expect, test } from 'vitest';
+import { buildAppCaptureSurfaceState } from './appCaptureSurface';
+import { renderAppCaptureDocument } from '../AppCapture';
+
+describe('app capture surface state', () => {
+  test('models a mobile-first local private quick diary capture', () => {
+    const state = buildAppCaptureSurfaceState({
+      userId: 'local-user',
+      capturedAt: '2026-05-27T15:00:00.000Z',
+    });
+
+    expect(state).toMatchObject({
+      route: '/capture/',
+      surfaceMode: 'mobile-first-capture',
+      pwaStatus: 'installable-static-prototype',
+      storageMode: 'local-first',
+      privacyScope: 'private',
+      syncTarget: 'web-second-brain',
+      quickSaveAction: {
+        method: 'POST',
+        endpoint: '/api/capture',
+        disabled: false,
+      },
+      draft: {
+        text: '오늘은 그래프를 더 꾸미기보다 앱 캡처 흐름을 먼저 실제로 만들자.',
+        emotionHints: ['resolve'],
+        projectHints: ['personal-memory-ai'],
+        topicHints: ['app capture', 'pwa', 'local-first'],
+      },
+      savedPreview: {
+        sourceType: 'mobile',
+        privacyScope: 'private',
+        extractionStatus: 'manual',
+      },
+      graphSync: {
+        status: 'ready-for-store-backed-graph',
+        targetRoute: '/',
+      },
+    });
+    expect(state.quickSaveAction.body).toEqual({
+      text: state.draft.text,
+      capturedAt: '2026-05-27T15:00:00.000Z',
+      deviceId: 'pwa-local-device',
+      emotionHints: ['resolve'],
+      decisionHint: 'chosen',
+      projectHints: ['personal-memory-ai'],
+      topicHints: ['app capture', 'pwa', 'local-first'],
+    });
+    expect(state.savedPreview.id).toMatch(/^mem_mobile_/);
+    expect(state.graphSync.targetNodeId).toBe(`memory:${state.savedPreview.id}`);
+  });
+
+  test('renders a standalone mobile PWA capture document with API and graph handoff evidence', () => {
+    const html = renderAppCaptureDocument();
+
+    expect(html).toContain('<!doctype html>');
+    expect(html).toContain('<link rel="manifest" href="/manifest.webmanifest" />');
+    expect(html).toContain('aria-label="Mobile app quick diary capture"');
+    expect(html).toContain('data-surface-mode="mobile-first-capture"');
+    expect(html).toContain('data-pwa-status="installable-static-prototype"');
+    expect(html).toContain('data-storage-mode="local-first"');
+    expect(html).toContain('data-privacy-scope="private"');
+    expect(html).toContain('data-quick-save-endpoint="/api/capture"');
+    expect(html).toContain('data-quick-save-method="POST"');
+    expect(html).toContain('data-graph-sync-status="ready-for-store-backed-graph"');
+    expect(html).toContain('data-graph-target-route="/"');
+    expect(html).toContain('data-graph-target-node="memory:');
+    expect(html).toContain('오늘은 그래프를 더 꾸미기보다 앱 캡처 흐름을 먼저 실제로 만들자.');
+    expect(html).toContain('local-first');
+    expect(html).toContain('private vault');
+    expect(html).not.toContain('public shared memory');
+  });
+});

@@ -2,7 +2,7 @@
 
 Status: active local execution plan  
 Owner: Ko Yunseo  
-Updated: 2026-05-27, graph/privacy UX pass
+Updated: 2026-05-27, app capture PWA pass
 Supersedes for local Codex work: `docs/product/product-master-plan-2026-05-26.md`
 
 ## 1. Product Definition
@@ -88,7 +88,7 @@ Status values:
 | Area | Feature | Status | Notes |
 |---|---|---|---|
 | Capture | Fast diary to `MemoryRecord` | `done-foundation` | `fastDiaryCapture` and ingestion loop exist. |
-| Capture | Mobile/PWA capture UI | `planned` | Current web shows prototype only, not real app capture. |
+| Capture | Mobile/PWA capture UI | `done-foundation` | `/capture/` renders a mobile-first local/private quick diary capture surface. |
 | Capture | Voice capture | `later` | In PRD direction, not MVP-critical. |
 | Capture | Emotion/project/decision hints | `done-foundation` | Data contract exists; full UI still planned. |
 | Import | Notion/Obsidian/Markdown preview | `done-foundation` | Preview/dedupe contract exists. |
@@ -153,21 +153,9 @@ No remote push, main merge, production deploy, or secret access is allowed witho
 - L10: citation-constrained generation guard.
 - L11: personal memory API boundary.
 - L12: privacy export/delete UX.
+- L13: PWA/app capture surface.
 
 ## 6. Active Next Loops
-
-### L13 — PWA/App Capture Surface
-
-Goal: make capture usable from mobile without requiring the full web graph.
-
-Acceptance:
-
-- mobile-first capture screen
-- quick save
-- local/private status
-- saved capture appears in store-backed second-brain graph
-
-Estimated effort: 3-7 days.
 
 ### L14 — Staging Backend Readiness
 
@@ -342,6 +330,26 @@ Implemented:
 - `src/components/PrivacyControlPanel.tsx`
 - `layout.privacyControls`
 - `artifacts/web-second-brain-product-surface/privacy-export-delete-surface.png`
+
+### L13 — PWA/App Capture Surface
+
+Goal: make capture usable from mobile without requiring the full web graph.
+
+Acceptance:
+
+- mobile-first capture screen
+- quick save action points to `/api/capture`
+- local/private status is visible
+- saved capture preview includes the generated MemoryRecord id and target graph node
+
+Implemented:
+
+- `src/lib/appCaptureSurface.ts`
+- `src/lib/appCaptureSurface.test.ts`
+- `src/AppCapture.tsx`
+- `/capture/` static route
+- `dist/manifest.webmanifest` generation
+- `artifacts/web-second-brain-product-surface/pwa-app-capture-surface.png`
 
 ## 8. MVP Time Estimate
 
