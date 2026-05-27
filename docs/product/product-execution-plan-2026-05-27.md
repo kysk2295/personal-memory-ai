@@ -2,7 +2,7 @@
 
 Status: active local execution plan  
 Owner: Ko Yunseo  
-Updated: 2026-05-27, knowledge ledger pass
+Updated: 2026-05-27, multi-axis retrieval pass
 Supersedes for local Codex work: `docs/product/product-master-plan-2026-05-26.md`
 
 ## 1. Product Definition
@@ -131,7 +131,7 @@ Status values:
 | Reports | Scheduler/reminders | `planned` | After report engine and app/PWA capture. |
 | Agent | Personal Memory Agent orchestrator | `done-foundation` | Loads store records and returns ask/replay/graph evidence. |
 | Agent | Semantic retrieval/reranking | `done-foundation` | Deterministic retrieval contract ranks user-scoped memories; pgvector path remains a backend task. |
-| Agent | Multi-axis retrieval router | `planned` | Add TEMPR-like routing that fuses semantic, keyword, graph, and temporal axes before citation-constrained generation. |
+| Agent | Multi-axis retrieval router | `done-foundation` | Deterministic router fuses keyword, semantic, knowledge-ledger graph traversal, and temporal freshness; legacy retrieval delegates to it. |
 | Agent | Citation-constrained generation guard | `done-foundation` | LLM-shaped outputs are rejected unless grounded in supplied citation ids. |
 | Agent | LLM provider adapter | `done-foundation` | Provider-agnostic adapter wraps model outputs in the citation guard before advice can surface. |
 | Agent | User feedback learning loop | `planned` | Needed for agent personalization. |
@@ -187,10 +187,11 @@ No remote push, main merge, production deploy, or secret access is allowed witho
 - L20: data-driven Cytoscape memory graph renderer.
 - L21: Postgres/pgvector runtime backend selection.
 - L22: canonical memory knowledge ledger.
+- L23: multi-axis memory retrieval router.
 
 ## 6. Active Next Loops
 
-Next local loop: multi-axis retrieval over the knowledge ledger, then detail/timeline surfaces and saved report/advice artifacts. Production auth, live LLM keys, and deployment wiring stay gated until secrets/deploy target are explicitly available.
+Next local loop: saved advice/report artifacts, then memory detail/timeline surfaces and agent retrieval integration with multilingual query bridging. Production auth, live LLM keys, and deployment wiring stay gated until secrets/deploy target are explicitly available.
 
 ## 7. Completed Loop Details
 
@@ -534,6 +535,25 @@ Implemented:
 - `src/lib/memoryKnowledgeLedger.test.ts`
 - `docs/superpowers/plans/2026-05-27-knowledge-ledger.md`
 
+### L23 — Multi-Axis Memory Retrieval Router
+
+Goal: fuse semantic, keyword, graph traversal, and temporal signals before memories are handed to advice/report workflows.
+
+Acceptance:
+
+- retrieval is deterministic regardless of input record order
+- each result exposes per-axis scores, matched terms, explanations, and supporting ledger edge ids
+- graph traversal can pull in memories linked through shared typed ledger targets even when query text does not directly match them
+- store-backed retrieval remains user-scoped and refuses unrelated queries with explicit insufficient evidence
+- the existing `memoryRetrieval` contract remains stable for Ask, Decision Replay, and Weekly Report callers
+
+Implemented:
+
+- `src/lib/multiAxisMemoryRetrieval.ts`
+- `src/lib/multiAxisMemoryRetrieval.test.ts`
+- `src/lib/memoryRetrieval.ts`
+- `docs/superpowers/plans/2026-05-27-multi-axis-retrieval.md`
+
 ## 8. MVP Time Estimate
 
 Assuming focused local development without major dependency or deployment blockers:
@@ -547,9 +567,9 @@ Assuming focused local development without major dependency or deployment blocke
 
 Critical path for the next "나를 아는 AI" jump:
 
-1. Add multi-axis retrieval: semantic, keyword, graph traversal, and temporal freshness.
-2. Persist saved advice/report artifacts so useful answers become future memory.
-3. Add memory detail/timeline views so the second brain is inspectable like a real vault.
+1. Persist saved advice/report artifacts so useful answers become future memory.
+2. Add memory detail/timeline views so the second brain is inspectable like a real vault.
+3. Bridge Korean/user-intent queries into retrieval before filtering the agent's memory context.
 4. Wire a live LLM provider through the citation-guarded adapter when secrets/config are available.
 5. Run staging PostgreSQL/pgvector/auth smoke against a chosen deployment target.
 
