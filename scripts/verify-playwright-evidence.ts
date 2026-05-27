@@ -258,6 +258,38 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   });
   assert(selectedCytoscapeMemoryId === 'memory:mem_unrelated_calm_import', 'Search result click should select the matching Cytoscape memory node');
 
+  const reviewSummary = `Reviewed calm import ${Date.now()}`;
+  await page.locator('[data-control="memory-edit-summary"]').fill(reviewSummary);
+  await page.locator('[data-control="save-memory-edit"]').click();
+  await page.waitForFunction(
+    () => document.querySelector('[data-memory-review-panel="source-edit"]')?.getAttribute('data-memory-review-state') === 'saved',
+    null,
+    { timeout: 10_000 },
+  );
+  const reviewRevisionId = await attribute(page, '[data-memory-review-panel="source-edit"]', 'data-memory-review-revision');
+  assert(reviewRevisionId && reviewRevisionId.startsWith('memory_review_'), 'Memory edit should expose a review ledger revision id');
+  assert(
+    (await attribute(page, '[data-memory-review-panel="source-edit"]', 'data-memory-review-ledger')) === 'recorded',
+    'Memory edit should mark the review ledger recorded',
+  );
+  assert(
+    Number(await attribute(page, '[data-memory-review-panel="source-edit"]', 'data-memory-review-history-count')) > 0,
+    'Memory edit should increase visible review history count',
+  );
+  assert(
+    (await page.locator('[data-memory-review-comparison][data-review-comparison-active="true"]').count()) >= 1,
+    'Memory edit should append and activate a review comparison card',
+  );
+  await page.locator('[data-control="select-review-comparison"]').first().click();
+  assert(
+    (await attribute(page, '[data-memory-review-panel="source-edit"]', 'data-active-review-comparison')) === reviewRevisionId,
+    'Review comparison click should expose the active revision id',
+  );
+  assert(
+    (await attribute(page, '.second-brain-shell', 'data-interaction-state')) === 'memory-review-comparison-selected',
+    'Review comparison click should expose comparison selection interaction state',
+  );
+
   await page.screenshot({ path: searchScreenshot, fullPage: false });
 }
 
@@ -298,6 +330,8 @@ try {
           'memory search filter',
           'search result detail selection',
           'memory detail timeline selection',
+          'memory review edit ledger',
+          'memory review comparison selection',
         ],
       },
       null,

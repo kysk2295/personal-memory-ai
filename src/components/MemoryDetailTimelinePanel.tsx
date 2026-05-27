@@ -38,9 +38,13 @@ function renderReviewHistory(entry: MemoryDetailTimelineEntry): string {
       .map(
         (comparison) => `<li data-memory-review-history-entry="${escapeHtml(
           comparison.revisionId,
-        )}" data-memory-review-comparison="${escapeHtml(comparison.revisionId)}">
-          <span>${escapeHtml(comparison.reviewedAt)}</span>
-          <strong>${escapeHtml(comparison.deltaLabel)}</strong>
+        )}" data-memory-review-comparison="${escapeHtml(comparison.revisionId)}" data-review-comparison-active="false">
+          <button type="button" data-control="select-review-comparison" data-review-comparison-id="${escapeHtml(
+            comparison.revisionId,
+          )}">
+            <span>${escapeHtml(comparison.reviewedAt)}</span>
+            <strong>${escapeHtml(comparison.deltaLabel)}</strong>
+          </button>
           <div class="memory-review-field-list">
             ${comparison.changedFieldLabels
               .map((field) => `<span data-review-changed-field="${escapeHtml(field)}">${escapeHtml(field)}</span>`)

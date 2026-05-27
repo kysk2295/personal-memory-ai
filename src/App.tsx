@@ -806,6 +806,56 @@ const APP_SHELL_STYLES = `
     border-color: rgba(143, 128, 255, 0.34);
     background: rgba(143, 128, 255, 0.08);
   }
+  .memory-review-history-list {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .memory-review-history-list li {
+    display: grid;
+    gap: 7px;
+    border: 1px solid rgba(117, 122, 143, 0.12);
+    border-radius: 8px;
+    background: rgba(250, 251, 255, 0.78);
+    padding: 9px;
+  }
+  .memory-review-history-list li[data-review-comparison-active="true"] {
+    border-color: rgba(143, 128, 255, 0.34);
+    background: rgba(143, 128, 255, 0.08);
+  }
+  .memory-review-history-list button {
+    display: grid;
+    gap: 3px;
+    width: 100%;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    padding: 0;
+    text-align: left;
+  }
+  .memory-review-history-list button span {
+    color: #73798c;
+    font-size: 11px;
+  }
+  .memory-review-history-list button strong {
+    color: #53586a;
+    font-size: 12px;
+  }
+  .memory-review-field-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+  .memory-review-field-list span {
+    border: 1px solid rgba(117, 122, 143, 0.12);
+    border-radius: 999px;
+    padding: 4px 6px;
+    color: #7a728d;
+    background: rgba(255,255,255,0.6);
+    font-size: 10px;
+  }
   .timeline-memory-item strong {
     color: #53586a;
     font-size: 12px;
@@ -1262,6 +1312,26 @@ const APP_SHELL_STYLES = `
   .timeline-memory-item[data-timeline-active="true"] {
     border-color: rgba(214, 31, 60, 0.44);
     background: rgba(214, 31, 60, 0.1);
+  }
+  .memory-review-history-list li {
+    border-color: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.04);
+    color: #c3c3c8;
+  }
+  .memory-review-history-list li[data-review-comparison-active="true"] {
+    border-color: rgba(214, 31, 60, 0.44);
+    background: rgba(214, 31, 60, 0.1);
+  }
+  .memory-review-history-list button span {
+    color: #b0b0b6;
+  }
+  .memory-review-history-list button strong {
+    color: #ececef;
+  }
+  .memory-review-field-list span {
+    border-color: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.055);
+    color: #d0d0d4;
   }
   .timeline-memory-item strong {
     color: #ececef;
@@ -1731,6 +1801,86 @@ const GRAPH_CONTROL_SCRIPT = `
     if (memoryEditRawText) memoryEditRawText.value = body || '';
     const sourceLabel = memoryReviewPanel.querySelector('.panel-topline span');
     if (sourceLabel && source) sourceLabel.textContent = source;
+  };
+
+  const reviewChangedFieldLabel = (field) => {
+    if (field === 'rawText') return 'raw text';
+    if (field === 'observedAt') return 'observed date';
+    if (field === 'emotionTags') return 'emotion tags';
+    if (field === 'topicTags') return 'topic tags';
+    if (field === 'projectTags') return 'project tags';
+    if (field === 'peopleTags') return 'people tags';
+    return field || 'review';
+  };
+
+  const selectReviewComparison = (comparisonId) => {
+    if (!memoryReviewPanel || !comparisonId) return;
+    const comparisonCards = Array.from(memoryReviewPanel.querySelectorAll('[data-memory-review-comparison]'));
+    comparisonCards.forEach((card) => {
+      card.setAttribute('data-review-comparison-active', String(card.getAttribute('data-memory-review-comparison') === comparisonId));
+    });
+    memoryReviewPanel.setAttribute('data-active-review-comparison', comparisonId);
+    setInteractionState('memory-review-comparison-selected');
+  };
+
+  const wireReviewComparisonButtons = (root = memoryReviewPanel) => {
+    if (!root) return;
+    Array.from(root.querySelectorAll('[data-control="select-review-comparison"]')).forEach((button) => {
+      if (button.getAttribute('data-review-comparison-wired') === 'true') return;
+      button.setAttribute('data-review-comparison-wired', 'true');
+      button.addEventListener('click', () => {
+        selectReviewComparison(button.getAttribute('data-review-comparison-id') || '');
+      });
+    });
+  };
+
+  const renderMemoryReviewComparison = (entry) => {
+    if (!entry?.id) return '';
+    const changedFieldLabels = Array.isArray(entry.changedFields) ? entry.changedFields.map(reviewChangedFieldLabel) : [];
+    const deltaLabel = changedFieldLabels.length ? changedFieldLabels.join(', ') + ' changed' : 'no field changes';
+    return (
+      '<li data-memory-review-history-entry="' +
+      escapeText(entry.id) +
+      '" data-memory-review-comparison="' +
+      escapeText(entry.id) +
+      '" data-review-comparison-active="false"><button type="button" data-control="select-review-comparison" data-review-comparison-id="' +
+      escapeText(entry.id) +
+      '"><span>' +
+      escapeText(entry.reviewedAt || new Date().toISOString()) +
+      '</span><strong>' +
+      escapeText(deltaLabel) +
+      '</strong></button><div class="memory-review-field-list">' +
+      changedFieldLabels.map((field) => '<span data-review-changed-field="' + escapeText(field) + '">' + escapeText(field) + '</span>').join('') +
+      '</div><p data-review-before-summary="' +
+      escapeText(entry.beforeSummary || '') +
+      '">' +
+      escapeText(entry.beforeSummary || '') +
+      '</p><p data-review-after-summary="' +
+      escapeText(entry.afterSummary || '') +
+      '">' +
+      escapeText(entry.afterSummary || '') +
+      '</p><code>' +
+      escapeText(entry.sourceRef || '') +
+      '</code></li>'
+    );
+  };
+
+  const appendMemoryReviewComparison = (entry) => {
+    if (!memoryReviewPanel || !entry?.id) return;
+    let list = memoryReviewPanel.querySelector('.memory-review-history-list');
+    const emptyState = memoryReviewPanel.querySelector('[data-memory-review-history-state="empty"]');
+    if (!list) {
+      list = document.createElement('ol');
+      list.className = 'memory-review-history-list';
+      list.setAttribute('data-memory-review-history-state', 'ready');
+      emptyState?.replaceWith(list);
+    }
+    list.insertAdjacentHTML('afterbegin', renderMemoryReviewComparison(entry));
+    const currentCount = Number(memoryReviewPanel.getAttribute('data-memory-review-history-count') || '0') + 1;
+    memoryReviewPanel.setAttribute('data-memory-review-history-count', String(currentCount));
+    memoryReviewPanel.setAttribute('data-memory-review-history-state', 'ready');
+    wireReviewComparisonButtons(list);
+    selectReviewComparison(entry.id);
   };
 
   const markCytoscapeSelection = (citation) => {
@@ -2483,6 +2633,7 @@ const GRAPH_CONTROL_SCRIPT = `
         const revisionId = body?.reviewLedgerEntry?.id || '';
         memoryReviewPanel.setAttribute('data-memory-review-ledger', revisionId ? 'recorded' : 'pending');
         memoryReviewPanel.setAttribute('data-memory-review-revision', revisionId);
+        appendMemoryReviewComparison(body?.reviewLedgerEntry);
         await rehydrateAppShellAfterImport();
       } catch (error) {
         memoryReviewPanel.setAttribute('data-memory-review-state', 'error');
@@ -2524,6 +2675,7 @@ const GRAPH_CONTROL_SCRIPT = `
     });
   });
   if (memoryNodes[2]) selectMemory(memoryNodes[2]);
+  wireReviewComparisonButtons();
   initializeCytoscapeGraph();
 
   if (toggleLabels) {

@@ -375,6 +375,19 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(documentHtml).toContain('Timeline stretches the graph from old diary traces to recent imports.');
   });
 
+  test('wires memory review comparison cards for immediate post-edit inspection', () => {
+    const documentHtml = renderAppShellDocument();
+
+    expect(documentHtml).toContain('data-review-comparison-active=');
+    expect(documentHtml).toContain('data-control="select-review-comparison"');
+    expect(documentHtml).toContain('const renderMemoryReviewComparison =');
+    expect(documentHtml).toContain('const selectReviewComparison =');
+    expect(documentHtml).toContain("memoryReviewPanel.setAttribute('data-active-review-comparison'");
+    expect(documentHtml).toContain("memoryReviewPanel.setAttribute('data-memory-review-history-count'");
+    expect(documentHtml).toContain("memoryReviewPanel.setAttribute('data-memory-review-history-state', 'ready')");
+    expect(documentHtml).toContain("setInteractionState('memory-review-comparison-selected')");
+  });
+
   test('renders Ask My Past Self as a cited path over the graph with evidence drawer trace', () => {
     const shell = buildInitialAppShellEvidenceLayout();
     const html = renderAppShellHtml();
