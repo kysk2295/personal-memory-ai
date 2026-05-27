@@ -403,6 +403,21 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(documentHtml).toContain("setInteractionState('memory-provenance-downloaded')");
   });
 
+  test('separates the source review drawer into review history and provenance modes', () => {
+    const documentHtml = renderAppShellDocument();
+
+    expect(documentHtml).toContain('data-memory-review-mode="review"');
+    expect(documentHtml).toContain('data-control="memory-review-mode"');
+    expect(documentHtml).toContain('data-review-mode-target="history"');
+    expect(documentHtml).toContain('data-review-mode-target="provenance"');
+    expect(documentHtml).toContain('data-memory-review-section="review"');
+    expect(documentHtml).toContain('data-memory-review-section="history"');
+    expect(documentHtml).toContain('data-memory-review-section="provenance"');
+    expect(documentHtml).toContain('const setMemoryReviewMode =');
+    expect(documentHtml).toContain("memoryReviewPanel.setAttribute('data-memory-review-mode', mode)");
+    expect(documentHtml).toContain("setInteractionState('memory-review-mode-' + mode)");
+  });
+
   test('renders Ask My Past Self as a cited path over the graph with evidence drawer trace', () => {
     const shell = buildInitialAppShellEvidenceLayout();
     const html = renderAppShellHtml();

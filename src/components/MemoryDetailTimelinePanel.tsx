@@ -82,7 +82,7 @@ export function renderMemoryDetailTimelinePanel(layout: InitialAppShellEvidenceL
     </div>
     ${
       selectedEntry
-        ? `<article class="memory-review-panel" aria-label="Source-backed memory review" data-memory-review-panel="source-edit" data-memory-detail-endpoint="/api/memory/detail" data-memory-update-endpoint="/api/memory/update" data-memory-review-history-endpoint="/api/memory/review-history" data-memory-provenance-export-endpoint="/api/memory/provenance-export" data-memory-provenance-export-filename="${escapeHtml(
+        ? `<article class="memory-review-panel" aria-label="Source-backed memory review" data-memory-review-panel="source-edit" data-memory-review-mode="review" data-memory-detail-endpoint="/api/memory/detail" data-memory-update-endpoint="/api/memory/update" data-memory-review-history-endpoint="/api/memory/review-history" data-memory-provenance-export-endpoint="/api/memory/provenance-export" data-memory-provenance-export-filename="${escapeHtml(
             buildMemoryProvenanceExportFilename(selectedEntry.memoryId, '2026-05-27T00:00:00.000Z'),
           )}" data-memory-provenance-download-endpoint="/api/memory/provenance-download" data-memory-provenance-export-state="idle" data-memory-provenance-download-state="idle" data-memory-provenance-download-filename="${escapeHtml(
             buildMemoryProvenanceExportFilename(selectedEntry.memoryId, '2026-05-27T00:00:00.000Z'),
@@ -95,6 +95,12 @@ export function renderMemoryDetailTimelinePanel(layout: InitialAppShellEvidenceL
         <span>${escapeHtml(selectedEntry.sourceLabel)}</span>
         <span>${escapeHtml(selectedEntry.privacyScope)}</span>
       </div>
+      <div class="entrypoint-grid" aria-label="Source review drawer modes">
+        <button type="button" data-control="memory-review-mode" data-review-mode-target="review" aria-pressed="true">Review</button>
+        <button type="button" data-control="memory-review-mode" data-review-mode-target="history" aria-pressed="false">History</button>
+        <button type="button" data-control="memory-review-mode" data-review-mode-target="provenance" aria-pressed="false">Provenance</button>
+      </div>
+      <section data-memory-review-section="review">
       <label for="memory-edit-summary">Summary</label>
       <textarea id="memory-edit-summary" data-control="memory-edit-summary">${escapeHtml(selectedEntry.title)}</textarea>
       <label for="memory-edit-raw-text">Source excerpt</label>
@@ -105,11 +111,16 @@ export function renderMemoryDetailTimelinePanel(layout: InitialAppShellEvidenceL
         <span data-memory-review-related-count>${selectedEntry.relatedMemoryIds.length} related</span>
       </div>
       <button type="button" data-control="save-memory-edit">Save memory edit</button>
+      </section>
+      <section data-memory-review-section="provenance">
       <button type="button" data-control="export-memory-provenance">Export provenance</button>
       <button type="button" data-control="download-memory-provenance" data-download-endpoint="/api/memory/provenance-download" data-download-filename="${escapeHtml(
         buildMemoryProvenanceExportFilename(selectedEntry.memoryId, '2026-05-27T00:00:00.000Z'),
       )}">Download provenance JSON</button>
+      </section>
+      <section data-memory-review-section="history">
       ${renderReviewHistory(selectedEntry)}
+      </section>
     </article>`
         : ''
     }

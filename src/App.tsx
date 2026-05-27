@@ -806,6 +806,32 @@ const APP_SHELL_STYLES = `
     border-color: rgba(143, 128, 255, 0.34);
     background: rgba(143, 128, 255, 0.08);
   }
+  .memory-review-panel [data-control="memory-review-mode"][aria-pressed="true"] {
+    border-color: rgba(143, 128, 255, 0.34);
+    background: rgba(143, 128, 255, 0.12);
+    color: #6255d7;
+    font-weight: 800;
+  }
+  .memory-review-panel [data-memory-review-section] {
+    display: none;
+    gap: 8px;
+  }
+  .memory-review-panel[data-memory-review-mode="review"] [data-memory-review-section="review"],
+  .memory-review-panel[data-memory-review-mode="history"] [data-memory-review-section="history"],
+  .memory-review-panel[data-memory-review-mode="provenance"] [data-memory-review-section="provenance"] {
+    display: grid;
+  }
+  .memory-review-panel [data-control="save-memory-edit"],
+  .memory-review-panel [data-control="export-memory-provenance"],
+  .memory-review-panel [data-control="download-memory-provenance"] {
+    min-height: 34px;
+    border: 1px solid rgba(143, 128, 255, 0.24);
+    border-radius: 8px;
+    background: rgba(143, 128, 255, 0.1);
+    color: #6255d7;
+    font-size: 12px;
+    font-weight: 760;
+  }
   .memory-review-history-list {
     display: grid;
     gap: 8px;
@@ -1322,6 +1348,18 @@ const APP_SHELL_STYLES = `
     border-color: rgba(214, 31, 60, 0.44);
     background: rgba(214, 31, 60, 0.1);
   }
+  .memory-review-panel [data-control="memory-review-mode"][aria-pressed="true"] {
+    border-color: rgba(214, 31, 60, 0.44);
+    background: rgba(214, 31, 60, 0.12);
+    color: #ececef;
+  }
+  .memory-review-panel [data-control="save-memory-edit"],
+  .memory-review-panel [data-control="export-memory-provenance"],
+  .memory-review-panel [data-control="download-memory-provenance"] {
+    border-color: rgba(214, 31, 60, 0.34);
+    background: rgba(214, 31, 60, 0.1);
+    color: #ececef;
+  }
   .memory-review-history-list button span {
     color: #b0b0b6;
   }
@@ -1749,6 +1787,7 @@ const GRAPH_CONTROL_SCRIPT = `
   const memoryEditSummary = document.querySelector('[data-control="memory-edit-summary"]');
   const memoryEditRawText = document.querySelector('[data-control="memory-edit-raw-text"]');
   const saveMemoryEdit = document.querySelector('[data-control="save-memory-edit"]');
+  const memoryReviewModeButtons = Array.from(document.querySelectorAll('[data-control="memory-review-mode"]'));
   const exportMemoryProvenance = document.querySelector('[data-control="export-memory-provenance"]');
   const downloadMemoryProvenanceButton = document.querySelector('[data-control="download-memory-provenance"]');
   const cytoscapeMount = document.querySelector('[data-graph-library="cytoscape"]');
@@ -1761,6 +1800,16 @@ const GRAPH_CONTROL_SCRIPT = `
 
   const setInteractionState = (value) => {
     shell.setAttribute('data-interaction-state', value);
+  };
+
+  const setMemoryReviewMode = (mode) => {
+    if (!memoryReviewPanel || !mode) return;
+    memoryReviewPanel.setAttribute('data-memory-review-mode', mode);
+    memoryReviewModeButtons.forEach((button) => {
+      const active = button.getAttribute('data-review-mode-target') === mode;
+      button.setAttribute('aria-pressed', String(active));
+    });
+    setInteractionState('memory-review-mode-' + mode);
   };
 
   const escapeText = (value) =>
@@ -1799,6 +1848,7 @@ const GRAPH_CONTROL_SCRIPT = `
     if (!memoryReviewPanel || !citation) return;
     memoryReviewPanel.setAttribute('data-memory-review-selected-id', citation);
     memoryReviewPanel.setAttribute('data-memory-review-state', 'ready');
+    setMemoryReviewMode('review');
     if (memoryEditSummary) memoryEditSummary.value = title || '';
     if (memoryEditRawText) memoryEditRawText.value = body || '';
     const sourceLabel = memoryReviewPanel.querySelector('.panel-topline span');
@@ -1883,6 +1933,7 @@ const GRAPH_CONTROL_SCRIPT = `
     memoryReviewPanel.setAttribute('data-memory-review-history-state', 'ready');
     wireReviewComparisonButtons(list);
     selectReviewComparison(entry.id);
+    setMemoryReviewMode('history');
   };
 
   const currentProvenancePayload = () => ({
@@ -2684,6 +2735,10 @@ const GRAPH_CONTROL_SCRIPT = `
       shell.setAttribute('data-import-upload-error', String(error?.message || error));
       setInteractionState('import-undo-error');
     }
+  });
+
+  memoryReviewModeButtons.forEach((button) => {
+    button.addEventListener('click', () => setMemoryReviewMode(button.getAttribute('data-review-mode-target') || 'review'));
   });
 
   saveMemoryEdit?.addEventListener('click', async () => {

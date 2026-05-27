@@ -280,6 +280,10 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
     (await page.locator('[data-memory-review-comparison][data-review-comparison-active="true"]').count()) >= 1,
     'Memory edit should append and activate a review comparison card',
   );
+  assert(
+    (await attribute(page, '[data-memory-review-panel="source-edit"]', 'data-memory-review-mode')) === 'history',
+    'Memory edit should reveal the review history mode after saving',
+  );
   await page.locator('[data-control="select-review-comparison"]').first().click();
   assert(
     (await attribute(page, '[data-memory-review-panel="source-edit"]', 'data-active-review-comparison')) === reviewRevisionId,
@@ -288,6 +292,16 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   assert(
     (await attribute(page, '.second-brain-shell', 'data-interaction-state')) === 'memory-review-comparison-selected',
     'Review comparison click should expose comparison selection interaction state',
+  );
+
+  await page.locator('[data-control="memory-review-mode"][data-review-mode-target="provenance"]').click();
+  assert(
+    (await attribute(page, '[data-memory-review-panel="source-edit"]', 'data-memory-review-mode')) === 'provenance',
+    'Source review drawer should switch into provenance mode',
+  );
+  assert(
+    (await attribute(page, '.second-brain-shell', 'data-interaction-state')) === 'memory-review-mode-provenance',
+    'Source review drawer should expose provenance mode interaction state',
   );
 
   await page.locator('[data-control="export-memory-provenance"]').click();
@@ -360,6 +374,7 @@ try {
           'memory detail timeline selection',
           'memory review edit ledger',
           'memory review comparison selection',
+          'memory review drawer mode switch',
           'memory provenance export action',
           'memory provenance download action',
         ],

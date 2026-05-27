@@ -2,7 +2,7 @@
 
 Status: active local execution plan  
 Owner: Ko Yunseo  
-Updated: 2026-05-28, provenance controls client workflow pass
+Updated: 2026-05-28, source review drawer mode polish
 Supersedes for local Codex work: `docs/product/product-master-plan-2026-05-26.md`
 
 ## 1. Product Definition
@@ -117,7 +117,7 @@ Status values:
 | Knowledge Layer | Raw archive and checkpoint loop | `done-foundation` | Immutable raw diary/import archive entries, canonical thoughts, and an atomize/dedup/apply checkpoint exist as a deterministic local ledger. |
 | Web | Graph-first second brain | `prototype-ui` | `MemoryRecord` data builds a Cytoscape graph with fixture memory nodes plus saved artifact memories; owner-scoped app shell rehydration can rebuild Cytoscape elements after imports persist. |
 | Web | Evidence drawer | `prototype-ui` | Source/date/raw excerpt/why-connected visible. |
-| Web | Individual memory detail page | `prototype-ui` | Selected-memory inspector and timeline detail surface expose source/date/raw excerpts, owner-scoped review/edit controls, persisted edit review history, active before/after comparison cards, and provenance export/download controls wired through the private API. |
+| Web | Individual memory detail page | `prototype-ui` | Selected-memory inspector and timeline detail surface expose source/date/raw excerpts, owner-scoped review/edit controls, persisted edit review history, active before/after comparison cards, and provenance export/download controls wired through the private API. The source review drawer is split into Review/History/Provenance modes so editing, audit comparison, and export are separate focused flows. |
 | Web | Search/timeline views | `prototype-ui` | Sidebar search filters nodes and timeline entries show dated private memories, including saved Ask/Decision/Weekly artifacts, with active selection sync. |
 | Web | Memory search/detail inspector | `prototype-ui` | Search input dims unmatched nodes, result click selects inspector detail and citation chip. |
 | Ask | Ask My Past Self deterministic contract | `done-foundation` | Citation/insufficient evidence tested. |
@@ -216,10 +216,11 @@ No remote push, main merge, production deploy, or secret access is allowed witho
 - L47: review history comparison UX.
 - L48: review comparison interaction polish.
 - L49: provenance controls client workflow.
+- L50: source review drawer mode polish.
 
 ## 6. Active Next Loops
 
-Next local loop: run staging PostgreSQL/pgvector/auth smoke harness when deployment secrets are available, or continue the local private-vault polish path by making the source review drawer clearer and less dense for real use. Live LLM keys, hosted identity configuration, and deployment wiring stay gated until secrets/deploy target are explicitly available.
+Next local loop: run staging PostgreSQL/pgvector/auth smoke harness when deployment secrets are available, or continue the local private-vault polish path by tightening real-data import, memory detail, and graph interaction surfaces. Live LLM keys, hosted identity configuration, and deployment wiring stay gated until secrets/deploy target are explicitly available.
 
 ## 7. Completed Loop Details
 
@@ -991,6 +992,26 @@ Implemented:
 - `src/components/MemoryDetailTimelinePanel.tsx`
 - `docs/superpowers/plans/2026-05-28-review-history-comparison-ux.md`
 
+### L50 — Source Review Drawer Mode Polish
+
+Goal: split the dense source review drawer into focused Review, History, and Provenance modes.
+
+Acceptance:
+
+- drawer defaults to the editable Review mode
+- History and Provenance controls are exposed as first-class mode buttons
+- only the active mode section is visible
+- saved memory edits reveal the History mode with the new comparison card
+- Playwright verifies mode switching before provenance export/download
+
+Implemented:
+
+- `src/components/MemoryDetailTimelinePanel.tsx`
+- `src/App.tsx`
+- `src/lib/appShellEvidenceLayout.test.ts`
+- `scripts/verify-playwright-evidence.ts`
+- `docs/superpowers/plans/2026-05-28-source-review-drawer-mode-polish.md`
+
 ## 8. MVP Time Estimate
 
 Assuming focused local development without major dependency or deployment blockers:
@@ -1005,7 +1026,7 @@ Assuming focused local development without major dependency or deployment blocke
 Critical path for the next "나를 아는 AI" jump:
 
 1. Run staging PostgreSQL/pgvector/auth smoke against the already wired Postgres/auth runtimes when deployment secrets are available.
-2. Add source review/edit detail surfaces for individual memories.
+2. Tighten real-data import, memory detail, and graph interaction polish until the local prototype feels coherent with actual memories.
 3. Connect hosted identity/OAuth on the deployment target.
 
 ## 9. Product Quality Rules
