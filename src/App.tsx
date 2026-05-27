@@ -3,6 +3,7 @@ import { renderDecisionReplayPanel } from './components/DecisionReplayPanel';
 import { renderEvidenceDrawer } from './components/EvidenceDrawer';
 import { renderMemoryGraph } from './components/MemoryGraph';
 import { renderPatternPanel } from './components/PatternPanel';
+import { renderPrivacyControlPanel } from './components/PrivacyControlPanel';
 import { renderWeeklyReportPanel } from './components/WeeklyReportPanel';
 import { buildInitialAppShellEvidenceLayout } from './lib/appShellEvidenceLayout';
 
@@ -1025,6 +1026,46 @@ const APP_SHELL_STYLES = `
     background: rgba(255, 255, 255, 0.055);
     color: #a8a8ae;
   }
+  .privacy-control-flow {
+    display: grid;
+    gap: 12px;
+    padding: 14px;
+  }
+  .privacy-control-card {
+    display: grid;
+    gap: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding-top: 10px;
+  }
+  .privacy-control-card h3 {
+    margin: 0;
+    color: #ececef;
+    font-size: 14px;
+    line-height: 1.2;
+  }
+  .privacy-control-card p {
+    margin: 0;
+    color: #b0b0b6;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .privacy-control-card code {
+    color: #ff8797;
+    font-size: 10px;
+    overflow-wrap: anywhere;
+  }
+  .privacy-control-card input {
+    width: 100%;
+    border: 1px solid rgba(214, 31, 60, 0.22);
+    border-radius: 8px;
+    background: rgba(214, 31, 60, 0.08);
+    color: #f0f0f2;
+    padding: 8px 9px;
+    font-size: 12px;
+  }
+  .privacy-control-card.danger-zone {
+    border-top-color: rgba(214, 31, 60, 0.28);
+  }
   @media (max-width: 980px) {
     .second-brain-shell { grid-template-columns: 1fr; overflow: auto; }
     .brain-sidebar {
@@ -1241,6 +1282,7 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
 
         <aside class="product-rail" aria-label="Cited memory product rail" data-rail-mode="collapsed-evidence-drawer">
           ${renderAskMyPastSelfPanel(layout)}
+          ${renderPrivacyControlPanel(layout)}
           ${renderWeeklyReportPanel(layout)}
           ${renderEvidenceDrawer(layout)}
           ${renderDecisionReplayPanel(layout)}

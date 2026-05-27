@@ -7,6 +7,7 @@ import { personalMemoryRecords } from './__fixtures__/personalMemoryRecords';
 import type { MemoryRecord } from './memoryRecord';
 import type { MemoryStore } from './memoryStore';
 import { detectRepeatedPatterns, type PatternDetectionStatus } from './patternDetector';
+import { buildPrivacyControlState, type PrivacyControlState } from './privacyControls';
 import { generateWeeklyReport, type WeeklyReport } from './weeklyReport';
 
 export type ShellLinkKind = 'emotion' | 'project' | 'decision' | 'outcome' | 'source';
@@ -51,6 +52,7 @@ export interface InitialAppShellEvidenceLayout {
   weeklyReport: WeeklyReport;
   importPreview: ReturnType<typeof buildImportPreview>;
   compiledWiki: CompiledWikiGraph;
+  privacyControls: PrivacyControlState;
   evidenceDrawer: {
     status: PatternDetectionStatus;
     items: EvidenceDrawerItem[];
@@ -211,6 +213,12 @@ export function buildAppShellEvidenceLayoutFromRecords(records: readonly MemoryR
       },
     ],
   });
+  const privacyControls = buildPrivacyControlState({
+    userId: 'local-user',
+    records,
+    selectedMemoryIds: ['mem_freeze_vs_feature_addition'],
+    generatedAt: '2026-05-27T14:00:00.000Z',
+  });
 
   return {
     northStar: '나보다 나를 더 잘 아는 개인 기억 AI.',
@@ -279,6 +287,12 @@ export function buildAppShellEvidenceLayoutFromRecords(records: readonly MemoryR
         status: graphEvidence.status,
         description: 'Highlighted graph nodes and actions expose source/date/citation traces.',
       },
+      {
+        id: 'privacy-export-delete',
+        label: 'Privacy export/delete controls',
+        status: 'partial',
+        description: 'Local prototype exposes owner-only export, selected delete, and hard-delete confirmation before auth is connected.',
+      },
     ],
     ask,
     patterns,
@@ -286,6 +300,7 @@ export function buildAppShellEvidenceLayoutFromRecords(records: readonly MemoryR
     weeklyReport,
     importPreview,
     compiledWiki,
+    privacyControls,
     evidenceDrawer: {
       status: graphEvidence.status,
       items: graphEvidence.drawerItems,

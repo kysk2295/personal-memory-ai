@@ -64,6 +64,19 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(shell.compiledWiki.atomCount).toBe(5);
     expect(shell.compiledWiki.operationCounts).toEqual({ retain: 5, recall: 5, reflect: 3 });
     expect(shell.compiledWiki.freshnessCounts).toEqual({ strengthening: 2, stable: 2, stale: 1 });
+    expect(shell.privacyControls).toMatchObject({
+      privacyScope: 'private',
+      vaultAccess: 'owner-only',
+      storageMode: 'local-prototype',
+      selectedDeleteControl: {
+        endpoint: '/api/delete',
+        memoryIds: ['mem_freeze_vs_feature_addition'],
+      },
+      hardDeleteControl: {
+        confirmationPhrase: 'DELETE MY PRIVATE MEMORY VAULT',
+        disabled: true,
+      },
+    });
     expect(shell.compiledWiki.atoms).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ id: 'atom:mem_freeze_vs_feature_addition', origin: 'synthesized', freshness: 'stable' }),
@@ -259,6 +272,19 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('data-evidence-source=');
     expect(html).toContain('data-evidence-date=');
     expect(html).toContain('data-evidence-raw-excerpt=');
+
+    expect(html).toContain('aria-label="Private vault export and delete controls"');
+    expect(html).toContain('data-privacy-scope="private"');
+    expect(html).toContain('data-vault-access="owner-only"');
+    expect(html).toContain('data-storage-mode="local-prototype"');
+    expect(html).toContain('data-auth-status="not-connected-local-prototype"');
+    expect(html).toContain('data-transport-status="local-only-static-prototype"');
+    expect(html).toContain('data-export-endpoint="/api/export"');
+    expect(html).toContain('data-export-filename="personal-memory-export-local-user-2026-05-27.json"');
+    expect(html).toContain('data-delete-selected-ids="mem_freeze_vs_feature_addition"');
+    expect(html).toContain('data-hard-delete-confirmation="DELETE MY PRIVATE MEMORY VAULT"');
+    expect(html).toContain('GET /api/export');
+    expect(html).toContain('POST /api/delete');
   });
 
   test('keeps Decision Replay evidence in the hidden ledger while removing dashboard panels from the first impression', () => {

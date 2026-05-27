@@ -2,7 +2,7 @@
 
 Status: active local execution plan  
 Owner: Ko Yunseo  
-Updated: 2026-05-27, expanded roadmap pass
+Updated: 2026-05-27, graph/privacy UX pass
 Supersedes for local Codex work: `docs/product/product-master-plan-2026-05-26.md`
 
 ## 1. Product Definition
@@ -115,7 +115,7 @@ Status values:
 | Agent | Citation-constrained generation guard | `done-foundation` | LLM-shaped outputs are rejected unless grounded in supplied citation ids. |
 | Agent | User feedback learning loop | `planned` | Needed for agent personalization. |
 | Privacy | Private-by-default scope | `done-foundation` | Data model and UI labels exist. |
-| Privacy | Export/delete local UX | `planned` | Store functions exist; user-facing flow incomplete. |
+| Privacy | Export/delete local UX | `done-foundation` | Owner-only local export, selected delete, and hard-delete confirmation panel are rendered. |
 | Privacy | Auth/private vault | `planned` | Required before multi-user beta. |
 | Backend/API | Capture/import endpoints | `done-foundation` | User-scoped API dispatcher handles capture, import preview, and import apply. |
 | Backend/API | Ask/replay/report endpoints | `done-foundation` | User-scoped API dispatcher handles ask, replay, weekly report, export, and delete boundaries. |
@@ -152,21 +152,9 @@ No remote push, main merge, production deploy, or secret access is allowed witho
 - L9: semantic retrieval contract.
 - L10: citation-constrained generation guard.
 - L11: personal memory API boundary.
+- L12: privacy export/delete UX.
 
 ## 6. Active Next Loops
-
-### L12 — Privacy Export/Delete UX
-
-Goal: expose user-facing local export/delete behavior beyond labels.
-
-Acceptance:
-
-- export returns user memory payload
-- delete removes user data
-- UI shows private/local/skeleton status honestly
-- tests cover batch delete and hard-delete guardrails
-
-Estimated effort: 0.5-1 day.
 
 ### L13 — PWA/App Capture Surface
 
@@ -335,6 +323,25 @@ Implemented:
 
 - `src/lib/personalMemoryApi.ts`
 - `src/lib/personalMemoryApi.test.ts`
+
+### L12 — Privacy Export/Delete UX
+
+Goal: expose user-facing local export/delete behavior beyond labels.
+
+Acceptance:
+
+- export returns user memory payload
+- delete removes user data
+- UI shows private/local/auth status honestly
+- tests cover selected delete and hard-delete guardrails
+
+Implemented:
+
+- `src/lib/privacyControls.ts`
+- `src/lib/privacyControls.test.ts`
+- `src/components/PrivacyControlPanel.tsx`
+- `layout.privacyControls`
+- `artifacts/web-second-brain-product-surface/privacy-export-delete-surface.png`
 
 ## 8. MVP Time Estimate
 
