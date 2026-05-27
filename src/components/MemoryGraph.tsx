@@ -143,7 +143,13 @@ function renderMemoryEdges(layout: InitialAppShellEvidenceLayout): string {
     .filter((node) => node.id !== SELECTED_NODE_ID)
     .map((node) => {
       const position = nodePosition(node.id);
-      return `<line class="semantic-edge obsidian-spoke-edge" x1="${selectedPosition.x}" y1="${selectedPosition.y}" x2="${position.x}" y2="${position.y}" />`;
+      const fromCitationId = SELECTED_NODE_ID.replace(/^memory:/, '');
+      const toCitationId = node.id.replace(/^memory:/, '');
+      return `<line class="semantic-edge obsidian-spoke-edge" data-edge-from="${escapeHtml(fromCitationId)}" data-edge-to="${escapeHtml(
+        toCitationId,
+      )}" data-edge-active="true" x1="${
+        selectedPosition.x
+      }" y1="${selectedPosition.y}" x2="${position.x}" y2="${position.y}" />`;
     })
     .join('');
 }

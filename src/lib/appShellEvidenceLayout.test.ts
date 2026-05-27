@@ -94,6 +94,8 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('class="memory-node obsidian-memory-node');
     expect(html).toContain('class="memory-node obsidian-memory-node obsidian-selected-memory');
     expect(html).toContain('class="semantic-edge obsidian-spoke-edge"');
+    expect(html).toContain('data-edge-from="mem_freeze_vs_feature_addition"');
+    expect(html).toContain('data-edge-active="true"');
     expect(html).toContain('class="ghost-memory-edge obsidian-faded-edge"');
     expect(html).toContain('class="ghost-memory-node obsidian-background-node"');
     expect(html).toContain('class="node-title obsidian-node-label');
@@ -194,12 +196,13 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(documentHtml).toContain('<meta name="viewport" content="width=device-width, initial-scale=1" />');
     expect(documentHtml).toContain('.second-brain-shell');
     expect(documentHtml).toContain('Personal Memory AI Second Brain');
-    expect(documentHtml).toContain('data-graph-control-script="pmi014"');
+    expect(documentHtml).toContain('data-graph-control-script="pmi019"');
     expect(documentHtml).toContain('data-inspector-panel="pmi015"');
     expect(documentHtml).toContain('data-wiki-compiler="pmi017"');
     expect(documentHtml).toContain('canonical memory atoms');
     expect(documentHtml).toContain('const selectMemory = (node) =>');
     expect(documentHtml).toContain("inspector.setAttribute('data-selected-memory', citation)");
+    expect(documentHtml).toContain("edge.setAttribute('data-edge-active', String(active))");
     expect(documentHtml).toContain("shell.setAttribute('data-labels', hidden ? 'visible' : 'hidden')");
     expect(documentHtml).toContain("setSpacing('normal')");
   });

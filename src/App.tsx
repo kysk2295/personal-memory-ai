@@ -264,7 +264,9 @@ const APP_SHELL_STYLES = `
   .ghost-memory-label { fill: #c2c6d4; font-size: 8px; font-weight: 520; }
   .selected-node-halo { fill: none; stroke: rgba(143, 128, 255, 0.34); stroke-opacity: 1; stroke-width: 1.2; }
   .selected-node-handle { fill: #8f80ff; fill-opacity: 0.88; }
-  .obsidian-spoke-edge { stroke: rgba(143, 128, 255, 0.82); stroke-width: 1.45; }
+  .obsidian-spoke-edge { stroke: rgba(181, 186, 204, 0.42); stroke-width: 1.05; transition: stroke 120ms ease, stroke-width 120ms ease, stroke-opacity 120ms ease; }
+  .obsidian-spoke-edge[data-edge-active="true"] { stroke: rgba(143, 128, 255, 0.86); stroke-width: 1.55; stroke-opacity: 1; }
+  .obsidian-spoke-edge[data-edge-active="false"] { stroke: rgba(181, 186, 204, 0.22); stroke-width: 0.95; stroke-opacity: 0.75; }
   .obsidian-faded-edge { stroke: rgba(181, 186, 204, 0.36); stroke-width: 1; }
   .obsidian-background-node { fill: rgba(255,255,255,0.96); stroke: rgba(173, 178, 199, 0.72); stroke-width: 1.1; }
   .obsidian-node-core { fill: rgba(255,255,255,0.98); stroke: rgba(151, 157, 181, 0.88); stroke-width: 1.1; }
@@ -524,6 +526,7 @@ const GRAPH_CONTROL_SCRIPT = `
   const inspectorSource = inspector?.querySelector('[data-inspector-source]');
   const inspectorBody = inspector?.querySelector('[data-inspector-body]');
   const citationRefs = Array.from(document.querySelectorAll('[data-citation-ref]'));
+  const memoryEdges = Array.from(document.querySelectorAll('.obsidian-spoke-edge[data-edge-from][data-edge-to]'));
 
   const selectMemory = (node) => {
     if (!node || !inspectorHeadline || !inspectorBody || !inspectorSource) return;
@@ -536,6 +539,12 @@ const GRAPH_CONTROL_SCRIPT = `
     inspectorSource.textContent = source;
     inspectorBody.textContent = body;
     citationRefs.forEach((ref) => ref.setAttribute('data-active', String(ref.getAttribute('data-citation-ref') === citation)));
+    memoryEdges.forEach((edge) => {
+      const edgeFrom = edge.getAttribute('data-edge-from');
+      const edgeTo = edge.getAttribute('data-edge-to');
+      const active = edgeFrom === citation || edgeTo === citation;
+      edge.setAttribute('data-edge-active', String(active));
+    });
     inspector.setAttribute('data-selected-memory', citation);
   };
 
@@ -619,6 +628,6 @@ export function renderAppShellDocument(variant: RenderVariant = 'full'): string 
     <title>Personal Memory AI Second Brain</title>
     <style>${APP_SHELL_STYLES}</style>
   </head>
-  <body>${renderAppShellHtml(variant)}<script data-graph-control-script="pmi014">${GRAPH_CONTROL_SCRIPT}</script></body>
+  <body>${renderAppShellHtml(variant)}<script data-graph-control-script="pmi019">${GRAPH_CONTROL_SCRIPT}</script></body>
 </html>`;
 }
