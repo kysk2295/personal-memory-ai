@@ -180,6 +180,15 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('class="product-rail"');
     expect(html).toContain('Fast diary capture');
     expect(html).toContain('Import existing memories');
+    expect(html).toContain('aria-label="App capture prototype"');
+    expect(html).toContain('id="fast-diary-capture"');
+    expect(html).toContain('data-capture-memory-id="mem_captured_ship_note"');
+    expect(html).toContain('app-capture contract/prototype');
+    expect(html).toContain('aria-label="Import preview apply undo"');
+    expect(html).toContain('Apply import');
+    expect(html).toContain('Undo import');
+    expect(html).toContain('data-import-duplicate-state="duplicate"');
+    expect(html).toContain('data-import-duplicate-state="new"');
 
     expect(html).toContain('data-ask-answer-contract="citations-or-insufficient-evidence"');
     expect(html).toContain('data-insufficient-evidence-state="available"');

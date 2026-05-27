@@ -13,6 +13,8 @@ export function renderPatternPanel(layout: InitialAppShellEvidenceLayout): strin
   const pattern = layout.patterns.patterns[0];
   const importSummary = layout.importPreview.summary;
   const supportingMemoryIds = pattern.supportingMemoryIds.slice(0, 3);
+  const capturedRecord = layout.records.find((record) => record.id === 'mem_captured_ship_note') ?? layout.records[0];
+  const previewRecords = layout.importPreview.records.slice(0, 2);
 
   return `<section class="analysis-panels" aria-label="Graph-supporting panels">
     <div class="analysis-lead">
@@ -46,6 +48,36 @@ export function renderPatternPanel(layout: InitialAppShellEvidenceLayout): strin
         </div>
         <h3>Existing records become the first memory graph.</h3>
         <p>${importSummary.duplicates.duplicate} duplicate, ${importSummary.duplicates.new} new, ${importSummary.duplicates.possible} possible from the visible preview batch.</p>
+        <section class="capture-prototype" aria-label="App capture prototype" data-capture-memory-id="${escapeHtml(capturedRecord.id)}">
+          <label for="fast-diary-capture">Fast diary capture</label>
+          <textarea id="fast-diary-capture" readonly>${escapeHtml(capturedRecord.rawText)}</textarea>
+          <div class="capture-meta">
+            <span>source ${escapeHtml(capturedRecord.sourceType)}</span>
+            <span>${escapeHtml(capturedRecord.observedAt ?? capturedRecord.createdAt.slice(0, 10))}</span>
+            <span>${escapeHtml(capturedRecord.privacyScope)}</span>
+            <span>app-capture contract/prototype</span>
+          </div>
+          <p>이 영역은 네이티브 앱이 아니라, 앱에서 들어온 일기가 MemoryRecord로 바뀌는 로컬 프로토타입 계약을 보여준다.</p>
+        </section>
+        <section class="import-preview-actions" aria-label="Import preview apply undo">
+          <div class="import-preview-list">
+            ${previewRecords
+              .map(
+                (record) => `<article data-import-preview-id="${escapeHtml(record.id)}" data-import-duplicate-state="${escapeHtml(
+                  record.duplicate.state,
+                )}">
+                  <strong>${escapeHtml(record.sourceType)} ${escapeHtml(record.observedDate)}</strong>
+                  <p>${escapeHtml(record.memoryRecord?.summary ?? 'Blocked import candidate')}</p>
+                  <span>${escapeHtml(record.duplicate.state)}</span>
+                </article>`,
+              )
+              .join('')}
+          </div>
+          <div class="entrypoint-grid" aria-label="Import actions">
+            <button type="button">Apply import</button>
+            <button type="button">Undo import</button>
+          </div>
+        </section>
         <div class="entrypoint-grid" aria-label="Diary and import entry points">
           <a href="#ask-my-past-self-question">Fast diary capture</a>
           <a href="#evidence-mem_launch_may_anxiety_scope_delay">Import existing memories</a>
