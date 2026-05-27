@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "build": "tsx scripts/render-static.ts",
-    "start": "node server.mjs",
+    "start": "tsx server.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },

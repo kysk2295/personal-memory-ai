@@ -2,7 +2,7 @@
 
 Status: active local execution plan  
 Owner: Ko Yunseo  
-Updated: 2026-05-27, private vault boundary pass
+Updated: 2026-05-27, local HTTP API transport pass
 Supersedes for local Codex work: `docs/product/product-master-plan-2026-05-26.md`
 
 ## 1. Product Definition
@@ -120,6 +120,7 @@ Status values:
 | Privacy | Production auth provider | `planned` | Required before multi-user beta. |
 | Backend/API | Capture/import endpoints | `done-foundation` | User-scoped API dispatcher handles capture, import preview, and import apply. |
 | Backend/API | Ask/replay/report endpoints | `done-foundation` | User-scoped API dispatcher handles ask, replay, weekly report, export, and delete boundaries. |
+| Backend/API | Local HTTP transport | `done-foundation` | `npm start` serves static UI and private-vault `/api/*` JSON routes locally. |
 | Backend/API | Staging readiness | `done-foundation` | Redacted env presence and pgvector staging smoke plan exist without secret leakage. |
 | Release | Visual evidence gates | `done-foundation` | Local screenshots exist; staging review still planned. |
 | Release | PR/release checklist | `planned` | Needed before remote/main workflow. |
@@ -157,6 +158,7 @@ No remote push, main merge, production deploy, or secret access is allowed witho
 - L13: PWA/app capture surface.
 - L14: staging backend readiness.
 - L15: auth/private vault boundary.
+- L16: local HTTP API transport.
 
 ## 6. Active Next Loops
 
@@ -365,6 +367,24 @@ Implemented:
 - `src/lib/privateVault.test.ts`
 - `handlePrivateVaultMemoryApiRequest`
 - private vault API test proving caller-supplied user ids do not override session owner
+
+### L16 — Local HTTP API Transport
+
+Goal: expose the private-vault API boundary through the local server.
+
+Acceptance:
+
+- `POST /api/capture` accepts JSON and creates private local-user memory
+- `GET /api/export` returns only the session owner's records
+- invalid JSON returns a safe JSON error
+- `npm start` serves both static pages and API routes
+
+Implemented:
+
+- `src/lib/localHttpTransport.ts`
+- `src/lib/localHttpTransport.test.ts`
+- `server.ts`
+- `npm start` uses `tsx server.ts`
 
 ## 8. MVP Time Estimate
 
