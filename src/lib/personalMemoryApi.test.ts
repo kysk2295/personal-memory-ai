@@ -379,12 +379,30 @@ describe('personal memory API boundary', () => {
     });
 
     expect(response.statusCode).toBe(200);
-    const body = response.body as { appShell: { records: MemoryRecord[]; primaryNodes: Array<{ recordId: string }> } };
+    const body = response.body as {
+      appShell: { records: MemoryRecord[]; primaryNodes: Array<{ recordId: string }> };
+      memoryGraph: { library: 'cytoscape'; stats: { memoryNodeCount: number }; elements: unknown[] };
+    };
     expect(body.appShell.records.map((record) => record.id)).toEqual(
       expect.arrayContaining(['mem_launch_may_anxiety_scope_delay']),
     );
     expect(body.appShell.primaryNodes.map((node) => node.recordId)).toEqual(
       expect.arrayContaining(['mem_launch_may_anxiety_scope_delay']),
+    );
+    expect(body.memoryGraph).toEqual(
+      expect.objectContaining({
+        library: 'cytoscape',
+        stats: expect.objectContaining({
+          memoryNodeCount: body.appShell.records.length,
+        }),
+        elements: expect.arrayContaining([
+          expect.objectContaining({
+            data: expect.objectContaining({
+              id: 'memory:mem_launch_may_anxiety_scope_delay',
+            }),
+          }),
+        ]),
+      }),
     );
     expect(JSON.stringify(response.body)).not.toContain('mem_other_user_app_shell_guard');
   });

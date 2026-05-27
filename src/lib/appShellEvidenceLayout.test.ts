@@ -467,5 +467,8 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(documentHtml).toContain("fetch('/api/app-shell'");
     expect(documentHtml).toContain("shell.setAttribute('data-graph-rehydrate-state', 'ready')");
     expect(documentHtml).toContain("shell.setAttribute('data-rehydrated-memory-node-count'");
+    expect(documentHtml).toContain('const rebuildCytoscapeGraphFromModel =');
+    expect(documentHtml).toContain('cytoscapeGraph.elements().remove()');
+    expect(documentHtml).toContain("shell.setAttribute('data-graph-rebuild-state', 'rebuilt')");
   });
 });

@@ -6,6 +6,7 @@ import {
   applyImportPreviewToMemoryStore,
   ingestFastDiaryCaptureToMemoryStore,
 } from './memoryIngestion';
+import { buildMemoryGraphModel } from './memoryGraphModel';
 import type { MemoryStore } from './memoryStore';
 import { answerPersonalMemoryQuestion } from './personalMemoryAgent';
 import { resolvePrivateVaultAccess, type PrivateVaultSession } from './privateVault';
@@ -134,10 +135,12 @@ export async function handlePersonalMemoryApiRequest(
 
   if (request.path === '/api/app-shell') {
     if (request.method !== 'GET') return methodNotAllowed();
+    const appShell = await buildAppShellEvidenceLayoutFromMemoryStore({ store, userId });
     return {
       statusCode: 200,
       body: {
-        appShell: await buildAppShellEvidenceLayoutFromMemoryStore({ store, userId }),
+        appShell,
+        memoryGraph: buildMemoryGraphModel(appShell.records),
       },
     };
   }

@@ -2200,13 +2200,44 @@ const GRAPH_CONTROL_SCRIPT = `
       if (!response.ok) throw new Error('app shell rehydrate failed with ' + response.status);
       const body = await response.json();
       const appShell = body?.appShell || {};
+      const memoryGraph = body?.memoryGraph;
       shell.setAttribute('data-graph-rehydrate-state', 'ready');
       shell.setAttribute('data-rehydrated-memory-node-count', String(appShell.primaryNodes?.length || 0));
       shell.setAttribute('data-rehydrated-graph-node-count', String(appShell.compiledWiki?.nodeCount || 0));
       shell.setAttribute('data-rehydrated-timeline-entry-count', String(appShell.memoryTimeline?.entries?.length || 0));
+      rebuildCytoscapeGraphFromModel(memoryGraph);
     } catch (error) {
       shell.setAttribute('data-graph-rehydrate-state', 'error');
       shell.setAttribute('data-graph-rehydrate-error', String(error?.message || error));
+    }
+  };
+
+  const rebuildCytoscapeGraphFromModel = (memoryGraph) => {
+    if (!cytoscapeGraph || !memoryGraph?.elements) return;
+    cytoscapeGraph.elements().remove();
+    cytoscapeGraph.add(memoryGraph.elements);
+    cytoscapeGraph.layout({
+      name: 'cose',
+      animate: false,
+      randomize: false,
+      padding: 54,
+      nodeRepulsion: 9500,
+      idealEdgeLength: 92,
+      edgeElasticity: 80,
+      numIter: 500,
+    }).run();
+    window.__personalMemoryGraph = {
+      library: 'cytoscape',
+      stats: memoryGraph.stats,
+      cy: cytoscapeGraph,
+    };
+    shell.setAttribute('data-graph-rebuild-state', 'rebuilt');
+    shell.setAttribute('data-memory-node-count', String(memoryGraph.stats?.memoryNodeCount || 0));
+    shell.setAttribute('data-graph-node-count', String(memoryGraph.stats?.graphNodeCount || 0));
+    shell.setAttribute('data-graph-edge-count', String(memoryGraph.stats?.edgeCount || 0));
+    if (cytoscapeMount) {
+      cytoscapeMount.setAttribute('data-cytoscape-node-count', String(memoryGraph.stats?.graphNodeCount || 0));
+      cytoscapeMount.setAttribute('data-cytoscape-edge-count', String(memoryGraph.stats?.edgeCount || 0));
     }
   };
 

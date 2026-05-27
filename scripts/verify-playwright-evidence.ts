@@ -156,8 +156,14 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   assert((await page.locator('[data-imported-memory="true"]').count()) === 1, 'Applied import should append an imported timeline row');
   assert((await attribute(page, '.second-brain-shell', 'data-graph-import-pending')) === 'true', 'Shell should mark graph import refresh pending after apply');
   assert((await attribute(page, '.second-brain-shell', 'data-graph-rehydrate-state')) === 'ready', 'Shell should rehydrate app shell data after import apply');
+  assert((await attribute(page, '.second-brain-shell', 'data-graph-rebuild-state')) === 'rebuilt', 'Shell should rebuild Cytoscape after import rehydration');
   const rehydratedMemoryNodeCount = Number(await attribute(page, '.second-brain-shell', 'data-rehydrated-memory-node-count'));
   assert(rehydratedMemoryNodeCount > 8, 'Rehydrated app shell should include newly imported private memories');
+  const rebuiltGraphStats = await page.evaluate(() => {
+    const graph = (window as any).__personalMemoryGraph;
+    return graph?.stats;
+  });
+  assert(rebuiltGraphStats?.memoryNodeCount > 8, 'Rebuilt Cytoscape graph should include newly imported private memories');
 
   await page.locator('[data-control="spacing"][data-spacing="wide"]').click();
   assert((await attribute(page, '.second-brain-shell', 'data-spacing')) === 'wide', 'Spacing control should switch graph spacing to wide');
@@ -168,9 +174,13 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
     const graph = (window as any).__personalMemoryGraph;
     return graph?.cy?.nodes('.labels-hidden').length ?? 0;
   });
-  assert(cytoscapeHiddenLabelCount === 44, 'Label toggle should hide Cytoscape node labels');
+  const currentCytoscapeNodeCount = await page.evaluate(() => {
+    const graph = (window as any).__personalMemoryGraph;
+    return graph?.cy?.nodes().length ?? 0;
+  });
+  assert(cytoscapeHiddenLabelCount === currentCytoscapeNodeCount, 'Label toggle should hide Cytoscape node labels');
 
-  const firstCitation = await clickableCytoscapeMemoryCitation(page);
+  const firstCitation = 'mem_launch_may_anxiety_scope_delay';
   await clickCytoscapeNode(page, `memory:${firstCitation}`);
   await page.waitForFunction(
     (citation) => document.querySelector('[data-inspector-panel="pmi015"]')?.getAttribute('data-selected-memory') === citation,
@@ -210,7 +220,11 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
     const graph = (window as any).__personalMemoryGraph;
     return graph?.cy?.nodes('.search-dimmed').length ?? 0;
   });
-  assert(cytoscapeDimmedCount === 7, 'Search should dim unmatched Cytoscape memory nodes');
+  const cytoscapeMemoryNodeCount = await page.evaluate(() => {
+    const graph = (window as any).__personalMemoryGraph;
+    return graph?.cy?.nodes('[kind = "memory"]').length ?? 0;
+  });
+  assert(cytoscapeDimmedCount === cytoscapeMemoryNodeCount - 1, 'Search should dim unmatched Cytoscape memory nodes');
 
   await page.locator('[data-search-citation="mem_unrelated_calm_import"]').click();
   assert(
@@ -270,6 +284,7 @@ try {
           'applied import graph feedback',
           'applied import timeline append',
           'app shell rehydration after import',
+          'cytoscape graph rebuild after import',
           'spacing click',
           'label toggle',
           'filter toggle',

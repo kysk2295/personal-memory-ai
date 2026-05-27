@@ -2,7 +2,7 @@
 
 Status: active local execution plan  
 Owner: Ko Yunseo  
-Updated: 2026-05-28, app shell rehydration pass
+Updated: 2026-05-28, Cytoscape graph rebuild pass
 Supersedes for local Codex work: `docs/product/product-master-plan-2026-05-26.md`
 
 ## 1. Product Definition
@@ -115,7 +115,7 @@ Status values:
 | Knowledge Layer | LLM Wiki compiler | `done-foundation` | Local compiler turns `MemoryRecord`s into canonical memory atoms plus source/concept/decision/pattern nodes with citations, freshness, and retain/recall/reflect markers. |
 | Knowledge Layer | Typed edge ledger | `done-foundation` | `memoryKnowledgeLedger` emits typed, confidence-weighted edges for citations, facets, sources, outcomes, and compiled patterns with stale-edge checks. |
 | Knowledge Layer | Raw archive and checkpoint loop | `done-foundation` | Immutable raw diary/import archive entries, canonical thoughts, and an atomize/dedup/apply checkpoint exist as a deterministic local ledger. |
-| Web | Graph-first second brain | `prototype-ui` | `MemoryRecord` data builds a Cytoscape graph with fixture memory nodes plus saved artifact memories; owner-scoped app shell rehydration can refresh graph/timeline counts after imports persist. |
+| Web | Graph-first second brain | `prototype-ui` | `MemoryRecord` data builds a Cytoscape graph with fixture memory nodes plus saved artifact memories; owner-scoped app shell rehydration can rebuild Cytoscape elements after imports persist. |
 | Web | Evidence drawer | `prototype-ui` | Source/date/raw excerpt/why-connected visible. |
 | Web | Individual memory detail page | `prototype-ui` | Selected-memory inspector and timeline detail surface expose source/date/raw excerpts; full review/edit route remains planned. |
 | Web | Search/timeline views | `prototype-ui` | Sidebar search filters nodes and timeline entries show dated private memories, including saved Ask/Decision/Weekly artifacts, with active selection sync. |
@@ -206,10 +206,11 @@ No remote push, main merge, production deploy, or secret access is allowed witho
 - L37: local file upload/import UI.
 - L38: applied import graph/timeline feedback.
 - L39: app shell rehydration API.
+- L40: Cytoscape graph rebuild after import.
 
 ## 6. Active Next Loops
 
-Next local loop: add explicit graph rebuild from rehydrated app shell payload, or run staging PostgreSQL/pgvector/auth smoke harness when deployment secrets are available. Live LLM keys, hosted identity configuration, and deployment wiring stay gated until secrets/deploy target are explicitly available.
+Next local loop: add durable import undo through API/HTTP so uploaded memories can be rolled back from the private graph, or run staging PostgreSQL/pgvector/auth smoke harness when deployment secrets are available. Live LLM keys, hosted identity configuration, and deployment wiring stay gated until secrets/deploy target are explicitly available.
 
 ## 7. Completed Loop Details
 
@@ -902,6 +903,27 @@ Implemented:
 - `scripts/verify-playwright-evidence.ts`
 - `docs/superpowers/plans/2026-05-28-app-shell-rehydration.md`
 
+### L40 — Cytoscape Graph Rebuild After Import
+
+Goal: rebuild the live Cytoscape graph from owner-scoped app shell rehydration data after imports persist.
+
+Acceptance:
+
+- `/api/app-shell` returns a data-derived Cytoscape `memoryGraph`
+- memoryGraph is owner-scoped and built from current private memories
+- browser replaces Cytoscape elements after import apply rehydration
+- graph count markers update to the rehydrated graph stats
+- Playwright verifies graph rebuild includes newly imported memories
+
+Implemented:
+
+- `src/lib/personalMemoryApi.ts`
+- `src/lib/personalMemoryApi.test.ts`
+- `src/App.tsx`
+- `src/lib/appShellEvidenceLayout.test.ts`
+- `scripts/verify-playwright-evidence.ts`
+- `docs/superpowers/plans/2026-05-28-cytoscape-rebuild-after-import.md`
+
 ## 8. MVP Time Estimate
 
 Assuming focused local development without major dependency or deployment blockers:
@@ -915,7 +937,7 @@ Assuming focused local development without major dependency or deployment blocke
 
 Critical path for the next "나를 아는 AI" jump:
 
-1. Add explicit graph rebuild from the rehydrated app shell payload.
+1. Add durable import undo through API/HTTP so uploaded memories can be rolled back from the private graph.
 2. Run staging PostgreSQL/pgvector/auth smoke against the already wired Postgres/auth runtimes when deployment secrets are available.
 3. Connect hosted identity/OAuth on the deployment target.
 
