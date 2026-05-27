@@ -9,6 +9,7 @@ Personal Memory AI turns diary entries, notes, and imported Notion/Obsidian/Mark
 ## Source of Truth
 
 - `docs/product/personal-memory-ai-korean-prd-2026-05-26.md`
+- `docs/product/product-execution-plan-2026-05-27.md`
 - `docs/product/product-master-plan-2026-05-26.md`
 - `docs/product/compliance-matrix.md`
 - `AGENTS.md`
