@@ -2,7 +2,7 @@
 
 Status: active local execution plan  
 Owner: Ko Yunseo  
-Updated: 2026-05-27, staging readiness pass
+Updated: 2026-05-27, private vault boundary pass
 Supersedes for local Codex work: `docs/product/product-master-plan-2026-05-26.md`
 
 ## 1. Product Definition
@@ -116,7 +116,8 @@ Status values:
 | Agent | User feedback learning loop | `planned` | Needed for agent personalization. |
 | Privacy | Private-by-default scope | `done-foundation` | Data model and UI labels exist. |
 | Privacy | Export/delete local UX | `done-foundation` | Owner-only local export, selected delete, and hard-delete confirmation panel are rendered. |
-| Privacy | Auth/private vault | `planned` | Required before multi-user beta. |
+| Privacy | Auth/private vault boundary | `done-foundation` | Local session owner boundary scopes API calls to one private vault. |
+| Privacy | Production auth provider | `planned` | Required before multi-user beta. |
 | Backend/API | Capture/import endpoints | `done-foundation` | User-scoped API dispatcher handles capture, import preview, and import apply. |
 | Backend/API | Ask/replay/report endpoints | `done-foundation` | User-scoped API dispatcher handles ask, replay, weekly report, export, and delete boundaries. |
 | Backend/API | Staging readiness | `done-foundation` | Redacted env presence and pgvector staging smoke plan exist without secret leakage. |
@@ -155,21 +156,11 @@ No remote push, main merge, production deploy, or secret access is allowed witho
 - L12: privacy export/delete UX.
 - L13: PWA/app capture surface.
 - L14: staging backend readiness.
+- L15: auth/private vault boundary.
 
 ## 6. Active Next Loops
 
-### L15 — Auth / Private Vault
-
-Goal: ensure each user's second brain is accessible only to that user.
-
-Acceptance:
-
-- authenticated user identity boundary
-- private vault/user id mapping
-- no cross-user memory access
-- export/delete scoped to one user
-
-Estimated effort: 1-3 weeks depending on auth provider and deployment target.
+No active local loop is selected. Next likely loop: production transport/deploy wiring or provider-backed auth, depending on deployment target.
 
 ## 7. Completed Loop Details
 
@@ -356,6 +347,24 @@ Implemented:
 - `src/lib/stagingReadiness.test.ts`
 - redacted env presence report contract
 - staging-only pgvector smoke plan
+
+### L15 — Auth / Private Vault
+
+Goal: ensure each user's second brain is accessible only to that user.
+
+Acceptance:
+
+- authenticated user identity boundary
+- private vault/user id mapping
+- no cross-user memory access
+- export/delete scoped to one user
+
+Implemented:
+
+- `src/lib/privateVault.ts`
+- `src/lib/privateVault.test.ts`
+- `handlePrivateVaultMemoryApiRequest`
+- private vault API test proving caller-supplied user ids do not override session owner
 
 ## 8. MVP Time Estimate
 

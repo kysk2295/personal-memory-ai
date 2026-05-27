@@ -4,8 +4,9 @@ import { createMemoryStore } from './createMemoryStore';
 import type { ImportPreview } from './importPreview';
 import type { ApplyImportPreviewResult } from './memoryIngestion';
 import type { MemoryRecord } from './memoryRecord';
-import { handlePersonalMemoryApiRequest } from './personalMemoryApi';
+import { handlePersonalMemoryApiRequest, handlePrivateVaultMemoryApiRequest } from './personalMemoryApi';
 import type { PersonalMemoryAgentResult } from './personalMemoryAgent';
+import { createLocalPrivateVaultSession } from './privateVault';
 import type { WeeklyReport } from './weeklyReport';
 
 describe('personal memory API boundary', () => {
@@ -224,5 +225,36 @@ describe('personal memory API boundary', () => {
     expect((await store.listByUser('user-b')).map((record) => record.id)).toEqual([
       'mem_other_user_delete_guard',
     ]);
+  });
+
+  test('handles API requests through the private vault session owner and ignores caller supplied user ids', async () => {
+    const store = createMemoryStore({ env: {} });
+    await store.create('user-a', personalMemoryRecords[0]);
+    await store.create('user-b', {
+      ...personalMemoryRecords[1],
+      id: 'mem_user_b_should_not_export',
+      sourceRef: 'obsidian://other-user/private',
+    });
+
+    const exported = await handlePrivateVaultMemoryApiRequest({
+      store,
+      session: createLocalPrivateVaultSession({
+        userId: 'user-a',
+        sessionId: 'session-user-a',
+        createdAt: '2026-05-27T16:00:00.000Z',
+      }),
+      request: {
+        method: 'GET',
+        path: '/api/export',
+        body: {
+          userId: 'user-b',
+        },
+      },
+    });
+
+    expect(exported.statusCode).toBe(200);
+    const exportedBody = exported.body as { records: MemoryRecord[] };
+    expect(exportedBody.records.map((record) => record.id)).toEqual(['mem_launch_may_anxiety_scope_delay']);
+    expect(JSON.stringify(exported.body)).not.toContain('mem_user_b_should_not_export');
   });
 });

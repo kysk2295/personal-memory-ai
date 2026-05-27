@@ -7,6 +7,7 @@ import {
 } from './memoryIngestion';
 import type { MemoryStore } from './memoryStore';
 import { answerPersonalMemoryQuestion } from './personalMemoryAgent';
+import { resolvePrivateVaultAccess, type LocalPrivateVaultSession } from './privateVault';
 import { generateWeeklyReport } from './weeklyReport';
 
 export type PersonalMemoryApiMethod = 'GET' | 'POST';
@@ -30,6 +31,13 @@ export interface HandlePersonalMemoryApiRequestInput {
   store: MemoryStore;
   userId: string;
   request: PersonalMemoryApiRequest;
+}
+
+export interface HandlePrivateVaultMemoryApiRequestInput {
+  store: MemoryStore;
+  session: LocalPrivateVaultSession;
+  request: PersonalMemoryApiRequest;
+  requestedUserId?: string;
 }
 
 export interface PersonalMemoryApiResponse<Body = unknown> {
@@ -181,4 +189,29 @@ export async function handlePersonalMemoryApiRequest(
     statusCode: 404,
     body: { error: 'not_found' },
   };
+}
+
+export async function handlePrivateVaultMemoryApiRequest(
+  input: HandlePrivateVaultMemoryApiRequestInput,
+): Promise<PersonalMemoryApiResponse> {
+  const access = resolvePrivateVaultAccess({
+    session: input.session,
+    requestedUserId: input.requestedUserId,
+  });
+
+  if (!access.allowed) {
+    return {
+      statusCode: 403,
+      body: {
+        error: access.reason,
+        vaultId: access.vaultId,
+      },
+    };
+  }
+
+  return handlePersonalMemoryApiRequest({
+    store: input.store,
+    userId: access.userId,
+    request: input.request,
+  });
 }
