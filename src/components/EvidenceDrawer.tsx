@@ -41,13 +41,18 @@ export function renderEvidenceDrawer(layout: InitialAppShellEvidenceLayout): str
         .map((item) => {
           const traceLabel = item.trace.map((trace) => `${trace.type}:${trace.id}`).join(', ');
           const citationId = item.trace.find((trace) => trace.type === 'memory')?.id ?? item.highlightId;
-          return `<article class="drawer-item" id="evidence-${escapeHtml(citationId)}" data-highlight-id="${escapeHtml(item.highlightId)}">
+          return `<article class="drawer-item product-panel" id="evidence-${escapeHtml(citationId)}" data-highlight-id="${escapeHtml(
+            item.highlightId,
+          )}" data-evidence-source="${escapeHtml(item.source)}" data-evidence-date="${escapeHtml(
+            item.date,
+          )}" data-evidence-raw-excerpt="${escapeHtml(item.citation)}">
             <div class="drawer-meta">
               <span>${escapeHtml(item.source)}</span>
               <span>${escapeHtml(item.date)}</span>
               ${renderStatus(item.status)}
             </div>
             <p>${escapeHtml(item.citation)}</p>
+            <p><strong>why connected</strong> ${escapeHtml(traceLabel || item.highlightId)}</p>
             <code>${escapeHtml(item.highlightId)}</code>
             <code>trace ${escapeHtml(traceLabel)}</code>
           </article>`;

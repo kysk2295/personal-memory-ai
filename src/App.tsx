@@ -1,4 +1,8 @@
+import { renderAskMyPastSelfPanel } from './components/AskMyPastSelfPanel';
+import { renderDecisionReplayPanel } from './components/DecisionReplayPanel';
+import { renderEvidenceDrawer } from './components/EvidenceDrawer';
 import { renderMemoryGraph } from './components/MemoryGraph';
+import { renderPatternPanel } from './components/PatternPanel';
 import { buildInitialAppShellEvidenceLayout } from './lib/appShellEvidenceLayout';
 
 const APP_SHELL_STYLES = `
@@ -150,6 +154,7 @@ const APP_SHELL_STYLES = `
     padding: 22px 28px 28px;
     display: flex;
     flex-direction: column;
+    gap: 14px;
   }
   .ask-memory-bar {
     position: relative;
@@ -186,11 +191,65 @@ const APP_SHELL_STYLES = `
     background: #8f80ff;
     font-size: 18px;
   }
+  .product-value-strip {
+    position: relative;
+    z-index: 4;
+    width: min(1180px, 100%);
+    margin: 0 auto;
+    border: 1px solid rgba(117, 122, 143, 0.16);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 16px 36px rgba(165, 170, 197, 0.14);
+    padding: 12px 14px;
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) auto;
+    gap: 14px;
+    align-items: center;
+  }
+  .product-value-strip h2 {
+    margin: 0;
+    color: #4f5363;
+    font-size: 19px;
+    line-height: 1.15;
+    letter-spacing: 0;
+  }
+  .product-value-strip p {
+    margin: 5px 0 0;
+    color: #757b8d;
+    font-size: 12px;
+    line-height: 1.45;
+  }
+  .privacy-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 6px;
+  }
+  .privacy-actions span {
+    border: 1px solid rgba(88, 96, 122, 0.13);
+    border-radius: 999px;
+    padding: 6px 9px;
+    color: #687084;
+    background: rgba(246, 247, 252, 0.86);
+    font-size: 11px;
+    font-weight: 760;
+  }
+  .product-main-grid {
+    position: relative;
+    z-index: 2;
+    width: min(1320px, 100%);
+    margin: 0 auto;
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 420px);
+    gap: 16px;
+    align-items: stretch;
+  }
   .graph-stage {
     position: relative;
-    flex: 1;
-    min-height: 680px;
-    margin-top: -18px;
+    min-height: 650px;
+    margin-top: 0;
     display: grid;
     place-items: center;
   }
@@ -325,17 +384,207 @@ const APP_SHELL_STYLES = `
     font-size: 11px;
   }
   .pill-red { color: #7a6ae7; }
-  .evidence-ledger {
-    position: absolute;
-    left: -9999px;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
+  .product-rail {
+    position: relative;
+    z-index: 4;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-height: calc(100vh - 126px);
+    overflow: auto;
+    padding: 2px 2px 18px;
+  }
+  .product-rail > * { flex: 0 0 auto; }
+  .product-panel,
+  .evidence-drawer,
+  .ask-flow,
+  .decision-replay-flow,
+  .analysis-panels .panel {
+    border: 1px solid rgba(117, 122, 143, 0.16);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 14px 32px rgba(166, 171, 198, 0.13);
+  }
+  .ask-flow,
+  .decision-replay-flow,
+  .evidence-drawer,
+  .analysis-panels {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .ask-flow { max-height: 500px; overflow: auto; }
+  .evidence-drawer { max-height: 390px; overflow: auto; }
+  .ask-flow,
+  .decision-replay-flow,
+  .evidence-drawer,
+  .analysis-panels .panel {
+    padding: 14px;
+  }
+  .section-header,
+  .panel-topline,
+  .drawer-meta {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .section-header h2,
+  .panel h3,
+  .ask-answer-cited h3,
+  .decision-recommendation h3,
+  .evidence-drawer h2 {
+    margin: 4px 0 0;
+    color: #53586a;
+    font-size: 16px;
+    line-height: 1.2;
+    letter-spacing: 0;
+  }
+  .section-intro,
+  .drawer-principle,
+  .ask-answer-cited p,
+  .decision-recommendation p,
+  .similar-decision p,
+  .panel p,
+  .drawer-item p,
+  .insufficient-evidence-state p {
+    margin: 0;
+    color: #73798c;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .status,
+  .status-badge {
+    flex: 0 0 auto;
+    border: 1px solid rgba(111, 119, 146, 0.14);
+    border-radius: 999px;
+    padding: 4px 7px;
+    color: #687084;
+    background: rgba(246,247,252,0.9);
+    font-size: 10px;
+    font-weight: 760;
+  }
+  .ask-question-row,
+  .decision-current-card,
+  .drawer-current-question,
+  .ask-answer-cited,
+  .decision-recommendation,
+  .insufficient-evidence-state,
+  .similar-decision,
+  .drawer-item {
+    border: 1px solid rgba(117, 122, 143, 0.12);
+    border-radius: 8px;
+    background: rgba(250, 251, 255, 0.78);
+    padding: 10px;
+  }
+  .ask-question-row,
+  .decision-current-card {
+    display: grid;
+    gap: 8px;
+  }
+  .ask-question-row input,
+  .decision-current-card input {
+    width: 100%;
+    min-width: 0;
+    border: 1px solid rgba(117, 122, 143, 0.14);
+    border-radius: 8px;
+    background: #ffffff;
+    color: #555b6e;
+    padding: 8px 9px;
+    font-size: 12px;
+  }
+  .ask-question-row button {
+    justify-self: start;
+    border: 1px solid rgba(143, 128, 255, 0.24);
+    border-radius: 8px;
+    background: #8f80ff;
+    color: #ffffff;
+    padding: 7px 11px;
+    font-size: 12px;
+    font-weight: 760;
+  }
+  .ask-citations,
+  .decision-citations,
+  .pattern-memory-list,
+  .privacy-action-list,
+  .decision-tag-list,
+  .surface-list,
+  .status-key {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .ask-citations,
+  .similar-decision-list,
+  .drawer-list,
+  .analysis-lead {
+    display: grid;
+    gap: 9px;
+  }
+  .ask-citations li,
+  .decision-citations li {
+    display: grid;
+    gap: 5px;
+    border-top: 1px solid rgba(117, 122, 143, 0.1);
+    padding-top: 8px;
+  }
+  .citation-ref,
+  .pattern-memory-list a {
+    color: #6255d7;
+    text-decoration: none;
+    overflow-wrap: anywhere;
+  }
+  .decision-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .decision-columns span,
+  .panel-topline span:first-child,
+  .drawer-current-question strong,
+  .insufficient-evidence-state strong,
+  .supporting-label {
+    color: #8a90a2;
+    font-size: 11px;
+    font-weight: 780;
+  }
+  .decision-tag-list,
+  .pattern-memory-list,
+  .privacy-action-list,
+  .entrypoint-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .decision-tag-list li,
+  .pattern-memory-list li,
+  .privacy-action-list li,
+  .entrypoint-grid a {
+    border: 1px solid rgba(117, 122, 143, 0.12);
+    border-radius: 999px;
+    background: rgba(255,255,255,0.76);
+    color: #687084;
+    padding: 5px 7px;
+    font-size: 11px;
+    text-decoration: none;
+  }
+  .drawer-list {
+    max-height: 380px;
+    overflow: auto;
+  }
+  .drawer-item code,
+  .ask-citations code,
+  .decision-citations code {
+    color: #8f96aa;
+    font-size: 10px;
+    overflow-wrap: anywhere;
   }
   @media (max-width: 980px) {
     .second-brain-shell { grid-template-columns: 1fr; overflow: auto; }
     .brain-sidebar { min-height: auto; border-right: 0; border-bottom: 1px solid rgba(255,255,255,0.08); }
     .brain-canvas { min-height: 760px; }
+    .product-main-grid { grid-template-columns: 1fr; }
+    .product-rail { max-height: none; overflow: visible; }
     .graph-stage { min-height: 560px; }
     .memory-inspector { position: relative; right: auto; bottom: auto; margin: 18px auto 0; width: 100%; }
   }
@@ -345,6 +594,9 @@ const APP_SHELL_STYLES = `
     .brain-title h1 { font-size: 36px; }
     .memory-graph { min-height: 420px; }
     .ask-memory-bar { grid-template-columns: auto minmax(0, 1fr) auto; }
+    .product-value-strip { grid-template-columns: 1fr; }
+    .privacy-actions { justify-content: flex-start; }
+    .decision-columns { grid-template-columns: 1fr; }
   }
 `;
 
@@ -370,13 +622,6 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
   const citationLinks = layout.ask.citationMemoryIds
     .slice(0, 3)
     .map((citationId) => `<a href="#evidence-${escapeHtml(citationId)}" class="citation-ref" data-citation-ref="${escapeHtml(citationId)}">[${escapeHtml(citationId)}]</a>`)
-    .join('');
-  const drawerLedger = layout.evidenceDrawer.items
-    .map((item) => {
-      const memoryTrace = item.trace.find((trace) => trace.type === 'memory');
-      const memoryId = memoryTrace?.id ?? item.highlightId.replace(/^memory:/, '');
-      return `<article id="evidence-${escapeHtml(memoryId)}" data-citation-id="${escapeHtml(memoryId)}" data-replay-memory-id="${escapeHtml(memoryId)}"><h3>${escapeHtml(item.source)}</h3><p>${escapeHtml(item.citation)}</p></article>`;
-    })
     .join('');
 
   if (variant === 'plain' || variant === 'topbar-only' || variant === 'debug-text') {
@@ -463,48 +708,62 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
     <section class="brain-canvas" aria-label="Personal Memory AI Second Brain canvas">
       <form class="ask-memory-bar" aria-label="Ask Second Brain">
         <span class="ask-lock" aria-hidden="true">⌘</span>
-        <input id="ask-my-past-self-question" name="question" value="${escapeHtml(layout.askQuestion)}" aria-label="Ask My Past Self question" />
+        <input id="ask-memory-bar-question" name="question" value="${escapeHtml(layout.askQuestion)}" aria-label="Ask My Past Self question" />
         <button class="ask-submit" type="button" aria-label="Ask">→</button>
       </form>
 
-      <div class="graph-stage">
-        ${variant === 'no-svg' ? '' : renderMemoryGraph(layout)}
-        <aside class="wiki-compiler-strip" aria-label="LLM Wiki compiler preview" data-wiki-compiler="pmi017">
-          <span><strong>${layout.compiledWiki.atomCount}</strong> canonical memory atoms</span>
-          <span><strong>${layout.compiledWiki.nodeCount}</strong> compiled wiki nodes</span>
-          <span><strong>${layout.compiledWiki.citationCount}</strong> citations</span>
-          <span data-memory-ops="retain-recall-reflect">retain ${layout.compiledWiki.operationCounts.retain} · recall ${layout.compiledWiki.operationCounts.recall} · reflect ${layout.compiledWiki.operationCounts.reflect}</span>
-          <span data-memory-freshness="strengthening-stable-stale">freshness ${layout.compiledWiki.freshnessCounts.strengthening}/${layout.compiledWiki.freshnessCounts.stable}/${layout.compiledWiki.freshnessCounts.stale}</span>
-          ${layout.compiledWiki.nodes
-            .filter((node) => node.type === 'pattern' || node.type === 'concept')
-            .sort((left, right) => (left.type === right.type ? left.id.localeCompare(right.id) : left.type === 'pattern' ? -1 : 1))
-            .slice(0, 2)
-            .map((node) => `<span class="wiki-node-chip" data-wiki-node-id="${escapeHtml(node.id)}">${escapeHtml(node.title)}</span>`)
-            .join('')}
-          ${layout.compiledWiki.atoms
-            .filter((atom) => atom.freshness === 'strengthening')
-            .slice(0, 1)
-            .map((atom) => `<span class="wiki-node-chip subtle" data-memory-atom-id="${escapeHtml(atom.id)}">${escapeHtml(atom.canonicalClaim)}</span>`)
-            .join('')}
+      <section class="product-value-strip" aria-label="Private memory product value">
+        <div>
+          <p class="eyebrow">Private Personal Memory AI</p>
+          <h2>나보다 나를 더 잘 아는 개인 기억 AI</h2>
+          <p>앱에서 쓴 일기와 가져온 기록이 개인 기억 그래프로 연결된다. 공유는 공개가 아니라, 현재 일기와 과거 기억이 같은 맥락 안에서 함께 떠오른다는 뜻이다.</p>
+        </div>
+        <div class="privacy-actions" aria-label="Privacy and control actions">
+          <span>비공개 기본값</span>
+          <span>로컬 프로토타입</span>
+          <span>내보내기</span>
+          <span>삭제</span>
+        </div>
+      </section>
+
+      <div class="product-main-grid">
+        <div class="graph-stage">
+          ${variant === 'no-svg' ? '' : renderMemoryGraph(layout)}
+          <aside class="wiki-compiler-strip" aria-label="LLM Wiki compiler preview" data-wiki-compiler="pmi017">
+            <span><strong>${layout.compiledWiki.atomCount}</strong> canonical memory atoms</span>
+            <span><strong>${layout.compiledWiki.nodeCount}</strong> compiled wiki nodes</span>
+            <span><strong>${layout.compiledWiki.citationCount}</strong> citations</span>
+            <span data-memory-ops="retain-recall-reflect">retain ${layout.compiledWiki.operationCounts.retain} · recall ${layout.compiledWiki.operationCounts.recall} · reflect ${layout.compiledWiki.operationCounts.reflect}</span>
+            <span data-memory-freshness="strengthening-stable-stale">freshness ${layout.compiledWiki.freshnessCounts.strengthening}/${layout.compiledWiki.freshnessCounts.stable}/${layout.compiledWiki.freshnessCounts.stale}</span>
+            ${layout.compiledWiki.nodes
+              .filter((node) => node.type === 'pattern' || node.type === 'concept')
+              .sort((left, right) => (left.type === right.type ? left.id.localeCompare(right.id) : left.type === 'pattern' ? -1 : 1))
+              .slice(0, 2)
+              .map((node) => `<span class="wiki-node-chip" data-wiki-node-id="${escapeHtml(node.id)}">${escapeHtml(node.title)}</span>`)
+              .join('')}
+            ${layout.compiledWiki.atoms
+              .filter((atom) => atom.freshness === 'strengthening')
+              .slice(0, 1)
+              .map((atom) => `<span class="wiki-node-chip subtle" data-memory-atom-id="${escapeHtml(atom.id)}">${escapeHtml(atom.canonicalClaim)}</span>`)
+              .join('')}
+          </aside>
+
+          <article class="memory-inspector" aria-label="Ask My Past Self cited question flow" data-inspector-panel="pmi015">
+            <p class="eyebrow">Ask My Past Self · cited path</p>
+            <h2 data-inspector-headline>${escapeHtml(layout.ask.recommendation)}</h2>
+            <p class="memory-inspector-source" data-inspector-source>selected path · 3 cited memories</p>
+            <p data-inspector-body>반복된 <span class="pill-red">anxiety → feature addition → launch delay</span> 경로만 근거로 답한다. Decision Replay는 현재 결정을 과거 결과와 비교하고, Evidence drawer는 출처·날짜·기억 원문으로 되돌아간다.</p>
+            <div class="citation-row" aria-label="Ask My Past Self citations" data-inspector-citations>${citationLinks}</div>
+          </article>
+        </div>
+
+        <aside class="product-rail" aria-label="Cited memory product rail">
+          ${renderAskMyPastSelfPanel(layout)}
+          ${renderEvidenceDrawer(layout)}
+          ${renderDecisionReplayPanel(layout)}
+          ${renderPatternPanel(layout)}
         </aside>
       </div>
-
-      <article class="memory-inspector" aria-label="Ask My Past Self cited question flow" data-inspector-panel="pmi015">
-        <p class="eyebrow">Ask My Past Self · cited path</p>
-        <h2 data-inspector-headline>${escapeHtml(layout.ask.recommendation)}</h2>
-        <p class="memory-inspector-source" data-inspector-source>selected path · 3 cited memories</p>
-        <p data-inspector-body>반복된 <span class="pill-red">anxiety → feature addition → launch delay</span> 경로만 근거로 답한다. Decision Replay는 현재 결정을 과거 결과와 비교하고, Evidence drawer는 출처·날짜·기억 원문으로 되돌아간다.</p>
-        <div class="citation-row" aria-label="Ask My Past Self citations" data-inspector-citations>${citationLinks}</div>
-      </article>
-
-      <section class="evidence-ledger" aria-label="Evidence drawer">
-        <h2>Evidence drawer</h2>
-        <label for="decision-replay-current">Current decision</label>
-        <input id="decision-replay-current" value="${escapeHtml(layout.replay.currentDecision.prompt)}" readonly />
-        <p>Decision Replay</p>
-        <p>Pattern detection</p>
-        ${drawerLedger}
-      </section>
     </section>
   </main>`;
 }

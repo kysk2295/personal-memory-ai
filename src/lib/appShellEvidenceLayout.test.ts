@@ -166,6 +166,39 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     }
   });
 
+  test('renders the private diary-to-memory product surface with visible evidence contracts', () => {
+    const html = renderAppShellHtml();
+
+    expect(html).toContain('class="product-value-strip"');
+    expect(html).toContain('나보다 나를 더 잘 아는 개인 기억 AI');
+    expect(html).toContain('앱에서 쓴 일기와 가져온 기록이 개인 기억 그래프로 연결된다');
+    expect(html).toContain('비공개 기본값');
+    expect(html).toContain('내보내기');
+    expect(html).toContain('삭제');
+    expect(html).not.toContain('public shared memory');
+
+    expect(html).toContain('class="product-rail"');
+    expect(html).toContain('Fast diary capture');
+    expect(html).toContain('Import existing memories');
+
+    expect(html).toContain('data-ask-answer-contract="citations-or-insufficient-evidence"');
+    expect(html).toContain('data-insufficient-evidence-state="available"');
+    expect(html).toContain('aria-label="Ask My Past Self citations"');
+    expect(html).toContain('href="#evidence-mem_launch_may_anxiety_scope_delay"');
+
+    expect(html).toContain('data-replay-outcome="launch delayed by two days after adding graph filters"');
+    expect(html).toContain('data-replay-citation-id="mem_launch_may_anxiety_scope_delay"');
+
+    expect(html).toContain('Weekly Pattern Report');
+    expect(html).toContain('data-pattern-memory-id="mem_launch_may_anxiety_scope_delay"');
+    expect(html).toContain('data-pattern-memory-id="mem_launch_june_anxiety_scope_delay"');
+
+    expect(html).toContain('why connected');
+    expect(html).toContain('data-evidence-source=');
+    expect(html).toContain('data-evidence-date=');
+    expect(html).toContain('data-evidence-raw-excerpt=');
+  });
+
   test('keeps Decision Replay evidence in the hidden ledger while removing dashboard panels from the first impression', () => {
     const shell = buildInitialAppShellEvidenceLayout();
     const html = renderAppShellHtml();

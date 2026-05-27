@@ -34,11 +34,19 @@ function renderCitation(citation: DecisionReplayCitation): string {
   </li>`;
 }
 
+function renderOutcomeAttribute(outcome: string): string {
+  return outcome.replace(/[.。]+$/g, '').toLocaleLowerCase();
+}
+
 function renderSimilarDecision(decision: SimilarPastDecision): string {
-  return `<article class="similar-decision" data-replay-memory-id="${escapeHtml(decision.memoryId)}">
+  const outcome = decision.outcome ?? 'Outcome not captured yet.';
+
+  return `<article class="similar-decision" data-replay-memory-id="${escapeHtml(decision.memoryId)}" data-replay-outcome="${escapeHtml(
+    renderOutcomeAttribute(outcome),
+  )}">
     <div>
       <strong>${escapeHtml(decision.summary)}</strong>
-      <p>${escapeHtml(decision.outcome ?? 'Outcome not captured yet.')}</p>
+      <p><span>outcome</span> ${escapeHtml(outcome)}</p>
     </div>
     <div class="decision-columns">
       <div>

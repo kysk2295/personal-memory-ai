@@ -217,8 +217,8 @@ export function renderMemoryGraph(layout: InitialAppShellEvidenceLayout): string
   const highlightedIds = new Set(graphHighlightIds);
   const selectedPosition = nodePosition(SELECTED_NODE_ID);
 
-  return `<section class="graph-workspace obsidian-graph-workspace" aria-label="Initial loaded memory-brain graph">
-    <svg class="memory-graph obsidian-memory-graph" viewBox="0 0 860 620" role="img" aria-label="Memory brain graph linking records to emotion, project, decision, outcome, and source" data-current-question-id="${escapeHtml(
+  return `<section class="graph-workspace obsidian-graph-workspace" aria-label="Initial loaded memory-brain graph private evidence workspace">
+    <svg class="memory-graph obsidian-memory-graph" viewBox="0 0 860 620" role="img" aria-label="Private memory brain graph linking diary and imported records to emotion, project, decision, outcome, and source evidence" data-current-question-id="${escapeHtml(
       layout.ask.graphHighlightIds[0] ?? '',
     )}">
       <rect x="0" y="0" width="860" height="620" rx="26" class="obsidian-graph-surface" />
@@ -232,7 +232,7 @@ export function renderMemoryGraph(layout: InitialAppShellEvidenceLayout): string
       ${renderMemoryNodes(layout, highlightedIds)}
     </svg>
     <div class="graph-support-copy" aria-label="Graph supporting cues">
-      <span class="hero-pill">Obsidian-like graph density with citation-backed memory selection</span>
+      <span class="hero-pill">Private diary and imported records become citation-backed memory nodes</span>
       <span class="hero-pill">Selected node remains wired to Ask My Past Self inspector</span>
     </div>
     <div class="graph-highlight-manifest" aria-label="Active Ask My Past Self graph highlights">

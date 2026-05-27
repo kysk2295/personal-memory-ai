@@ -21,8 +21,11 @@ export function renderAskMyPastSelfPanel(layout: InitialAppShellEvidenceLayout):
   const questionHighlightId = layout.ask.graphHighlightIds[0] ?? '';
   const answerCitationRefs = layout.ask.citationMemoryIds.map(renderCitationReference).join(' ');
   const visibleBullets = layout.ask.evidenceBullets.slice(0, 2);
+  const hasCitations = layout.ask.citationMemoryIds.length > 0;
 
-  return `<section class="ask-flow" aria-label="Ask My Past Self cited question flow" data-ask-highlight="${escapeHtml(questionHighlightId)}">
+  return `<section class="ask-flow product-panel" aria-label="Ask My Past Self cited question flow" data-ask-highlight="${escapeHtml(
+    questionHighlightId,
+  )}" data-ask-answer-contract="citations-or-insufficient-evidence">
     <div class="section-header">
       <div>
         <p class="eyebrow">Ask My Past Self</p>
@@ -42,7 +45,13 @@ export function renderAskMyPastSelfPanel(layout: InitialAppShellEvidenceLayout):
         <span>confidence <strong>${Math.round(layout.ask.confidence * 100)}%</strong></span>
       </div>
       <h3>${escapeHtml(layout.ask.recommendation)}</h3>
-      <p>${escapeHtml(layout.ask.answer)} Citations: ${answerCitationRefs}</p>
+      <p>${escapeHtml(layout.ask.answer)} ${
+        hasCitations ? `Citations: ${answerCitationRefs}` : '근거가 충분하지 않으면 답변을 보류한다.'
+      }</p>
+    </article>
+    <article class="insufficient-evidence-state" data-insufficient-evidence-state="available">
+      <strong>Insufficient evidence state</strong>
+      <p>관련 기억이 부족하면 일반 조언을 생성하지 않고, 어떤 기록이 더 필요한지 먼저 요청한다.</p>
     </article>
     <ol class="ask-citations" aria-label="Ask My Past Self citations">
       ${visibleBullets
