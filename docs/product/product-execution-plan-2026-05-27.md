@@ -2,7 +2,7 @@
 
 Status: active local execution plan  
 Owner: Ko Yunseo  
-Updated: 2026-05-27, Cytoscape data-driven graph pass
+Updated: 2026-05-27, Postgres/pgvector runtime pass
 Supersedes for local Codex work: `docs/product/product-master-plan-2026-05-26.md`
 
 ## 1. Product Definition
@@ -110,8 +110,8 @@ Status values:
 | Import | Apply/undo import state model | `done-foundation` | Batch state model tracks preview, applied, skipped, graph evidence, and undone states. |
 | Import | File upload/import UI | `planned` | Needed before real personal use. |
 | Memory Store | Fixture user isolation | `done-foundation` | Tests cover user-scoped records. |
-| Memory Store | PostgreSQL repository | `done-foundation` | Code exists; staging smoke still planned. |
-| Memory Store | pgvector semantic search | `done-foundation` | Store method plus redacted staging smoke contract exist; live staging execution remains gated on secrets/deploy target. |
+| Memory Store | PostgreSQL repository | `done-foundation` | Runtime factory can select Postgres via `MEMORY_BACKEND_MODE=postgres` and `DATABASE_URL`; live credentials remain a deployment gate. |
+| Memory Store | pgvector semantic search | `done-foundation` | Store method, migration, optional auto-migrate, and safe runtime health metadata exist; live staging execution remains gated on secrets/deploy target. |
 | Knowledge Layer | LLM Wiki compiler | `done-foundation` | Local compiler turns `MemoryRecord`s into canonical memory atoms plus source/concept/decision/pattern nodes with citations, freshness, and retain/recall/reflect markers. |
 | Knowledge Layer | Typed edge ledger | `planned` | Move beyond generated UI edges into append-only, typed, confidence-weighted knowledge edges with stale-edge checks. |
 | Knowledge Layer | Raw archive and checkpoint loop | `planned` | Preserve immutable raw diary/import text, then atomize, dedupe, review, and apply changes as reversible memory operations. |
@@ -142,6 +142,7 @@ Status values:
 | Backend/API | Capture/import endpoints | `done-foundation` | User-scoped API dispatcher handles capture, import preview, and import apply. |
 | Backend/API | Ask/replay/report endpoints | `done-foundation` | User-scoped API dispatcher handles ask, replay, weekly report, export, and delete boundaries. |
 | Backend/API | Local HTTP transport | `done-foundation` | `npm start` serves static UI and private-vault `/api/*` JSON routes locally. |
+| Backend/API | Runtime backend selection | `done-foundation` | `server.ts` now uses the memory runtime to select fixture/Postgres, seed fixture data only in fixture mode, and expose safe health metadata. |
 | Backend/API | Staging readiness | `done-foundation` | Redacted env presence and pgvector staging smoke plan exist without secret leakage. |
 | Release | Visual evidence gates | `done-foundation` | Playwright verifies Cytoscape readiness, data-derived graph stats, search/filter/selection interactions, and captures benchmark/local screenshots; staging review still planned. |
 | Release | PR/release checklist | `planned` | Needed before remote/main workflow. |
@@ -184,10 +185,11 @@ No remote push, main merge, production deploy, or secret access is allowed witho
 - L18: benchmark graph density and Playwright interaction verification.
 - L19: memory search and detail interaction verification.
 - L20: data-driven Cytoscape memory graph renderer.
+- L21: Postgres/pgvector runtime backend selection.
 
 ## 6. Active Next Loops
 
-Next local loop: architecture alignment for canonical atoms and typed edges, then timeline/detail review pages or saved advice/report artifacts. Production auth, live LLM keys, and deployment wiring stay gated until secrets/deploy target are explicitly available.
+Next local loop: canonical atom/thought schema and typed edge ledger, then multi-axis retrieval and detail/timeline surfaces. Production auth, live LLM keys, and deployment wiring stay gated until secrets/deploy target are explicitly available.
 
 ## 7. Completed Loop Details
 
@@ -489,6 +491,29 @@ Implemented:
 - Cytoscape vendor copy in `scripts/render-static.ts`
 - Playwright Cytoscape assertions in `scripts/verify-playwright-evidence.ts`
 - updated graph screenshots under `artifacts/web-second-brain-product-surface/`
+
+### L21 — Postgres / Pgvector Runtime Backend Selection
+
+Goal: make the local HTTP server choose fixture or PostgreSQL/pgvector storage at runtime without leaking secrets.
+
+Acceptance:
+
+- fixture mode remains the default local mode
+- fixture mode seeds local demo memories for the private local owner
+- Postgres mode requires `DATABASE_URL`
+- Postgres mode creates a `pg` pool and wraps it in `PostgresMemoryStore`
+- pgvector migration SQL can run when `POSTGRES_AUTO_MIGRATE=true`
+- `/health/live` exposes only safe backend metadata: backend mode, migration status, and database URL presence
+- server shutdown closes the Postgres pool
+
+Implemented:
+
+- `src/lib/memoryStoreRuntime.ts`
+- `src/lib/memoryStoreRuntime.test.ts`
+- `src/lib/localServerHealth.ts`
+- `src/lib/localServerHealth.test.ts`
+- `server.ts`
+- `pg` runtime dependency and `@types/pg` development dependency
 
 ## 8. MVP Time Estimate
 

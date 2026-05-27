@@ -1,13 +1,16 @@
 import { createReadStream, existsSync, statSync } from 'node:fs';
 import { createServer, type IncomingMessage } from 'node:http';
 import { extname, join, normalize } from 'node:path';
+import { Pool } from 'pg';
 import { personalMemoryRecords } from './src/lib/__fixtures__/personalMemoryRecords';
-import { createMemoryStore } from './src/lib/createMemoryStore';
+import { buildLiveHealthPayload } from './src/lib/localServerHealth';
 import { createLocalPersonalMemoryHttpHandler } from './src/lib/localHttpTransport';
+import { createMemoryStoreRuntime } from './src/lib/memoryStoreRuntime';
 import { createLocalPrivateVaultSession } from './src/lib/privateVault';
 
 const root = join(process.cwd(), 'dist');
 const port = Number(process.env.PORT || 3000);
+const localUserId = process.env.PMI_LOCAL_USER_ID || 'local-user';
 
 const contentTypes: Record<string, string> = {
   '.html': 'text/html; charset=utf-8',
@@ -38,24 +41,26 @@ async function readRequestBody(req: IncomingMessage): Promise<string> {
   return Buffer.concat(chunks).toString('utf8');
 }
 
-const store = createMemoryStore({ env: {} });
-for (const record of personalMemoryRecords) {
-  await store.create('local-user', record);
-}
+const memoryRuntime = await createMemoryStoreRuntime({
+  env: process.env,
+  pgPool: Pool,
+  fixtureSeedRecords: personalMemoryRecords,
+  seedUserId: localUserId,
+});
 
 const apiHandler = createLocalPersonalMemoryHttpHandler({
-  store,
+  store: memoryRuntime.store,
   session: createLocalPrivateVaultSession({
-    userId: 'local-user',
+    userId: localUserId,
     sessionId: 'local-dev-session',
     createdAt: '2026-05-27T17:30:00.000Z',
   }),
 });
 
-createServer(async (req, res) => {
+const server = createServer(async (req, res) => {
   if (req.url === '/health/live') {
     res.writeHead(200, { 'content-type': 'application/json' });
-    res.end(JSON.stringify({ status: 'ok', service: 'personal-memory-ai-web' }));
+    res.end(JSON.stringify(buildLiveHealthPayload(memoryRuntime)));
     return;
   }
 
@@ -74,6 +79,21 @@ createServer(async (req, res) => {
   const filePath = resolvePath(urlPath);
   res.writeHead(200, { 'content-type': contentTypes[extname(filePath)] || 'application/octet-stream' });
   createReadStream(filePath).pipe(res);
-}).listen(port, '0.0.0.0', () => {
+});
+
+async function shutdown(): Promise<void> {
+  await new Promise<void>((resolve) => server.close(() => resolve()));
+  await memoryRuntime.close();
+}
+
+process.once('SIGINT', () => {
+  void shutdown().finally(() => process.exit(0));
+});
+
+process.once('SIGTERM', () => {
+  void shutdown().finally(() => process.exit(0));
+});
+
+server.listen(port, '0.0.0.0', () => {
   console.log(`personal-memory-ai-web listening on ${port}`);
 });
