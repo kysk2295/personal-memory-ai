@@ -1,14 +1,16 @@
+import type { PrivateVaultAuthRuntime } from './authProviderRuntime';
 import type { MemoryStore } from './memoryStore';
 import {
   handlePrivateVaultMemoryApiRequest,
   type PersonalMemoryApiMethod,
   type PersonalMemoryApiPath,
 } from './personalMemoryApi';
-import type { LocalPrivateVaultSession } from './privateVault';
+import type { PrivateVaultSession } from './privateVault';
 
 export interface LocalPersonalMemoryHttpRequest {
   method: string;
   path: string;
+  headers?: Record<string, string | string[] | undefined>;
   bodyText?: string;
 }
 
@@ -20,7 +22,8 @@ export interface LocalPersonalMemoryHttpResponse {
 
 export interface CreateLocalPersonalMemoryHttpHandlerInput {
   store: MemoryStore;
-  session: LocalPrivateVaultSession;
+  session?: PrivateVaultSession;
+  authRuntime?: PrivateVaultAuthRuntime;
 }
 
 export type LocalPersonalMemoryHttpHandler = (
@@ -59,9 +62,12 @@ export function createLocalPersonalMemoryHttpHandler(
       return jsonResponse(400, { error: 'invalid_json_body' });
     }
 
+    const session = input.session ?? input.authRuntime?.resolveSession({ headers: request.headers });
+    if (!session) return jsonResponse(401, { error: 'auth_required' });
+
     const apiResponse = await handlePrivateVaultMemoryApiRequest({
       store: input.store,
-      session: input.session,
+      session,
       request: {
         method,
         path: request.path as PersonalMemoryApiPath,

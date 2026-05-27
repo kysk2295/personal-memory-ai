@@ -2,7 +2,7 @@
 
 Status: active local execution plan  
 Owner: Ko Yunseo  
-Updated: 2026-05-28, Gemini provider adapter pass
+Updated: 2026-05-28, auth provider runtime pass
 Supersedes for local Codex work: `docs/product/product-master-plan-2026-05-26.md`
 
 ## 1. Product Definition
@@ -140,10 +140,10 @@ Status values:
 | Privacy | Private-by-default scope | `done-foundation` | Data model and UI labels exist. |
 | Privacy | Export/delete local UX | `done-foundation` | Owner-only local export, selected delete, and hard-delete confirmation panel are rendered. |
 | Privacy | Auth/private vault boundary | `done-foundation` | Local session owner boundary scopes API calls to one private vault. |
-| Privacy | Production auth provider | `planned` | Required before multi-user beta. |
+| Privacy | Production auth provider | `done-foundation` | Runtime can select local or trusted-header private vault auth and resolve owner-only sessions per request; OAuth/hosted identity remains a deployment integration task. |
 | Backend/API | Capture/import endpoints | `done-foundation` | User-scoped API dispatcher handles fast diary capture, saved artifact capture, import preview, and import apply. |
 | Backend/API | Ask/replay/report endpoints | `done-foundation` | User-scoped API dispatcher handles ask, replay, weekly report, feedback memory, export, and delete boundaries. |
-| Backend/API | Local HTTP transport | `done-foundation` | `npm start` serves static UI and private-vault `/api/*` JSON routes locally. |
+| Backend/API | Local HTTP transport | `done-foundation` | `npm start` serves static UI and private-vault `/api/*` JSON routes locally, with optional trusted-header auth for deployed owner scoping. |
 | Backend/API | Runtime backend selection | `done-foundation` | `server.ts` now uses the memory runtime to select fixture/Postgres, seed fixture data only in fixture mode, and expose safe health metadata. |
 | Backend/API | Staging readiness | `done-foundation` | Redacted env presence and pgvector staging smoke plan exist without secret leakage. |
 | Release | Visual evidence gates | `done-foundation` | Playwright verifies Cytoscape readiness, data-derived graph stats, search/filter/selection interactions, and captures benchmark/local screenshots; staging review still planned. |
@@ -201,10 +201,11 @@ No remote push, main merge, production deploy, or secret access is allowed witho
 - L32: feedback correction UI.
 - L33: feedback retrieval priority.
 - L34: Gemini provider adapter.
+- L35: private vault auth provider runtime.
 
 ## 6. Active Next Loops
 
-Next local loop: run staging PostgreSQL/pgvector/auth smoke harness when deployment secrets are available, or add production auth provider scaffolding locally. Production auth, live LLM keys, and deployment wiring stay gated until secrets/deploy target are explicitly available.
+Next local loop: add recurring weekly report generation and notification scheduling locally, or run staging PostgreSQL/pgvector/auth smoke harness when deployment secrets are available. Live LLM keys, hosted identity configuration, and deployment wiring stay gated until secrets/deploy target are explicitly available.
 
 ## 7. Completed Loop Details
 
@@ -788,6 +789,29 @@ Implemented:
 - `src/lib/llmProviderRuntime.test.ts`
 - `docs/superpowers/plans/2026-05-28-gemini-provider-adapter.md`
 
+### L35 — Private Vault Auth Provider Runtime
+
+Goal: add production-auth scaffolding for private vault ownership without changing the local-only default.
+
+Acceptance:
+
+- default auth runtime keeps local owner-only private vault behavior
+- trusted-header auth runtime resolves a per-request owner from configured headers
+- missing trusted owner headers return `auth_required`
+- runtime health metadata reports provider readiness without exposing request values or secrets
+- local HTTP transport can use either a fixed session or auth runtime
+
+Implemented:
+
+- `src/lib/authProviderRuntime.ts`
+- `src/lib/authProviderRuntime.test.ts`
+- `src/lib/privateVault.ts`
+- `src/lib/privateVault.test.ts`
+- `src/lib/localHttpTransport.ts`
+- `src/lib/localHttpTransport.test.ts`
+- `server.ts`
+- `docs/superpowers/plans/2026-05-28-auth-provider-runtime.md`
+
 ## 8. MVP Time Estimate
 
 Assuming focused local development without major dependency or deployment blockers:
@@ -801,9 +825,9 @@ Assuming focused local development without major dependency or deployment blocke
 
 Critical path for the next "나를 아는 AI" jump:
 
-1. Run staging PostgreSQL/pgvector/auth smoke against the already wired Postgres runtime when deployment secrets are available.
-2. Add production auth/private vault provider for multi-user beta.
-3. Add recurring weekly report generation and notification scheduling.
+1. Add recurring weekly report generation and notification scheduling.
+2. Run staging PostgreSQL/pgvector/auth smoke against the already wired Postgres/auth runtimes when deployment secrets are available.
+3. Connect hosted identity/OAuth on the deployment target.
 
 ## 9. Product Quality Rules
 

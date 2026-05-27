@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { personalMemoryRecords } from './__fixtures__/personalMemoryRecords';
+import { createPrivateVaultAuthRuntime } from './authProviderRuntime';
 import { createMemoryStore } from './createMemoryStore';
 import { createLocalPersonalMemoryHttpHandler } from './localHttpTransport';
 import type { MemoryRecord } from './memoryRecord';
@@ -130,6 +131,72 @@ describe('local personal memory HTTP transport', () => {
       statusCode: 400,
       headers: { 'content-type': 'application/json; charset=utf-8' },
       bodyText: JSON.stringify({ error: 'invalid_json_body' }),
+    });
+  });
+
+  test('scopes requests through trusted-header auth runtime owners', async () => {
+    const store = createMemoryStore({ env: {} });
+    await store.create('user-a', personalMemoryRecords[0]);
+    await store.create('user-b', {
+      ...personalMemoryRecords[1],
+      id: 'mem_user_b_trusted_header_guard',
+      sourceRef: 'obsidian://user-b/trusted-header-guard',
+    });
+    const handle = createLocalPersonalMemoryHttpHandler({
+      store,
+      authRuntime: createPrivateVaultAuthRuntime({
+        env: {
+          PMI_AUTH_PROVIDER: 'trusted-header',
+        },
+      }),
+    });
+
+    const exportedA = await handle({
+      method: 'GET',
+      path: '/api/export',
+      headers: {
+        'x-pmi-user-id': 'user-a',
+        authorization: 'Bearer should-not-leak',
+      },
+    });
+    const exportedB = await handle({
+      method: 'GET',
+      path: '/api/export',
+      headers: {
+        'x-pmi-user-id': 'user-b',
+        'x-pmi-session-id': 'session-user-b',
+      },
+    });
+
+    expect(exportedA.statusCode).toBe(200);
+    expect(exportedA.bodyText).toContain(personalMemoryRecords[0].id);
+    expect(exportedA.bodyText).not.toContain('mem_user_b_trusted_header_guard');
+    expect(exportedA.bodyText).not.toContain('should-not-leak');
+    expect(exportedB.statusCode).toBe(200);
+    expect(exportedB.bodyText).toContain('mem_user_b_trusted_header_guard');
+    expect(exportedB.bodyText).not.toContain(personalMemoryRecords[0].id);
+  });
+
+  test('returns auth_required when trusted-header auth has no owner header', async () => {
+    const handle = createLocalPersonalMemoryHttpHandler({
+      store: createMemoryStore({ env: {} }),
+      authRuntime: createPrivateVaultAuthRuntime({
+        env: {
+          PMI_AUTH_PROVIDER: 'trusted-header',
+        },
+      }),
+    });
+
+    const response = await handle({
+      method: 'GET',
+      path: '/api/export',
+      headers: {},
+    });
+
+    expect(response).toEqual({
+      statusCode: 401,
+      headers: { 'content-type': 'application/json; charset=utf-8' },
+      bodyText: JSON.stringify({ error: 'auth_required' }),
     });
   });
 });

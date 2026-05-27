@@ -7,7 +7,7 @@ import {
 } from './memoryIngestion';
 import type { MemoryStore } from './memoryStore';
 import { answerPersonalMemoryQuestion } from './personalMemoryAgent';
-import { resolvePrivateVaultAccess, type LocalPrivateVaultSession } from './privateVault';
+import { resolvePrivateVaultAccess, type PrivateVaultSession } from './privateVault';
 import { saveArtifactAsMemoryRecord, type SavedMemoryArtifact } from './savedMemoryArtifact';
 import { saveUserFeedbackMemory, type UserFeedbackMemoryInput } from './userFeedbackMemory';
 import { generateWeeklyReport } from './weeklyReport';
@@ -38,7 +38,7 @@ export interface HandlePersonalMemoryApiRequestInput {
 
 export interface HandlePrivateVaultMemoryApiRequestInput {
   store: MemoryStore;
-  session: LocalPrivateVaultSession;
+  session: PrivateVaultSession;
   request: PersonalMemoryApiRequest;
   requestedUserId?: string;
 }

@@ -15,6 +15,7 @@ describe('private vault boundary', () => {
     expect(session).toEqual({
       authStatus: 'local-auth-boundary',
       vaultAccess: 'owner-only',
+      providerName: 'local',
       sessionId: 'session-local-a',
       ownerUserId: 'user-a',
       vaultId: 'vault:user-a',

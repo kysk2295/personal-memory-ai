@@ -3,10 +3,10 @@ import { createServer, type IncomingMessage } from 'node:http';
 import { extname, join, normalize } from 'node:path';
 import { Pool } from 'pg';
 import { personalMemoryRecords } from './src/lib/__fixtures__/personalMemoryRecords';
+import { createPrivateVaultAuthRuntime } from './src/lib/authProviderRuntime';
 import { buildLiveHealthPayload } from './src/lib/localServerHealth';
 import { createLocalPersonalMemoryHttpHandler } from './src/lib/localHttpTransport';
 import { createMemoryStoreRuntime } from './src/lib/memoryStoreRuntime';
-import { createLocalPrivateVaultSession } from './src/lib/privateVault';
 
 const root = join(process.cwd(), 'dist');
 const port = Number(process.env.PORT || 3000);
@@ -50,11 +50,7 @@ const memoryRuntime = await createMemoryStoreRuntime({
 
 const apiHandler = createLocalPersonalMemoryHttpHandler({
   store: memoryRuntime.store,
-  session: createLocalPrivateVaultSession({
-    userId: localUserId,
-    sessionId: 'local-dev-session',
-    createdAt: '2026-05-27T17:30:00.000Z',
-  }),
+  authRuntime: createPrivateVaultAuthRuntime({ env: process.env }),
 });
 
 const server = createServer(async (req, res) => {
@@ -69,6 +65,7 @@ const server = createServer(async (req, res) => {
     const response = await apiHandler({
       method: req.method || 'GET',
       path: urlPath.split('?')[0] || '/',
+      headers: req.headers,
       bodyText: await readRequestBody(req),
     });
     res.writeHead(response.statusCode, response.headers);
