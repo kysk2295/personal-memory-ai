@@ -207,7 +207,12 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
 
   await page.locator('[data-control="rearrange"]').click();
   assert((await attribute(page, '.second-brain-shell', 'data-layout-version')) === '1', 'Rearrange should advance layout version');
-  assert((await attribute(page, '.second-brain-shell', 'data-layout-mode')) === 'rearranged', 'Rearrange should switch graph layout mode');
+  assert((await attribute(page, '.second-brain-shell', 'data-layout-mode')) === 'constellation', 'Rearrange should switch graph layout mode');
+  assert(
+    (await attribute(page, '.second-brain-shell', 'data-layout-explainer')) ===
+      'Constellation pins decision and thesis nodes around the selected memory.',
+    'Rearrange should expose benchmark-style constellation layout copy',
+  );
 
   await page.screenshot({ path: interactionScreenshot, fullPage: false });
 
