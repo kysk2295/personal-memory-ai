@@ -91,15 +91,17 @@ npm run build
 
 - RED: `npx vitest run src/lib/notionImport.test.ts src/lib/personalMemoryApi.test.ts src/lib/localHttpTransport.test.ts src/lib/appShellEvidenceLayout.test.ts -t "Notion|notion"` failed because `queryNotionImportSources` was missing, `/api/import/notion/sources` returned 404, and the rendered import panel lacked source-list controls.
 - Focused GREEN passed after implementation:
-  - `npx vitest run src/lib/notionImport.test.ts src/lib/personalMemoryApi.test.ts src/lib/localHttpTransport.test.ts src/lib/appShellEvidenceLayout.test.ts -t "Notion|notion"` passed: 4 files, 9 tests.
+  - `npx vitest run src/lib/notionImport.test.ts src/lib/personalMemoryApi.test.ts src/lib/localHttpTransport.test.ts src/lib/appShellEvidenceLayout.test.ts -t "Notion|notion"` passed: 4 files, 10 tests.
 - Final verification passed:
   - `npm run typecheck`
   - `npm test` passed: 40 files, 151 tests.
   - `npm run build`
-- Final changed files from `git diff --name-only` included four generated screenshot artifact changes that were not part of this contract and were left uncommitted.
+  - `PMI_LOCAL_URL=http://127.0.0.1:3001 npm run evidence:playwright`
+- Local commit: pending local commit for this bounded slice.
+- Final changed files from `git diff --name-only` included code/tests/docs plus four generated screenshot artifact changes from Playwright evidence.
 
 ## Known risks
 
 - Live Notion source listing still requires a valid server-side Notion token and user-approved workspace/database access.
 - Staging PostgreSQL/pgvector/auth/LLM smoke remains secret-gated and was not run.
-- Browser screenshot evidence remains blocked by the local sandbox/server/browser limitations seen in prior runs; this slice is covered by DOM/render and API tests.
+- Live Notion source discovery was not executed against a real database/source id; this slice is covered by deterministic connector/API/HTTP/render tests.
