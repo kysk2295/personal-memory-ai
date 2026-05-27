@@ -103,3 +103,38 @@ export const insufficientPatternMemoryRecords: MemoryRecord[] = [
     extractionStatus: 'ready',
   }),
 ];
+
+export const singleSourceRepeatedMemoryRecords: MemoryRecord[] = [
+  normalizeMemoryRecord({
+    id: 'mem_same_source_repeat_one',
+    sourceType: 'markdown',
+    sourceRef: 'markdown://repeat-1.md',
+    createdAt: '2026-05-18T08:00:00.000Z',
+    observedAt: '2026-05-18',
+    rawText: 'Anxiety about launch made me add features and delay shipping again.',
+    summary: 'Launch anxiety turned into feature addition and shipping delay.',
+    memoryType: 'reflection',
+    emotionTags: ['anxiety'],
+    topicTags: ['feature addition', 'launch delay'],
+    projectTags: ['personal-memory-ai'],
+    decisionSignal: 'chosen',
+    outcomeText: 'Shipping slipped after adding more features.',
+    extractionStatus: 'ready',
+  }),
+  normalizeMemoryRecord({
+    id: 'mem_same_source_repeat_two',
+    sourceType: 'markdown',
+    sourceRef: 'markdown://repeat-2.md',
+    createdAt: '2026-05-19T08:00:00.000Z',
+    observedAt: '2026-05-19',
+    rawText: 'The same anxiety pattern caused expanded scope and another delayed launch.',
+    summary: 'Repeated anxiety scope expansion pattern delayed launch again.',
+    memoryType: 'reflection',
+    emotionTags: ['anxiety', 'pressure'],
+    topicTags: ['scope expansion', 'launch delay'],
+    projectTags: ['personal-memory-ai'],
+    decisionSignal: 'chosen',
+    outcomeText: 'Launch delayed again after scope expansion.',
+    extractionStatus: 'ready',
+  }),
+];
