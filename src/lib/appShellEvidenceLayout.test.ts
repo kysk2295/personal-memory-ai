@@ -388,6 +388,21 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(documentHtml).toContain("setInteractionState('memory-review-comparison-selected')");
   });
 
+  test('wires selected-memory provenance export and download controls through the private API', () => {
+    const documentHtml = renderAppShellDocument();
+
+    expect(documentHtml).toContain('data-memory-provenance-export-state="idle"');
+    expect(documentHtml).toContain('data-memory-provenance-download-state="idle"');
+    expect(documentHtml).toContain('const fetchMemoryProvenanceExport =');
+    expect(documentHtml).toContain('const downloadMemoryProvenance =');
+    expect(documentHtml).toContain("memoryReviewPanel.setAttribute('data-memory-provenance-export-state', 'ready')");
+    expect(documentHtml).toContain("memoryReviewPanel.setAttribute('data-memory-provenance-download-state', 'ready')");
+    expect(documentHtml).toContain("shell.setAttribute('data-last-provenance-export-memory'");
+    expect(documentHtml).toContain("shell.setAttribute('data-last-provenance-download-filename'");
+    expect(documentHtml).toContain("setInteractionState('memory-provenance-exported')");
+    expect(documentHtml).toContain("setInteractionState('memory-provenance-downloaded')");
+  });
+
   test('renders Ask My Past Self as a cited path over the graph with evidence drawer trace', () => {
     const shell = buildInitialAppShellEvidenceLayout();
     const html = renderAppShellHtml();

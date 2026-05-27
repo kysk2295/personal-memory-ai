@@ -290,6 +290,34 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
     'Review comparison click should expose comparison selection interaction state',
   );
 
+  await page.locator('[data-control="export-memory-provenance"]').click();
+  await page.waitForFunction(
+    () => document.querySelector('[data-memory-review-panel="source-edit"]')?.getAttribute('data-memory-provenance-export-state') === 'ready',
+    null,
+    { timeout: 10_000 },
+  );
+  assert(
+    (await attribute(page, '.second-brain-shell', 'data-last-provenance-export-memory')) === 'mem_unrelated_calm_import',
+    'Provenance export should expose the selected memory id',
+  );
+  assert(
+    (await attribute(page, '.second-brain-shell', 'data-interaction-state')) === 'memory-provenance-exported',
+    'Provenance export should expose export interaction state',
+  );
+
+  const downloadPromise = page.waitForEvent('download', { timeout: 10_000 });
+  await page.locator('[data-control="download-memory-provenance"]').click();
+  const download = await downloadPromise;
+  assert(
+    (await attribute(page, '[data-memory-review-panel="source-edit"]', 'data-memory-provenance-download-state')) === 'ready',
+    'Provenance download should mark the download state ready',
+  );
+  assert(download.suggestedFilename().startsWith('memory-provenance-mem_unrelated_calm_import-'), 'Provenance download should use selected-memory filename');
+  assert(
+    (await attribute(page, '.second-brain-shell', 'data-interaction-state')) === 'memory-provenance-downloaded',
+    'Provenance download should expose download interaction state',
+  );
+
   await page.screenshot({ path: searchScreenshot, fullPage: false });
 }
 
@@ -332,6 +360,8 @@ try {
           'memory detail timeline selection',
           'memory review edit ledger',
           'memory review comparison selection',
+          'memory provenance export action',
+          'memory provenance download action',
         ],
       },
       null,

@@ -1749,6 +1749,8 @@ const GRAPH_CONTROL_SCRIPT = `
   const memoryEditSummary = document.querySelector('[data-control="memory-edit-summary"]');
   const memoryEditRawText = document.querySelector('[data-control="memory-edit-raw-text"]');
   const saveMemoryEdit = document.querySelector('[data-control="save-memory-edit"]');
+  const exportMemoryProvenance = document.querySelector('[data-control="export-memory-provenance"]');
+  const downloadMemoryProvenanceButton = document.querySelector('[data-control="download-memory-provenance"]');
   const cytoscapeMount = document.querySelector('[data-graph-library="cytoscape"]');
   const graphPayloadScript = document.querySelector('#memory-graph-elements');
   const savedArtifactPayloadScript = document.querySelector('#saved-artifact-actions');
@@ -1881,6 +1883,79 @@ const GRAPH_CONTROL_SCRIPT = `
     memoryReviewPanel.setAttribute('data-memory-review-history-state', 'ready');
     wireReviewComparisonButtons(list);
     selectReviewComparison(entry.id);
+  };
+
+  const currentProvenancePayload = () => ({
+    memoryId: memoryReviewPanel?.getAttribute('data-memory-review-selected-id') || '',
+    exportedAt: new Date().toISOString(),
+  });
+
+  const fetchMemoryProvenanceExport = async () => {
+    if (!memoryReviewPanel) return null;
+    const endpoint = memoryReviewPanel.getAttribute('data-memory-provenance-export-endpoint') || '';
+    const payload = currentProvenancePayload();
+    if (!endpoint || !payload.memoryId) return null;
+    memoryReviewPanel.setAttribute('data-memory-provenance-export-state', 'loading');
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!response.ok) throw new Error('memory provenance export failed with ' + response.status);
+      const body = await response.json().catch(() => ({}));
+      const exportBundle = body?.export || body;
+      memoryReviewPanel.setAttribute('data-memory-provenance-export-state', 'ready');
+      memoryReviewPanel.setAttribute('data-memory-provenance-export-memory-id', exportBundle?.memory?.id || payload.memoryId);
+      memoryReviewPanel.setAttribute('data-memory-provenance-export-review-count', String(exportBundle?.reviewHistory?.length || 0));
+      memoryReviewPanel.setAttribute('data-memory-provenance-export-related-count', String(exportBundle?.relatedMemoryIds?.length || 0));
+      shell.setAttribute('data-last-provenance-export-memory', exportBundle?.memory?.id || payload.memoryId);
+      setInteractionState('memory-provenance-exported');
+      return exportBundle;
+    } catch (error) {
+      memoryReviewPanel.setAttribute('data-memory-provenance-export-state', 'error');
+      shell.setAttribute('data-memory-provenance-export-error', String(error?.message || error));
+      setInteractionState('memory-provenance-export-error');
+      return null;
+    }
+  };
+
+  const downloadMemoryProvenance = async () => {
+    if (!memoryReviewPanel) return;
+    const endpoint = memoryReviewPanel.getAttribute('data-memory-provenance-download-endpoint') || '';
+    const payload = currentProvenancePayload();
+    if (!endpoint || !payload.memoryId) return;
+    memoryReviewPanel.setAttribute('data-memory-provenance-download-state', 'loading');
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!response.ok) throw new Error('memory provenance download failed with ' + response.status);
+      const filename =
+        response.headers.get('content-disposition')?.match(/filename="([^"]+)"/)?.[1] ||
+        memoryReviewPanel.getAttribute('data-memory-provenance-download-filename') ||
+        'memory-provenance.json';
+      const bodyText = await response.text();
+      const blobUrl = URL.createObjectURL(new Blob([bodyText], { type: 'application/json' }));
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = filename;
+      link.setAttribute('data-generated-provenance-download', filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(blobUrl);
+      memoryReviewPanel.setAttribute('data-memory-provenance-download-state', 'ready');
+      memoryReviewPanel.setAttribute('data-memory-provenance-download-filename', filename);
+      shell.setAttribute('data-last-provenance-download-filename', filename);
+      setInteractionState('memory-provenance-downloaded');
+    } catch (error) {
+      memoryReviewPanel.setAttribute('data-memory-provenance-download-state', 'error');
+      shell.setAttribute('data-memory-provenance-download-error', String(error?.message || error));
+      setInteractionState('memory-provenance-download-error');
+    }
   };
 
   const markCytoscapeSelection = (citation) => {
@@ -2645,6 +2720,14 @@ const GRAPH_CONTROL_SCRIPT = `
     memoryReviewPanel.setAttribute('data-memory-review-state', 'saved');
     shell.setAttribute('data-last-edited-memory', memoryId);
     setInteractionState('memory-review-saved');
+  });
+
+  exportMemoryProvenance?.addEventListener('click', () => {
+    void fetchMemoryProvenanceExport();
+  });
+
+  downloadMemoryProvenanceButton?.addEventListener('click', () => {
+    void downloadMemoryProvenance();
   });
 
   filterButtons.forEach((button) => {

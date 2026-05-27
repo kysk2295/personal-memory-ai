@@ -236,7 +236,7 @@ export async function handlePersonalMemoryApiRequest(
   }
 
   if (request.path === '/api/memory/provenance-export') {
-    if (request.method !== 'GET') return methodNotAllowed();
+    if (request.method !== 'GET' && request.method !== 'POST') return methodNotAllowed();
     const body = readBody<MemoryProvenanceExportBody>(request.body);
     const memoryId = sanitizeOptionalText(body?.memoryId);
     const exportBundle = memoryId
@@ -251,7 +251,7 @@ export async function handlePersonalMemoryApiRequest(
   }
 
   if (request.path === '/api/memory/provenance-download') {
-    if (request.method !== 'GET') return methodNotAllowed();
+    if (request.method !== 'GET' && request.method !== 'POST') return methodNotAllowed();
     const body = readBody<MemoryProvenanceExportBody>(request.body);
     const memoryId = sanitizeOptionalText(body?.memoryId);
     const exportBundle = memoryId

@@ -519,6 +519,48 @@ describe('personal memory API boundary', () => {
     expect(JSON.stringify(downloaded.body)).not.toContain('obsidian://other-user/provenance-download-guard');
   });
 
+  test('allows browser provenance controls to export and download selected memory through POST bodies', async () => {
+    const store = createMemoryStore({ env: {} });
+    await store.create('user-a', personalMemoryRecords[2]);
+
+    const exported = await handlePersonalMemoryApiRequest({
+      store,
+      userId: 'user-a',
+      request: {
+        method: 'POST',
+        path: '/api/memory/provenance-export',
+        body: {
+          memoryId: 'mem_freeze_vs_feature_addition',
+          exportedAt: '2026-05-28T00:00:00.000Z',
+        },
+      },
+    });
+    const downloaded = await handlePersonalMemoryApiRequest({
+      store,
+      userId: 'user-a',
+      request: {
+        method: 'POST',
+        path: '/api/memory/provenance-download',
+        body: {
+          memoryId: 'mem_freeze_vs_feature_addition',
+          exportedAt: '2026-05-28T00:00:00.000Z',
+        },
+      },
+    });
+
+    expect(exported.statusCode).toBe(200);
+    expect(exported.body).toEqual({
+      export: expect.objectContaining({
+        exportType: 'memory_provenance',
+        filename: 'memory-provenance-mem_freeze_vs_feature_addition-2026-05-28.json',
+      }),
+    });
+    expect(downloaded.statusCode).toBe(200);
+    expect(downloaded.headers?.['content-disposition']).toBe(
+      'attachment; filename="memory-provenance-mem_freeze_vs_feature_addition-2026-05-28.json"',
+    );
+  });
+
   test('handles ask, replay, and weekly report without leaking another user memory', async () => {
     const store = createMemoryStore({ env: {} });
     for (const record of personalMemoryRecords.slice(0, 3)) {

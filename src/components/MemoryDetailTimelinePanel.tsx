@@ -84,7 +84,7 @@ export function renderMemoryDetailTimelinePanel(layout: InitialAppShellEvidenceL
       selectedEntry
         ? `<article class="memory-review-panel" aria-label="Source-backed memory review" data-memory-review-panel="source-edit" data-memory-detail-endpoint="/api/memory/detail" data-memory-update-endpoint="/api/memory/update" data-memory-review-history-endpoint="/api/memory/review-history" data-memory-provenance-export-endpoint="/api/memory/provenance-export" data-memory-provenance-export-filename="${escapeHtml(
             buildMemoryProvenanceExportFilename(selectedEntry.memoryId, '2026-05-27T00:00:00.000Z'),
-          )}" data-memory-provenance-download-endpoint="/api/memory/provenance-download" data-memory-provenance-download-filename="${escapeHtml(
+          )}" data-memory-provenance-download-endpoint="/api/memory/provenance-download" data-memory-provenance-export-state="idle" data-memory-provenance-download-state="idle" data-memory-provenance-download-filename="${escapeHtml(
             buildMemoryProvenanceExportFilename(selectedEntry.memoryId, '2026-05-27T00:00:00.000Z'),
           )}" data-memory-review-selected-id="${escapeHtml(
             selectedEntry.memoryId,
