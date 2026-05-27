@@ -216,6 +216,85 @@ describe('personal memory API boundary', () => {
     expect(JSON.stringify(report.body)).not.toContain('mem_other_user_api_private');
   });
 
+  test('evaluates due weekly report schedule with owner-scoped memories and in-app notification', async () => {
+    const store = createMemoryStore({ env: {} });
+    for (const record of personalMemoryRecords.slice(0, 3)) {
+      await store.create('user-a', record);
+    }
+    await store.create('user-b', {
+      ...personalMemoryRecords[0],
+      id: 'mem_other_user_schedule_guard',
+      sourceRef: 'notion://other-user/schedule-guard',
+    });
+
+    const response = await handlePersonalMemoryApiRequest({
+      store,
+      userId: 'user-a',
+      request: {
+        method: 'POST',
+        path: '/api/report/weekly/schedule/evaluate',
+        body: {
+          nowLocalDateTime: '2026-05-25T09:05:00',
+        },
+      },
+    });
+
+    expect(response.statusCode).toBe(200);
+    const body = response.body as {
+      evaluation: unknown;
+      weeklyReport?: WeeklyReport;
+    };
+    expect(body).toEqual(
+      expect.objectContaining({
+        evaluation: expect.objectContaining({
+          due: true,
+          reportId: 'weekly_report_2026-05-18_2026-05-24',
+          notification: expect.objectContaining({
+            channel: 'in-app',
+            reportId: 'weekly_report_2026-05-18_2026-05-24',
+          }),
+        }),
+        weeklyReport: expect.objectContaining({
+          id: 'weekly_report_2026-05-18_2026-05-24',
+          includedMemoryIds: ['mem_freeze_vs_feature_addition'],
+        }),
+      }),
+    );
+    expect(JSON.stringify(response.body)).not.toContain('mem_other_user_schedule_guard');
+  });
+
+  test('suppresses already generated weekly report schedules', async () => {
+    const store = createMemoryStore({ env: {} });
+    await store.create('user-a', personalMemoryRecords[2]);
+
+    const response = await handlePersonalMemoryApiRequest({
+      store,
+      userId: 'user-a',
+      request: {
+        method: 'POST',
+        path: '/api/report/weekly/schedule/evaluate',
+        body: {
+          nowLocalDateTime: '2026-05-25T09:05:00',
+          lastGeneratedReportId: 'weekly_report_2026-05-18_2026-05-24',
+        },
+      },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.body).toEqual({
+      evaluation: {
+        due: false,
+        reason: 'already_generated',
+        reportId: 'weekly_report_2026-05-18_2026-05-24',
+        reportWindow: {
+          startDate: '2026-05-18',
+          endDate: '2026-05-24',
+        },
+        scheduledForLocal: '2026-05-25T09:00:00',
+      },
+    });
+  });
+
   test('handles export and delete within one private user scope', async () => {
     const store = createMemoryStore({ env: {} });
     await store.create('user-a', personalMemoryRecords[0]);

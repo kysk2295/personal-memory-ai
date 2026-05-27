@@ -199,4 +199,38 @@ describe('local personal memory HTTP transport', () => {
       bodyText: JSON.stringify({ error: 'auth_required' }),
     });
   });
+
+  test('evaluates scheduled weekly reports through the HTTP private vault owner', async () => {
+    const store = createMemoryStore({ env: {} });
+    await store.create('user-a', personalMemoryRecords[2]);
+    await store.create('user-b', {
+      ...personalMemoryRecords[2],
+      id: 'mem_other_user_http_schedule_guard',
+      sourceRef: 'obsidian://other-user/http-schedule-guard',
+    });
+    const handle = createLocalPersonalMemoryHttpHandler({
+      store,
+      authRuntime: createPrivateVaultAuthRuntime({
+        env: {
+          PMI_AUTH_PROVIDER: 'trusted-header',
+        },
+      }),
+    });
+
+    const response = await handle({
+      method: 'POST',
+      path: '/api/report/weekly/schedule/evaluate',
+      headers: {
+        'x-pmi-user-id': 'user-a',
+      },
+      bodyText: JSON.stringify({
+        nowLocalDateTime: '2026-05-25T09:05:00',
+      }),
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.bodyText).toContain('weekly_report_2026-05-18_2026-05-24');
+    expect(response.bodyText).toContain('mem_freeze_vs_feature_addition');
+    expect(response.bodyText).not.toContain('mem_other_user_http_schedule_guard');
+  });
 });

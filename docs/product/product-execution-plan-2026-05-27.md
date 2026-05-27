@@ -2,7 +2,7 @@
 
 Status: active local execution plan  
 Owner: Ko Yunseo  
-Updated: 2026-05-28, auth provider runtime pass
+Updated: 2026-05-28, weekly report schedule pass
 Supersedes for local Codex work: `docs/product/product-master-plan-2026-05-26.md`
 
 ## 1. Product Definition
@@ -129,7 +129,7 @@ Status values:
 | Reports | Weekly Pattern Report foundation | `done-foundation` | Weekly report panel and pattern citation panel are visible in the web surface. |
 | Reports | Weekly report engine | `done-foundation` | Date-window report generation aggregates emotions, decisions, outcomes, projects, and pattern citations. |
 | Reports | Saved weekly/monthly reports | `prototype-ui` | Weekly reports can become saved artifacts and future pattern memories; Save report feeds the graph/timeline display model and posts artifact payloads through `/api/capture` when served over HTTP. |
-| Reports | Scheduler/reminders | `planned` | After report engine and app/PWA capture. |
+| Reports | Scheduler/reminders | `done-foundation` | Deterministic weekly schedule evaluation returns due windows, duplicate suppression, and in-app notification payloads through the private-vault API. |
 | Agent | Personal Memory Agent orchestrator | `done-foundation` | Loads user-scoped retrieved memories and returns ask/replay/graph evidence with retrieval metadata. |
 | Agent | Semantic retrieval/reranking | `done-foundation` | Deterministic retrieval contract ranks user-scoped memories; pgvector path remains a backend task. |
 | Agent | Multi-axis retrieval router | `done-foundation` | Deterministic router fuses keyword, semantic, knowledge-ledger graph traversal, temporal freshness, and user feedback corrections; legacy retrieval delegates to it. |
@@ -202,10 +202,11 @@ No remote push, main merge, production deploy, or secret access is allowed witho
 - L33: feedback retrieval priority.
 - L34: Gemini provider adapter.
 - L35: private vault auth provider runtime.
+- L36: weekly report schedule evaluation.
 
 ## 6. Active Next Loops
 
-Next local loop: add recurring weekly report generation and notification scheduling locally, or run staging PostgreSQL/pgvector/auth smoke harness when deployment secrets are available. Live LLM keys, hosted identity configuration, and deployment wiring stay gated until secrets/deploy target are explicitly available.
+Next local loop: add file upload/import UI for real personal memory onboarding, or run staging PostgreSQL/pgvector/auth smoke harness when deployment secrets are available. Live LLM keys, hosted identity configuration, and deployment wiring stay gated until secrets/deploy target are explicitly available.
 
 ## 7. Completed Loop Details
 
@@ -812,6 +813,27 @@ Implemented:
 - `server.ts`
 - `docs/superpowers/plans/2026-05-28-auth-provider-runtime.md`
 
+### L36 — Weekly Report Schedule Evaluation
+
+Goal: add a local recurring weekly report schedule contract that can later be driven by cron, push, email, or app notifications.
+
+Acceptance:
+
+- default owner schedule runs Monday 09:00 in Asia/Seoul
+- due evaluation returns the previous Monday-Sunday report window
+- already-generated report ids suppress duplicate due runs
+- private-vault API evaluates schedules with owner-scoped memories only
+- due responses include an in-app notification payload
+
+Implemented:
+
+- `src/lib/weeklyReportSchedule.ts`
+- `src/lib/weeklyReportSchedule.test.ts`
+- `src/lib/personalMemoryApi.ts`
+- `src/lib/personalMemoryApi.test.ts`
+- `src/lib/localHttpTransport.test.ts`
+- `docs/superpowers/plans/2026-05-28-weekly-report-schedule.md`
+
 ## 8. MVP Time Estimate
 
 Assuming focused local development without major dependency or deployment blockers:
@@ -825,7 +847,7 @@ Assuming focused local development without major dependency or deployment blocke
 
 Critical path for the next "나를 아는 AI" jump:
 
-1. Add recurring weekly report generation and notification scheduling.
+1. Add file upload/import UI so real Notion/Obsidian/Markdown memories can enter the private graph without hand-coded fixtures.
 2. Run staging PostgreSQL/pgvector/auth smoke against the already wired Postgres/auth runtimes when deployment secrets are available.
 3. Connect hosted identity/OAuth on the deployment target.
 

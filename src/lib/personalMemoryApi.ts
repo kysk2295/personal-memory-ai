@@ -11,6 +11,11 @@ import { resolvePrivateVaultAccess, type PrivateVaultSession } from './privateVa
 import { saveArtifactAsMemoryRecord, type SavedMemoryArtifact } from './savedMemoryArtifact';
 import { saveUserFeedbackMemory, type UserFeedbackMemoryInput } from './userFeedbackMemory';
 import { generateWeeklyReport } from './weeklyReport';
+import {
+  createDefaultWeeklyReportSchedule,
+  evaluateWeeklyReportSchedule,
+  type WeeklyReportSchedule,
+} from './weeklyReportSchedule';
 
 export type PersonalMemoryApiMethod = 'GET' | 'POST';
 export type PersonalMemoryApiPath =
@@ -20,6 +25,7 @@ export type PersonalMemoryApiPath =
   | '/api/ask'
   | '/api/replay'
   | '/api/report/weekly'
+  | '/api/report/weekly/schedule/evaluate'
   | '/api/feedback'
   | '/api/export'
   | '/api/delete';
@@ -77,6 +83,12 @@ interface WeeklyReportBody {
   startDate: string;
   endDate: string;
   generatedAt?: string;
+}
+
+interface WeeklyReportScheduleEvaluateBody {
+  nowLocalDateTime: string;
+  lastGeneratedReportId?: string;
+  schedule?: Partial<WeeklyReportSchedule>;
 }
 
 interface DeleteBody {
@@ -198,6 +210,29 @@ export async function handlePersonalMemoryApiRequest(
       generatedAt: body.generatedAt,
     });
     return { statusCode: 200, body: { weeklyReport } };
+  }
+
+  if (request.path === '/api/report/weekly/schedule/evaluate') {
+    if (request.method !== 'POST') return methodNotAllowed();
+    const body = readBody<WeeklyReportScheduleEvaluateBody>(request.body);
+    const schedule = {
+      ...createDefaultWeeklyReportSchedule({ userId }),
+      ...body.schedule,
+    };
+    const evaluation = evaluateWeeklyReportSchedule({
+      schedule,
+      nowLocalDateTime: body.nowLocalDateTime,
+      lastGeneratedReportId: body.lastGeneratedReportId,
+    });
+    if (!evaluation.due) return { statusCode: 200, body: { evaluation } };
+
+    const weeklyReport = generateWeeklyReport({
+      records: await store.listByUser(userId),
+      startDate: evaluation.reportWindow.startDate,
+      endDate: evaluation.reportWindow.endDate,
+      generatedAt: `${body.nowLocalDateTime}.000`,
+    });
+    return { statusCode: 200, body: { evaluation, weeklyReport } };
   }
 
   if (request.path === '/api/feedback') {
