@@ -63,6 +63,7 @@ export interface DecisionReplayResult {
 }
 
 const SIMILAR_DECISION_THRESHOLD = 2;
+const OUTCOME_CITATION_THRESHOLD = 2;
 const SUFFICIENT_RECOMMENDATION =
   'Based on cited memories, freeze Decision Replay scope for review instead of adding more polish.';
 const INSUFFICIENT_RECOMMENDATION =
@@ -195,6 +196,10 @@ function collectOutcomes(memories: readonly MemoryRecord[]): string[] {
   return outcomes;
 }
 
+function countOutcomeCitations(memories: readonly MemoryRecord[]): number {
+  return memories.filter((memory) => Boolean(memory.outcomeText)).length;
+}
+
 function buildGraphHighlightIds(
   currentDecision: CurrentDecision,
   similarPastDecisions: readonly SimilarPastDecision[],
@@ -223,9 +228,13 @@ function buildGraphHighlightIds(
   return graphHighlightIds;
 }
 
-function buildUncertainty(hasSufficientEvidence: boolean, similarPastDecisionCount: number): string {
+function buildUncertainty(
+  hasSufficientEvidence: boolean,
+  similarPastDecisionCount: number,
+  outcomeCitationCount: number,
+): string {
   if (!hasSufficientEvidence) {
-    return `Need at least ${SIMILAR_DECISION_THRESHOLD} similar past decision citations with a sufficient pattern before recommending. Current cited support: ${similarPastDecisionCount}.`;
+    return `Need at least ${SIMILAR_DECISION_THRESHOLD} similar past decision citations and ${OUTCOME_CITATION_THRESHOLD} cited past outcomes with a sufficient pattern before recommending. Current cited support: ${similarPastDecisionCount}; cited outcomes: ${outcomeCitationCount}.`;
   }
 
   return 'Recommendation is bounded to cited personal memories and should not be treated as general advice.';
@@ -239,9 +248,11 @@ export function replayDecision(input: DecisionReplayInput): DecisionReplayResult
   );
   const citationMemoryIds = similarPastDecisions.map((decision) => decision.memoryId);
   const citations = supportingMemories.map((memory) => buildCitation(input.currentDecision.id, memory));
+  const outcomeCitationCount = countOutcomeCitations(supportingMemories);
   const hasSufficientEvidence =
     primaryPattern?.evidenceLabel === 'sufficient_evidence' &&
-    citationMemoryIds.length >= SIMILAR_DECISION_THRESHOLD;
+    citationMemoryIds.length >= SIMILAR_DECISION_THRESHOLD &&
+    outcomeCitationCount >= OUTCOME_CITATION_THRESHOLD;
 
   return {
     status: 'implemented',
@@ -254,7 +265,7 @@ export function replayDecision(input: DecisionReplayInput): DecisionReplayResult
     citations,
     pattern: primaryPattern && hasSufficientEvidence ? buildPatternSummary(primaryPattern) : undefined,
     recommendation: hasSufficientEvidence ? SUFFICIENT_RECOMMENDATION : INSUFFICIENT_RECOMMENDATION,
-    uncertainty: buildUncertainty(hasSufficientEvidence, citationMemoryIds.length),
+    uncertainty: buildUncertainty(hasSufficientEvidence, citationMemoryIds.length, outcomeCitationCount),
     confidence: hasSufficientEvidence ? primaryPattern.confidence : 0,
     citationMemoryIds,
     graphHighlightIds: buildGraphHighlightIds(

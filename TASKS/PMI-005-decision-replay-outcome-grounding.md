@@ -6,7 +6,7 @@ PMI-005
 
 ## Status
 
-ready_for_rpi
+ready_for_human_review
 
 ## Goal
 
