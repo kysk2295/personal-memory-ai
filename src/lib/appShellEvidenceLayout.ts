@@ -5,6 +5,7 @@ import { buildImportPreview } from './importPreview';
 import { compileMemoryRecordsToWikiGraph, type CompiledWikiGraph } from './llmWikiCompiler';
 import { personalMemoryRecords } from './__fixtures__/personalMemoryRecords';
 import type { MemoryRecord } from './memoryRecord';
+import type { MemoryStore } from './memoryStore';
 import { detectRepeatedPatterns, type PatternDetectionStatus } from './patternDetector';
 
 export type ShellLinkKind = 'emotion' | 'project' | 'decision' | 'outcome' | 'source';
@@ -143,8 +144,7 @@ function buildRecordLinks(records: readonly MemoryRecord[]): ShellLink[] {
   return links;
 }
 
-export function buildInitialAppShellEvidenceLayout(): InitialAppShellEvidenceLayout {
-  const records = personalMemoryRecords;
+export function buildAppShellEvidenceLayoutFromRecords(records: readonly MemoryRecord[]): InitialAppShellEvidenceLayout {
   const patterns = detectRepeatedPatterns(records);
   const askQuestion = '이번에도 기능을 더 넣어야 할까?';
   const ask = askMyPastSelf({
@@ -282,4 +282,19 @@ export function buildInitialAppShellEvidenceLayout(): InitialAppShellEvidenceLay
       items: graphEvidence.drawerItems,
     },
   };
+}
+
+export interface BuildAppShellEvidenceLayoutFromMemoryStoreInput {
+  store: MemoryStore;
+  userId: string;
+}
+
+export async function buildAppShellEvidenceLayoutFromMemoryStore(
+  input: BuildAppShellEvidenceLayoutFromMemoryStoreInput,
+): Promise<InitialAppShellEvidenceLayout> {
+  return buildAppShellEvidenceLayoutFromRecords(await input.store.listByUser(input.userId));
+}
+
+export function buildInitialAppShellEvidenceLayout(): InitialAppShellEvidenceLayout {
+  return buildAppShellEvidenceLayoutFromRecords(personalMemoryRecords);
 }

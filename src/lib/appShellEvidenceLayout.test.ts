@@ -1,6 +1,11 @@
 import { describe, expect, test } from 'vitest';
 import { renderAppShellDocument, renderAppShellHtml } from '../App';
-import { buildInitialAppShellEvidenceLayout } from './appShellEvidenceLayout';
+import {
+  buildAppShellEvidenceLayoutFromMemoryStore,
+  buildInitialAppShellEvidenceLayout,
+} from './appShellEvidenceLayout';
+import { createMemoryStore } from './createMemoryStore';
+import { personalMemoryRecords } from './__fixtures__/personalMemoryRecords';
 
 describe('buildInitialAppShellEvidenceLayout', () => {
   test('loads the first-screen memory-brain graph around diary and imported memories', () => {
@@ -76,6 +81,32 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(shell.surfaces.map((surface) => surface.status)).toEqual(
       expect.arrayContaining(['implemented', 'partial', 'skeleton', 'fake/sample', 'planned']),
     );
+  });
+
+  test('can assemble the app shell data from one user memory store records', async () => {
+    const store = createMemoryStore({ env: {} });
+    const userRecords = personalMemoryRecords.slice(0, 3);
+
+    for (const record of userRecords) {
+      await store.create('user-a', record);
+    }
+    await store.create('user-b', {
+      ...personalMemoryRecords[3],
+      id: 'mem_other_user_hidden_from_shell',
+      sourceRef: 'markdown://other-user/private.md',
+    });
+
+    const shell = await buildAppShellEvidenceLayoutFromMemoryStore({
+      store,
+      userId: 'user-a',
+    });
+
+    expect(shell.primaryNodes.map((node) => node.recordId).sort()).toEqual(userRecords.map((record) => record.id).sort());
+    expect(shell.primaryNodes.map((node) => node.recordId)).not.toContain('mem_other_user_hidden_from_shell');
+    expect(shell.records.map((record) => record.id)).not.toContain('mem_other_user_hidden_from_shell');
+    expect(shell.compiledWiki.atomCount).toBe(userRecords.length);
+    expect(shell.ask.citationMemoryIds.sort()).toEqual(userRecords.map((record) => record.id).sort());
+    expect(shell.evidenceDrawer.items.map((item) => item.citation).join(' ')).not.toContain('mem_other_user_hidden_from_shell');
   });
 
   test('renders a benchmark-like second-brain graph workspace instead of a dashboard shell', () => {
