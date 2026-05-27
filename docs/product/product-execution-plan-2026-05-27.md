@@ -92,7 +92,7 @@ Status values:
 | Capture | Voice capture | `later` | In PRD direction, not MVP-critical. |
 | Capture | Emotion/project/decision hints | `done-foundation` | Data contract exists; full UI still planned. |
 | Import | Notion/Obsidian/Markdown preview | `done-foundation` | Preview/dedupe contract exists. |
-| Import | Apply/undo import state model | `partial` | Domain apply/undo exists; richer state model is next. |
+| Import | Apply/undo import state model | `done-foundation` | Batch state model tracks preview, applied, skipped, graph evidence, and undone states. |
 | Import | File upload/import UI | `planned` | Needed before real personal use. |
 | Memory Store | Fixture user isolation | `done-foundation` | Tests cover user-scoped records. |
 | Memory Store | PostgreSQL repository | `done-foundation` | Code exists; staging smoke still planned. |
@@ -145,21 +145,9 @@ No remote push, main merge, production deploy, or secret access is allowed witho
 - L3: capture/import product surface.
 - L4: personal memory agent orchestrator.
 - L5: store-backed app shell data builder.
+- L6: import apply/undo UI state model.
 
 ## 6. Active Next Loops
-
-### L6 — Import Apply/Undo UI State Model
-
-Goal: model the state transitions for applying and undoing import batches before adding real client interactivity.
-
-Acceptance:
-
-- apply creates graph-visible records
-- undo removes only applied records
-- duplicate rows are skipped by default
-- tests cover state transitions
-
-Estimated effort: 0.5-1 day.
 
 ### L7 — Weekly Report Engine
 
@@ -310,6 +298,22 @@ Implemented:
 
 - `buildAppShellEvidenceLayoutFromRecords(records)`
 - `buildAppShellEvidenceLayoutFromMemoryStore({ store, userId })`
+
+### L6 — Import Apply/Undo UI State Model
+
+Goal: model the state transitions for applying and undoing import batches before adding real client interactivity.
+
+Acceptance:
+
+- preview state tracks importable and default-skipped rows
+- applied state tracks created records, skipped rows, graph-visible records, and undo availability
+- undone state clears graph-visible records and disables undo
+- duplicate rows remain skipped by default through the ingestion loop
+
+Implemented:
+
+- `src/lib/importBatchState.ts`
+- `src/lib/importBatchState.test.ts`
 
 ## 8. MVP Time Estimate
 
