@@ -350,6 +350,9 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('data-control="apply-local-import"');
     expect(html).toContain('data-import-upload-file-count="0"');
     expect(html).toContain('data-import-upload-candidate-count="0"');
+    expect(html).toContain('data-import-applied-feedback="local-upload"');
+    expect(html).toContain('data-import-applied-count="0"');
+    expect(html).toContain('data-import-applied-memory-list');
     expect(html).toContain('Markdown, JSON, Obsidian export');
     expect(html).toContain('Apply import');
     expect(html).toContain('Undo import');
@@ -458,5 +461,8 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(documentHtml).toContain("importUploadPanel.setAttribute('data-import-upload-state', 'preview-ready')");
     expect(documentHtml).toContain("fetch(importPreviewEndpoint");
     expect(documentHtml).toContain("fetch(importApplyEndpoint");
+    expect(documentHtml).toContain('const renderAppliedImportFeedback =');
+    expect(documentHtml).toContain("timelinePanel.setAttribute('data-timeline-entry-count'");
+    expect(documentHtml).toContain("shell.setAttribute('data-import-applied-memory-ids'");
   });
 });

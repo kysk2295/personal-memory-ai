@@ -1654,6 +1654,8 @@ const GRAPH_CONTROL_SCRIPT = `
   const importApplyButton = document.querySelector('[data-control="apply-local-import"]');
   const importUploadSummary = document.querySelector('[data-import-upload-summary]');
   const importUploadPreviewList = document.querySelector('[data-import-upload-preview-list]');
+  const importAppliedFeedback = document.querySelector('[data-import-applied-feedback="local-upload"]');
+  const importAppliedMemoryList = document.querySelector('[data-import-applied-memory-list]');
   const cytoscapeMount = document.querySelector('[data-graph-library="cytoscape"]');
   const graphPayloadScript = document.querySelector('#memory-graph-elements');
   const savedArtifactPayloadScript = document.querySelector('#saved-artifact-actions');
@@ -2138,6 +2140,55 @@ const GRAPH_CONTROL_SCRIPT = `
       .join('');
   };
 
+  const renderAppliedImportFeedback = (createdMemoryIds, graphEvidenceRecords) => {
+    const records = Array.isArray(graphEvidenceRecords) ? graphEvidenceRecords : [];
+    const ids = Array.isArray(createdMemoryIds) ? createdMemoryIds : [];
+    shell.setAttribute('data-import-applied-memory-ids', ids.join(','));
+    shell.setAttribute('data-graph-import-pending', ids.length ? 'true' : 'false');
+    if (importAppliedFeedback) importAppliedFeedback.setAttribute('data-import-applied-count', String(ids.length));
+    if (importAppliedMemoryList) {
+      importAppliedMemoryList.innerHTML = records
+        .map(
+          (record) =>
+            '<article data-import-applied-memory-id="' +
+            escapeText(record.id || '') +
+            '"><strong>' +
+            escapeText(record.summary || record.id || 'Imported memory') +
+            '</strong><span>' +
+            escapeText(record.sourceType || 'markdown') +
+            ' · ' +
+            escapeText(record.observedAt || record.createdAt || '') +
+            '</span></article>',
+        )
+        .join('');
+    }
+    const timelineList = timelinePanel?.querySelector('.timeline-list');
+    if (timelinePanel && timelineList && records.length) {
+      const currentCount = Number(timelinePanel.getAttribute('data-timeline-entry-count') || '0');
+      timelinePanel.setAttribute('data-timeline-entry-count', String(currentCount + records.length));
+      records.forEach((record) => {
+        const item = document.createElement('button');
+        item.type = 'button';
+        item.className = 'timeline-memory-item imported-memory-item';
+        item.setAttribute('data-control', 'timeline-select-memory');
+        item.setAttribute('data-timeline-memory-id', record.id || '');
+        item.setAttribute('data-timeline-active', 'false');
+        item.setAttribute('data-imported-memory', 'true');
+        item.innerHTML =
+          '<span class="timeline-date">' +
+          escapeText(record.observedAt || record.createdAt || '') +
+          '</span><strong>' +
+          escapeText(record.summary || record.id || 'Imported memory') +
+          '</strong><span class="timeline-source">' +
+          escapeText(record.sourceType || 'markdown') +
+          '</span><span class="timeline-excerpt">' +
+          escapeText(record.rawText || '') +
+          '</span>';
+        timelineList.prepend(item);
+      });
+    }
+  };
+
   importPreviewButton?.addEventListener('click', async () => {
     if (!importUploadPanel) return;
     importUploadPanel.setAttribute('data-import-upload-state', 'reading');
@@ -2206,6 +2257,7 @@ const GRAPH_CONTROL_SCRIPT = `
         if (!response.ok) throw new Error('import apply failed with ' + response.status);
         const body = await response.json().catch(() => ({}));
         shell.setAttribute('data-last-import-created-count', String(body.createdMemoryIds?.length || 0));
+        renderAppliedImportFeedback(body.createdMemoryIds || [], body.graphEvidenceRecords || []);
       }
       importUploadPanel.setAttribute('data-import-upload-state', 'applied');
       setInteractionState('import-applied');

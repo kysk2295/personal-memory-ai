@@ -140,7 +140,10 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   );
   assert((await attribute(page, '.second-brain-shell', 'data-interaction-state')) === 'feedback-submitted', 'Shell should expose feedback submitted state');
 
-  await page.locator('[data-control="local-import-paste-text"]').fill('Imported local memory says I should cut scope before adding another visual feature.');
+  const importNonce = `playwright-${Date.now()}`;
+  await page
+    .locator('[data-control="local-import-paste-text"]')
+    .fill(`Imported local memory ${importNonce} says I should cut scope before adding another visual feature.`);
   await page.locator('[data-control="preview-local-import"]').click();
   await page.waitForFunction(() => document.querySelector('[data-import-upload-panel="local-file"]')?.getAttribute('data-import-upload-state') === 'preview-ready');
   assert((await attribute(page, '[data-import-upload-panel="local-file"]', 'data-import-upload-candidate-count')) === '1', 'Local import preview should create one candidate');
@@ -148,6 +151,10 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   await page.locator('[data-control="apply-local-import"]').click();
   await page.waitForFunction(() => document.querySelector('[data-import-upload-panel="local-file"]')?.getAttribute('data-import-upload-state') === 'applied');
   assert((await attribute(page, '.second-brain-shell', 'data-interaction-state')) === 'import-applied', 'Shell should expose local import apply state');
+  assert((await attribute(page, '[data-import-applied-feedback="local-upload"]', 'data-import-applied-count')) === '1', 'Applied import feedback should expose created memory count');
+  assert((await page.locator('[data-import-applied-memory-id]').count()) === 1, 'Applied import feedback should render created memory rows');
+  assert((await page.locator('[data-imported-memory="true"]').count()) === 1, 'Applied import should append an imported timeline row');
+  assert((await attribute(page, '.second-brain-shell', 'data-graph-import-pending')) === 'true', 'Shell should mark graph import refresh pending after apply');
 
   await page.locator('[data-control="spacing"][data-spacing="wide"]').click();
   assert((await attribute(page, '.second-brain-shell', 'data-spacing')) === 'wide', 'Spacing control should switch graph spacing to wide');
@@ -257,6 +264,8 @@ try {
           'feedback correction action',
           'local import upload preview',
           'local import upload apply',
+          'applied import graph feedback',
+          'applied import timeline append',
           'spacing click',
           'label toggle',
           'filter toggle',

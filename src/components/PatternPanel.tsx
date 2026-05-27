@@ -75,6 +75,10 @@ export function renderPatternPanel(layout: InitialAppShellEvidenceLayout): strin
             </div>
             <output data-import-upload-summary>0 files · 0 candidates</output>
             <div data-import-upload-preview-list aria-label="Local import preview results"></div>
+            <section class="import-applied-feedback" aria-label="Applied import graph feedback" data-import-applied-feedback="local-upload" data-import-applied-count="0">
+              <strong>Applied imports join the private graph</strong>
+              <div data-import-applied-memory-list></div>
+            </section>
           </section>
           <div class="import-preview-list">
             ${previewRecords
