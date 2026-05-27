@@ -2,7 +2,7 @@
 
 Status: active local execution plan  
 Owner: Ko Yunseo  
-Updated: 2026-05-27, Postgres/pgvector runtime pass
+Updated: 2026-05-27, knowledge ledger pass
 Supersedes for local Codex work: `docs/product/product-master-plan-2026-05-26.md`
 
 ## 1. Product Definition
@@ -113,8 +113,8 @@ Status values:
 | Memory Store | PostgreSQL repository | `done-foundation` | Runtime factory can select Postgres via `MEMORY_BACKEND_MODE=postgres` and `DATABASE_URL`; live credentials remain a deployment gate. |
 | Memory Store | pgvector semantic search | `done-foundation` | Store method, migration, optional auto-migrate, and safe runtime health metadata exist; live staging execution remains gated on secrets/deploy target. |
 | Knowledge Layer | LLM Wiki compiler | `done-foundation` | Local compiler turns `MemoryRecord`s into canonical memory atoms plus source/concept/decision/pattern nodes with citations, freshness, and retain/recall/reflect markers. |
-| Knowledge Layer | Typed edge ledger | `planned` | Move beyond generated UI edges into append-only, typed, confidence-weighted knowledge edges with stale-edge checks. |
-| Knowledge Layer | Raw archive and checkpoint loop | `planned` | Preserve immutable raw diary/import text, then atomize, dedupe, review, and apply changes as reversible memory operations. |
+| Knowledge Layer | Typed edge ledger | `done-foundation` | `memoryKnowledgeLedger` emits typed, confidence-weighted edges for citations, facets, sources, outcomes, and compiled patterns with stale-edge checks. |
+| Knowledge Layer | Raw archive and checkpoint loop | `done-foundation` | Immutable raw diary/import archive entries, canonical thoughts, and an atomize/dedup/apply checkpoint exist as a deterministic local ledger. |
 | Web | Graph-first second brain | `prototype-ui` | `MemoryRecord` data now builds a Cytoscape graph with 5 memory nodes, 34 total graph nodes, and 40 data-derived edges; fallback SVG is hidden after the graph library is ready. |
 | Web | Evidence drawer | `prototype-ui` | Source/date/raw excerpt/why-connected visible. |
 | Web | Individual memory detail page | `planned` | Selected-memory detail inspector exists; full review/edit page remains planned. |
@@ -186,10 +186,11 @@ No remote push, main merge, production deploy, or secret access is allowed witho
 - L19: memory search and detail interaction verification.
 - L20: data-driven Cytoscape memory graph renderer.
 - L21: Postgres/pgvector runtime backend selection.
+- L22: canonical memory knowledge ledger.
 
 ## 6. Active Next Loops
 
-Next local loop: canonical atom/thought schema and typed edge ledger, then multi-axis retrieval and detail/timeline surfaces. Production auth, live LLM keys, and deployment wiring stay gated until secrets/deploy target are explicitly available.
+Next local loop: multi-axis retrieval over the knowledge ledger, then detail/timeline surfaces and saved report/advice artifacts. Production auth, live LLM keys, and deployment wiring stay gated until secrets/deploy target are explicitly available.
 
 ## 7. Completed Loop Details
 
@@ -515,6 +516,24 @@ Implemented:
 - `server.ts`
 - `pg` runtime dependency and `@types/pg` development dependency
 
+### L22 — Canonical Memory Knowledge Ledger
+
+Goal: promote compiled memory atoms into a private, deterministic knowledge ledger that can back graph traversal and multi-axis retrieval.
+
+Acceptance:
+
+- immutable raw archive entries preserve diary/import text and source refs
+- canonical thoughts keep stable atom ids, claims, citations, freshness, confidentiality, and meaning version
+- typed edges cover raw citations, topics, emotions, projects, decisions, outcomes, sources, and architecture-level patterns
+- stale edge status follows the freshness of supporting memory atoms
+- checkpoint summarizes atomize/dedup/apply readiness without mutating source records
+
+Implemented:
+
+- `src/lib/memoryKnowledgeLedger.ts`
+- `src/lib/memoryKnowledgeLedger.test.ts`
+- `docs/superpowers/plans/2026-05-27-knowledge-ledger.md`
+
 ## 8. MVP Time Estimate
 
 Assuming focused local development without major dependency or deployment blockers:
@@ -528,12 +547,11 @@ Assuming focused local development without major dependency or deployment blocke
 
 Critical path for the next "나를 아는 AI" jump:
 
-1. Promote the current LLM Wiki compiler into a durable canonical atom schema and typed edge ledger.
-2. Add multi-axis retrieval: semantic, keyword, graph traversal, and temporal freshness.
-3. Persist saved advice/report artifacts so useful answers become future memory.
-4. Add memory detail/search views so the second brain is inspectable like a real vault.
-5. Wire a live LLM provider through the citation-guarded adapter when secrets/config are available.
-6. Run staging PostgreSQL/pgvector/auth smoke against a chosen deployment target.
+1. Add multi-axis retrieval: semantic, keyword, graph traversal, and temporal freshness.
+2. Persist saved advice/report artifacts so useful answers become future memory.
+3. Add memory detail/timeline views so the second brain is inspectable like a real vault.
+4. Wire a live LLM provider through the citation-guarded adapter when secrets/config are available.
+5. Run staging PostgreSQL/pgvector/auth smoke against a chosen deployment target.
 
 ## 9. Product Quality Rules
 
