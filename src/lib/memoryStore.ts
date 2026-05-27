@@ -23,6 +23,7 @@ export interface MemoryStore {
   semanticSearch(userId: string, queryEmbedding: readonly number[], limit: number): Promise<MemoryQueryResult[]>;
   graphEvidenceByMemoryIds(userId: string, memoryIds: readonly string[]): Promise<MemoryRecord[]>;
   exportUserData(userId: string): Promise<MemoryRecord[]>;
+  deleteByIds(userId: string, memoryIds: readonly string[]): Promise<number>;
   hardDeleteUserData(userId: string): Promise<number>;
 }
 

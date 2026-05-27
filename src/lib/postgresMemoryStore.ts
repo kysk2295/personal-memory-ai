@@ -182,6 +182,19 @@ export class PostgresMemoryStore implements MemoryStore {
     return this.listByUser(userId);
   }
 
+  async deleteByIds(userId: string, memoryIds: readonly string[]): Promise<number> {
+    if (!memoryIds.length) return 0;
+    await this.client.query('DELETE FROM memory_embeddings WHERE user_id = $1 AND memory_id = ANY($2::text[])', [
+      userId,
+      memoryIds,
+    ]);
+    const result = await this.client.query('DELETE FROM memory_records WHERE user_id = $1 AND memory_id = ANY($2::text[])', [
+      userId,
+      memoryIds,
+    ]);
+    return result.rowCount;
+  }
+
   async hardDeleteUserData(userId: string): Promise<number> {
     await this.client.query('DELETE FROM memory_embeddings WHERE user_id = $1', [userId]);
     const result = await this.client.query('DELETE FROM memory_records WHERE user_id = $1', [userId]);

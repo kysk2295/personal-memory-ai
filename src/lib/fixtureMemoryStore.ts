@@ -76,6 +76,19 @@ export class FixtureMemoryStore implements MemoryStore {
     return this.listByUser(userId);
   }
 
+  async deleteByIds(userId: string, memoryIds: readonly string[]): Promise<number> {
+    const records = this.recordsByUser.get(userId);
+    const embeddings = this.embeddingsByUser.get(userId);
+    if (!records || !memoryIds.length) return 0;
+
+    let deletedCount = 0;
+    for (const memoryId of memoryIds) {
+      if (records.delete(memoryId)) deletedCount += 1;
+      embeddings?.delete(memoryId);
+    }
+    return deletedCount;
+  }
+
   async hardDeleteUserData(userId: string): Promise<number> {
     const count = this.recordsByUser.get(userId)?.size ?? 0;
     this.recordsByUser.delete(userId);

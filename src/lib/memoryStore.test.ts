@@ -51,6 +51,18 @@ describe('createMemoryStore', () => {
     expect((await store.listByUser('user-b')).map((item) => item.id)).toEqual(['mem_db_002']);
   });
 
+  test('fixture deleteByIds removes only matching records for one user', async () => {
+    const store = createMemoryStore({ env: {} });
+
+    await store.create('user-a', record);
+    await store.create('user-a', { ...record, id: 'mem_db_002' });
+    await store.create('user-b', record);
+
+    expect(await store.deleteByIds('user-a', [record.id])).toBe(1);
+    expect((await store.listByUser('user-a')).map((item) => item.id)).toEqual(['mem_db_002']);
+    expect((await store.listByUser('user-b')).map((item) => item.id)).toEqual([record.id]);
+  });
+
   test('requires postgres client when postgres mode is enabled', () => {
     expect(() => createMemoryStore({ env: { MEMORY_BACKEND_MODE: 'postgres' } })).toThrow(
       'postgresClient is required when MEMORY_BACKEND_MODE=postgres',
@@ -161,10 +173,20 @@ describe('PostgresMemoryStore', () => {
     client.enqueue({ rows: [], rowCount: 1 });
     expect(await store.hardDeleteUserData('user-a')).toBe(1);
 
+    client.enqueue({ rows: [], rowCount: 2 });
+    client.enqueue({ rows: [], rowCount: 2 });
+    expect(await store.deleteByIds('user-a', ['mem_db_001', 'mem_db_002'])).toBe(2);
+
     expect(client.calls.some((call) => call.text.includes('WHERE me.user_id = $1'))).toBe(true);
     expect(client.calls.some((call) => call.text.includes('WHERE user_id = $1 AND memory_id = ANY'))).toBe(true);
     expect(client.calls.some((call) => call.text.includes('DELETE FROM memory_embeddings WHERE user_id = $1'))).toBe(true);
     expect(client.calls.some((call) => call.text.includes('DELETE FROM memory_records WHERE user_id = $1'))).toBe(true);
+    expect(
+      client.calls.some((call) => call.text.includes('DELETE FROM memory_embeddings WHERE user_id = $1 AND memory_id = ANY')),
+    ).toBe(true);
+    expect(
+      client.calls.some((call) => call.text.includes('DELETE FROM memory_records WHERE user_id = $1 AND memory_id = ANY')),
+    ).toBe(true);
     expect(client.calls.some((call) => call.text.includes('$3::vector'))).toBe(true);
   });
 });
