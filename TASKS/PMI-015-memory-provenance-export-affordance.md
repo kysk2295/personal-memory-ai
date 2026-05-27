@@ -115,7 +115,7 @@ npm run build
   - `npm run typecheck`
   - `npm test` (39 files, 134 tests)
   - `npm run build`
-- Local commit: `1117542 feat: add memory provenance export`
+- Feature local commit: `27b1538 feat: add memory provenance export`
 
 ## Known risks
 
