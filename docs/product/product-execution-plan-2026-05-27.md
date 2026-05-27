@@ -86,29 +86,10 @@ No remote push, main merge, production deploy, or secret access is allowed witho
 - L1: web second-brain product surface.
 - L2: capture/import ingestion loop.
 - L3: capture/import product surface.
+- L4: personal memory agent orchestrator.
+- L5: store-backed app shell data builder.
 
 ## 5. Active Next Loops
-
-### L4 — Personal Memory Agent Orchestrator
-
-Goal: create a single domain service that loads one user's memories from `MemoryStore`, runs pattern detection, Ask My Past Self, Decision Replay, and graph evidence generation.
-
-Acceptance:
-
-- user-scoped memories only
-- sufficient evidence returns cited ask/replay/evidence payloads
-- insufficient evidence remains explicit
-- no generic advice without citations
-
-### L5 — Store-Backed App Shell Data
-
-Goal: move the static web shell toward store-backed data assembly while keeping deterministic local fixtures.
-
-Acceptance:
-
-- app shell can be built from a `MemoryStore`
-- fixture fallback remains deterministic
-- UI still shows graph, Ask, Evidence, Decision, Pattern, Capture/Import
 
 ### L6 — Import Apply/Undo UI State Model
 
@@ -152,7 +133,40 @@ Acceptance:
 - pgvector smoke covers extension, insert, search, delete
 - per-user isolation is demonstrated in staging-only smoke
 
-## 6. Product Quality Rules
+## 6. Completed Loop Details
+
+### L4 — Personal Memory Agent Orchestrator
+
+Goal: create a single domain service that loads one user's memories from `MemoryStore`, runs pattern detection, Ask My Past Self, Decision Replay, and graph evidence generation.
+
+Acceptance:
+
+- user-scoped memories only
+- sufficient evidence returns cited ask/replay/evidence payloads
+- insufficient evidence remains explicit
+- no generic advice without citations
+
+Implemented:
+
+- `src/lib/personalMemoryAgent.ts`
+- `src/lib/personalMemoryAgent.test.ts`
+
+### L5 — Store-Backed App Shell Data
+
+Goal: move the static web shell toward store-backed data assembly while keeping deterministic local fixtures.
+
+Acceptance:
+
+- app shell can be built from a `MemoryStore`
+- fixture fallback remains deterministic
+- UI still shows graph, Ask, Evidence, Decision, Pattern, Capture/Import
+
+Implemented:
+
+- `buildAppShellEvidenceLayoutFromRecords(records)`
+- `buildAppShellEvidenceLayoutFromMemoryStore({ store, userId })`
+
+## 7. Product Quality Rules
 
 - The graph is evidence UI, not the product by itself.
 - Every AI answer must cite memories or say insufficient evidence.
