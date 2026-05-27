@@ -99,6 +99,8 @@ npm run build
   - `PMI_LOCAL_URL=http://127.0.0.1:3001 npm run evidence:playwright`
 - Live source discovery smoke passed without printing source titles/content:
   - local endpoint returned `sourceCount: 1`, `objectTypes: ["data_source"]`.
+- Live Notion preview smoke passed without printing page titles/content:
+  - local endpoint returned `previewRecordCount: 10`, duplicates `{ "duplicate": 0, "new": 10, "possible": 0 }`.
 - Local commit: pending local commit for this bounded slice.
 - Final changed files from `git diff --name-only` included code/tests/docs plus four generated screenshot artifact changes from Playwright evidence.
 
@@ -106,4 +108,4 @@ npm run build
 
 - Live Notion source listing still requires a valid server-side Notion token and user-approved workspace/database access.
 - Staging PostgreSQL/pgvector/auth/LLM smoke remains secret-gated and was not run.
-- Live Notion database preview/apply was not executed because no specific database/source id was selected for import in this loop.
+- Live Notion apply was not executed; preview is ready, but persisting the 10 live Notion records should be a deliberate next action.
