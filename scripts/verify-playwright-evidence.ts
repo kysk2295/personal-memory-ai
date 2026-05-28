@@ -533,6 +533,14 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   assert((await attribute(page, '[data-import-applied-feedback="local-upload"]', 'data-import-applied-count')) === '1', 'Applied import feedback should expose created memory count');
   assert((await page.locator('[data-import-applied-memory-id]').count()) === 1, 'Applied import feedback should render created memory rows');
   assert(
+    (await attribute(page, '[data-diary-graph-handoff-map="app-web-notion-to-graph"]', 'data-handoff-active-route')) === 'web-paste-diary',
+    'Diary graph handoff map should mark web paste diary as the active route after local paste apply',
+  );
+  assert(
+    (await attribute(page, '[data-diary-graph-handoff-map="app-web-notion-to-graph"]', 'data-handoff-stage')) === 'session-ready',
+    'Diary graph handoff map should advance from graph apply to AI session readiness',
+  );
+  assert(
     (await page.locator('[data-imported-memory="true"]').count()) === importedTimelineRowsBeforeLocalImport + 1,
     'Applied import should append one imported timeline row',
   );
@@ -543,10 +551,18 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   assert(rehydratedMemoryNodeCount > 8, 'Rehydrated app shell should include newly imported private memories');
   const importedMemoryId = (await attribute(page, '.second-brain-shell', 'data-import-session-source-memory')) || '';
   assert(importedMemoryId, 'Import handoff should expose the imported memory session source');
+  assert(
+    (await attribute(page, '[data-diary-graph-handoff-map="app-web-notion-to-graph"]', 'data-handoff-selected-memory')) === importedMemoryId,
+    'Diary graph handoff map should point at the imported memory node',
+  );
   assert((await attribute(page, '.second-brain-shell', 'data-active-memory')) === importedMemoryId, 'Import handoff should select the imported memory');
   assert(
     Number(await attribute(page, '.second-brain-shell', 'data-import-session-related-memory-count')) > 0,
     'Import handoff should expose related memories for the imported memory',
+  );
+  assert(
+    Number(await attribute(page, '[data-diary-graph-handoff-map="app-web-notion-to-graph"]', 'data-handoff-related-count')) > 0,
+    'Diary graph handoff map should expose related-memory count for the imported memory',
   );
   assert((await attribute(page, '.second-brain-shell', 'data-import-session-state')) === 'ready', 'Import handoff should prepare a memory session');
   const rebuiltGraphStats = await page.evaluate(() => {
@@ -584,6 +600,10 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   );
   assert((await attribute(page, '[data-memory-intake-hub="app-web-diary"]', 'data-intake-result')) === 'session-saved', 'Intake hub should mark the flow saved back as memory');
   assert((await attribute(page, '[data-intake-session-result="applied-memory"]', 'data-intake-next-step')) === 'session-saved', 'Intake result should mark session saveback complete');
+  assert(
+    (await attribute(page, '[data-diary-graph-handoff-map="app-web-notion-to-graph"]', 'data-handoff-saveback-state')) === 'saved',
+    'Diary graph handoff map should show the saved future-memory state',
+  );
   assert((await attribute(page, '[data-flow-coach="diary-to-memory-ai"]', 'data-flow-coach-stage')) === 'saved', 'Flow coach should stay saved after guided session saveback');
   assert((await attribute(page, '.second-brain-shell', 'data-graph-rehydrate-state')) === 'ready', 'Saving memory session should rehydrate graph state');
   await page.locator('[data-control="undo-local-import"]').click();

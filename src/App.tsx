@@ -561,6 +561,68 @@ const APP_SHELL_STYLES = `
   .memory-intake-notion-actions button {
     min-width: 0;
   }
+  .diary-graph-handoff-map {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(150px, 0.48fr);
+    gap: 8px;
+    min-width: 0;
+    border: 1px solid rgba(20, 184, 166, 0.18);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.66);
+    padding: 8px 9px;
+  }
+  .handoff-route-list {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+    min-width: 0;
+  }
+  .handoff-route {
+    min-width: 0;
+    border: 1px solid rgba(20, 184, 166, 0.14);
+    border-radius: 8px;
+    background: rgba(240, 253, 250, 0.72);
+    padding: 7px;
+  }
+  .handoff-route[data-handoff-route-state="active"],
+  .handoff-route[data-handoff-route-state="done"] {
+    border-color: rgba(225, 29, 63, 0.28);
+    background: rgba(225, 29, 63, 0.08);
+  }
+  .handoff-route strong,
+  .handoff-route span,
+  .handoff-status-grid strong,
+  .handoff-status-grid span {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .handoff-route strong {
+    color: #0f766e;
+    font-size: 10px;
+  }
+  .handoff-route span {
+    margin-top: 2px;
+    color: #57716d;
+    font-size: 9px;
+  }
+  .handoff-status-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 5px;
+    min-width: 0;
+  }
+  .handoff-status-grid span {
+    border: 1px solid rgba(20, 184, 166, 0.12);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.68);
+    color: #57716d;
+    padding: 5px 6px;
+    font-size: 9px;
+    font-weight: 760;
+  }
   .memory-intake-draft-actions button,
   .memory-intake-notion-actions button {
     border: 1px solid rgba(20, 184, 166, 0.2);
@@ -2305,6 +2367,24 @@ const APP_SHELL_STYLES = `
   .memory-intake-action span {
     color: #aaaab1;
   }
+  .diary-graph-handoff-map,
+  .handoff-route,
+  .handoff-status-grid span {
+    border-color: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.055);
+  }
+  .handoff-route strong {
+    color: #f0f0f2;
+  }
+  .handoff-route span,
+  .handoff-status-grid span {
+    color: #aaaab1;
+  }
+  .handoff-route[data-handoff-route-state="active"],
+  .handoff-route[data-handoff-route-state="done"] {
+    border-color: rgba(214, 31, 60, 0.34);
+    background: rgba(214, 31, 60, 0.12);
+  }
   .memory-intake-action.primary {
     border-color: rgba(214, 31, 60, 0.34);
     background: rgba(214, 31, 60, 0.12);
@@ -2324,8 +2404,8 @@ const APP_SHELL_STYLES = `
     z-index: 9;
     pointer-events: auto;
     top: 84px;
-    left: 338px;
-    width: min(430px, calc(100vw - 520px));
+    left: 18px;
+    width: min(300px, calc(100vw - 36px));
     max-height: calc(100vh - 96px);
     grid-template-columns: 1fr;
     gap: 9px;
@@ -2384,6 +2464,10 @@ const APP_SHELL_STYLES = `
   }
   .product-value-strip[data-command-shelf="graph-led"] .memory-intake-actions,
   .product-value-strip[data-command-shelf="graph-led"] .memory-intake-notion-actions {
+    grid-template-columns: 1fr;
+  }
+  .product-value-strip[data-command-shelf="graph-led"] .diary-graph-handoff-map,
+  .product-value-strip[data-command-shelf="graph-led"] .handoff-route-list {
     grid-template-columns: 1fr;
   }
   .product-value-strip[data-command-shelf="graph-led"] .memory-intake-draft {
@@ -2732,7 +2816,7 @@ const APP_SHELL_STYLES = `
     position: relative;
     right: auto;
     bottom: auto;
-    z-index: 5;
+    z-index: 12;
     width: 100%;
     max-height: calc(100vh - 172px);
     overflow: auto;
@@ -3326,6 +3410,20 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
             <button type="button" data-control="intake-preview-notion-diary">습관리스트 미리보기</button>
             <button type="button" data-control="intake-apply-notion-diary">Notion 그래프 적용</button>
           </div>
+          <section class="diary-graph-handoff-map" data-diary-graph-handoff-map="app-web-notion-to-graph" data-handoff-active-route="none" data-handoff-stage="waiting" data-handoff-selected-memory="${escapeHtml(currentFlowMemoryId)}" data-handoff-related-count="${currentFlowRelatedCount}" data-handoff-ai-state="idle" data-handoff-saveback-state="idle" aria-label="일기 입력에서 세컨브레인 그래프까지 연결 상태">
+            <div class="handoff-route-list" aria-label="일기 인입 경로">
+              <div class="handoff-route" data-handoff-route="app-quick-diary" data-handoff-route-state="idle"><strong>앱 빠른 일기</strong><span>저장 후 그래프 선택</span></div>
+              <div class="handoff-route" data-handoff-route="web-paste-diary" data-handoff-route-state="idle"><strong>웹 일기 붙여넣기</strong><span>미리보기 후 적용</span></div>
+              <div class="handoff-route" data-handoff-route="notion-diary-db" data-handoff-route-state="idle"><strong>Notion 일기 DB</strong><span>습관리스트만 가져오기</span></div>
+            </div>
+            <div class="handoff-status-grid" aria-label="그래프 반영 상태">
+              <span data-handoff-stage-label>그래프 반영 상태 · 대기</span>
+              <span data-handoff-memory-label>선택 기억 · ${escapeHtml(currentFlowMemoryId)}</span>
+              <span data-handoff-related-label>연관 기억 · ${currentFlowRelatedCount}개</span>
+              <span data-handoff-ai-label>AI 실행 · 대기</span>
+              <span data-handoff-saveback-label>미래 기억 저장 · 대기</span>
+            </div>
+          </section>
           <div class="memory-intake-result" data-intake-session-result="applied-memory" data-intake-applied-memory="none" data-intake-related-memory-count="0" data-intake-next-step="waiting-for-diary">
             <div>
               <strong data-intake-result-title>적용하면 여기서 바로 다음 행동을 보여준다</strong>
@@ -3637,6 +3735,12 @@ const GRAPH_CONTROL_SCRIPT = `
   const importPasteText = document.querySelector('[data-control="local-import-paste-text"]');
   const focusLocalImportButton = document.querySelector('[data-control="focus-local-import"]');
   const memoryIntakeHub = document.querySelector('[data-memory-intake-hub="app-web-diary"]');
+  const diaryGraphHandoffMap = document.querySelector('[data-diary-graph-handoff-map="app-web-notion-to-graph"]');
+  const handoffStageLabel = diaryGraphHandoffMap?.querySelector('[data-handoff-stage-label]');
+  const handoffMemoryLabel = diaryGraphHandoffMap?.querySelector('[data-handoff-memory-label]');
+  const handoffRelatedLabel = diaryGraphHandoffMap?.querySelector('[data-handoff-related-label]');
+  const handoffAiLabel = diaryGraphHandoffMap?.querySelector('[data-handoff-ai-label]');
+  const handoffSavebackLabel = diaryGraphHandoffMap?.querySelector('[data-handoff-saveback-label]');
   const diaryInbox = document.querySelector('[data-diary-inbox="app-web-diary-sources"]');
   const diaryInboxItems = Array.from(document.querySelectorAll('[data-control="diary-inbox-select-memory"]'));
   const intakeDiaryDraft = document.querySelector('[data-control="intake-diary-draft"]');
@@ -4295,6 +4399,49 @@ const GRAPH_CONTROL_SCRIPT = `
     if (flowCoachSummary) flowCoachSummary.textContent = summary;
   };
 
+  const setHandoffRouteState = (route, state) => {
+    Array.from(diaryGraphHandoffMap?.querySelectorAll('[data-handoff-route]') || []).forEach((item) => {
+      const itemRoute = item.getAttribute('data-handoff-route') || '';
+      item.setAttribute('data-handoff-route-state', itemRoute === route ? state : state === 'done' ? 'idle' : 'idle');
+    });
+  };
+
+  const updateDiaryGraphHandoffMap = (detail = {}) => {
+    const route = detail.route || diaryGraphHandoffMap?.getAttribute('data-handoff-active-route') || 'none';
+    const stage = detail.stage || diaryGraphHandoffMap?.getAttribute('data-handoff-stage') || 'waiting';
+    const memoryId =
+      detail.memoryId ||
+      shell.getAttribute('data-import-session-source-memory') ||
+      shell.getAttribute('data-active-memory') ||
+      diaryGraphHandoffMap?.getAttribute('data-handoff-selected-memory') ||
+      '';
+    const relatedCount = String(
+      detail.relatedCount ??
+        shell.getAttribute('data-import-session-related-memory-count') ??
+        shell.getAttribute('data-related-memory-count') ??
+        diaryGraphHandoffMap?.getAttribute('data-handoff-related-count') ??
+        '0',
+    );
+    const aiState = detail.aiState || diaryGraphHandoffMap?.getAttribute('data-handoff-ai-state') || 'idle';
+    const savebackState = detail.savebackState || diaryGraphHandoffMap?.getAttribute('data-handoff-saveback-state') || 'idle';
+    diaryGraphHandoffMap?.setAttribute('data-handoff-active-route', route);
+    diaryGraphHandoffMap?.setAttribute('data-handoff-stage', stage);
+    diaryGraphHandoffMap?.setAttribute('data-handoff-selected-memory', memoryId);
+    diaryGraphHandoffMap?.setAttribute('data-handoff-related-count', relatedCount);
+    diaryGraphHandoffMap?.setAttribute('data-handoff-ai-state', aiState);
+    diaryGraphHandoffMap?.setAttribute('data-handoff-saveback-state', savebackState);
+    shell.setAttribute('data-diary-graph-handoff-route', route);
+    shell.setAttribute('data-diary-graph-handoff-stage', stage);
+    shell.setAttribute('data-diary-graph-handoff-memory', memoryId);
+    shell.setAttribute('data-diary-graph-handoff-related-count', relatedCount);
+    if (route !== 'none') setHandoffRouteState(detail.route || 'web-paste-diary', stage === 'applied' || stage === 'session-saved' ? 'done' : 'active');
+    if (handoffStageLabel) handoffStageLabel.textContent = '그래프 반영 상태 · ' + stage;
+    if (handoffMemoryLabel) handoffMemoryLabel.textContent = '선택 기억 · ' + (memoryId || '대기');
+    if (handoffRelatedLabel) handoffRelatedLabel.textContent = '연관 기억 · ' + relatedCount + '개';
+    if (handoffAiLabel) handoffAiLabel.textContent = 'AI 실행 · ' + aiState;
+    if (handoffSavebackLabel) handoffSavebackLabel.textContent = '미래 기억 저장 · ' + savebackState;
+  };
+
   const renderIntakeRelatedBundle = () => {
     if (!intakeRelatedBundle || !intakeRelatedBundleList) return [];
     let related = Array.from(relatedMemoryList?.querySelectorAll('[data-related-memory-id]') || [])
@@ -4365,6 +4512,7 @@ const GRAPH_CONTROL_SCRIPT = `
     intakeRelatedBundle?.setAttribute('data-intake-last-ai-action', kind);
     intakeRelatedBundle?.setAttribute('data-intake-ai-action-result', kind + '-' + state);
     intakeSessionResult?.setAttribute('data-intake-ai-action-result', kind + '-' + state);
+    updateDiaryGraphHandoffMap({ aiState: kind + '-' + state });
     setIntakeFlowStepState('ai', state === 'answered' ? 'done' : state === 'loading' ? 'loading' : 'error');
     updateFlowCoach(
       state === 'answered' ? 'ai-answered' : state === 'loading' ? 'ai-running' : 'ai-error',
@@ -4474,6 +4622,7 @@ const GRAPH_CONTROL_SCRIPT = `
     setIntakeFlowStepState('graph', 'done');
     setIntakeFlowStepState('related', related.length ? 'ready' : 'loading');
     setIntakeFlowStepState('ai', 'ready');
+    updateDiaryGraphHandoffMap({ route: 'web-paste-diary', stage: 'applied', memoryId: appliedMemoryId, relatedCount, aiState: 'ready' });
     updateFlowCoach(
       'graph-ready',
       'inspect-related-memories',
@@ -4492,6 +4641,7 @@ const GRAPH_CONTROL_SCRIPT = `
     memoryIntakeHub?.setAttribute('data-intake-result', 'notion-' + state);
     memoryIntakeHub?.setAttribute('data-intake-next-step', state === 'preview-ready' ? 'notion-apply-ready' : state);
     intakeSessionResult?.setAttribute('data-intake-next-step', state === 'preview-ready' ? 'notion-apply-ready' : state);
+    updateDiaryGraphHandoffMap({ route: 'notion-diary-db', stage: 'notion-ready', aiState: 'idle' });
     if (intakeResultTitle) {
       intakeResultTitle.textContent =
         state === 'token-required'
@@ -4578,6 +4728,17 @@ const GRAPH_CONTROL_SCRIPT = `
     captureHandoffBanner?.setAttribute('data-capture-handoff-save-state', state === 'session-saved' ? 'saved' : 'idle');
     shell.setAttribute('data-capture-handoff-banner-state', state);
     shell.setAttribute('data-capture-handoff-related-count', count);
+    const currentHandoffRoute = diaryGraphHandoffMap?.getAttribute('data-handoff-active-route') || '';
+    const nextHandoffRoute = state === 'idle' ? 'none' : currentHandoffRoute && currentHandoffRoute !== 'none' ? currentHandoffRoute : 'web-paste-diary';
+    const nextHandoffStage = state === 'ready' ? 'session-ready' : state;
+    updateDiaryGraphHandoffMap({
+      route: nextHandoffRoute,
+      stage: nextHandoffStage,
+      memoryId: normalizedMemoryId,
+      relatedCount: count,
+      aiState: state === 'session-running' ? 'session-running' : state === 'session-completed' || nextHandoffStage === 'session-ready' ? 'session-ready' : diaryGraphHandoffMap?.getAttribute('data-handoff-ai-state') || 'idle',
+      savebackState: state === 'session-saved' ? 'saved' : diaryGraphHandoffMap?.getAttribute('data-handoff-saveback-state') || 'idle',
+    });
     if (captureHandoffTitle) {
       captureHandoffTitle.textContent =
         state === 'session-saved'
@@ -5424,6 +5585,7 @@ const GRAPH_CONTROL_SCRIPT = `
       memoryIntakeHub?.setAttribute('data-intake-result', 'session-saved');
       memoryIntakeHub?.setAttribute('data-intake-saved-session-memory', savedMemoryId);
       memoryIntakeHub?.setAttribute('data-intake-next-step', 'session-saved');
+      updateDiaryGraphHandoffMap({ stage: 'session-saved', memoryId: savedMemoryId, aiState: 'session-completed', savebackState: 'saved' });
       memorySessionSaveButton.setAttribute('data-artifact-save-state', 'saved');
       memorySessionSaveButton.textContent = '세션 저장 완료';
       if (captureHandoffBanner?.getAttribute('data-capture-handoff-banner-state') === 'session-completed') {
@@ -5476,6 +5638,7 @@ const GRAPH_CONTROL_SCRIPT = `
       memoryIntakeHub?.setAttribute('data-intake-result', 'session-saved');
       memoryIntakeHub?.setAttribute('data-intake-saved-session-memory', savedMemoryId);
       memoryIntakeHub?.setAttribute('data-intake-next-step', 'session-saved');
+      updateDiaryGraphHandoffMap({ stage: 'session-saved', memoryId: savedMemoryId, aiState: 'session-completed', savebackState: 'saved' });
       if (intakeResultTitle) intakeResultTitle.textContent = 'AI 세션이 미래 기억으로 저장됐다';
       if (intakeResultSummary) {
         intakeResultSummary.textContent =
@@ -6683,6 +6846,7 @@ const GRAPH_CONTROL_SCRIPT = `
     memoryIntakeHub?.setAttribute('data-intake-last-action', 'preview-diary');
     memoryIntakeHub?.setAttribute('data-intake-draft-state', 'preview-requested');
     shell.setAttribute('data-intake-last-action', 'preview-diary');
+    updateDiaryGraphHandoffMap({ route: 'web-paste-diary', stage: 'previewing', aiState: 'idle', savebackState: 'idle' });
     importPreviewButton?.click();
     setInteractionState('intake-diary-preview-requested');
   });
@@ -6695,6 +6859,7 @@ const GRAPH_CONTROL_SCRIPT = `
     memoryIntakeHub?.setAttribute('data-intake-last-action', 'apply-diary');
     memoryIntakeHub?.setAttribute('data-intake-draft-state', 'apply-requested');
     shell.setAttribute('data-intake-last-action', 'apply-diary');
+    updateDiaryGraphHandoffMap({ route: 'web-paste-diary', stage: 'applying', aiState: 'idle', savebackState: 'idle' });
     pendingIntakeApplyAfterPreview = true;
     importPreviewButton?.click();
     setInteractionState('intake-diary-apply-requested');
@@ -6706,6 +6871,7 @@ const GRAPH_CONTROL_SCRIPT = `
     memoryIntakeHub?.setAttribute('data-intake-source-scope', 'diary-only');
     shell.setAttribute('data-intake-last-action', action);
     notionImportPanel?.setAttribute('data-notion-source-scope', 'diary-only');
+    updateDiaryGraphHandoffMap({ route: 'notion-diary-db', stage: 'notion-ready', aiState: 'idle', savebackState: 'idle' });
     updateFlowCoach('importing', 'preview-diary-db', '일기 DB를 불러오는 중', '습관리스트/일기 데이터베이스만 가져와서 개인 기억 그래프에 연결할 준비를 한다.');
     setIntakeFlowStepState('capture', 'loading');
     setIntakeFlowStepState('graph', 'idle');
@@ -6739,12 +6905,16 @@ const GRAPH_CONTROL_SCRIPT = `
       const action = button.getAttribute('data-intake-action') || '';
       memoryIntakeHub?.setAttribute('data-intake-last-action', action);
       shell.setAttribute('data-intake-last-action', action);
-      if (action === 'quick-capture') return;
+      if (action === 'quick-capture') {
+        updateDiaryGraphHandoffMap({ route: 'app-quick-diary', stage: 'capture-opened', aiState: 'idle', savebackState: 'idle' });
+        return;
+      }
       event.preventDefault();
       if (action === 'paste-diary') {
         importPasteText?.scrollIntoView({ block: 'center', behavior: 'smooth' });
         importPasteText?.focus();
         memoryIntakeHub?.setAttribute('data-intake-stage', 'paste-diary-focused');
+        updateDiaryGraphHandoffMap({ route: 'web-paste-diary', stage: 'drafting', aiState: 'idle', savebackState: 'idle' });
         updateFlowCoach('importing', 'paste-and-preview', '웹에서 일기를 붙여넣는 단계', '긴 일기나 Markdown을 붙여넣고 미리보기를 만들면 그래프에 넣을 기억 후보가 나온다.');
         setIntakeFlowStepState('capture', 'loading');
         setIntakeFlowStepState('graph', 'idle');
@@ -6760,6 +6930,7 @@ const GRAPH_CONTROL_SCRIPT = `
         notionDatabaseId?.focus();
         memoryIntakeHub?.setAttribute('data-intake-stage', 'notion-diary-ready');
         notionImportPanel?.setAttribute('data-notion-source-scope', 'diary-only');
+        updateDiaryGraphHandoffMap({ route: 'notion-diary-db', stage: 'notion-ready', aiState: 'idle', savebackState: 'idle' });
         updateFlowCoach('importing', 'select-notion-diary-db', '습관리스트 일기 DB 선택', 'Notion에서 일기 데이터베이스만 선택해 미리보기와 그래프 적용으로 이어간다.');
         setIntakeFlowStepState('capture', 'loading');
         setIntakeFlowStepState('graph', 'idle');
