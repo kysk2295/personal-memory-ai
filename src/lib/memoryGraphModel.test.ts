@@ -112,6 +112,8 @@ describe('buildMemoryGraphModel', () => {
       id: `mem_large_graph_${index}`,
       summary: `Large graph memory ${index}`,
       rawText: `Large graph raw text ${index}`,
+      createdAt: `2026-05-${String((index % 28) + 1).padStart(2, '0')}T00:00:00.000Z`,
+      observedAt: `2026-05-${String((index % 28) + 1).padStart(2, '0')}`,
     }));
     const graph = buildMemoryGraphModel(records);
     const memoryNodeCount = graph.elements.filter((element) => element.group === 'nodes' && element.data.kind === 'memory').length;
@@ -119,5 +121,48 @@ describe('buildMemoryGraphModel', () => {
     expect(graph.stats.memoryNodeCount).toBe(350);
     expect(graph.stats.renderedMemoryNodeCount).toBe(300);
     expect(memoryNodeCount).toBeLessThanOrEqual(300);
+  });
+
+  test('renders newest captured memories inside the large-vault graph window', () => {
+    const oldRecords = Array.from({ length: 350 }, (_, index) => ({
+      ...personalMemoryRecords[0],
+      id: `mem_old_graph_${index}`,
+      summary: `Old graph memory ${index}`,
+      rawText: `Old graph raw text ${index}`,
+      createdAt: '2026-04-01T00:00:00.000Z',
+      observedAt: '2026-04-01',
+    }));
+    const newestCapture: MemoryRecord = {
+      ...personalMemoryRecords[0],
+      id: 'mem_newest_service_flow_capture',
+      summary: 'Newest service flow diary capture.',
+      rawText: 'Newest service flow diary capture should appear in the graph window.',
+      sourceType: 'mobile',
+      sourceRef: 'app-capture://pwa-local-device/newest',
+      createdAt: '2026-05-28T03:00:00.000Z',
+      observedAt: '2026-05-28',
+      emotionTags: ['resolve'],
+      topicTags: ['service flow'],
+      projectTags: ['personal-memory-ai'],
+    };
+
+    const graph = buildMemoryGraphModel([...oldRecords, newestCapture]);
+
+    expect(graph.elements).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          data: expect.objectContaining({
+            id: 'memory:mem_newest_service_flow_capture',
+            recordId: 'mem_newest_service_flow_capture',
+          }),
+        }),
+        expect.objectContaining({
+          data: expect.objectContaining({
+            source: 'memory:mem_newest_service_flow_capture',
+            target: 'topic:service-flow',
+          }),
+        }),
+      ]),
+    );
   });
 });

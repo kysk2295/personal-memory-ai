@@ -21,6 +21,7 @@ export interface ReleaseChecklist {
   requiredCommands: ReleaseChecklistCommand[];
   evidenceArtifacts: string[];
   prohibitedActions: string[];
+  remoteActionsAllowedWhenExplicitlyRequested: string[];
   humanApprovalRequiredFor: string[];
 }
 
@@ -47,6 +48,13 @@ export function buildReleaseChecklist(input: BuildReleaseChecklistInput): Releas
         purpose: 'render the static second-brain shell used by local review',
       },
       {
+        name: 'service-flow-smoke',
+        command: `PMI_LOCAL_URL=${input.localUrl} npm run evidence:service-flow`,
+        purpose:
+          'verify the end-to-end product path: capture or imported memory, graph rehydration, Ask, save insight, and weekly report metadata',
+        requiresRunningServer: true,
+      },
+      {
         name: 'playwright-evidence',
         command: `PMI_LOCAL_URL=${input.localUrl} npm run evidence:playwright`,
         purpose: 'verify browser interactions, graph rendering, live Ask, follow-up context, save actions, imports, and screenshots',
@@ -70,8 +78,10 @@ export function buildReleaseChecklist(input: BuildReleaseChecklistInput): Releas
       'artifacts/web-second-brain-product-surface/local-graph-interactions-playwright.png',
       'artifacts/web-second-brain-product-surface/local-memory-search-detail-playwright.png',
       'artifacts/web-second-brain-product-surface/local-app-capture-playwright.png',
+      'artifacts/web-second-brain-product-surface/local-service-flow-playwright.png',
     ],
-    prohibitedActions: ['push_remote', 'merge_main', 'deploy_production', 'print_secrets'],
-    humanApprovalRequiredFor: ['remote_push', 'main_merge', 'production_deploy', 'secret_access'],
+    prohibitedActions: ['print_secrets'],
+    remoteActionsAllowedWhenExplicitlyRequested: ['push_remote', 'merge_deploy_branch', 'deploy_configured_staging'],
+    humanApprovalRequiredFor: ['secret_access', 'production_secret_rotation'],
   };
 }

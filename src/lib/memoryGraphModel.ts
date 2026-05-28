@@ -127,10 +127,18 @@ function appendTagEdges(
   }
 }
 
+function compareNewestRecordFirst(left: MemoryRecord, right: MemoryRecord): number {
+  const rightDate = right.observedAt ?? right.createdAt;
+  const leftDate = left.observedAt ?? left.createdAt;
+  const dateComparison = rightDate.localeCompare(leftDate);
+  if (dateComparison !== 0) return dateComparison;
+  return left.id.localeCompare(right.id);
+}
+
 export function buildMemoryGraphModel(records: readonly MemoryRecord[]): MemoryGraphModel {
   const nodes = new Map<string, CytoscapeMemoryGraphElement>();
   const edges = new Map<string, CytoscapeMemoryGraphElement>();
-  const renderedRecords = records.slice(0, MAX_RENDERED_MEMORY_NODES);
+  const renderedRecords = records.slice().sort(compareNewestRecordFirst).slice(0, MAX_RENDERED_MEMORY_NODES);
 
   for (const record of renderedRecords) {
     const memoryNodeId = appendNode(nodes, 'memory', record.summary, {

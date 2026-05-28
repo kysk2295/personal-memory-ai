@@ -6,6 +6,7 @@ function isEvidenceRecord(record: MemoryRecord): boolean {
   return (
     rawText.includes('Imported local memory playwright-') ||
     rawText.includes('playwright-capture-') ||
+    rawText.includes('service-flow-') ||
     sourceRef.startsWith('personal-memory-ai://saved-artifacts/') ||
     sourceRef.startsWith('personal-memory-ai://feedback/')
   );

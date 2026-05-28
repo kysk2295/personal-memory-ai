@@ -30,6 +30,12 @@ describe('selectEvidenceCleanupMemoryIds', () => {
         rawText: 'Playwright capture memory playwright-capture-123 with manual hints.',
       }),
       normalizeMemoryRecord({
+        id: 'mem_service_flow',
+        sourceType: 'mobile',
+        sourceRef: 'app-capture://pwa-local-device/2026-05-28T01%3A00%3A00.000Z',
+        rawText: 'Service flow smoke service-flow-123 verifies diary capture to graph.',
+      }),
+      normalizeMemoryRecord({
         id: 'mem_real_notion',
         sourceType: 'notion',
         sourceRef: 'notion://data-source/journal/page/real',
@@ -42,6 +48,7 @@ describe('selectEvidenceCleanupMemoryIds', () => {
       'mem_saved_artifact',
       'mem_feedback',
       'mem_capture_playwright',
+      'mem_service_flow',
     ]);
   });
 });

@@ -334,7 +334,7 @@ const APP_SHELL_STYLES = `
     box-shadow: 0 16px 36px rgba(165, 170, 197, 0.14);
     padding: 12px 14px;
     display: grid;
-    grid-template-columns: minmax(0, 1.2fr) auto;
+    grid-template-columns: minmax(260px, 0.78fr) minmax(0, 1.22fr) auto;
     gap: 14px;
     align-items: center;
   }
@@ -365,6 +365,36 @@ const APP_SHELL_STYLES = `
     background: rgba(246, 247, 252, 0.86);
     font-size: 11px;
     font-weight: 760;
+  }
+  .service-flow-steps {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(86px, 1fr));
+    gap: 6px;
+  }
+  .service-flow-steps li {
+    min-width: 0;
+    min-height: 62px;
+    border: 1px solid rgba(117, 122, 143, 0.12);
+    border-radius: 8px;
+    background: rgba(250, 251, 255, 0.78);
+    padding: 8px;
+    display: grid;
+    align-content: start;
+    gap: 4px;
+  }
+  .service-flow-steps strong {
+    color: #52586a;
+    font-size: 11px;
+    line-height: 1.25;
+  }
+  .service-flow-steps span {
+    color: #81889b;
+    font-size: 10px;
+    line-height: 1.35;
   }
   .product-main-grid {
     position: relative;
@@ -1094,14 +1124,40 @@ const APP_SHELL_STYLES = `
   }
   .product-value-strip {
     position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
+    top: 82px;
+    left: 28px;
+    width: min(980px, calc(100% - 494px));
+    padding: 10px;
+    margin: 0;
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    background: rgba(14, 14, 15, 0.82);
+    box-shadow: 0 18px 44px rgba(0, 0, 0, 0.24);
+    backdrop-filter: blur(12px);
+    grid-template-columns: minmax(210px, 0.74fr) minmax(0, 1.26fr);
+    z-index: 5;
+  }
+  .product-value-strip h2 {
+    color: #f2f2f4;
+    font-size: 15px;
+  }
+  .product-value-strip p {
+    color: #aaaab1;
+    font-size: 11px;
+  }
+  .product-value-strip .privacy-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+  .product-value-strip .privacy-actions span,
+  .service-flow-steps li {
+    border-color: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.055);
+  }
+  .service-flow-steps strong {
+    color: #f0f0f2;
+  }
+  .service-flow-steps span {
+    color: #a7a7ad;
   }
   .product-main-grid {
     width: 100%;
@@ -1734,6 +1790,13 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
           <h2>나보다 나를 더 잘 아는 개인 기억 AI</h2>
           <p>앱에서 쓴 일기와 가져온 기록이 개인 기억 그래프로 연결된다. 공유는 공개가 아니라, 현재 일기와 과거 기억이 같은 맥락 안에서 함께 떠오른다는 뜻이다.</p>
         </div>
+        <ol class="service-flow-steps" aria-label="Diary to Second Brain service flow" data-service-flow="diary-to-second-brain" data-service-flow-primary-entry="app-or-web-diary" data-service-flow-graph-source="actual-memory-records">
+          <li data-service-flow-step="quick-diary-capture"><strong>앱에서 빠르게 기록</strong><span>모바일/PWA 일기 캡처</span></li>
+          <li data-service-flow-step="diary-database-load"><strong>웹에서 전체 일기 불러오기</strong><span>습관리스트/일기 DB만 선택</span></li>
+          <li data-service-flow-step="second-brain-graph"><strong>세컨브레인 그래프 생성</strong><span>실제 MemoryRecord 기반</span></li>
+          <li data-service-flow-step="related-memory-nodes"><strong>연관된 과거 기억 노드 표시</strong><span>감정·결정·결과 엣지</span></li>
+          <li data-service-flow-step="ask-report"><strong>Ask와 Weekly Report로 해결</strong><span>인용 근거가 있을 때만 답변</span></li>
+        </ol>
         <div class="privacy-actions" aria-label="Privacy and control actions">
           <span>비공개 기본값</span>
           <span>로컬 프로토타입</span>

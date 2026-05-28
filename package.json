@@ -6,6 +6,7 @@
     "build": "tsx scripts/render-static.ts",
     "cleanup:evidence": "tsx scripts/cleanup-playwright-evidence.ts",
     "evidence:playwright": "tsx scripts/verify-playwright-evidence.ts",
+    "evidence:service-flow": "tsx scripts/verify-service-flow.ts",
     "import:notion:resume": "tsx scripts/resume-notion-import.ts",
     "import:notion:prune-sources": "tsx scripts/prune-notion-sources.ts",
     "release:checklist": "tsx scripts/verify-release.ts",
