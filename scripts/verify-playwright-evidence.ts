@@ -174,6 +174,18 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   assert((await page.locator('[data-import-applied-memory-id]').count()) >= 1, 'Intake draft apply should surface at least one applied memory id');
   const intakeAppliedMemoryId = await page.locator('[data-import-applied-memory-id]').first().getAttribute('data-import-applied-memory-id');
   assert(Boolean(intakeAppliedMemoryId), 'Intake draft apply should expose the applied memory id');
+  assert(
+    (await attribute(page, '[data-intake-session-result="applied-memory"]', 'data-intake-applied-memory')) === intakeAppliedMemoryId,
+    'Intake result panel should expose the applied diary memory id',
+  );
+  assert(
+    Number(await attribute(page, '[data-intake-session-result="applied-memory"]', 'data-intake-related-memory-count')) > 0,
+    'Intake result panel should expose related-memory count',
+  );
+  assert(
+    (await attribute(page, '[data-intake-session-result="applied-memory"]', 'data-intake-next-step')) === 'memory-session-ready',
+    'Intake result panel should offer the guided AI session as the next step',
+  );
   const initialMemoryNodeCount = Number(await attribute(page, '.second-brain-shell', 'data-memory-node-count'));
   const initialRenderedMemoryNodeCount = Number(await attribute(page, '.second-brain-shell', 'data-rendered-memory-node-count'));
   const initialGraphNodeCount = Number(await attribute(page, '.second-brain-shell', 'data-graph-node-count'));
@@ -315,6 +327,16 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
     });
     assert(highlightedWeeklyCitationCount === weeklyCitationCount, 'Cytoscape graph should mark Weekly Report citation memory nodes');
   }
+  await page.locator('[data-control="intake-run-session"]').click();
+  await page.waitForFunction(
+    () => document.querySelector('.second-brain-shell')?.getAttribute('data-memory-session-state') === 'completed',
+    null,
+    { timeout: 20_000 },
+  );
+  assert(
+    (await attribute(page, '[data-memory-session-panel]', 'data-session-source-memory')) === intakeAppliedMemoryId,
+    'Intake result session button should run the guided session from the applied diary memory',
+  );
   await page.waitForFunction(() => {
     const graph = document.querySelector('#memory-graph-cytoscape');
     const fallback = document.querySelector('.graph-workspace');

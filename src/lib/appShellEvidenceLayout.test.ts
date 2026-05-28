@@ -533,6 +533,10 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('data-intake-last-action="none"');
     expect(html).toContain('data-intake-draft-state="idle"');
     expect(html).toContain('data-control="intake-diary-draft"');
+    expect(html).toContain('data-intake-session-result="applied-memory"');
+    expect(html).toContain('data-control="intake-run-session"');
+    expect(html).toContain('data-intake-applied-memory="none"');
+    expect(html).toContain('data-intake-next-step="waiting-for-diary"');
     expect(html).toContain('data-control="intake-preview-diary"');
     expect(html).toContain('data-control="intake-apply-diary"');
     expect(html).toContain('오늘의 일기를 바로 붙여넣기');
@@ -725,6 +729,10 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(documentHtml).toContain("memoryIntakeHub?.setAttribute('data-intake-draft-state', 'applied')");
     expect(documentHtml).toContain('importApplyButton?.click()');
     expect(documentHtml).toContain("timelinePanel?.querySelectorAll('[data-control=\"timeline-select-memory\"]')");
+    expect(documentHtml).toContain("memoryIntakeHub?.setAttribute('data-intake-applied-memory', appliedMemoryId)");
+    expect(documentHtml).toContain("memoryIntakeHub?.setAttribute('data-intake-next-step', 'memory-session-ready')");
+    expect(documentHtml).toContain("intakeRunSessionButton?.removeAttribute('disabled')");
+    expect(documentHtml).toContain("intakeRunSessionButton?.addEventListener('click'");
     expect(documentHtml).toContain("setInteractionState('intake-paste-diary-focused')");
     expect(documentHtml).toContain("setInteractionState('intake-notion-diary-ready')");
     expect(documentHtml).toContain('const applyMemorySearch = (query) =>');

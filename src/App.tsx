@@ -477,6 +477,51 @@ const APP_SHELL_STYLES = `
     font-size: 11px;
     font-weight: 780;
   }
+  .memory-intake-result {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    align-items: center;
+    border: 1px solid rgba(20, 184, 166, 0.18);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.68);
+    padding: 8px 9px;
+  }
+  .memory-intake-result strong,
+  .memory-intake-result span {
+    display: block;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .memory-intake-result strong {
+    color: #0f766e;
+    font-size: 12px;
+    line-height: 1.25;
+  }
+  .memory-intake-result span {
+    margin-top: 2px;
+    color: #57716d;
+    font-size: 11px;
+    line-height: 1.4;
+  }
+  .memory-intake-result button {
+    min-width: 104px;
+    min-height: 34px;
+    border: 1px solid rgba(225, 29, 63, 0.26);
+    border-radius: 8px;
+    background: rgba(225, 29, 63, 0.1);
+    color: #be123c;
+    padding: 7px 9px;
+    font-size: 11px;
+    font-weight: 780;
+  }
+  .memory-intake-result button:disabled {
+    opacity: 0.42;
+    color: #57716d;
+    border-color: rgba(20, 184, 166, 0.18);
+    background: rgba(20, 184, 166, 0.06);
+  }
   .memory-intake-action {
     min-width: 0;
     border: 1px solid rgba(20, 184, 166, 0.2);
@@ -2334,6 +2379,13 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
               <button type="button" data-control="intake-apply-diary">그래프에 적용</button>
             </div>
           </div>
+          <div class="memory-intake-result" data-intake-session-result="applied-memory" data-intake-applied-memory="none" data-intake-related-memory-count="0" data-intake-next-step="waiting-for-diary">
+            <div>
+              <strong data-intake-result-title>적용하면 여기서 바로 다음 행동을 보여준다</strong>
+              <span data-intake-result-summary>일기를 그래프에 넣으면 생성된 기억과 연관 과거 기억 수를 확인하고 AI 세션을 실행할 수 있다.</span>
+            </div>
+            <button type="button" data-control="intake-run-session" disabled>AI 세션 실행</button>
+          </div>
         </section>
         <div class="prototype-entry-dock" data-entry-dock="diary-start" aria-label="첫 화면 일기 시작 액션">
           <a class="entry-dock-action primary" href="/capture/" data-primary-entry-action="quick-diary">
@@ -2513,6 +2565,10 @@ const GRAPH_CONTROL_SCRIPT = `
   const intakeDiaryDraft = document.querySelector('[data-control="intake-diary-draft"]');
   const intakePreviewDiaryButton = document.querySelector('[data-control="intake-preview-diary"]');
   const intakeApplyDiaryButton = document.querySelector('[data-control="intake-apply-diary"]');
+  const intakeSessionResult = document.querySelector('[data-intake-session-result="applied-memory"]');
+  const intakeResultTitle = intakeSessionResult?.querySelector('[data-intake-result-title]');
+  const intakeResultSummary = intakeSessionResult?.querySelector('[data-intake-result-summary]');
+  const intakeRunSessionButton = document.querySelector('[data-control="intake-run-session"]');
   const intakeActions = Array.from(document.querySelectorAll('[data-intake-action]'));
   const firstRunGuideActions = Array.from(document.querySelectorAll('[data-guide-action]'));
   const importPreviewButton = document.querySelector('[data-control="preview-local-import"]');
@@ -2963,6 +3019,26 @@ const GRAPH_CONTROL_SCRIPT = `
       memorySessionSummary.textContent =
         context.sourceMemoryId + ' 기억과 관련 과거 기억 ' + String(context.relatedMemoryIds.length) + '개로 질문, 결정 되짚기, 주간 패턴을 실행한다.';
     }
+  };
+
+  const updateIntakeSessionResult = (appliedMemoryId) => {
+    if (!intakeSessionResult || !appliedMemoryId) return;
+    const relatedCount =
+      shell.getAttribute('data-import-session-related-memory-count') ||
+      shell.getAttribute('data-related-memory-count') ||
+      '0';
+    intakeSessionResult.setAttribute('data-intake-applied-memory', appliedMemoryId);
+    intakeSessionResult.setAttribute('data-intake-related-memory-count', relatedCount);
+    intakeSessionResult.setAttribute('data-intake-next-step', 'memory-session-ready');
+    memoryIntakeHub?.setAttribute('data-intake-applied-memory', appliedMemoryId);
+    memoryIntakeHub?.setAttribute('data-intake-related-memory-count', relatedCount);
+    memoryIntakeHub?.setAttribute('data-intake-next-step', 'memory-session-ready');
+    if (intakeResultTitle) intakeResultTitle.textContent = '새 일기가 그래프에 연결됐다';
+    if (intakeResultSummary) {
+      intakeResultSummary.textContent =
+        appliedMemoryId + ' 기억에서 연관 과거 기억 ' + relatedCount + '개를 찾았다. 이제 AI 세션으로 질문, 결정 되짚기, 주간 패턴을 한 번에 실행할 수 있다.';
+    }
+    intakeRunSessionButton?.removeAttribute('disabled');
   };
 
   const selectMemory = (node) => {
@@ -4438,6 +4514,7 @@ const GRAPH_CONTROL_SCRIPT = `
     if (!importUploadPanel || !lastLocalImportPreview) return;
     const importApplyEndpoint = importUploadPanel.getAttribute('data-import-apply-endpoint') || '';
     importUploadPanel.setAttribute('data-import-upload-state', 'applying');
+    let appliedMemoryId = '';
     try {
       if (importApplyEndpoint && window.location.protocol !== 'file:') {
         const response = await fetch(importApplyEndpoint, {
@@ -4448,15 +4525,17 @@ const GRAPH_CONTROL_SCRIPT = `
         if (!response.ok) throw new Error('import apply failed with ' + response.status);
         const body = await response.json().catch(() => ({}));
         shell.setAttribute('data-last-import-created-count', String(body.createdMemoryIds?.length || 0));
+        appliedMemoryId = body.createdMemoryIds?.[0] || '';
         lastLocalImportUndoAction = body.undoAction || null;
         renderAppliedImportFeedback(body.createdMemoryIds || [], body.graphEvidenceRecords || []);
         if (lastLocalImportUndoAction?.enabled) importUndoButton?.removeAttribute('disabled');
-        await rehydrateAppShellAfterImport(body.createdMemoryIds?.[0] || '');
+        await rehydrateAppShellAfterImport(appliedMemoryId);
       }
       importUploadPanel.setAttribute('data-import-upload-state', 'applied');
       if (memoryIntakeHub?.getAttribute('data-intake-last-action') === 'apply-diary') {
         memoryIntakeHub?.setAttribute('data-intake-draft-state', 'applied');
         memoryIntakeHub?.setAttribute('data-intake-result', 'graph-applied');
+        updateIntakeSessionResult(appliedMemoryId || shell.getAttribute('data-import-session-source-memory') || '');
       }
       setInteractionState('import-applied');
     } catch (error) {
@@ -4576,6 +4655,11 @@ const GRAPH_CONTROL_SCRIPT = `
   replayWithRelatedMemoryButton?.addEventListener('click', replayWithRelatedMemoryContext);
   reportWithRelatedMemoryButton?.addEventListener('click', reportWithRelatedMemoryContext);
   runMemorySessionButton?.addEventListener('click', () => void runMemorySession());
+  intakeRunSessionButton?.addEventListener('click', () => {
+    intakeSessionResult?.setAttribute('data-intake-next-step', 'memory-session-running');
+    memoryIntakeHub?.setAttribute('data-intake-next-step', 'memory-session-running');
+    void runMemorySession();
+  });
   selectedPathActions.forEach((button) => {
     button.addEventListener('click', () => {
       const action = button.getAttribute('data-selected-path-action');
