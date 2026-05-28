@@ -231,6 +231,7 @@ No remote push, main merge, production deploy, or secret access is allowed witho
 - L81: selected memory related-path graph highlight.
 - L82: related-memory Ask context handoff.
 - L83: related-memory Decision Replay context handoff.
+- L84: related-memory Weekly Report context handoff.
 
 ## 6. Active Next Loops
 
@@ -1601,6 +1602,24 @@ Acceptance:
 - action stores selected memory plus related memory ids as replay context
 - shell exposes selected source memory and related count markers for replay
 - Playwright verifies the graph selection to Decision Replay context handoff
+
+Implemented:
+
+- `src/App.tsx`
+- `src/lib/appShellEvidenceLayout.test.ts`
+- `scripts/verify-playwright-evidence.ts`
+
+### L84 — Related-Memory Weekly Report Context Handoff
+
+Goal: let the user move from selected diary memory + related past memories directly into Weekly Pattern Report context.
+
+Acceptance:
+
+- related-memory strip exposes a Weekly Report context action
+- action stores selected memory plus related memory ids as weekly report context
+- weekly report panel marks the related-memory context
+- shell exposes selected source memory and related count markers for weekly report
+- Playwright verifies graph selection to Weekly Report context handoff
 
 Implemented:
 

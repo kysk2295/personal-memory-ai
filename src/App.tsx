@@ -1352,6 +1352,7 @@ const APP_SHELL_STYLES = `
   .memory-inspector {
     right: 22px;
     bottom: 82px;
+    z-index: 6;
     width: min(330px, calc(100% - 44px));
     max-height: 330px;
     overflow: auto;
@@ -1879,6 +1880,7 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
               <div class="related-memory-list" data-related-memory-list></div>
               <button type="button" class="related-memory-action" data-control="ask-with-related-memory-context">이 맥락으로 Ask</button>
               <button type="button" class="related-memory-action" data-control="replay-with-related-memory-context">이 맥락으로 Decision</button>
+              <button type="button" class="related-memory-action" data-control="report-with-related-memory-context">이 맥락으로 Weekly</button>
             </div>
             <div class="citation-row" aria-label="Ask My Past Self citations" data-inspector-citations>${citationLinks}</div>
           </article>
@@ -1921,6 +1923,7 @@ const GRAPH_CONTROL_SCRIPT = `
   const relatedMemoryList = inspector?.querySelector('[data-related-memory-list]');
   const askWithRelatedMemoryButton = inspector?.querySelector('[data-control="ask-with-related-memory-context"]');
   const replayWithRelatedMemoryButton = inspector?.querySelector('[data-control="replay-with-related-memory-context"]');
+  const reportWithRelatedMemoryButton = inspector?.querySelector('[data-control="report-with-related-memory-context"]');
   const askForm = document.querySelector('[data-ask-endpoint]');
   const askEndpoint = askForm?.getAttribute('data-ask-endpoint') || '';
   const askQuestionInput = askForm?.querySelector('input[name="question"]');
@@ -1991,6 +1994,7 @@ const GRAPH_CONTROL_SCRIPT = `
   let lastLocalImportUndoAction = null;
   let lastAskFollowUpContext = null;
   let lastReplayRelatedContext = null;
+  let lastWeeklyRelatedContext = null;
 
   const setInteractionState = (value) => {
     shell.setAttribute('data-interaction-state', value);
@@ -2297,6 +2301,25 @@ const GRAPH_CONTROL_SCRIPT = `
     shell.setAttribute('data-replay-context-related-memory-count', String(relatedMemoryIds.length));
     shell.setAttribute('data-replay-context-related-memories', relatedMemoryIds.join(','));
     setInteractionState('replay-context-seeded-from-related-memories');
+  };
+
+  const reportWithRelatedMemoryContext = () => {
+    const sourceMemoryId = shell.getAttribute('data-active-memory') || '';
+    const relatedMemoryIds = Array.from(relatedMemoryList?.querySelectorAll('[data-related-memory-id]') || [])
+      .map((item) => item.getAttribute('data-related-memory-id') || '')
+      .filter(Boolean);
+    if (!sourceMemoryId || !relatedMemoryIds.length) return;
+    lastWeeklyRelatedContext = {
+      sourceMemoryId,
+      relatedMemoryIds,
+    };
+    weeklyReportPanel?.setAttribute('data-weekly-report-context', 'related-memories');
+    weeklyReportPanel?.setAttribute('data-weekly-context-source-memory', sourceMemoryId);
+    weeklyReportPanel?.setAttribute('data-weekly-context-related-memory-count', String(relatedMemoryIds.length));
+    shell.setAttribute('data-weekly-context-source-memory', sourceMemoryId);
+    shell.setAttribute('data-weekly-context-related-memory-count', String(relatedMemoryIds.length));
+    shell.setAttribute('data-weekly-context-related-memories', relatedMemoryIds.join(','));
+    setInteractionState('weekly-context-seeded-from-related-memories');
   };
 
   const selectMemory = (node) => {
@@ -3028,6 +3051,7 @@ const GRAPH_CONTROL_SCRIPT = `
           startDate: weeklyReportPanel?.getAttribute('data-weekly-report-window-start') || '2026-05-01',
           endDate: weeklyReportPanel?.getAttribute('data-weekly-report-window-end') || new Date().toISOString().slice(0, 10),
           generatedAt: new Date().toISOString(),
+          relatedMemoryContext: lastWeeklyRelatedContext,
         }),
       });
       if (!response.ok) throw new Error('weekly report failed with ' + response.status);
@@ -3699,6 +3723,7 @@ const GRAPH_CONTROL_SCRIPT = `
   });
   askWithRelatedMemoryButton?.addEventListener('click', askWithRelatedMemoryContext);
   replayWithRelatedMemoryButton?.addEventListener('click', replayWithRelatedMemoryContext);
+  reportWithRelatedMemoryButton?.addEventListener('click', reportWithRelatedMemoryContext);
   if (memoryNodes[2]) selectMemory(memoryNodes[2]);
   wireReviewComparisonButtons();
   initializeCytoscapeGraph();
