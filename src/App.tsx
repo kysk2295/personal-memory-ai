@@ -9106,23 +9106,30 @@ const GRAPH_CONTROL_SCRIPT = `
       const body = await response.json().catch(() => ({}));
       const savedMemoryId = body.createdMemoryIds?.[0] || body.record?.id || '';
       if (!savedMemoryId) throw new Error('quick diary save did not return a memory id');
-      memoryIntakeHub.setAttribute('data-intake-quick-saved-memory', savedMemoryId);
-      memoryIntakeHub.setAttribute('data-intake-result', 'quick-saved');
-      shell.setAttribute('data-intake-quick-saved-memory', savedMemoryId);
-      updateIntakeSessionResult(savedMemoryId);
-      await rehydrateAppShellAfterImport(savedMemoryId);
-      updateIntakeSessionResult(savedMemoryId);
-      updateUseNowRouteBoard({
+	      memoryIntakeHub.setAttribute('data-intake-quick-saved-memory', savedMemoryId);
+	      memoryIntakeHub.setAttribute('data-intake-result', 'quick-saved');
+	      shell.setAttribute('data-intake-quick-saved-memory', savedMemoryId);
+	      updateIntakeSessionResult(savedMemoryId);
+	      updateUseNowRouteBoard({
+	        state: 'related',
+	        sourceMemoryId: savedMemoryId,
+	        relatedCount: shell.getAttribute('data-related-memory-count') || memoryIntakeHub.getAttribute('data-intake-related-memory-count') || '0',
+	        aiState: 'ready',
+	        saveState: 'idle',
+	      });
+	      memoryIntakeHub?.setAttribute('data-intake-quick-save-state', 'saved');
+	      memoryIntakeHub.setAttribute('data-intake-draft-state', 'saved');
+	      setInteractionState('intake-quick-diary-saved');
+	      await rehydrateAppShellAfterImport(savedMemoryId);
+	      updateIntakeSessionResult(savedMemoryId);
+	      updateUseNowRouteBoard({
         state: 'related',
         sourceMemoryId: savedMemoryId,
         relatedCount: shell.getAttribute('data-related-memory-count') || memoryIntakeHub.getAttribute('data-intake-related-memory-count') || '0',
-        aiState: 'ready',
-        saveState: 'idle',
-      });
-      memoryIntakeHub?.setAttribute('data-intake-quick-save-state', 'saved');
-      memoryIntakeHub.setAttribute('data-intake-draft-state', 'saved');
-      setInteractionState('intake-quick-diary-saved');
-    } catch (error) {
+	        aiState: 'ready',
+	        saveState: 'idle',
+	      });
+	    } catch (error) {
       memoryIntakeHub.setAttribute('data-intake-quick-save-state', 'error');
       memoryIntakeHub.setAttribute('data-intake-draft-state', 'error');
       shell.setAttribute('data-intake-quick-save-error', String(error?.message || error));
@@ -9204,9 +9211,9 @@ const GRAPH_CONTROL_SCRIPT = `
       };
       waitForApplied();
     });
-  const waitForImportApplyReady = (timeoutMs = 4000) =>
-    new Promise((resolve) => {
-      const startedAt = Date.now();
+	  const waitForImportApplyReady = (timeoutMs = 4000) =>
+	    new Promise((resolve) => {
+	      const startedAt = Date.now();
       const waitForReady = () => {
         if (importApplyButton && !importApplyButton.hasAttribute('disabled')) {
           resolve('ready');
@@ -9216,11 +9223,29 @@ const GRAPH_CONTROL_SCRIPT = `
           resolve('timeout');
           return;
         }
-        window.setTimeout(waitForReady, 40);
-      };
-      waitForReady();
-    });
-  const setOneClickNotionState = (state) => {
+	        window.setTimeout(waitForReady, 40);
+	      };
+	      waitForReady();
+	    });
+	  const waitForImportedMemoryId = (timeoutMs = 4000) =>
+	    new Promise((resolve) => {
+	      const startedAt = Date.now();
+	      const waitForMemoryId = () => {
+	        const candidates = [
+	          intakeSessionResult?.getAttribute('data-intake-applied-memory'),
+	          shell.getAttribute('data-import-session-source-memory'),
+	          koreanAiWorkbench?.getAttribute('data-workbench-selected-memory'),
+	        ];
+	        const memoryId = candidates.find((candidate) => candidate && candidate !== 'none') || '';
+	        if ((memoryId && memoryId !== 'none') || Date.now() - startedAt > timeoutMs) {
+	          resolve(memoryId && memoryId !== 'none' ? memoryId : '');
+	          return;
+	        }
+	        window.setTimeout(waitForMemoryId, 80);
+	      };
+	      waitForMemoryId();
+	    });
+	  const setOneClickNotionState = (state) => {
     memoryIntakeHub?.setAttribute('data-intake-one-click-notion-state', state);
     shell.setAttribute('data-intake-one-click-notion-state', state);
   };
@@ -9273,9 +9298,10 @@ const GRAPH_CONTROL_SCRIPT = `
       setIntakeNotionState('source-required');
       return;
     }
-    const importedMemoryId = intakeSessionResult?.getAttribute('data-intake-applied-memory') || shell.getAttribute('data-import-session-source-memory') || '';
-    const relatedCount = intakeSessionResult?.getAttribute('data-intake-related-memory-count') || shell.getAttribute('data-related-memory-count') || '0';
-    setOneClickNotionState('imported');
+	    const importedMemoryId = await waitForImportedMemoryId();
+	    const relatedCount = intakeSessionResult?.getAttribute('data-intake-related-memory-count') || shell.getAttribute('data-related-memory-count') || '0';
+	    if (importedMemoryId) updateIntakeSessionResult(importedMemoryId);
+	    setOneClickNotionState('imported');
     setIntakeNotionState('imported');
     updateUseNowRouteBoard({
       state: 'related',

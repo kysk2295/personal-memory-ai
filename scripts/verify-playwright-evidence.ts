@@ -1490,6 +1490,8 @@ async function verifyCaptureInteractions(page: Page): Promise<void> {
   assert((await attribute(page, '.capture-app-shell', 'data-privacy-scope')) === 'private', 'Capture app should stay private by default');
   assert((await attribute(page, '.capture-app-shell', 'data-quick-save-endpoint')) === '/api/capture', 'Capture app should target the private capture API');
   assert((await attribute(page, '[data-capture-hints-panel="manual"]', 'aria-label')) === 'Quick save diary form', 'Capture app should expose manual hint controls');
+  assert((await page.locator('text=오늘 기록').count()) > 0, 'Capture app should show Korean diary field label');
+  assert((await attribute(page, '[data-capture-save-receipt="quick-diary"]', 'data-capture-receipt-state')) === 'idle', 'Capture receipt should start idle');
   assert(
     Number(await attribute(page, '[data-capture-related-preview="past-memory-nodes"]', 'data-capture-related-count')) === 3,
     'Capture app should preview related past-memory nodes before handoff',
@@ -1513,6 +1515,19 @@ async function verifyCaptureInteractions(page: Page): Promise<void> {
     );
     const capturedMemoryId = await attribute(page, '.capture-app-shell', 'data-last-captured-memory');
     assert(Boolean(capturedMemoryId), 'Capture app should expose the saved memory id after quick save');
+    assert(
+      (await attribute(page, '[data-capture-save-receipt="quick-diary"]', 'data-capture-receipt-state')) === 'saved',
+      'Capture receipt should mark saved after quick save',
+    );
+    assert(
+      ((await page.locator('[data-capture-receipt-memory-label]').textContent()) || '').includes(capturedMemoryId || ''),
+      'Capture receipt should show the saved memory id',
+    );
+    assert(
+      ((await page.locator('[data-capture-receipt-hints-label]').textContent()) || '').includes('focused') &&
+        ((await page.locator('[data-capture-receipt-hints-label]').textContent()) || '').includes('personal-memory-ai'),
+      'Capture receipt should show manual emotion/project hints',
+    );
     assert(
       (await attribute(page, '.capture-app-shell', 'data-graph-handoff-url')) === `/?memory=${encodeURIComponent(capturedMemoryId || '')}`,
       'Capture app should expose a graph handoff URL after quick save',

@@ -93,7 +93,8 @@ const CAPTURE_STYLES = `
     background: rgba(214, 31, 60, 0.1);
   }
   .capture-card,
-  .capture-sync-card {
+  .capture-sync-card,
+  .capture-save-receipt {
     display: grid;
     gap: 12px;
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -182,6 +183,23 @@ const CAPTURE_STYLES = `
     font-size: 11px;
     overflow-wrap: anywhere;
   }
+  .capture-save-receipt {
+    gap: 8px;
+    border-color: rgba(47, 155, 101, 0.22);
+    background: rgba(47, 155, 101, 0.08);
+  }
+  .capture-save-receipt span {
+    display: block;
+    min-width: 0;
+    color: #d9d9dd;
+    font-size: 12px;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+  }
+  .capture-save-receipt span:first-child {
+    color: #8ee0b5;
+    font-weight: 820;
+  }
   .capture-related-preview {
     display: grid;
     gap: 9px;
@@ -260,7 +278,7 @@ export function renderAppCaptureHtml(): string {
   const graphHandoffUrl = `${state.graphSync.targetRoute}?memory=${encodeURIComponent(state.savedPreview.id)}`;
   const sessionHandoffUrl = `${graphHandoffUrl}&start=session`;
 
-  return `<main class="capture-app-shell" aria-label="Mobile app quick diary capture" data-surface-mode="${escapeHtml(
+  return `<main class="capture-app-shell" aria-label="앱 빠른 일기 기록" data-surface-mode="${escapeHtml(
     state.surfaceMode,
   )}" data-pwa-status="${escapeHtml(state.pwaStatus)}" data-storage-mode="${escapeHtml(
     state.storageMode,
@@ -274,32 +292,32 @@ export function renderAppCaptureHtml(): string {
     <section class="capture-phone">
       <div class="capture-topbar">
         <button class="capture-icon-button" type="button" aria-label="Back">←</button>
-        <span class="capture-chip private">private vault</span>
+        <span class="capture-chip private">비공개 보관함</span>
       </div>
       <section class="capture-title">
         <h1>빠른 일기</h1>
         <p>앱에서는 길게 분석하지 않고 바로 기록한다. 저장된 일기는 로컬 우선으로 private MemoryRecord가 되고 웹 세컨브레인 그래프에 연결된다.</p>
       </section>
       <form class="capture-card" aria-label="Quick save diary form" data-capture-hints-panel="manual">
-        <label for="quick-diary-text">Today</label>
+        <label for="quick-diary-text">오늘 기록</label>
         <textarea id="quick-diary-text" name="text">${escapeHtml(state.draft.text)}</textarea>
         <div class="capture-hint-grid" aria-label="Manual capture hint controls">
-          <label>Emotion
+          <label>감정
             <input name="emotionHints" data-control="capture-emotion-hints" value="${escapeHtml(
               state.draft.emotionHints.join(', '),
             )}" />
           </label>
-          <label>Project
+          <label>프로젝트
             <input name="projectHints" data-control="capture-project-hints" value="${escapeHtml(
               state.draft.projectHints.join(', '),
             )}" />
           </label>
-          <label>Topic
+          <label>주제
             <input name="topicHints" data-control="capture-topic-hints" value="${escapeHtml(
               state.draft.topicHints.join(', '),
             )}" />
           </label>
-          <label>Decision
+          <label>결정
             <select name="decisionHint" data-control="capture-decision-hint">
               ${['none', 'pending', 'chosen', 'avoided', 'reversed']
                 .map(
@@ -309,7 +327,7 @@ export function renderAppCaptureHtml(): string {
                 .join('')}
             </select>
           </label>
-          <label>Outcome
+          <label>결과
             <input name="outcomeHint" data-control="capture-outcome-hint" value="" />
           </label>
         </div>
@@ -322,9 +340,9 @@ export function renderAppCaptureHtml(): string {
       </form>
       <section class="capture-sync-card" aria-label="Saved capture graph handoff">
         <span>저장 후 연결</span>
-        <p>Quick save will call <code>${escapeHtml(
+        <p>빠른 저장은 <code>${escapeHtml(
           `${state.quickSaveAction.method} ${state.quickSaveAction.endpoint}`,
-        )}</code> with local-first private payload.</p>
+        )}</code>를 호출해 로컬 우선 비공개 payload로 저장한다.</p>
         <div class="capture-memory-meta">
           <span>${escapeHtml(state.savedPreview.id)}</span>
           <span>${escapeHtml(state.savedPreview.sourceType)}</span>
@@ -335,6 +353,11 @@ export function renderAppCaptureHtml(): string {
           graphHandoffUrl,
         )}</code></p>
         <p>AI session handoff: <code>${escapeHtml(sessionHandoffUrl)}</code></p>
+      </section>
+      <section class="capture-save-receipt" data-capture-save-receipt="quick-diary" data-capture-receipt-state="idle" aria-label="저장 결과">
+        <span data-capture-receipt-memory-label>저장 기억 · 대기</span>
+        <span data-capture-receipt-hints-label>힌트 · 대기</span>
+        <span data-capture-receipt-handoff-label>세컨브레인 연결 · 저장 후 준비</span>
       </section>
       <section class="capture-related-preview" data-capture-related-preview="past-memory-nodes" data-capture-related-count="${state.relatedPreview.count}" data-capture-related-state="${escapeHtml(
         state.relatedPreview.status,
@@ -377,6 +400,10 @@ const CAPTURE_SCRIPT = `
   const openGraphLink = document.querySelector('[data-control="open-captured-memory-graph"]');
   const openSessionLink = document.querySelector('[data-control="open-captured-memory-session"]');
   const captureRelatedPreview = document.querySelector('[data-capture-related-preview="past-memory-nodes"]');
+  const captureReceipt = document.querySelector('[data-capture-save-receipt="quick-diary"]');
+  const captureReceiptMemoryLabel = captureReceipt?.querySelector('[data-capture-receipt-memory-label]');
+  const captureReceiptHintsLabel = captureReceipt?.querySelector('[data-capture-receipt-hints-label]');
+  const captureReceiptHandoffLabel = captureReceipt?.querySelector('[data-capture-receipt-handoff-label]');
   if (!captureShell || !form) return;
   form.setAttribute('id', 'quick-diary-form');
   const quickSaveEndpoint = captureShell.getAttribute('data-quick-save-endpoint') || '/api/capture';
@@ -395,7 +422,19 @@ const CAPTURE_SCRIPT = `
       decisionHint: String(formData.get('decisionHint') || 'none'),
       outcomeHint: String(formData.get('outcomeHint') || ''),
     };
+    const receiptHints = [
+      ...payload.emotionHints,
+      ...payload.projectHints,
+      ...payload.topicHints,
+      payload.decisionHint,
+      payload.outcomeHint,
+    ].filter(Boolean);
+    let memoryId = '';
     captureShell.setAttribute('data-quick-save-state', 'saving');
+    captureReceipt?.setAttribute('data-capture-receipt-state', 'saving');
+    if (captureReceiptMemoryLabel) captureReceiptMemoryLabel.textContent = '저장 기억 · 저장 중';
+    if (captureReceiptHintsLabel) captureReceiptHintsLabel.textContent = '힌트 · ' + (receiptHints.join(' · ') || '없음');
+    if (captureReceiptHandoffLabel) captureReceiptHandoffLabel.textContent = '세컨브레인 연결 · 저장 중';
     saveButton?.setAttribute('aria-busy', 'true');
     try {
       if (window.location.protocol !== 'file:') {
@@ -406,7 +445,7 @@ const CAPTURE_SCRIPT = `
         });
         if (!response.ok) throw new Error('capture failed with ' + response.status);
         const body = await response.json().catch(() => ({}));
-        const memoryId = body.createdMemoryIds?.[0] || body.record?.id || '';
+        memoryId = body.createdMemoryIds?.[0] || body.record?.id || '';
         captureShell.setAttribute('data-last-captured-memory', memoryId);
         const graphHandoffUrl = '/?memory=' + encodeURIComponent(memoryId);
         const sessionHandoffUrl = graphHandoffUrl + '&start=session';
@@ -419,10 +458,17 @@ const CAPTURE_SCRIPT = `
         openSessionLink?.setAttribute('href', sessionHandoffUrl);
       }
       captureShell.setAttribute('data-quick-save-state', 'saved');
+      captureReceipt?.setAttribute('data-capture-receipt-state', 'saved');
+      if (captureReceiptMemoryLabel) captureReceiptMemoryLabel.textContent = '저장 기억 · ' + memoryId;
+      if (captureReceiptHintsLabel) captureReceiptHintsLabel.textContent = '힌트 · ' + receiptHints.join(' · ');
+      if (captureReceiptHandoffLabel) captureReceiptHandoffLabel.textContent = '세컨브레인 연결 · 그래프/AI 세션 준비';
       if (saveButton) saveButton.textContent = '저장됨';
     } catch (error) {
       captureShell.setAttribute('data-quick-save-state', 'error');
       captureShell.setAttribute('data-quick-save-error', String(error?.message || error));
+      captureReceipt?.setAttribute('data-capture-receipt-state', 'error');
+      if (captureReceiptMemoryLabel) captureReceiptMemoryLabel.textContent = '저장 기억 · 실패';
+      if (captureReceiptHandoffLabel) captureReceiptHandoffLabel.textContent = '세컨브레인 연결 · 다시 저장 필요';
     } finally {
       saveButton?.setAttribute('aria-busy', 'false');
     }

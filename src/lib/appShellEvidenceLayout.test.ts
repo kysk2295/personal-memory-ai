@@ -1224,6 +1224,10 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(documentHtml).toContain("section.setAttribute('data-workflow-section-visibility', isActive ? 'active' : 'collapsed')");
     expect(documentHtml).toContain("flowFocusActions.forEach((button) =>");
     expect(documentHtml).toContain("memoryIntakeHub?.getAttribute('data-intake-applied-memory')");
+    expect(documentHtml).toContain("koreanAiWorkbench?.getAttribute('data-workbench-selected-memory')");
+    expect(documentHtml).toContain('const waitForImportedMemoryId =');
+    expect(documentHtml).toContain("candidates.find((candidate) => candidate && candidate !== 'none')");
+    expect(documentHtml).toContain('if (importedMemoryId) updateIntakeSessionResult(importedMemoryId)');
     expect(documentHtml).toContain("intakeRelatedBundle?.querySelectorAll('[data-intake-related-memory-id]')");
     expect(documentHtml).toContain("const context = getIntakeMemorySessionContext()");
     expect(documentHtml).toContain("setWorkflowFocus('ai')");

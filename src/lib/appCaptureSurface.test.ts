@@ -64,7 +64,7 @@ describe('app capture surface state', () => {
 
     expect(html).toContain('<!doctype html>');
     expect(html).toContain('<link rel="manifest" href="/manifest.webmanifest" />');
-    expect(html).toContain('aria-label="Mobile app quick diary capture"');
+    expect(html).toContain('aria-label="앱 빠른 일기 기록"');
     expect(html).toContain('data-surface-mode="mobile-first-capture"');
     expect(html).toContain('data-pwa-status="installable-static-prototype"');
     expect(html).toContain('data-storage-mode="local-first"');
@@ -84,6 +84,12 @@ describe('app capture surface state', () => {
     expect(html).toContain('data-capture-related-memory-id="mem_freeze_vs_feature_addition"');
     expect(html).toContain('저장하면 같이 떠오를 과거 기억');
     expect(html).toContain('data-capture-hints-panel="manual"');
+    expect(html).toContain('오늘 기록');
+    expect(html).toContain('감정');
+    expect(html).toContain('프로젝트');
+    expect(html).toContain('주제');
+    expect(html).toContain('결정');
+    expect(html).toContain('결과');
     expect(html).toContain('name="emotionHints"');
     expect(html).toContain('name="projectHints"');
     expect(html).toContain('name="topicHints"');
@@ -92,6 +98,13 @@ describe('app capture surface state', () => {
     expect(html).toContain('data-control="quick-diary-save"');
     expect(html).toContain('data-control="open-captured-memory-graph"');
     expect(html).toContain('data-control="open-captured-memory-session"');
+    expect(html).toContain('data-capture-save-receipt="quick-diary"');
+    expect(html).toContain('data-capture-receipt-state="idle"');
+    expect(html).toContain('data-capture-receipt-memory-label');
+    expect(html).toContain('data-capture-receipt-hints-label');
+    expect(html).toContain("captureReceipt?.setAttribute('data-capture-receipt-state', 'saved')");
+    expect(html).toContain("captureReceiptMemoryLabel.textContent = '저장 기억 · ' + memoryId");
+    expect(html).toContain("captureReceiptHintsLabel.textContent = '힌트 · ' + receiptHints.join(' · ')");
     expect(html).toContain('세컨브레인에서 연관 기억 보기');
     expect(html).toContain('AI 세션 시작');
     expect(html).toContain("fetch(quickSaveEndpoint");
@@ -104,7 +117,7 @@ describe('app capture surface state', () => {
     expect(html).toContain("captureShell.setAttribute('data-quick-save-state', 'saved')");
     expect(html).toContain('오늘은 그래프를 더 꾸미기보다 앱 캡처 흐름을 먼저 실제로 만들자.');
     expect(html).toContain('local-first');
-    expect(html).toContain('private vault');
+    expect(html).toContain('비공개 보관함');
     expect(html).not.toContain('id="quick-diary-text" readonly');
     expect(html).not.toContain('public shared memory');
   });
