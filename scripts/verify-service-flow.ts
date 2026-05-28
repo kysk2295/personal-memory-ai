@@ -73,6 +73,11 @@ async function verifyServiceFlow(page: Page): Promise<void> {
   );
   const capturedMemoryId = await attribute(page, '.capture-app-shell', 'data-last-captured-memory');
   assert(capturedMemoryId, 'Quick save should expose the created memory id');
+  const graphHandoffUrl = await attribute(page, '.capture-app-shell', 'data-graph-handoff-url');
+  assert(
+    graphHandoffUrl === `/?memory=${encodeURIComponent(capturedMemoryId)}`,
+    'Quick save should expose a graph handoff URL for the captured diary memory',
+  );
 
   const search = await postJson<{ totalMatchCount: number; records: MemoryRecord[] }>(page, '/api/memory/search', {
     query: marker,
@@ -81,7 +86,7 @@ async function verifyServiceFlow(page: Page): Promise<void> {
   assert(search.totalMatchCount >= 1, 'Captured diary should be searchable from the web memory API');
   assert(search.records.some((record) => record.id === capturedMemoryId), 'Search should return the captured diary memory');
 
-  await page.goto(`${baseUrl}/`, { waitUntil: 'load', timeout: 30_000 });
+  await page.goto(`${baseUrl}/?memory=${encodeURIComponent(capturedMemoryId)}`, { waitUntil: 'load', timeout: 30_000 });
   await page.locator('[data-service-flow="diary-to-second-brain"]').waitFor({ timeout: 10_000 });
   for (const step of [
     'quick-diary-capture',
@@ -103,6 +108,15 @@ async function verifyServiceFlow(page: Page): Promise<void> {
     () => document.querySelector('.second-brain-shell')?.getAttribute('data-graph-rehydrate-state') === 'ready',
     null,
     { timeout: 15_000 },
+  );
+  await page.waitForFunction(
+    (memoryId) => document.querySelector('.second-brain-shell')?.getAttribute('data-capture-handoff-selected-memory') === memoryId,
+    capturedMemoryId,
+    { timeout: 15_000 },
+  );
+  assert(
+    (await attribute(page, '.second-brain-shell', 'data-capture-handoff-state')) === 'selected',
+    'Web graph should select the captured memory from the handoff URL',
   );
 
   const appShell = await getJson<{

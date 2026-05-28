@@ -226,6 +226,7 @@ No remote push, main merge, production deploy, or secret access is allowed witho
 - L76: live Ask citation path graph highlight.
 - L77: live Decision Replay citation path graph highlight.
 - L78: live Weekly Report citation path graph highlight.
+- L79: quick diary capture graph handoff selection.
 
 ## 6. Active Next Loops
 
@@ -1509,6 +1510,26 @@ Implemented:
 - `src/components/WeeklyReportPanel.tsx`
 - `src/App.tsx`
 - `src/lib/appShellEvidenceLayout.test.ts`
+- `scripts/verify-playwright-evidence.ts`
+
+### L79 — Quick Diary Capture Graph Handoff Selection
+
+Goal: make the app capture surface hand off directly to the newly saved diary memory in the web second-brain graph.
+
+Acceptance:
+
+- capture shell exposes a graph handoff URL with the captured memory id
+- Open graph link updates after Quick save
+- web shell reads `?memory=<id>` and selects that memory after graph hydration/rebuild
+- service-flow evidence verifies the captured diary is selected in the graph handoff
+
+Implemented:
+
+- `src/AppCapture.tsx`
+- `src/App.tsx`
+- `src/lib/appCaptureSurface.test.ts`
+- `src/lib/appShellEvidenceLayout.test.ts`
+- `scripts/verify-service-flow.ts`
 - `scripts/verify-playwright-evidence.ts`
 
 ## 8. MVP Time Estimate

@@ -658,6 +658,12 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(documentHtml).toContain("fetch('/api/app-shell'");
     expect(documentHtml).toContain("shell.setAttribute('data-graph-rehydrate-state', 'ready')");
     expect(documentHtml).toContain("shell.setAttribute('data-rehydrated-memory-node-count'");
+    expect(documentHtml).toContain('const handoffMemoryId = new URLSearchParams(window.location.search).get');
+    expect(documentHtml).toContain('const selectHandoffMemoryFromGraph =');
+    expect(documentHtml).toContain("shell.setAttribute('data-capture-handoff-selected-memory'");
+    expect(documentHtml).toContain("shell.setAttribute('data-capture-handoff-state', 'selected')");
+    expect(documentHtml).toContain("setInteractionState('capture-handoff-selected')");
+    expect(documentHtml).toContain('selectHandoffMemoryFromGraph(handoffMemoryId)');
     expect(documentHtml).toContain('data-live-count="memory-nodes"');
     expect(documentHtml).toContain('liveCountTargets.memoryNodes');
     expect(documentHtml).toContain("searchCount.textContent = String(appShell.primaryNodes?.length || 0)");

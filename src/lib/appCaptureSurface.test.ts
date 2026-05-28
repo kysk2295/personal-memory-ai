@@ -65,6 +65,7 @@ describe('app capture surface state', () => {
     expect(html).toContain('data-graph-sync-status="ready-for-store-backed-graph"');
     expect(html).toContain('data-graph-target-route="/"');
     expect(html).toContain('data-graph-target-node="memory:');
+    expect(html).toContain('data-graph-handoff-url="/?memory=');
     expect(html).toContain('data-capture-hints-panel="manual"');
     expect(html).toContain('name="emotionHints"');
     expect(html).toContain('name="projectHints"');
@@ -72,7 +73,10 @@ describe('app capture surface state', () => {
     expect(html).toContain('name="decisionHint"');
     expect(html).toContain('name="outcomeHint"');
     expect(html).toContain('data-control="quick-diary-save"');
+    expect(html).toContain('data-control="open-captured-memory-graph"');
     expect(html).toContain("fetch(quickSaveEndpoint");
+    expect(html).toContain("captureShell.setAttribute('data-graph-handoff-url', graphHandoffUrl)");
+    expect(html).toContain("openGraphLink?.setAttribute('href', graphHandoffUrl)");
     expect(html).toContain("captureShell.setAttribute('data-quick-save-state', 'saved')");
     expect(html).toContain('오늘은 그래프를 더 꾸미기보다 앱 캡처 흐름을 먼저 실제로 만들자.');
     expect(html).toContain('local-first');

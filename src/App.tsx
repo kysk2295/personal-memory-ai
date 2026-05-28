@@ -1877,6 +1877,7 @@ const GRAPH_CONTROL_SCRIPT = `
   const askQuestionInput = askForm?.querySelector('input[name="question"]');
   const askSubmit = document.querySelector('[data-control="ask-second-brain"]');
   const askSaveButton = document.querySelector('[data-save-artifact-action="ask_answer"]');
+  const handoffMemoryId = new URLSearchParams(window.location.search).get('memory');
   const citationRefs = Array.from(document.querySelectorAll('[data-citation-ref]'));
   const memoryEdges = Array.from(document.querySelectorAll('.obsidian-spoke-edge[data-edge-from][data-edge-to]'));
   const filterTargets = Array.from(document.querySelectorAll('[data-filter-kind]'));
@@ -2202,6 +2203,45 @@ const GRAPH_CONTROL_SCRIPT = `
   const selectMemoryByCitation = (citation) => {
     const node = findMemoryNodeByCitation(citation);
     if (node) selectMemory(node);
+  };
+
+  const selectHandoffMemoryFromGraph = (citation) => {
+    if (!citation) return false;
+    const normalizedCitation = String(citation).replace(/^memory:/, '');
+    const node = findMemoryNodeByCitation(normalizedCitation);
+    if (node) {
+      selectMemory(node);
+    } else if (cytoscapeGraph) {
+      const graphNode = cytoscapeGraph.getElementById('memory:' + normalizedCitation);
+      if (!graphNode || !graphNode.length) return false;
+      markCytoscapeSelection(normalizedCitation);
+      const data = graphNode.data();
+      if (inspectorHeadline) inspectorHeadline.textContent = data.graphLabel || data.label || normalizedCitation;
+      if (inspectorSource) {
+        inspectorSource.textContent = [data.sourceType, data.recordType, data.observedAt].filter(Boolean).join(' · ');
+      }
+      if (inspectorBody) inspectorBody.textContent = data.searchText || data.label || normalizedCitation;
+      if (inspectorCitations) {
+        inspectorCitations.innerHTML =
+          '<a href="#evidence-' +
+          escapeText(normalizedCitation) +
+          '" class="citation-ref" data-citation-ref="' +
+          escapeText(normalizedCitation) +
+          '" data-active="true">[' +
+          escapeText(normalizedCitation) +
+          ']</a>';
+        inspectorCitations.setAttribute('data-inspector-selected-citation', normalizedCitation);
+      }
+      inspector?.setAttribute('data-selected-memory', normalizedCitation);
+      shell.setAttribute('data-active-memory', normalizedCitation);
+      updateTimelineSelection(normalizedCitation);
+    } else {
+      return false;
+    }
+    shell.setAttribute('data-capture-handoff-selected-memory', normalizedCitation);
+    shell.setAttribute('data-capture-handoff-state', 'selected');
+    setInteractionState('capture-handoff-selected');
+    return true;
   };
 
   const highlightLiveAskCitations = (citations) => {
@@ -3146,6 +3186,7 @@ const GRAPH_CONTROL_SCRIPT = `
       if (searchCount) searchCount.textContent = String(appShell.primaryNodes?.length || 0) + ' / ' + String(appShell.primaryNodes?.length || 0);
       if (timelinePanel) timelinePanel.setAttribute('data-timeline-entry-count', String(appShell.memoryTimeline?.entries?.length || 0));
       rebuildCytoscapeGraphFromModel(memoryGraph);
+      selectHandoffMemoryFromGraph(handoffMemoryId);
     } catch (error) {
       shell.setAttribute('data-graph-rehydrate-state', 'error');
       shell.setAttribute('data-graph-rehydrate-error', String(error?.message || error));
@@ -3486,6 +3527,7 @@ const GRAPH_CONTROL_SCRIPT = `
   if (memoryNodes[2]) selectMemory(memoryNodes[2]);
   wireReviewComparisonButtons();
   initializeCytoscapeGraph();
+  selectHandoffMemoryFromGraph(handoffMemoryId);
   void rehydrateHealthState();
   void rehydrateAppShellAfterImport();
 

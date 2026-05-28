@@ -203,6 +203,8 @@ export function renderAppCaptureHtml(): string {
     capturedAt: '2026-05-27T15:00:00.000Z',
   });
 
+  const graphHandoffUrl = `${state.graphSync.targetRoute}?memory=${encodeURIComponent(state.savedPreview.id)}`;
+
   return `<main class="capture-app-shell" aria-label="Mobile app quick diary capture" data-surface-mode="${escapeHtml(
     state.surfaceMode,
   )}" data-pwa-status="${escapeHtml(state.pwaStatus)}" data-storage-mode="${escapeHtml(
@@ -213,7 +215,7 @@ export function renderAppCaptureHtml(): string {
     state.graphSync.status,
   )}" data-graph-target-route="${escapeHtml(state.graphSync.targetRoute)}" data-graph-target-node="${escapeHtml(
     state.graphSync.targetNodeId,
-  )}">
+  )}" data-graph-handoff-url="${escapeHtml(graphHandoffUrl)}">
     <section class="capture-phone">
       <div class="capture-topbar">
         <button class="capture-icon-button" type="button" aria-label="Back">←</button>
@@ -275,12 +277,12 @@ export function renderAppCaptureHtml(): string {
           <span>${escapeHtml(state.savedPreview.privacyScope)}</span>
         </div>
         <p>Graph handoff: <code>${escapeHtml(state.graphSync.targetNodeId)}</code> → <code>${escapeHtml(
-          state.graphSync.targetRoute,
+          graphHandoffUrl,
         )}</code></p>
       </section>
       <div class="capture-actions">
         <button class="capture-save-button" type="submit" data-control="quick-diary-save" form="quick-diary-form">Quick save</button>
-        <a class="capture-secondary-link" href="/">Open graph</a>
+        <a class="capture-secondary-link" href="${escapeHtml(graphHandoffUrl)}" data-control="open-captured-memory-graph">Open graph</a>
       </div>
     </section>
   </main>`;
@@ -291,6 +293,7 @@ const CAPTURE_SCRIPT = `
   const captureShell = document.querySelector('.capture-app-shell');
   const form = document.querySelector('[data-capture-hints-panel="manual"]');
   const saveButton = document.querySelector('[data-control="quick-diary-save"]');
+  const openGraphLink = document.querySelector('[data-control="open-captured-memory-graph"]');
   if (!captureShell || !form) return;
   form.setAttribute('id', 'quick-diary-form');
   const quickSaveEndpoint = captureShell.getAttribute('data-quick-save-endpoint') || '/api/capture';
@@ -322,6 +325,10 @@ const CAPTURE_SCRIPT = `
         const body = await response.json().catch(() => ({}));
         const memoryId = body.createdMemoryIds?.[0] || body.record?.id || '';
         captureShell.setAttribute('data-last-captured-memory', memoryId);
+        const graphHandoffUrl = '/?memory=' + encodeURIComponent(memoryId);
+        captureShell.setAttribute('data-graph-handoff-url', graphHandoffUrl);
+        captureShell.setAttribute('data-graph-target-node', 'memory:' + memoryId);
+        openGraphLink?.setAttribute('href', graphHandoffUrl);
       }
       captureShell.setAttribute('data-quick-save-state', 'saved');
       if (saveButton) saveButton.textContent = 'Saved';
