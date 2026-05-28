@@ -2,7 +2,7 @@
 
 Status: active local execution plan  
 Owner: Ko Yunseo  
-Updated: 2026-05-28, live Ask follow-up/save-back and Notion graph rehydration
+Updated: 2026-05-28, release checklist, live Ask follow-up/save-back, and Notion graph rehydration
 Supersedes for local Codex work: `docs/product/product-master-plan-2026-05-26.md`
 
 ## 1. Product Definition
@@ -147,7 +147,7 @@ Status values:
 | Backend/API | Runtime backend selection | `done-foundation` | `server.ts` now uses the memory runtime to select fixture/Postgres, seed fixture data only in fixture mode, and expose safe health metadata. |
 | Backend/API | Staging readiness | `done-foundation` | Redacted env presence and pgvector staging smoke plan exist without secret leakage. |
 | Release | Visual evidence gates | `done-foundation` | Playwright verifies Cytoscape readiness, data-derived graph stats, search/filter/selection interactions, and captures benchmark/local screenshots; staging review still planned. |
-| Release | PR/release checklist | `planned` | Needed before remote/main workflow. |
+| Release | PR/release checklist | `done-foundation` | `npm run release:checklist` emits the local review gates, screenshot artifact paths, prohibited remote/deploy actions, and approval-required boundaries without secret values. |
 
 ## 4. Execution Loop
 

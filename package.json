@@ -7,6 +7,7 @@
     "cleanup:evidence": "tsx scripts/cleanup-playwright-evidence.ts",
     "evidence:playwright": "tsx scripts/verify-playwright-evidence.ts",
     "import:notion:resume": "tsx scripts/resume-notion-import.ts",
+    "release:checklist": "tsx scripts/verify-release.ts",
     "start": "tsx server.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit -p tsconfig.json"
