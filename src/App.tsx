@@ -369,6 +369,40 @@ const APP_SHELL_STYLES = `
     font-size: 11px;
     font-weight: 760;
   }
+  .prototype-entry-dock {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: minmax(190px, 0.85fr) minmax(180px, 0.72fr) minmax(220px, 1fr);
+    gap: 8px;
+    align-items: stretch;
+  }
+  .entry-dock-action,
+  .entry-dock-note {
+    min-width: 0;
+    border: 1px solid rgba(117, 122, 143, 0.14);
+    border-radius: 8px;
+    background: rgba(246, 247, 252, 0.74);
+    color: #616779;
+    padding: 9px 10px;
+    text-decoration: none;
+    font: inherit;
+    font-size: 12px;
+    line-height: 1.38;
+    text-align: left;
+  }
+  .entry-dock-action strong,
+  .entry-dock-note strong {
+    display: block;
+    color: #515668;
+    font-size: 12px;
+    line-height: 1.25;
+  }
+  .entry-dock-action.primary {
+    border-color: rgba(225, 29, 63, 0.3);
+    background: rgba(225, 29, 63, 0.1);
+    color: #be123c;
+  }
+  .entry-dock-action.primary strong { color: #be123c; }
   .service-flow-steps {
     min-width: 0;
     margin: 0;
@@ -1928,6 +1962,20 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
           <span>내보내기</span>
           <span>삭제</span>
         </div>
+        <div class="prototype-entry-dock" data-entry-dock="diary-start" aria-label="첫 화면 일기 시작 액션">
+          <a class="entry-dock-action primary" href="/capture/" data-primary-entry-action="quick-diary">
+            <strong>앱처럼 빠른 일기 쓰기</strong>
+            지금 떠오른 고민을 바로 기록하고 세컨브레인으로 넘긴다.
+          </a>
+          <button type="button" class="entry-dock-action" data-primary-entry-action="diary-import" data-control="focus-local-import">
+            <strong>일기 붙여넣어 가져오기</strong>
+            웹에서 긴 일기/Notion export를 먼저 넣는다.
+          </button>
+          <div class="entry-dock-note" data-primary-entry-action="memory-session-hint">
+            <strong>선택한 기억에서 AI 세션 실행</strong>
+            그래프 노드를 고르면 연관 과거 기억과 함께 질문·결정·주간 패턴으로 이어진다.
+          </div>
+        </div>
       </section>
 
       <div class="product-main-grid">
@@ -2049,6 +2097,7 @@ const GRAPH_CONTROL_SCRIPT = `
   const importUploadPanel = document.querySelector('[data-import-upload-panel="local-file"]');
   const importFileInput = document.querySelector('[data-control="local-import-file-input"]');
   const importPasteText = document.querySelector('[data-control="local-import-paste-text"]');
+  const focusLocalImportButton = document.querySelector('[data-control="focus-local-import"]');
   const importPreviewButton = document.querySelector('[data-control="preview-local-import"]');
   const importApplyButton = document.querySelector('[data-control="apply-local-import"]');
   const importUndoButton = document.querySelector('[data-control="undo-local-import"]');
@@ -4070,6 +4119,11 @@ const GRAPH_CONTROL_SCRIPT = `
   replayWithRelatedMemoryButton?.addEventListener('click', replayWithRelatedMemoryContext);
   reportWithRelatedMemoryButton?.addEventListener('click', reportWithRelatedMemoryContext);
   runMemorySessionButton?.addEventListener('click', () => void runMemorySession());
+  focusLocalImportButton?.addEventListener('click', () => {
+    importPasteText?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    importPasteText?.focus();
+    setInteractionState('diary-import-focused');
+  });
   if (memoryNodes[2]) selectMemory(memoryNodes[2]);
   wireReviewComparisonButtons();
   initializeCytoscapeGraph();

@@ -106,6 +106,10 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   assert((await page.locator('text=세션 저장').count()) > 0, 'Expected Korean save session action');
   assert((await page.locator('text=Run Memory Session').count()) === 0, 'Old English memory-session CTA should not be visible');
   assert((await page.locator('text=Save session').count()) === 0, 'Old English memory-session save CTA should not be visible');
+  assert((await page.locator('[data-entry-dock="diary-start"]').count()) === 1, 'Expected first-screen diary entry dock');
+  assert((await page.locator('[data-primary-entry-action="quick-diary"]').count()) === 1, 'Expected first-screen quick diary action');
+  assert((await attribute(page, '[data-primary-entry-action="quick-diary"]', 'href'))?.endsWith('/capture/'), 'Quick diary action should open the capture app');
+  assert((await page.locator('[data-control="focus-local-import"]').count()) === 1, 'Expected first-screen diary import focus action');
   const inspectorRailOverlap = await page.evaluate(() => {
     const inspector = document.querySelector('.memory-inspector')?.getBoundingClientRect();
     const rail = document.querySelector('.product-rail')?.getBoundingClientRect();
@@ -113,6 +117,8 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
     return !(inspector.right <= rail.left || rail.right <= inspector.left || inspector.bottom <= rail.top || rail.bottom <= inspector.top);
   });
   assert(!inspectorRailOverlap, 'Selected memory inspector should not overlap the AI session/evidence rail');
+  await page.locator('[data-control="focus-local-import"]').click();
+  assert((await attribute(page, '.second-brain-shell', 'data-interaction-state')) === 'diary-import-focused', 'First-screen import action should focus diary import');
   const initialMemoryNodeCount = Number(await attribute(page, '.second-brain-shell', 'data-memory-node-count'));
   const initialRenderedMemoryNodeCount = Number(await attribute(page, '.second-brain-shell', 'data-rendered-memory-node-count'));
   const initialGraphNodeCount = Number(await attribute(page, '.second-brain-shell', 'data-graph-node-count'));

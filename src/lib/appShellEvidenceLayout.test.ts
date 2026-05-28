@@ -492,6 +492,12 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('오늘 쓴 고민을 과거 기억과 연결해서 답하게 한다');
     expect(html).toContain('앱에서는 빠르게 쓰고, 웹에서는 일기 DB만 가져온다');
     expect(html).toContain('data-prototype-flow="tonight-usable"');
+    expect(html).toContain('data-entry-dock="diary-start"');
+    expect(html).toContain('data-primary-entry-action="quick-diary"');
+    expect(html).toContain('href="/capture/"');
+    expect(html).toContain('data-control="focus-local-import"');
+    expect(html).toContain('앱처럼 빠른 일기 쓰기');
+    expect(html).toContain('일기 붙여넣어 가져오기');
     expect(html).toContain('data-service-flow="diary-to-second-brain"');
     expect(html).toContain('data-service-flow-step="quick-diary-capture"');
     expect(html).toContain('빠른 일기');
@@ -691,6 +697,7 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(documentHtml).toContain("shell.setAttribute('data-capture-handoff-selected-memory'");
     expect(documentHtml).toContain("shell.setAttribute('data-capture-handoff-state', 'selected')");
     expect(documentHtml).toContain("setInteractionState('capture-handoff-selected')");
+    expect(documentHtml).toContain("setInteractionState('diary-import-focused')");
     expect(documentHtml).toContain('selectHandoffMemoryFromGraph(handoffMemoryId)');
     expect(documentHtml).toContain('data-live-count="memory-nodes"');
     expect(documentHtml).toContain('liveCountTargets.memoryNodes');

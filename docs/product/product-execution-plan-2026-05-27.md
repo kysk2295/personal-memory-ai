@@ -1742,6 +1742,24 @@ Implemented:
 - `scripts/verify-playwright-evidence.ts`
 - `docs/superpowers/plans/2026-05-28-korean-prototype-ux-rebuild.md`
 
+### L91 — First-Screen Diary Entry Dock
+
+Goal: make the first screen start from diary action, not graph comprehension, by exposing quick diary capture and diary import directly above the graph.
+
+Acceptance:
+
+- first screen exposes `data-entry-dock="diary-start"`
+- quick diary action links to `/capture/`
+- diary import action focuses the existing local import paste area and marks `data-interaction-state="diary-import-focused"`
+- Playwright verifies the entry dock before running the rest of graph/session evidence
+
+Implemented:
+
+- `src/App.tsx`
+- `src/lib/appShellEvidenceLayout.test.ts`
+- `scripts/verify-playwright-evidence.ts`
+- `docs/superpowers/plans/2026-05-28-first-screen-diary-entry-dock.md`
+
 ## 8. MVP Time Estimate
 
 Assuming focused local development without major dependency or deployment blockers:
