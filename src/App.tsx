@@ -701,6 +701,24 @@ const APP_SHELL_STYLES = `
     background: rgba(250, 251, 255, 0.78);
     padding: 10px;
   }
+  .result-context-evidence {
+    display: grid;
+    gap: 4px;
+    border: 1px solid rgba(20, 184, 166, 0.2);
+    border-radius: 8px;
+    background: rgba(20, 184, 166, 0.08);
+    color: #0f766e;
+    padding: 8px 9px;
+    font-size: 11px;
+    line-height: 1.35;
+  }
+  .result-context-evidence strong {
+    color: #0f766e;
+    font-size: 11px;
+  }
+  .result-context-evidence span {
+    overflow-wrap: anywhere;
+  }
   .ask-question-row,
   .decision-current-card {
     display: grid;
@@ -1928,6 +1946,7 @@ const GRAPH_CONTROL_SCRIPT = `
   const askEndpoint = askForm?.getAttribute('data-ask-endpoint') || '';
   const askQuestionInput = askForm?.querySelector('input[name="question"]');
   const askSubmit = document.querySelector('[data-control="ask-second-brain"]');
+  const askResult = document.querySelector('.ask-answer-cited');
   const askSaveButton = document.querySelector('[data-save-artifact-action="ask_answer"]');
   const handoffMemoryId = new URLSearchParams(window.location.search).get('memory');
   const citationRefs = Array.from(document.querySelectorAll('[data-citation-ref]'));
@@ -2885,6 +2904,7 @@ const GRAPH_CONTROL_SCRIPT = `
   const renderLiveAskResult = (result) => {
     const brief = result?.coachingBrief || {};
     const ask = result?.ask || {};
+    const relatedContext = relatedContextFromAskFollowUp(lastAskFollowUpContext);
     if (inspectorHeadline) inspectorHeadline.textContent = brief.recommendation || ask.recommendation || '';
     if (inspectorSource) {
       inspectorSource.textContent =
@@ -2909,6 +2929,7 @@ const GRAPH_CONTROL_SCRIPT = `
     shell.setAttribute('data-ask-state', 'answered');
     shell.setAttribute('data-ask-evidence-label', brief.evidenceLabel || ask.evidenceLabel || 'unknown');
     shell.setAttribute('data-ask-citation-count', String(brief.citationCount || ask.citationMemoryIds?.length || 0));
+    renderResultContextEvidence(askResult, 'ask', relatedContext);
     highlightLiveAskCitations(ask.citationMemoryIds || []);
     lastAskFollowUpContext = {
       previousQuestion: result.savedArtifact?.metadata?.question || '',
@@ -2936,6 +2957,40 @@ const GRAPH_CONTROL_SCRIPT = `
       shell.setAttribute('data-live-ask-artifact-id', result.savedArtifact.id);
     }
     setInteractionState('ask-answered');
+  };
+
+  const relatedContextFromAskFollowUp = (context) => {
+    if (!context || context.previousQuestion !== 'selected-memory-related-context') return null;
+    const memoryIds = Array.from(new Set(context.previousCitationMemoryIds || [])).filter(Boolean);
+    if (!memoryIds.length) return null;
+    return {
+      sourceMemoryId: memoryIds[0],
+      relatedMemoryIds: memoryIds.slice(1),
+    };
+  };
+
+  const renderResultContextEvidence = (target, kind, context) => {
+    if (!target || !context?.sourceMemoryId) return;
+    const relatedMemoryIds = Array.from(new Set(context.relatedMemoryIds || [])).filter(Boolean);
+    let badge = target.querySelector('[data-context-result="' + kind + '-related"]');
+    if (!badge) {
+      badge = document.createElement('div');
+      badge.className = 'result-context-evidence';
+      badge.setAttribute('data-context-result', kind + '-related');
+      target.prepend(badge);
+    }
+    badge.setAttribute('data-context-source-memory', context.sourceMemoryId);
+    badge.setAttribute('data-context-related-memory-count', String(relatedMemoryIds.length));
+    badge.setAttribute('data-context-related-memories', relatedMemoryIds.join(','));
+    badge.innerHTML =
+      '<strong>Selected memory context</strong><span>' +
+      escapeText(context.sourceMemoryId) +
+      ' + ' +
+      String(relatedMemoryIds.length) +
+      ' related memories</span>';
+    shell.setAttribute('data-' + kind + '-result-context-source-memory', context.sourceMemoryId);
+    shell.setAttribute('data-' + kind + '-result-context-related-memory-count', String(relatedMemoryIds.length));
+    shell.setAttribute('data-' + kind + '-result-context-related-memories', relatedMemoryIds.join(','));
   };
 
   const askSecondBrain = async () => {
@@ -2979,6 +3034,7 @@ const GRAPH_CONTROL_SCRIPT = `
     shell.setAttribute('data-replay-state', 'answered');
     shell.setAttribute('data-replay-evidence-label', replay.evidenceLabel || 'unknown');
     shell.setAttribute('data-replay-citation-count', String(citations.length));
+    renderResultContextEvidence(decisionReplayResult, 'replay', lastReplayRelatedContext);
     highlightLiveReplayCitations(citations);
   };
 
@@ -3034,6 +3090,7 @@ const GRAPH_CONTROL_SCRIPT = `
     weeklyReportPanel?.setAttribute('data-weekly-included-memory-count', String(citations.length));
     shell.setAttribute('data-weekly-report-state', 'ready');
     shell.setAttribute('data-weekly-report-citation-count', String(citations.length));
+    renderResultContextEvidence(weeklyReportPanel, 'weekly', lastWeeklyRelatedContext);
     highlightLiveWeeklyReportCitations(citations);
   };
 

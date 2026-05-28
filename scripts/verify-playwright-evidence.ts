@@ -339,14 +339,62 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   assert((await attribute(page, '.second-brain-shell', 'data-ask-context-source-memory')) === firstCitation, 'Related-memory ask action should seed the selected memory as context');
   assert(Number(await attribute(page, '.second-brain-shell', 'data-ask-context-related-memory-count')) > 0, 'Related-memory ask action should seed related memory context');
   assert((await attribute(page, '.second-brain-shell', 'data-interaction-state')) === 'ask-context-seeded-from-related-memories', 'Related-memory ask action should expose seeded interaction state');
+  if ((process.env.PMI_LOCAL_URL ?? '').startsWith('http')) {
+    await page.locator('[data-control="ask-second-brain"]').click();
+    await page.waitForFunction(
+      () => document.querySelector('.second-brain-shell')?.getAttribute('data-ask-state') === 'answered',
+      null,
+      { timeout: 10_000 },
+    );
+    assert(
+      (await attribute(page, '.second-brain-shell', 'data-ask-result-context-source-memory')) === firstCitation,
+      'Ask result should preserve the selected related-memory context source',
+    );
+    assert(
+      Number(await attribute(page, '[data-context-result="ask-related"]', 'data-context-related-memory-count')) > 0,
+      'Ask result should render a related-context evidence badge',
+    );
+  }
   await page.locator('[data-control="replay-with-related-memory-context"]').click();
   assert((await attribute(page, '.second-brain-shell', 'data-replay-context-source-memory')) === firstCitation, 'Related-memory replay action should seed the selected memory as context');
   assert(Number(await attribute(page, '.second-brain-shell', 'data-replay-context-related-memory-count')) > 0, 'Related-memory replay action should seed related memory context');
   assert((await attribute(page, '.second-brain-shell', 'data-interaction-state')) === 'replay-context-seeded-from-related-memories', 'Related-memory replay action should expose seeded interaction state');
+  if ((process.env.PMI_LOCAL_URL ?? '').startsWith('http')) {
+    await page.locator('[data-control="run-decision-replay"]').click();
+    await page.waitForFunction(
+      () => document.querySelector('.second-brain-shell')?.getAttribute('data-replay-state') === 'answered',
+      null,
+      { timeout: 10_000 },
+    );
+    assert(
+      (await attribute(page, '.second-brain-shell', 'data-replay-result-context-source-memory')) === firstCitation,
+      'Decision Replay result should preserve the selected related-memory context source',
+    );
+    assert(
+      Number(await attribute(page, '[data-context-result="replay-related"]', 'data-context-related-memory-count')) > 0,
+      'Decision Replay result should render a related-context evidence badge',
+    );
+  }
   await page.locator('[data-control="report-with-related-memory-context"]').click();
   assert((await attribute(page, '.second-brain-shell', 'data-weekly-context-source-memory')) === firstCitation, 'Related-memory report action should seed the selected memory as context');
   assert(Number(await attribute(page, '.second-brain-shell', 'data-weekly-context-related-memory-count')) > 0, 'Related-memory report action should seed related memory context');
   assert((await attribute(page, '.second-brain-shell', 'data-interaction-state')) === 'weekly-context-seeded-from-related-memories', 'Related-memory report action should expose seeded interaction state');
+  if ((process.env.PMI_LOCAL_URL ?? '').startsWith('http')) {
+    await page.locator('[data-control="refresh-weekly-report"]').click();
+    await page.waitForFunction(
+      () => document.querySelector('.second-brain-shell')?.getAttribute('data-weekly-report-state') === 'ready',
+      null,
+      { timeout: 10_000 },
+    );
+    assert(
+      (await attribute(page, '.second-brain-shell', 'data-weekly-result-context-source-memory')) === firstCitation,
+      'Weekly Report result should preserve the selected related-memory context source',
+    );
+    assert(
+      Number(await attribute(page, '[data-context-result="weekly-related"]', 'data-context-related-memory-count')) > 0,
+      'Weekly Report result should render a related-context evidence badge',
+    );
+  }
 
   await page.locator('[data-filter-chip="semantic"]').click();
   assert((await attribute(page, '[data-filter-chip="semantic"]', 'aria-pressed')) === 'false', 'Semantic filter chip should toggle off');
@@ -574,10 +622,13 @@ try {
           'remote memory search api',
           'live ask api response',
           'live ask follow-up context',
+          'live ask related-context result evidence',
           'live decision replay api response',
           'live decision replay graph highlight',
+          'live decision replay related-context result evidence',
           'live weekly report api response',
           'live weekly report graph highlight',
+          'live weekly report related-context result evidence',
           'saved artifact action',
           'saved artifact persistence manifest',
           'feedback correction action',

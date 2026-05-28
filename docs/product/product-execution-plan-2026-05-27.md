@@ -233,6 +233,7 @@ No remote push, main merge, production deploy, or secret access is allowed witho
 - L83: related-memory Decision Replay context handoff.
 - L84: related-memory Weekly Report context handoff.
 - L85: related context API grounding.
+- L86: related context result evidence.
 
 ## 6. Active Next Loops
 
@@ -1644,6 +1645,22 @@ Implemented:
 - `src/lib/personalMemoryApi.ts`
 - `src/lib/weeklyReport.ts`
 - `src/lib/personalMemoryApi.test.ts`
+
+### L86 — Related Context Result Evidence
+
+Goal: keep selected-memory related context visible after Ask, Decision Replay, and Weekly Report results are generated.
+
+Acceptance:
+
+- Ask results expose the selected source memory and related-memory count as result evidence
+- Decision Replay results expose the selected source memory and related-memory count as result evidence
+- Weekly Report results expose the selected source memory and related-memory count as result evidence
+- Playwright verifies the graph selection, context action, live API call, and result evidence marker
+
+Implemented:
+
+- `src/App.tsx`
+- `scripts/verify-playwright-evidence.ts`
 
 ## 8. MVP Time Estimate
 
