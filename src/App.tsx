@@ -1290,6 +1290,62 @@ const APP_SHELL_STYLES = `
     font-size: 10px;
     line-height: 1.25;
   }
+  .related-insight-bridge {
+    grid-column: 1 / -1;
+    display: grid;
+    gap: 8px;
+    min-width: 0;
+    border: 1px solid rgba(20, 184, 166, 0.16);
+    border-radius: 8px;
+    background: rgba(240, 253, 250, 0.78);
+    padding: 9px 10px;
+  }
+  .related-insight-bridge > strong {
+    color: #0f766e;
+    font-size: 12px;
+  }
+  .related-insight-reason-list {
+    display: grid;
+    gap: 6px;
+  }
+  .related-insight-reason {
+    display: grid;
+    gap: 3px;
+    min-width: 0;
+    border: 1px solid rgba(20, 184, 166, 0.12);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.76);
+    padding: 7px;
+  }
+  .related-insight-reason strong,
+  .related-insight-reason span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .related-insight-reason strong {
+    color: #234e49;
+    font-size: 11px;
+  }
+  .related-insight-reason span {
+    color: #60716f;
+    font-size: 10px;
+  }
+  .related-insight-actions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+  .related-insight-actions button {
+    min-height: 32px;
+    border: 1px solid rgba(20, 184, 166, 0.24);
+    border-radius: 8px;
+    background: rgba(20, 184, 166, 0.1);
+    color: #0f766e;
+    font-size: 11px;
+    font-weight: 760;
+    cursor: pointer;
+  }
   .citation-row { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 14px; }
   .citation-row a {
     color: #5f56d8;
@@ -2194,6 +2250,28 @@ const APP_SHELL_STYLES = `
   .memory-path-hop strong {
     color: #f0f0f2;
   }
+  .related-insight-bridge {
+    border-color: rgba(20, 184, 166, 0.2);
+    background: rgba(10, 25, 23, 0.78);
+  }
+  .related-insight-bridge > strong {
+    color: #9bf2e8;
+  }
+  .related-insight-reason {
+    border-color: rgba(255, 255, 255, 0.09);
+    background: rgba(255, 255, 255, 0.06);
+  }
+  .related-insight-reason strong {
+    color: #f0f0f2;
+  }
+  .related-insight-reason span {
+    color: #a7c9c4;
+  }
+  .related-insight-actions button {
+    border-color: rgba(20, 184, 166, 0.26);
+    background: rgba(20, 184, 166, 0.12);
+    color: #9bf2e8;
+  }
   .selected-path-action {
     border-color: rgba(255, 255, 255, 0.1);
     background: rgba(255, 255, 255, 0.065);
@@ -2777,6 +2855,13 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
       return `<button type="button" class="selected-path-related-chip" data-selected-path-related-memory-id="${escapeHtml(entry.memoryId)}" data-selected-path-related-reason="${escapeHtml(sharedFacet)}"><strong>${escapeHtml(entry.title)}</strong><span>연결 이유 · ${escapeHtml(sharedFacet)}</span></button>`;
     })
     .join('');
+  const currentFlowInsightHtml = currentFlowRelatedEntries
+    .slice(0, 3)
+    .map((entry) => {
+      const sharedFacet = entry.facetLabels.find((facet) => currentFlowEntry?.facetLabels.includes(facet)) ?? entry.memoryType;
+      return `<article class="related-insight-reason" data-related-insight-memory-id="${escapeHtml(entry.memoryId)}" data-related-insight-reason="${escapeHtml(sharedFacet)}"><strong>${escapeHtml(entry.title)}</strong><span>${escapeHtml(sharedFacet)} 때문에 지금 일기와 함께 떠올랐다.</span></article>`;
+    })
+    .join('');
   const citationLinks = layout.ask.citationMemoryIds
     .slice(0, 3)
     .map((citationId) => `<a href="#evidence-${escapeHtml(citationId)}" class="citation-ref" data-citation-ref="${escapeHtml(citationId)}">[${escapeHtml(citationId)}]</a>`)
@@ -3040,6 +3125,17 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
               <div class="memory-path-hop" data-memory-path-hop="ai-action"><span>다음 행동</span><strong data-memory-path-action>AI 세션</strong></div>
             </div>
           </div>
+          <section class="related-insight-bridge" data-related-insight-bridge="diary-to-past-memory-actions" data-related-insight-source="${escapeHtml(currentFlowMemoryId)}" data-related-insight-count="${currentFlowRelatedCount}" aria-label="선택 일기와 관련 과거 기억 이유">
+            <strong>왜 이 기억이 떠올랐나</strong>
+            <div class="related-insight-reason-list" data-related-insight-reason-list>
+              ${currentFlowInsightHtml}
+            </div>
+            <div class="related-insight-actions" aria-label="관련 과거 기억으로 바로 실행">
+              <button type="button" data-related-insight-action="ask">과거 기억으로 질문하기</button>
+              <button type="button" data-related-insight-action="replay">결정 되짚기</button>
+              <button type="button" data-related-insight-action="weekly">주간 패턴 보기</button>
+            </div>
+          </section>
           <div class="selected-path-actions" aria-label="AI 세션 준비">
             <button type="button" class="selected-path-action" data-selected-path-action="ask">질문</button>
             <button type="button" class="selected-path-action" data-selected-path-action="replay">결정</button>
@@ -3166,6 +3262,9 @@ const GRAPH_CONTROL_SCRIPT = `
   const memoryPathReason = memoryPathExplainer?.querySelector('[data-memory-path-reason]');
   const memoryPathPast = memoryPathExplainer?.querySelector('[data-memory-path-past]');
   const memoryPathAction = memoryPathExplainer?.querySelector('[data-memory-path-action]');
+  const relatedInsightBridge = document.querySelector('[data-related-insight-bridge="diary-to-past-memory-actions"]');
+  const relatedInsightReasonList = relatedInsightBridge?.querySelector('[data-related-insight-reason-list]');
+  const relatedInsightActions = Array.from(document.querySelectorAll('[data-related-insight-action]'));
   const askWithRelatedMemoryButton = inspector?.querySelector('[data-control="ask-with-related-memory-context"]');
   const replayWithRelatedMemoryButton = inspector?.querySelector('[data-control="replay-with-related-memory-context"]');
   const reportWithRelatedMemoryButton = inspector?.querySelector('[data-control="report-with-related-memory-context"]');
@@ -3621,6 +3720,24 @@ const GRAPH_CONTROL_SCRIPT = `
     if (memoryPathReason) memoryPathReason.textContent = related.length ? related[0].reason : '연결 이유 없음';
     if (memoryPathPast) memoryPathPast.textContent = related.length ? related[0].label : '연관 과거 기억 없음';
     if (memoryPathAction) memoryPathAction.textContent = related.length ? '질문/결정/주간/세션' : '먼저 기억 선택';
+    relatedInsightBridge?.setAttribute('data-related-insight-source', citation);
+    relatedInsightBridge?.setAttribute('data-related-insight-count', String(related.length));
+    if (relatedInsightReasonList) {
+      relatedInsightReasonList.replaceChildren();
+      related.slice(0, 3).forEach((item) => {
+        const reasonCard = document.createElement('article');
+        reasonCard.className = 'related-insight-reason';
+        reasonCard.setAttribute('data-related-insight-memory-id', item.id);
+        reasonCard.setAttribute('data-related-insight-reason', item.reason);
+        reasonCard.innerHTML =
+          '<strong>' +
+          escapeText(item.label) +
+          '</strong><span>' +
+          escapeText(item.reason) +
+          ' 때문에 지금 일기와 함께 떠올랐다.</span>';
+        relatedInsightReasonList.append(reasonCard);
+      });
+    }
     relatedMemoryStrip.setAttribute('data-related-memory-count', String(related.length));
     updateDiaryInboxSelection(citation);
     shell.setAttribute('data-selected-path-source-memory', citation);
@@ -5983,6 +6100,26 @@ const GRAPH_CONTROL_SCRIPT = `
       }
       if (action === 'session') {
         void runMemorySession();
+      }
+    });
+  });
+  relatedInsightActions.forEach((button) => {
+    button.addEventListener('click', () => {
+      const action = button.getAttribute('data-related-insight-action');
+      relatedInsightBridge?.setAttribute('data-related-insight-last-action', action || '');
+      if (action === 'ask') {
+        askWithRelatedMemoryContext();
+        setInteractionState('related-insight-ask-ready');
+        return;
+      }
+      if (action === 'replay') {
+        replayWithRelatedMemoryContext();
+        setInteractionState('related-insight-replay-ready');
+        return;
+      }
+      if (action === 'weekly') {
+        reportWithRelatedMemoryContext();
+        setInteractionState('related-insight-weekly-ready');
       }
     });
   });

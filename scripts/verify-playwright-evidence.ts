@@ -637,6 +637,17 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
     'Memory path explainer should expose related-memory count',
   );
   assert((await page.locator('[data-memory-path-hop="shared-reason"]').textContent())?.includes('공통 이유'), 'Memory path explainer should show why memories are connected');
+  assert(
+    (await attribute(page, '[data-related-insight-bridge="diary-to-past-memory-actions"]', 'data-related-insight-source')) === firstCitation,
+    'Related insight bridge should follow the selected diary memory',
+  );
+  assert(
+    Number(await attribute(page, '[data-related-insight-bridge="diary-to-past-memory-actions"]', 'data-related-insight-count')) > 0,
+    'Related insight bridge should expose related-memory reasons',
+  );
+  assert((await page.locator('[data-related-insight-memory-id]').count()) > 0, 'Related insight bridge should render past-memory reason cards');
+  await page.locator('[data-related-insight-action="ask"]').click();
+  assert((await attribute(page, '.second-brain-shell', 'data-interaction-state')) === 'related-insight-ask-ready', 'Related insight Ask action should seed related-memory context');
   await page.locator('[data-command-rail-action="ask"]').click();
   assert((await attribute(page, '.second-brain-shell', 'data-interaction-state')) === 'command-rail-ask-ready', 'Selected command rail Ask action should seed related context');
   const highlightedRelatedPath = await page.evaluate(() => {

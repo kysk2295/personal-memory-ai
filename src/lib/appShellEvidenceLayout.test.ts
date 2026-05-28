@@ -663,6 +663,14 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('data-memory-path-hop="shared-reason"');
     expect(html).toContain('data-memory-path-hop="past-memory"');
     expect(html).toContain('data-memory-path-hop="ai-action"');
+    expect(html).toContain('data-related-insight-bridge="diary-to-past-memory-actions"');
+    expect(html).toContain('data-related-insight-source="mem_freeze_vs_feature_addition"');
+    expect(html).toContain('왜 이 기억이 떠올랐나');
+    expect(html).toContain('data-related-insight-reason-list');
+    expect(html).toContain('data-related-insight-action="ask"');
+    expect(html).toContain('data-related-insight-action="replay"');
+    expect(html).toContain('data-related-insight-action="weekly"');
+    expect(html).toContain('과거 기억으로 질문하기');
 
     expect(html).toContain('class="product-rail"');
     expect(html).toContain('빠른 일기 기록');
@@ -892,6 +900,10 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(documentHtml).toContain("selectedPathActions.forEach((button) =>");
     expect(documentHtml).toContain("shell.setAttribute('data-related-memory-source', citation)");
     expect(documentHtml).toContain("shell.setAttribute('data-related-memory-count', String(related.length))");
+    expect(documentHtml).toContain("relatedInsightBridge?.setAttribute('data-related-insight-source', citation)");
+    expect(documentHtml).toContain('relatedInsightReasonList.replaceChildren()');
+    expect(documentHtml).toContain("reasonCard.setAttribute('data-related-insight-memory-id', item.id)");
+    expect(documentHtml).toContain("setInteractionState('related-insight-ask-ready')");
     expect(documentHtml).toContain("cytoscapeGraph.elements().removeClass('related-memory related-facet related-edge')");
     expect(documentHtml).toContain("candidate.addClass('related-memory')");
     expect(documentHtml).toContain("facetNode.addClass('related-facet')");
