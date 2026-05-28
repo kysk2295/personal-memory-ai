@@ -552,6 +552,21 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('결과를 기억으로 저장');
     expect(html).toContain('data-flow-current-memory="mem_freeze_vs_feature_addition"');
     expect(html).toContain('data-flow-related-memory-count=');
+    expect(html).toContain('data-selected-memory-path="graph-related-session"');
+    expect(html).toContain('data-selected-memory-source="mem_freeze_vs_feature_addition"');
+    expect(html).toContain('data-selected-memory-related-count=');
+    expect(html).toContain('선택한 기억');
+    expect(html).toContain('연결 이유');
+    expect(html).toContain('AI 세션 준비');
+    expect(html).toContain('data-selected-path-title');
+    expect(html).toContain('data-selected-path-source');
+    expect(html).toContain('data-selected-path-related-list');
+    expect(html).toContain('data-selected-path-related-memory-id=');
+    expect(html).toContain('data-selected-path-related-reason=');
+    expect(html).toContain('data-selected-path-action="ask"');
+    expect(html).toContain('data-selected-path-action="replay"');
+    expect(html).toContain('data-selected-path-action="weekly"');
+    expect(html).toContain('data-selected-path-action="session"');
 
     expect(html).toContain('class="product-rail"');
     expect(html).toContain('빠른 일기 기록');
@@ -688,8 +703,13 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(documentHtml).toContain("inspector.setAttribute('data-selected-memory', citation)");
     expect(documentHtml).toContain("edge.setAttribute('data-edge-active', String(active))");
     expect(documentHtml).toContain('data-related-memory-strip="selected-node"');
+    expect(documentHtml).toContain('data-selected-memory-path="graph-related-session"');
     expect(documentHtml).toContain('const renderRelatedMemoryEvidence = (citation) =>');
     expect(documentHtml).toContain("chip.setAttribute('data-related-memory-id', item.id)");
+    expect(documentHtml).toContain("selectedPathPanel.setAttribute('data-selected-memory-source', citation)");
+    expect(documentHtml).toContain("pathChip.setAttribute('data-selected-path-related-memory-id', item.id)");
+    expect(documentHtml).toContain("shell.setAttribute('data-selected-path-source-memory', citation)");
+    expect(documentHtml).toContain("selectedPathActions.forEach((button) =>");
     expect(documentHtml).toContain("shell.setAttribute('data-related-memory-source', citation)");
     expect(documentHtml).toContain("shell.setAttribute('data-related-memory-count', String(related.length))");
     expect(documentHtml).toContain("cytoscapeGraph.elements().removeClass('related-memory related-facet related-edge')");

@@ -701,6 +701,88 @@ const APP_SHELL_STYLES = `
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+  .selected-memory-path-panel {
+    position: relative;
+    grid-column: 1 / -1;
+    z-index: 2;
+    display: grid;
+    grid-template-columns: minmax(220px, 0.75fr) minmax(260px, 1fr) auto;
+    gap: 12px;
+    align-items: stretch;
+    border: 1px solid rgba(120, 126, 149, 0.15);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.93);
+    box-shadow: 0 10px 26px rgba(132, 138, 164, 0.13);
+    backdrop-filter: blur(14px);
+    padding: 12px;
+  }
+  .selected-path-current,
+  .selected-path-related,
+  .selected-path-actions {
+    min-width: 0;
+  }
+  .selected-path-current h3 {
+    margin: 3px 0 6px;
+    color: #555b6e;
+    font-size: 16px;
+    line-height: 1.2;
+  }
+  .selected-path-current p,
+  .selected-path-related p {
+    margin: 0;
+    color: #7a8092;
+    font-size: 11px;
+    line-height: 1.45;
+  }
+  .selected-path-related-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 7px;
+  }
+  .selected-path-related-chip {
+    display: inline-grid;
+    gap: 2px;
+    min-width: 0;
+    max-width: 180px;
+    border: 1px solid rgba(20, 184, 166, 0.18);
+    border-radius: 8px;
+    background: rgba(240, 253, 250, 0.86);
+    color: #0f766e;
+    padding: 6px 7px;
+    text-align: left;
+    font-size: 10px;
+    line-height: 1.2;
+  }
+  .selected-path-related-chip strong,
+  .selected-path-related-chip span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .selected-path-related-chip span {
+    color: #5f6f6b;
+  }
+  .selected-path-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(86px, 1fr));
+    gap: 7px;
+    align-content: center;
+  }
+  .selected-path-action {
+    border: 1px solid rgba(97, 102, 125, 0.14);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.78);
+    color: #5e6374;
+    padding: 7px 8px;
+    font-size: 11px;
+    font-weight: 780;
+  }
+  .selected-path-action.primary {
+    border-color: rgba(225, 29, 63, 0.28);
+    background: #e11d3f;
+    color: #ffffff;
+  }
   .citation-row { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 14px; }
   .citation-row a {
     color: #5f56d8;
@@ -1386,6 +1468,51 @@ const APP_SHELL_STYLES = `
     display: block;
     min-height: calc(100vh - 38px);
   }
+  .selected-memory-path-panel {
+    border-color: rgba(255, 255, 255, 0.1);
+    background: rgba(18, 18, 21, 0.86);
+    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.24);
+    grid-template-columns: minmax(180px, 0.76fr) minmax(220px, 1fr) 180px;
+    gap: 9px;
+    padding: 10px;
+  }
+  .selected-path-current h3 {
+    color: #f0f0f2;
+    font-size: 14px;
+  }
+  .selected-path-current p,
+  .selected-path-related p {
+    color: #b8b8be;
+    font-size: 10px;
+  }
+  .selected-path-current [data-selected-path-source] {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .selected-path-related-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    max-height: 76px;
+    overflow: auto;
+  }
+  .selected-path-related-chip {
+    border-color: rgba(20, 184, 166, 0.28);
+    background: rgba(20, 184, 166, 0.11);
+    color: #91f0e4;
+    max-width: none;
+    padding: 5px 6px;
+  }
+  .selected-path-related-chip span {
+    color: #a7c9c4;
+  }
+  .selected-path-action {
+    border-color: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.065);
+    color: #f0f0f2;
+    padding: 6px 7px;
+  }
   .graph-stage {
     min-height: calc(100vh - 38px);
     height: calc(100vh - 38px);
@@ -1809,6 +1936,12 @@ const APP_SHELL_STYLES = `
       height: 520px;
       padding-top: 74px;
     }
+    .selected-memory-path-panel {
+      grid-template-columns: 1fr;
+    }
+    .selected-path-actions {
+      grid-template-columns: repeat(4, minmax(74px, 1fr));
+    }
     .memory-graph {
       height: 420px;
     }
@@ -1839,6 +1972,7 @@ const APP_SHELL_STYLES = `
     .ask-memory-bar { grid-template-columns: auto minmax(0, 1fr) auto; }
     .product-value-strip { grid-template-columns: 1fr; }
     .privacy-actions { justify-content: flex-start; }
+    .selected-path-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .decision-columns { grid-template-columns: 1fr; }
   }
 `;
@@ -1900,6 +2034,16 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
   const currentFlowMemoryId = layout.memoryTimeline.summary.selectedMemoryId ?? layout.memoryTimeline.entries[0]?.memoryId ?? '';
   const currentFlowEntry = layout.memoryTimeline.entries.find((entry) => entry.memoryId === currentFlowMemoryId);
   const currentFlowRelatedCount = currentFlowEntry?.relatedMemoryIds.length ?? 0;
+  const currentFlowRelatedEntries = (currentFlowEntry?.relatedMemoryIds ?? [])
+    .map((memoryId) => layout.memoryTimeline.entries.find((entry) => entry.memoryId === memoryId))
+    .filter((entry): entry is NonNullable<typeof entry> => Boolean(entry))
+    .slice(0, 4);
+  const currentFlowRelatedHtml = currentFlowRelatedEntries
+    .map((entry) => {
+      const sharedFacet = entry.facetLabels.find((facet) => currentFlowEntry?.facetLabels.includes(facet)) ?? entry.memoryType;
+      return `<button type="button" class="selected-path-related-chip" data-selected-path-related-memory-id="${escapeHtml(entry.memoryId)}" data-selected-path-related-reason="${escapeHtml(sharedFacet)}"><strong>${escapeHtml(entry.title)}</strong><span>연결 이유 · ${escapeHtml(sharedFacet)}</span></button>`;
+    })
+    .join('');
   const citationLinks = layout.ask.citationMemoryIds
     .slice(0, 3)
     .map((citationId) => `<a href="#evidence-${escapeHtml(citationId)}" class="citation-ref" data-citation-ref="${escapeHtml(citationId)}">[${escapeHtml(citationId)}]</a>`)
@@ -2057,6 +2201,25 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
             <button type="button" class="first-run-action" data-guide-action="save-session" data-guide-state="ready">결과를 기억으로 저장</button>
           </div>
         </section>
+        <section class="selected-memory-path-panel" data-selected-memory-path="graph-related-session" data-selected-memory-source="${escapeHtml(currentFlowMemoryId)}" data-selected-memory-related-count="${currentFlowRelatedCount}" aria-label="선택한 기억에서 AI 세션으로 이어지는 경로">
+          <div class="selected-path-current">
+            <p class="eyebrow">선택한 기억</p>
+            <h3 data-selected-path-title>${escapeHtml(currentFlowEntry?.title ?? '그래프에서 기억을 선택하세요')}</h3>
+            <p data-selected-path-source>${escapeHtml(currentFlowEntry ? `${currentFlowEntry.sourceLabel} · ${currentFlowEntry.observedAt}` : '선택 전')}</p>
+          </div>
+          <div class="selected-path-related">
+            <p><strong>연결 이유</strong> · 감정, 결정, 출처, 결과가 겹치는 과거 기억 ${currentFlowRelatedCount}개</p>
+            <div class="selected-path-related-list" data-selected-path-related-list>
+              ${currentFlowRelatedHtml}
+            </div>
+          </div>
+          <div class="selected-path-actions" aria-label="AI 세션 준비">
+            <button type="button" class="selected-path-action" data-selected-path-action="ask">질문</button>
+            <button type="button" class="selected-path-action" data-selected-path-action="replay">결정</button>
+            <button type="button" class="selected-path-action" data-selected-path-action="weekly">주간</button>
+            <button type="button" class="selected-path-action primary" data-selected-path-action="session">AI 세션 준비</button>
+          </div>
+        </section>
       </section>
 
       <div class="product-main-grid">
@@ -2150,6 +2313,11 @@ const GRAPH_CONTROL_SCRIPT = `
   const inspectorCitations = inspector?.querySelector('[data-inspector-citations]');
   const relatedMemoryStrip = inspector?.querySelector('[data-related-memory-strip]');
   const relatedMemoryList = inspector?.querySelector('[data-related-memory-list]');
+  const selectedPathPanel = document.querySelector('[data-selected-memory-path="graph-related-session"]');
+  const selectedPathTitle = selectedPathPanel?.querySelector('[data-selected-path-title]');
+  const selectedPathSource = selectedPathPanel?.querySelector('[data-selected-path-source]');
+  const selectedPathRelatedList = selectedPathPanel?.querySelector('[data-selected-path-related-list]');
+  const selectedPathActions = Array.from(document.querySelectorAll('[data-selected-path-action]'));
   const askWithRelatedMemoryButton = inspector?.querySelector('[data-control="ask-with-related-memory-context"]');
   const replayWithRelatedMemoryButton = inspector?.querySelector('[data-control="replay-with-related-memory-context"]');
   const reportWithRelatedMemoryButton = inspector?.querySelector('[data-control="report-with-related-memory-context"]');
@@ -2493,7 +2661,36 @@ const GRAPH_CONTROL_SCRIPT = `
       chip.addEventListener('click', () => selectMemoryByCitation(item.id));
       relatedMemoryList.append(chip);
     });
+    if (selectedPathPanel && selectedPathRelatedList) {
+      selectedPathRelatedList.replaceChildren();
+      related.slice(0, 4).forEach((item) => {
+        const pathChip = document.createElement('button');
+        pathChip.type = 'button';
+        pathChip.className = 'selected-path-related-chip';
+        pathChip.setAttribute('data-selected-path-related-memory-id', item.id);
+        pathChip.setAttribute('data-selected-path-related-reason', item.reason);
+        const title = document.createElement('strong');
+        title.textContent = item.label;
+        const reason = document.createElement('span');
+        reason.textContent = '연결 이유 · ' + item.reason;
+        pathChip.append(title, reason);
+        pathChip.addEventListener('click', () => selectMemoryByCitation(item.id));
+        selectedPathRelatedList.append(pathChip);
+      });
+      selectedPathPanel.setAttribute('data-selected-memory-source', citation);
+      selectedPathPanel.setAttribute('data-selected-memory-related-count', String(related.length));
+      selectedPathPanel.setAttribute('data-selected-path-state', related.length ? 'ready' : 'empty');
+      if (selectedPathTitle) selectedPathTitle.textContent = selectedNode.data('graphLabel') || selectedNode.data('label') || citation;
+      if (selectedPathSource) {
+        selectedPathSource.textContent = [selectedNode.data('sourceType'), selectedNode.data('recordType'), selectedNode.data('observedAt')]
+          .filter(Boolean)
+          .join(' · ');
+      }
+    }
     relatedMemoryStrip.setAttribute('data-related-memory-count', String(related.length));
+    shell.setAttribute('data-selected-path-source-memory', citation);
+    shell.setAttribute('data-selected-path-related-memory-count', String(related.length));
+    shell.setAttribute('data-selected-path-related-memories', related.map((item) => item.id).join(','));
     shell.setAttribute('data-related-memory-source', citation);
     shell.setAttribute('data-related-memory-count', String(related.length));
     shell.setAttribute('data-related-memory-highlighted-edge-count', String(highlightedEdgeCount));
@@ -4201,6 +4398,27 @@ const GRAPH_CONTROL_SCRIPT = `
   replayWithRelatedMemoryButton?.addEventListener('click', replayWithRelatedMemoryContext);
   reportWithRelatedMemoryButton?.addEventListener('click', reportWithRelatedMemoryContext);
   runMemorySessionButton?.addEventListener('click', () => void runMemorySession());
+  selectedPathActions.forEach((button) => {
+    button.addEventListener('click', () => {
+      const action = button.getAttribute('data-selected-path-action');
+      selectedPathPanel?.setAttribute('data-selected-path-last-action', action || '');
+      if (action === 'ask') {
+        askWithRelatedMemoryContext();
+        return;
+      }
+      if (action === 'replay') {
+        replayWithRelatedMemoryContext();
+        return;
+      }
+      if (action === 'weekly') {
+        reportWithRelatedMemoryContext();
+        return;
+      }
+      if (action === 'session') {
+        void runMemorySession();
+      }
+    });
+  });
   focusLocalImportButton?.addEventListener('click', () => {
     importPasteText?.scrollIntoView({ block: 'center', behavior: 'smooth' });
     importPasteText?.focus();

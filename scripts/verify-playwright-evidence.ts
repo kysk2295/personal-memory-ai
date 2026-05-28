@@ -411,6 +411,19 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   assert(relatedMemoryCount > 0, 'Selected memory should expose related past memory nodes');
   assert((await attribute(page, '.second-brain-shell', 'data-related-memory-source')) === firstCitation, 'Shell should expose selected related-memory source');
   assert((await page.locator('[data-related-memory-id]').count()) > 0, 'Related memory strip should render clickable related memory chips');
+  assert(
+    (await attribute(page, '[data-selected-memory-path="graph-related-session"]', 'data-selected-memory-source')) === firstCitation,
+    'Selected memory path panel should follow graph selection',
+  );
+  assert(
+    Number(await attribute(page, '[data-selected-memory-path="graph-related-session"]', 'data-selected-memory-related-count')) > 0,
+    'Selected memory path panel should expose related memory count',
+  );
+  assert((await page.locator('[data-selected-path-related-memory-id]').count()) > 0, 'Selected memory path panel should render related memory reason chips');
+  assert((await page.locator('[data-selected-path-action="ask"]').count()) === 1, 'Selected memory path panel should expose ask action');
+  assert((await page.locator('[data-selected-path-action="replay"]').count()) === 1, 'Selected memory path panel should expose replay action');
+  assert((await page.locator('[data-selected-path-action="weekly"]').count()) === 1, 'Selected memory path panel should expose weekly action');
+  assert((await page.locator('[data-selected-path-action="session"]').count()) === 1, 'Selected memory path panel should expose session action');
   const highlightedRelatedPath = await page.evaluate(() => {
     const graph = (window as any).__personalMemoryGraph;
     return {
