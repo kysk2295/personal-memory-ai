@@ -95,6 +95,17 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
     'Expected Korean usable MVP prototype marker',
   );
   assert((await page.locator('[data-prototype-flow="tonight-usable"]').count()) === 1, 'Expected visible tonight-usable product flow');
+  assert((await page.locator('[data-guided-service-flow="diary-memory-ai"]').count()) === 1, 'Expected guided Korean service flow rail');
+  assert(
+    (await attribute(page, '[data-guided-service-flow="diary-memory-ai"]', 'data-guided-flow-current-step')) === 'capture',
+    'Guided service flow should start at capture',
+  );
+  for (const step of ['capture', 'graph', 'related', 'ai', 'save']) {
+    assert((await page.locator(`[data-guided-flow-step="${step}"]`).count()) === 1, `Missing guided service flow step ${step}`);
+  }
+  for (const action of ['start-capture', 'focus-graph', 'run-session', 'save-result']) {
+    assert((await page.locator(`[data-guided-flow-action="${action}"]`).count()) === 1, `Missing guided service flow action ${action}`);
+  }
   for (const step of ['quick-diary', 'diary-import', 'second-brain', 'related-memories', 'ai-session', 'saveback']) {
     assert((await page.locator(`[data-primary-flow-step="${step}"]`).count()) === 1, `Missing primary product flow step ${step}`);
   }
@@ -167,6 +178,10 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   await page.locator('[data-intake-action="paste-diary"]').click();
   assert((await attribute(page, '[data-memory-intake-hub="app-web-diary"]', 'data-intake-last-action')) === 'paste-diary', 'Intake paste action should update hub state');
   assert((await attribute(page, '.second-brain-shell', 'data-interaction-state')) === 'intake-paste-diary-focused', 'Intake paste action should focus the diary paste import');
+  assert(
+    (await attribute(page, '[data-guided-service-flow="diary-memory-ai"]', 'data-guided-flow-current-step')) === 'capture',
+    'Guided service flow should stay on capture while diary paste is focused',
+  );
   await page.locator('[data-intake-action="notion-diary-db"]').click();
   assert((await attribute(page, '[data-memory-intake-hub="app-web-diary"]', 'data-intake-last-action')) === 'notion-diary-db', 'Intake Notion action should update hub state');
   assert((await attribute(page, '[data-notion-import-panel="database"]', 'data-notion-source-scope')) === 'diary-only', 'Notion intake should remain diary scoped');
@@ -603,6 +618,10 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
     'Cytoscape memory node click should update inspector selection',
   );
   assert((await attribute(page, '.second-brain-shell', 'data-active-memory')) === firstCitation, 'Shell should expose active memory after Cytoscape node selection');
+  assert(
+    (await attribute(page, '[data-guided-service-flow="diary-memory-ai"]', 'data-guided-flow-current-step')) === 'related',
+    'Guided service flow should move to related after selecting a cited memory',
+  );
   const relatedMemoryCount = Number(await attribute(page, '[data-related-memory-strip="selected-node"]', 'data-related-memory-count'));
   assert(relatedMemoryCount > 0, 'Selected memory should expose related past memory nodes');
   assert((await attribute(page, '.second-brain-shell', 'data-related-memory-source')) === firstCitation, 'Shell should expose selected related-memory source');
@@ -666,6 +685,10 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   assert((await attribute(page, '.second-brain-shell', 'data-ask-context-source-memory')) === firstCitation, 'Related-memory ask action should seed the selected memory as context');
   assert(Number(await attribute(page, '.second-brain-shell', 'data-ask-context-related-memory-count')) > 0, 'Related-memory ask action should seed related memory context');
   assert((await attribute(page, '.second-brain-shell', 'data-interaction-state')) === 'ask-context-seeded-from-related-memories', 'Related-memory ask action should expose seeded interaction state');
+  assert(
+    (await attribute(page, '[data-guided-service-flow="diary-memory-ai"]', 'data-guided-flow-current-step')) === 'ai',
+    'Guided service flow should move to AI after related-memory ask',
+  );
   if ((process.env.PMI_LOCAL_URL ?? '').startsWith('http')) {
     await page.locator('[data-control="ask-second-brain"]').click();
     await page.waitForFunction(
@@ -776,6 +799,10 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
     assert(
       (await attribute(page, '.second-brain-shell', 'data-interaction-state')) === 'grounded-action-result-saved',
       'Grounded action result saveback should expose saved interaction state',
+    );
+    assert(
+      (await attribute(page, '[data-guided-service-flow="diary-memory-ai"]', 'data-guided-flow-current-step')) === 'save',
+      'Guided service flow should move to save after grounded saveback',
     );
   }
 

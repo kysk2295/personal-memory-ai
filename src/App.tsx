@@ -376,6 +376,81 @@ const APP_SHELL_STYLES = `
     font-size: 11px;
     font-weight: 760;
   }
+  .guided-service-flow {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px;
+    align-items: center;
+    border: 1px solid rgba(225, 29, 63, 0.18);
+    border-radius: 8px;
+    background: rgba(255, 247, 249, 0.82);
+    padding: 9px;
+  }
+  .guided-flow-steps {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .guided-flow-steps li {
+    min-width: 0;
+    border: 1px solid rgba(225, 29, 63, 0.14);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.7);
+    padding: 7px;
+  }
+  .guided-flow-steps li[data-guided-flow-state="active"] {
+    border-color: rgba(225, 29, 63, 0.38);
+    background: rgba(225, 29, 63, 0.1);
+  }
+  .guided-flow-steps li[data-guided-flow-state="done"] {
+    border-color: rgba(20, 184, 166, 0.28);
+    background: rgba(20, 184, 166, 0.1);
+  }
+  .guided-flow-steps strong,
+  .guided-flow-steps span {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .guided-flow-steps strong {
+    color: #6f1730;
+    font-size: 11px;
+    line-height: 1.22;
+  }
+  .guided-flow-steps span {
+    margin-top: 2px;
+    color: #80535d;
+    font-size: 10px;
+    line-height: 1.25;
+  }
+  .guided-flow-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(88px, 1fr));
+    gap: 6px;
+  }
+  .guided-flow-actions a,
+  .guided-flow-actions button {
+    min-height: 32px;
+    border: 1px solid rgba(225, 29, 63, 0.24);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.76);
+    color: #9f1239;
+    padding: 6px 8px;
+    font-size: 11px;
+    font-weight: 800;
+    text-align: center;
+    text-decoration: none;
+  }
+  .guided-flow-actions [data-guided-flow-action="start-capture"] {
+    background: #e11d3f;
+    color: #ffffff;
+  }
   .prototype-entry-dock {
     grid-column: 1 / -1;
     display: grid;
@@ -2157,10 +2232,13 @@ const APP_SHELL_STYLES = `
     color: #a7a7ad;
   }
   .product-value-strip[data-command-shelf="graph-led"] {
+    position: fixed;
+    z-index: 9;
+    pointer-events: auto;
     top: 84px;
-    left: 26px;
-    width: min(430px, calc(100% - 520px));
-    max-height: min(620px, calc(100vh - 136px));
+    left: 338px;
+    width: min(430px, calc(100vw - 520px));
+    max-height: calc(100vh - 96px);
     grid-template-columns: 1fr;
     gap: 9px;
     overflow: auto;
@@ -2171,6 +2249,29 @@ const APP_SHELL_STYLES = `
   }
   .product-value-strip[data-command-shelf="graph-led"] .service-flow-steps {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .product-value-strip[data-command-shelf="graph-led"] .guided-service-flow {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .product-value-strip[data-command-shelf="graph-led"] .guided-flow-steps {
+    grid-template-columns: 1fr;
+  }
+  .product-value-strip[data-command-shelf="graph-led"] .guided-flow-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .product-value-strip[data-command-shelf="graph-led"][data-flow-collapsed="true"] {
+    max-height: min(620px, calc(100vh - 96px));
+  }
+  .product-value-strip[data-command-shelf="graph-led"][data-flow-collapsed="true"] .service-flow-steps,
+  .product-value-strip[data-command-shelf="graph-led"][data-flow-collapsed="true"] .privacy-actions,
+  .product-value-strip[data-command-shelf="graph-led"][data-flow-collapsed="true"] .prototype-entry-dock,
+  .product-value-strip[data-command-shelf="graph-led"][data-flow-collapsed="true"] .first-run-guide,
+  .product-value-strip[data-command-shelf="graph-led"][data-flow-collapsed="true"] .flow-coach {
+    display: none;
+  }
+  .product-value-strip[data-command-shelf="graph-led"][data-flow-collapsed="true"] .guided-flow-steps {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
   }
   .product-value-strip[data-command-shelf="graph-led"] .service-flow-steps li {
     min-height: 48px;
@@ -2753,6 +2854,14 @@ const APP_SHELL_STYLES = `
       width: calc(100% - 22px);
     }
     .benchmark-signin-cta { display: none; }
+    .product-value-strip[data-command-shelf="graph-led"] {
+      position: relative;
+      top: auto;
+      left: auto;
+      width: calc(100% - 20px);
+      max-height: none;
+      margin: 12px auto 0;
+    }
     .product-main-grid { grid-template-columns: 1fr; }
     .graph-stage {
       min-height: 520px;
@@ -3035,6 +3144,21 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
           <h2>오늘 쓴 고민을 과거 기억과 연결해서 답하게 한다</h2>
           <p>앱에서는 빠르게 쓰고, 웹에서는 일기 DB만 가져온다. 기억은 공개 공유가 아니라 내 안에서만 현재 일기와 과거 기억이 함께 떠오르는 구조다.</p>
         </div>
+        <section class="guided-service-flow" data-guided-service-flow="diary-memory-ai" data-guided-flow-current-step="capture" data-guided-flow-source="${escapeHtml(currentFlowMemoryId)}" data-guided-flow-related-count="${currentFlowRelatedCount}" data-guided-flow-saved-memory="" aria-label="일기에서 개인 기억 AI까지 한 화면 흐름">
+          <ol class="guided-flow-steps" aria-label="핵심 사용 흐름">
+            <li data-guided-flow-step="capture" data-guided-flow-state="active"><strong>기록</strong><span>앱/웹 일기 입력</span></li>
+            <li data-guided-flow-step="graph" data-guided-flow-state="idle"><strong>세컨브레인</strong><span>기억 그래프 생성</span></li>
+            <li data-guided-flow-step="related" data-guided-flow-state="idle"><strong>연관 기억</strong><span>과거 노드 연결</span></li>
+            <li data-guided-flow-step="ai" data-guided-flow-state="idle"><strong>AI 실행</strong><span>인용 근거 답변</span></li>
+            <li data-guided-flow-step="save" data-guided-flow-state="idle"><strong>미래 기억 저장</strong><span>다음 고민의 근거</span></li>
+          </ol>
+          <div class="guided-flow-actions" aria-label="핵심 흐름 바로가기">
+            <a href="/capture/" data-guided-flow-action="start-capture">일기 쓰기</a>
+            <button type="button" data-guided-flow-action="focus-graph">그래프 보기</button>
+            <button type="button" data-guided-flow-action="run-session">AI 세션</button>
+            <button type="button" data-guided-flow-action="save-result">결과 저장</button>
+          </div>
+        </section>
         <ol class="prototype-flow-board service-flow-steps" aria-label="Diary to Second Brain service flow" data-prototype-flow="tonight-usable" data-service-flow="diary-to-second-brain" data-service-flow-primary-entry="app-or-web-diary" data-service-flow-graph-source="actual-memory-records">
           <li data-primary-flow-step="quick-diary" data-service-flow-step="quick-diary-capture"><strong>빠른 일기</strong><span>앱/PWA에서 바로 기록</span></li>
           <li data-primary-flow-step="diary-import" data-service-flow-step="diary-database-load"><strong>일기 DB 가져오기</strong><span>습관리스트/일기 DB만 선택</span></li>
@@ -3385,9 +3509,13 @@ const GRAPH_CONTROL_SCRIPT = `
   const intakeRunWeeklyButton = document.querySelector('[data-control="intake-run-weekly-report"]');
   const intakeSaveAiResultButton = document.querySelector('[data-control="intake-save-ai-result"]');
   const intakeRunSessionButton = document.querySelector('[data-control="intake-run-session"]');
+  const productValueStrip = document.querySelector('.product-value-strip[data-command-shelf="graph-led"]');
   const flowCoach = document.querySelector('[data-flow-coach="diary-to-memory-ai"]');
   const flowCoachTitle = flowCoach?.querySelector('[data-flow-coach-title]');
   const flowCoachSummary = flowCoach?.querySelector('[data-flow-coach-summary]');
+  const guidedServiceFlow = document.querySelector('[data-guided-service-flow="diary-memory-ai"]');
+  const guidedFlowSteps = Array.from(document.querySelectorAll('[data-guided-flow-step]'));
+  const guidedFlowActions = Array.from(document.querySelectorAll('[data-guided-flow-action]'));
   const captureHandoffBanner = document.querySelector('[data-capture-handoff-banner="selected-memory-session"]');
   const captureHandoffTitle = captureHandoffBanner?.querySelector('[data-capture-handoff-title]');
   const captureHandoffSummary = captureHandoffBanner?.querySelector('[data-capture-handoff-summary]');
@@ -3454,14 +3582,14 @@ const GRAPH_CONTROL_SCRIPT = `
     shell.setAttribute('data-interaction-state', value);
   };
 
-  const setMemoryReviewMode = (mode) => {
+  const setMemoryReviewMode = (mode, shouldUpdateInteraction = true) => {
     if (!memoryReviewPanel || !mode) return;
     memoryReviewPanel.setAttribute('data-memory-review-mode', mode);
     memoryReviewModeButtons.forEach((button) => {
       const active = button.getAttribute('data-review-mode-target') === mode;
       button.setAttribute('aria-pressed', String(active));
     });
-    setInteractionState('memory-review-mode-' + mode);
+    if (shouldUpdateInteraction) setInteractionState('memory-review-mode-' + mode);
   };
 
   const escapeText = (value) =>
@@ -3509,7 +3637,7 @@ const GRAPH_CONTROL_SCRIPT = `
     if (!memoryReviewPanel || !citation) return;
     memoryReviewPanel.setAttribute('data-memory-review-selected-id', citation);
     memoryReviewPanel.setAttribute('data-memory-review-state', 'ready');
-    setMemoryReviewMode('review');
+    setMemoryReviewMode('review', false);
     if (memoryEditSummary) memoryEditSummary.value = title || '';
     if (memoryEditRawText) memoryEditRawText.value = body || '';
     const sourceLabel = memoryReviewPanel.querySelector('.panel-topline span');
@@ -3814,6 +3942,7 @@ const GRAPH_CONTROL_SCRIPT = `
     shell.setAttribute('data-related-memory-source', citation);
     shell.setAttribute('data-related-memory-count', String(related.length));
     shell.setAttribute('data-related-memory-highlighted-edge-count', String(highlightedEdgeCount));
+    updateGuidedServiceFlow('related', { sourceMemoryId: citation, relatedCount: related.length });
   };
 
   const askWithRelatedMemoryContext = () => {
@@ -3833,6 +3962,7 @@ const GRAPH_CONTROL_SCRIPT = `
     shell.setAttribute('data-ask-context-source-memory', sourceMemoryId);
     shell.setAttribute('data-ask-context-related-memory-count', String(relatedMemoryIds.length));
     shell.setAttribute('data-ask-context-related-memories', relatedMemoryIds.join(','));
+    updateGuidedServiceFlow('ai', { sourceMemoryId, relatedCount: relatedMemoryIds.length });
     setInteractionState('ask-context-seeded-from-related-memories');
   };
 
@@ -3853,6 +3983,7 @@ const GRAPH_CONTROL_SCRIPT = `
     shell.setAttribute('data-replay-context-source-memory', sourceMemoryId);
     shell.setAttribute('data-replay-context-related-memory-count', String(relatedMemoryIds.length));
     shell.setAttribute('data-replay-context-related-memories', relatedMemoryIds.join(','));
+    updateGuidedServiceFlow('ai', { sourceMemoryId, relatedCount: relatedMemoryIds.length });
     setInteractionState('replay-context-seeded-from-related-memories');
   };
 
@@ -3872,6 +4003,7 @@ const GRAPH_CONTROL_SCRIPT = `
     shell.setAttribute('data-weekly-context-source-memory', sourceMemoryId);
     shell.setAttribute('data-weekly-context-related-memory-count', String(relatedMemoryIds.length));
     shell.setAttribute('data-weekly-context-related-memories', relatedMemoryIds.join(','));
+    updateGuidedServiceFlow('ai', { sourceMemoryId, relatedCount: relatedMemoryIds.length });
     setInteractionState('weekly-context-seeded-from-related-memories');
   };
 
@@ -3925,8 +4057,16 @@ const GRAPH_CONTROL_SCRIPT = `
         context.sourceMemoryId + ' 기억과 관련 과거 기억 ' + String(context.relatedMemoryIds.length) + '개로 질문, 결정 되짚기, 주간 패턴을 실행한다.';
     }
     if (state === 'running') {
+      updateGuidedServiceFlow('ai', {
+        sourceMemoryId: context?.sourceMemoryId || shell.getAttribute('data-active-memory') || '',
+        relatedCount: context?.relatedMemoryIds?.length ?? shell.getAttribute('data-related-memory-count') ?? '0',
+      });
       updateFlowCoach('ai-running', 'wait-for-session', 'AI 고민 세션 실행 중', '질문, 결정 되짚기, 주간 패턴을 같은 기억 묶음으로 처리하고 있다.');
     } else if (state === 'completed') {
+      updateGuidedServiceFlow('ai', {
+        sourceMemoryId: context?.sourceMemoryId || shell.getAttribute('data-active-memory') || '',
+        relatedCount: context?.relatedMemoryIds?.length ?? shell.getAttribute('data-related-memory-count') ?? '0',
+      });
       updateFlowCoach('ai-ready', 'save-session', 'AI 세션이 끝났다', '결과가 준비됐다. 세션 저장을 누르면 이 판단도 미래의 과거 기억으로 남는다.');
     }
   };
@@ -3938,6 +4078,23 @@ const GRAPH_CONTROL_SCRIPT = `
     memoryIntakeHub?.setAttribute('data-intake-flow-current-state', state);
     intakeSessionResult?.setAttribute('data-intake-flow-current-step', step);
     intakeSessionResult?.setAttribute('data-intake-flow-current-state', state);
+  };
+
+  const guidedStepOrder = ['capture', 'graph', 'related', 'ai', 'save'];
+  const updateGuidedServiceFlow = (step, detail = {}) => {
+    step = guidedStepOrder.includes(step) ? step : 'capture';
+    const activeIndex = guidedStepOrder.indexOf(step);
+    guidedServiceFlow?.setAttribute('data-guided-flow-current-step', step);
+    productValueStrip?.setAttribute('data-flow-collapsed', String(step !== 'capture' && step !== 'graph'));
+    guidedServiceFlow?.setAttribute('data-guided-flow-source', detail.sourceMemoryId || shell.getAttribute('data-active-memory') || guidedServiceFlow?.getAttribute('data-guided-flow-source') || '');
+    guidedServiceFlow?.setAttribute('data-guided-flow-related-count', String(detail.relatedCount ?? shell.getAttribute('data-related-memory-count') ?? guidedServiceFlow?.getAttribute('data-guided-flow-related-count') ?? '0'));
+    if (detail.savedMemoryId) guidedServiceFlow?.setAttribute('data-guided-flow-saved-memory', detail.savedMemoryId);
+    shell.setAttribute('data-guided-flow-current-step', step);
+    guidedFlowSteps.forEach((item) => {
+      const itemStep = item.getAttribute('data-guided-flow-step') || '';
+      const itemIndex = guidedStepOrder.indexOf(itemStep);
+      item.setAttribute('data-guided-flow-state', itemIndex < activeIndex ? 'done' : itemStep === step ? 'active' : 'idle');
+    });
   };
 
   const updateFlowCoach = (stage, nextAction, title, summary) => {
@@ -5084,6 +5241,11 @@ const GRAPH_CONTROL_SCRIPT = `
         updateCaptureHandoffBanner('session-saved', shell.getAttribute('data-memory-session-source-memory') || memorySessionPanel?.getAttribute('data-session-source-memory') || '', shell.getAttribute('data-memory-session-related-memory-count') || memorySessionPanel?.getAttribute('data-session-related-memory-count') || '0');
         updateCaptureHandoffReentry(savedMemoryId);
       }
+      updateGuidedServiceFlow('save', {
+        sourceMemoryId: shell.getAttribute('data-memory-session-source-memory') || memorySessionPanel?.getAttribute('data-session-source-memory') || '',
+        relatedCount: shell.getAttribute('data-memory-session-related-memory-count') || memorySessionPanel?.getAttribute('data-session-related-memory-count') || '0',
+        savedMemoryId,
+      });
       updateFlowCoach(
         'saved',
         'reopen-saved-memory',
@@ -5136,6 +5298,11 @@ const GRAPH_CONTROL_SCRIPT = `
         updateCaptureHandoffBanner('session-saved', captureHandoffSaveSource, captureHandoffSaveRelatedCount);
         updateCaptureHandoffReentry(savedMemoryId);
       }
+      updateGuidedServiceFlow('save', {
+        sourceMemoryId: captureHandoffSaveSource || shell.getAttribute('data-memory-session-source-memory') || '',
+        relatedCount: captureHandoffSaveRelatedCount,
+        savedMemoryId,
+      });
       updateFlowCoach(
         'saved',
         'reopen-saved-memory',
@@ -5331,6 +5498,23 @@ const GRAPH_CONTROL_SCRIPT = `
       updateDiaryInboxSelection(citation);
       setInteractionState('diary-inbox-memory-selected');
     });
+  });
+  diaryInbox?.addEventListener('click', (event) => {
+    const item = event.target?.closest?.('[data-control="diary-inbox-select-memory"]');
+    const citation = item?.getAttribute('data-diary-inbox-memory-id') || '';
+    if (!citation) return;
+    selectMemoryByCitation(citation);
+    updateDiaryInboxSelection(citation);
+    setInteractionState('diary-inbox-memory-selected');
+  });
+  document.addEventListener('click', (event) => {
+    const item = event.target?.closest?.('[data-control="diary-inbox-select-memory"]');
+    if (!item) return;
+    const citation = item.getAttribute('data-diary-inbox-memory-id') || '';
+    if (!citation) return;
+    selectMemoryByCitation(citation);
+    updateDiaryInboxSelection(citation);
+    setInteractionState('diary-inbox-memory-selected');
   });
 
   saveArtifactButtons.forEach((button) => {
@@ -6174,6 +6358,29 @@ const GRAPH_CONTROL_SCRIPT = `
   captureHandoffRunSessionButton?.addEventListener('click', () => {
     updateCaptureHandoffBanner('session-running', captureHandoffBanner?.getAttribute('data-capture-handoff-memory') || shell.getAttribute('data-capture-handoff-selected-memory') || '', captureHandoffBanner?.getAttribute('data-capture-handoff-related-count') || shell.getAttribute('data-capture-handoff-related-count') || '0');
     void runMemorySession();
+  });
+  guidedFlowActions.forEach((button) => {
+    button.addEventListener('click', (event) => {
+      const action = button.getAttribute('data-guided-flow-action') || '';
+      guidedServiceFlow?.setAttribute('data-guided-flow-last-action', action);
+      shell.setAttribute('data-guided-flow-last-action', action);
+      if (action === 'start-capture') return;
+      event.preventDefault();
+      if (action === 'focus-graph') {
+        document.querySelector('.graph-stage')?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        updateGuidedServiceFlow('graph');
+        setInteractionState('guided-flow-graph-focused');
+        return;
+      }
+      if (action === 'run-session') {
+        updateGuidedServiceFlow('ai');
+        void runMemorySession();
+        return;
+      }
+      if (action === 'save-result') {
+        void saveMemorySession();
+      }
+    });
   });
   selectedPathActions.forEach((button) => {
     button.addEventListener('click', () => {
