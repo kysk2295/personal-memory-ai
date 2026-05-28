@@ -26,7 +26,74 @@ export interface PersonalMemoryAgentResult {
   patterns: PatternDetectionResult;
   ask: AskMyPastSelfAnswer;
   replay?: DecisionReplayResult;
+  coachingBrief: PersonalMemoryCoachingBrief;
   graphEvidence: GraphEvidencePayload;
+}
+
+export interface PersonalMemoryCoachingBrief {
+  evidenceLabel: AskMyPastSelfAnswer['evidenceLabel'];
+  recommendation: string;
+  citationCount: number;
+  nextActions: string[];
+  boundary: string;
+  evidenceCoverage: {
+    memoryTypes: MemoryRecord['memoryType'][];
+    sourceTypes: MemoryRecord['sourceType'][];
+    observedRange?: {
+      start: string;
+      end: string;
+    };
+  };
+}
+
+function uniqueSorted<T extends string>(values: readonly T[]): T[] {
+  return Array.from(new Set(values)).sort();
+}
+
+function observedDate(memory: MemoryRecord): string {
+  return (memory.observedAt ?? memory.createdAt).slice(0, 10);
+}
+
+function evidenceCoverage(memories: readonly MemoryRecord[]): PersonalMemoryCoachingBrief['evidenceCoverage'] {
+  const dates = memories.map(observedDate).sort();
+  return {
+    memoryTypes: uniqueSorted(memories.map((memory) => memory.memoryType)),
+    sourceTypes: uniqueSorted(memories.map((memory) => memory.sourceType)),
+    ...(dates.length
+      ? {
+          observedRange: {
+            start: dates[0],
+            end: dates[dates.length - 1],
+          },
+        }
+      : {}),
+  };
+}
+
+function buildCoachingBrief(input: {
+  ask: AskMyPastSelfAnswer;
+  memories: readonly MemoryRecord[];
+}): PersonalMemoryCoachingBrief {
+  const hasSufficientEvidence = input.ask.evidenceLabel === 'sufficient_evidence';
+  return {
+    evidenceLabel: input.ask.evidenceLabel,
+    recommendation: input.ask.recommendation,
+    citationCount: input.ask.citationMemoryIds.length,
+    nextActions: hasSufficientEvidence
+      ? [
+          'freeze the current feature scope before adding more work',
+          'show the current build to a user feedback source',
+          'review the citation-backed memory path before overriding the recommendation',
+        ]
+      : [
+          'Import or write at least two relevant memories before asking for a personal recommendation.',
+          'Capture the current decision, emotion, options, and expected outcome as a diary memory.',
+        ],
+    boundary: hasSufficientEvidence
+      ? 'This recommendation is limited to cited personal memories and should not be treated as general advice.'
+      : 'No personal recommendation was generated because cited personal memories were insufficient.',
+    evidenceCoverage: evidenceCoverage(input.memories),
+  };
 }
 
 export async function answerPersonalMemoryQuestion(
@@ -67,6 +134,7 @@ export async function answerPersonalMemoryQuestion(
     patterns: patterns.patterns,
     replay,
   });
+  const coachingBrief = buildCoachingBrief({ ask, memories });
 
   return {
     privacyScope: 'private',
@@ -77,6 +145,7 @@ export async function answerPersonalMemoryQuestion(
     patterns,
     ask,
     replay,
+    coachingBrief,
     graphEvidence,
   };
 }

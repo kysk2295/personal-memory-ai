@@ -107,6 +107,19 @@ describe('answerPersonalMemoryQuestion', () => {
     expect(result.retrieval.retrievedMemoryIds.slice().sort()).toEqual(result.loadedMemoryIds.slice().sort());
     expect(result.ask.evidenceLabel).toBe('sufficient_evidence');
     expect(result.ask.citationMemoryIds.sort()).toEqual(result.loadedMemoryIds.slice().sort());
+    expect(result.coachingBrief.evidenceLabel).toBe('sufficient_evidence');
+    expect(result.coachingBrief.recommendation).toBe(result.ask.recommendation);
+    expect(result.coachingBrief.citationCount).toBe(2);
+    expect(result.coachingBrief.nextActions.join(' ')).toContain('freeze');
+    expect(result.coachingBrief.nextActions.join(' ')).toContain('user feedback');
+    expect(result.coachingBrief.nextActions.join(' ')).toContain('citation');
+    expect(result.coachingBrief.boundary).toContain('cited personal memories');
+    expect(result.coachingBrief.evidenceCoverage.memoryTypes.sort()).toEqual(['decision', 'reflection']);
+    expect(result.coachingBrief.evidenceCoverage.sourceTypes.sort()).toEqual(['notion', 'obsidian']);
+    expect(result.coachingBrief.evidenceCoverage.observedRange).toEqual({
+      start: '2026-05-01',
+      end: '2026-06-02',
+    });
     expect(result.replay?.evidenceLabel).toBe('sufficient_evidence');
     expect(result.replay?.citationMemoryIds.sort()).toEqual(result.loadedMemoryIds.slice().sort());
     expect(result.graphEvidence.highlightIds).toEqual(expect.arrayContaining(['query:agent-query-001']));
@@ -141,6 +154,11 @@ describe('answerPersonalMemoryQuestion', () => {
     expect(result.ask.evidenceLabel).toBe('insufficient_evidence');
     expect(result.retrieval.evidenceLabel).toBe('insufficient_evidence');
     expect(result.loadedMemoryIds).toEqual([]);
+    expect(result.coachingBrief.evidenceLabel).toBe('insufficient_evidence');
+    expect(result.coachingBrief.nextActions).toEqual([
+      'Import or write at least two relevant memories before asking for a personal recommendation.',
+      'Capture the current decision, emotion, options, and expected outcome as a diary memory.',
+    ]);
     expect(result.ask.answer).toContain('insufficient evidence');
     expect(result.ask.answer).toContain('No generic advice was generated.');
     expect(result.replay).toBeUndefined();

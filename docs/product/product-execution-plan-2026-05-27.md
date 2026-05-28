@@ -1400,6 +1400,22 @@ Implemented:
 - `scripts/resume-notion-import.ts`
 - `package.json`
 
+### L73 — Citation-Bounded Coaching Brief
+
+Goal: make the personal memory agent answer feel closer to a usable 고민 해결 assistant by separating recommendation, evidence coverage, next actions, and boundaries.
+
+Acceptance:
+
+- `/api/ask` result includes `coachingBrief`
+- sufficient-evidence answers expose recommendation, citation count, evidence source types, memory types, observed date range, and three next actions
+- insufficient-evidence answers avoid generic advice and suggest importing/writing relevant memories first
+- coaching boundary explicitly limits the answer to cited personal memories
+
+Implemented:
+
+- `src/lib/personalMemoryAgent.ts`
+- `src/lib/personalMemoryAgent.test.ts`
+
 ## 8. MVP Time Estimate
 
 Assuming focused local development without major dependency or deployment blockers:
