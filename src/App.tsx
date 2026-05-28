@@ -541,6 +541,48 @@ const APP_SHELL_STYLES = `
     border-color: rgba(20, 184, 166, 0.18);
     background: rgba(20, 184, 166, 0.06);
   }
+  .memory-intake-flow-tracker {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 6px;
+    margin: 2px 0;
+    padding: 0;
+    list-style: none;
+  }
+  .memory-intake-flow-tracker li {
+    min-width: 0;
+    border: 1px solid rgba(20, 184, 166, 0.16);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.6);
+    color: #57716d;
+    padding: 6px 7px;
+  }
+  .memory-intake-flow-tracker span {
+    margin: 0;
+    color: #66807b;
+    font-size: 9px;
+    font-weight: 800;
+  }
+  .memory-intake-flow-tracker strong {
+    margin-top: 2px;
+    color: #134e4a;
+    font-size: 10px;
+    line-height: 1.2;
+  }
+  .memory-intake-flow-tracker li[data-intake-flow-state="ready"],
+  .memory-intake-flow-tracker li[data-intake-flow-state="loading"] {
+    border-color: rgba(225, 29, 63, 0.24);
+    background: rgba(225, 29, 63, 0.08);
+  }
+  .memory-intake-flow-tracker li[data-intake-flow-state="done"] {
+    border-color: rgba(20, 184, 166, 0.26);
+    background: rgba(20, 184, 166, 0.12);
+  }
+  .memory-intake-flow-tracker li[data-intake-flow-state="error"] {
+    border-color: rgba(190, 18, 60, 0.34);
+    background: rgba(190, 18, 60, 0.1);
+  }
   .memory-intake-related-bundle {
     grid-column: 1 / -1;
     display: grid;
@@ -2539,6 +2581,13 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
               <strong data-intake-result-title>적용하면 여기서 바로 다음 행동을 보여준다</strong>
               <span data-intake-result-summary>일기를 그래프에 넣으면 생성된 기억과 연관 과거 기억 수를 확인하고 AI 세션을 실행할 수 있다.</span>
             </div>
+            <ol class="memory-intake-flow-tracker" data-intake-flow-tracker="diary-memory-ai" aria-label="기록에서 AI 저장까지 진행 상태">
+              <li data-intake-flow-step="capture" data-intake-flow-state="ready"><span>1</span><strong>기록</strong></li>
+              <li data-intake-flow-step="graph" data-intake-flow-state="idle"><span>2</span><strong>그래프 연결</strong></li>
+              <li data-intake-flow-step="related" data-intake-flow-state="idle"><span>3</span><strong>연관 기억</strong></li>
+              <li data-intake-flow-step="ai" data-intake-flow-state="idle"><span>4</span><strong>AI 실행</strong></li>
+              <li data-intake-flow-step="save" data-intake-flow-state="idle"><span>5</span><strong>다시 저장</strong></li>
+            </ol>
             <section class="memory-intake-related-bundle" data-intake-related-bundle="past-memory-nodes" data-intake-related-bundle-count="0" data-intake-ai-action-result="idle" aria-label="인입된 일기와 연결된 과거 기억">
               <div class="memory-intake-related-heading">
                 <strong>관련 과거 기억</strong>
@@ -2744,6 +2793,7 @@ const GRAPH_CONTROL_SCRIPT = `
   const intakeRelatedBundle = document.querySelector('[data-intake-related-bundle="past-memory-nodes"]');
   const intakeRelatedBundleSummary = intakeRelatedBundle?.querySelector('[data-intake-related-bundle-summary]');
   const intakeRelatedBundleList = intakeRelatedBundle?.querySelector('[data-intake-related-bundle-list]');
+  const intakeFlowTracker = document.querySelector('[data-intake-flow-tracker="diary-memory-ai"]');
   const intakeRunAskButton = document.querySelector('[data-control="intake-run-ask"]');
   const intakeRunReplayButton = document.querySelector('[data-control="intake-run-decision-replay"]');
   const intakeRunWeeklyButton = document.querySelector('[data-control="intake-run-weekly-report"]');
@@ -3239,6 +3289,15 @@ const GRAPH_CONTROL_SCRIPT = `
     }
   };
 
+  const setIntakeFlowStepState = (step, state) => {
+    const target = intakeFlowTracker?.querySelector('[data-intake-flow-step="' + step + '"]');
+    target?.setAttribute('data-intake-flow-state', state);
+    memoryIntakeHub?.setAttribute('data-intake-flow-current-step', step);
+    memoryIntakeHub?.setAttribute('data-intake-flow-current-state', state);
+    intakeSessionResult?.setAttribute('data-intake-flow-current-step', step);
+    intakeSessionResult?.setAttribute('data-intake-flow-current-state', state);
+  };
+
   const renderIntakeRelatedBundle = () => {
     if (!intakeRelatedBundle || !intakeRelatedBundleList) return [];
     let related = Array.from(relatedMemoryList?.querySelectorAll('[data-related-memory-id]') || [])
@@ -3263,6 +3322,7 @@ const GRAPH_CONTROL_SCRIPT = `
         ? '현재 일기와 연결된 과거 기억 ' + String(related.length) + '개'
         : '아직 연결된 과거 기억을 찾는 중이다';
     }
+    setIntakeFlowStepState('related', related.length ? 'ready' : 'loading');
     intakeRelatedBundleList.replaceChildren();
     related.forEach((item) => {
       const chip = document.createElement('button');
@@ -3300,6 +3360,7 @@ const GRAPH_CONTROL_SCRIPT = `
     intakeRelatedBundle?.setAttribute('data-intake-last-ai-action', kind);
     intakeRelatedBundle?.setAttribute('data-intake-ai-action-result', kind + '-' + state);
     intakeSessionResult?.setAttribute('data-intake-ai-action-result', kind + '-' + state);
+    setIntakeFlowStepState('ai', state === 'answered' ? 'done' : state === 'loading' ? 'loading' : 'error');
     if (intakeResultTitle) {
       intakeResultTitle.textContent =
         state === 'loading'
@@ -3358,12 +3419,14 @@ const GRAPH_CONTROL_SCRIPT = `
           intakeResultSummary.textContent =
             (savedMemoryId || '새 기억') + '으로 저장됐다. 다음 고민에서 이 결과도 과거 근거로 다시 불러올 수 있다.';
         }
+        setIntakeFlowStepState('save', 'done');
         setInteractionState('intake-ai-result-saved');
         return;
       }
       if (saveState === 'error' || Date.now() - startedAt > 12000) {
         memoryIntakeHub?.setAttribute('data-intake-ai-save-state', 'error');
         intakeSaveAiResultButton?.setAttribute('data-intake-ai-save-state', 'error');
+        setIntakeFlowStepState('save', 'error');
         setInteractionState('intake-ai-result-save-error');
         return;
       }
@@ -3386,6 +3449,10 @@ const GRAPH_CONTROL_SCRIPT = `
     memoryIntakeHub?.setAttribute('data-intake-applied-memory', appliedMemoryId);
     memoryIntakeHub?.setAttribute('data-intake-related-memory-count', relatedCount);
     memoryIntakeHub?.setAttribute('data-intake-next-step', 'memory-session-ready');
+    setIntakeFlowStepState('capture', 'done');
+    setIntakeFlowStepState('graph', 'done');
+    setIntakeFlowStepState('related', related.length ? 'ready' : 'loading');
+    setIntakeFlowStepState('ai', 'ready');
     if (intakeResultTitle) intakeResultTitle.textContent = '새 일기가 그래프에 연결됐다';
     if (intakeResultSummary) {
       intakeResultSummary.textContent =
@@ -5355,6 +5422,11 @@ const GRAPH_CONTROL_SCRIPT = `
     memoryIntakeHub?.setAttribute('data-intake-source-scope', 'diary-only');
     shell.setAttribute('data-intake-last-action', action);
     notionImportPanel?.setAttribute('data-notion-source-scope', 'diary-only');
+    setIntakeFlowStepState('capture', 'loading');
+    setIntakeFlowStepState('graph', 'idle');
+    setIntakeFlowStepState('related', 'idle');
+    setIntakeFlowStepState('ai', 'idle');
+    setIntakeFlowStepState('save', 'idle');
     setIntakeNotionState('loading');
   };
   intakeFindNotionSourceButton?.addEventListener('click', () => {
@@ -5388,6 +5460,11 @@ const GRAPH_CONTROL_SCRIPT = `
         importPasteText?.scrollIntoView({ block: 'center', behavior: 'smooth' });
         importPasteText?.focus();
         memoryIntakeHub?.setAttribute('data-intake-stage', 'paste-diary-focused');
+        setIntakeFlowStepState('capture', 'loading');
+        setIntakeFlowStepState('graph', 'idle');
+        setIntakeFlowStepState('related', 'idle');
+        setIntakeFlowStepState('ai', 'idle');
+        setIntakeFlowStepState('save', 'idle');
         setInteractionState('intake-paste-diary-focused');
         return;
       }
@@ -5397,6 +5474,11 @@ const GRAPH_CONTROL_SCRIPT = `
         notionDatabaseId?.focus();
         memoryIntakeHub?.setAttribute('data-intake-stage', 'notion-diary-ready');
         notionImportPanel?.setAttribute('data-notion-source-scope', 'diary-only');
+        setIntakeFlowStepState('capture', 'loading');
+        setIntakeFlowStepState('graph', 'idle');
+        setIntakeFlowStepState('related', 'idle');
+        setIntakeFlowStepState('ai', 'idle');
+        setIntakeFlowStepState('save', 'idle');
         setInteractionState('intake-notion-diary-ready');
       }
     });

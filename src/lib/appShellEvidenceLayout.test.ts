@@ -551,6 +551,12 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('data-control="intake-diary-draft"');
     expect(html).toContain('data-intake-session-result="applied-memory"');
     expect(html).toContain('data-control="intake-run-session"');
+    expect(html).toContain('data-intake-flow-tracker="diary-memory-ai"');
+    expect(html).toContain('data-intake-flow-step="capture"');
+    expect(html).toContain('data-intake-flow-step="graph"');
+    expect(html).toContain('data-intake-flow-step="related"');
+    expect(html).toContain('data-intake-flow-step="ai"');
+    expect(html).toContain('data-intake-flow-step="save"');
     expect(html).toContain('data-intake-related-bundle="past-memory-nodes"');
     expect(html).toContain('data-intake-related-bundle-count="0"');
     expect(html).toContain('data-intake-ai-action-result="idle"');
@@ -761,6 +767,11 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(documentHtml).toContain("timelinePanel?.querySelectorAll('[data-control=\"timeline-select-memory\"]')");
     expect(documentHtml).toContain("memoryIntakeHub?.setAttribute('data-intake-applied-memory', appliedMemoryId)");
     expect(documentHtml).toContain("memoryIntakeHub?.setAttribute('data-intake-next-step', 'memory-session-ready')");
+    expect(documentHtml).toContain('const setIntakeFlowStepState =');
+    expect(documentHtml).toContain("setIntakeFlowStepState('graph', 'done')");
+    expect(documentHtml).toContain("setIntakeFlowStepState('related', related.length ? 'ready' : 'loading')");
+    expect(documentHtml).toContain("setIntakeFlowStepState('ai', state === 'answered' ? 'done'");
+    expect(documentHtml).toContain("setIntakeFlowStepState('save', 'done')");
     expect(documentHtml).toContain('const renderIntakeRelatedBundle = () =>');
     expect(documentHtml).toContain("intakeRelatedBundle?.setAttribute('data-intake-related-bundle-count'");
     expect(documentHtml).toContain("intakeRelatedBundleList.replaceChildren");

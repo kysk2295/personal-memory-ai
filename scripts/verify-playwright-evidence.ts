@@ -246,6 +246,22 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
     'Intake result panel should offer the guided AI session as the next step',
   );
   assert(
+    (await attribute(page, '[data-intake-flow-step="capture"]', 'data-intake-flow-state')) === 'done',
+    'Intake flow tracker should mark capture done after diary apply',
+  );
+  assert(
+    (await attribute(page, '[data-intake-flow-step="graph"]', 'data-intake-flow-state')) === 'done',
+    'Intake flow tracker should mark graph connection done after diary apply',
+  );
+  assert(
+    (await attribute(page, '[data-intake-flow-step="related"]', 'data-intake-flow-state')) === 'ready',
+    'Intake flow tracker should mark related memories ready after diary apply',
+  );
+  assert(
+    (await attribute(page, '[data-intake-flow-step="ai"]', 'data-intake-flow-state')) === 'ready',
+    'Intake flow tracker should mark AI actions ready after diary apply',
+  );
+  assert(
     Number(await attribute(page, '[data-intake-related-bundle="past-memory-nodes"]', 'data-intake-related-bundle-count')) > 0,
     'Intake result panel should surface related past-memory nodes after diary apply',
   );
@@ -406,10 +422,12 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   await page.locator('[data-control="intake-run-weekly-report"]').click();
   await page.waitForFunction(() => document.querySelector('[data-intake-related-bundle="past-memory-nodes"]')?.getAttribute('data-intake-ai-action-result') === 'weekly-answered');
   assert((await attribute(page, '.second-brain-shell', 'data-weekly-report-state')) === 'ready', 'Intake Weekly action should run the grounded weekly report flow');
+  assert((await attribute(page, '[data-intake-flow-step="ai"]', 'data-intake-flow-state')) === 'done', 'Intake flow tracker should mark AI action done after a grounded answer');
   await page.locator('[data-control="intake-save-ai-result"]').click();
   await page.waitForFunction(() => document.querySelector('[data-intake-related-bundle="past-memory-nodes"]')?.getAttribute('data-intake-ai-save-state') === 'saved');
   assert((await attribute(page, '[data-control="intake-save-ai-result"]', 'data-intake-ai-save-state')) === 'saved', 'Intake AI saveback should mark the latest result saved');
   assert((await attribute(page, '[data-save-artifact-action="weekly_report"]', 'data-artifact-save-state')) === 'saved', 'Intake AI saveback should reuse the weekly saved artifact action');
+  assert((await attribute(page, '[data-intake-flow-step="save"]', 'data-intake-flow-state')) === 'done', 'Intake flow tracker should mark saveback done after saving the AI result');
   await page.locator('[data-control="intake-run-session"]').click();
   await page.waitForFunction(
     () => document.querySelector('.second-brain-shell')?.getAttribute('data-memory-session-state') === 'completed',
