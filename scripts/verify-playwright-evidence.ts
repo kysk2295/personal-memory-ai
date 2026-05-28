@@ -104,6 +104,15 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   );
   assert((await page.locator('text=AI 세션 실행').count()) > 0, 'Expected Korean AI session action');
   assert((await page.locator('text=세션 저장').count()) > 0, 'Expected Korean save session action');
+  assert((await attribute(page, '.product-value-strip', 'data-command-shelf')) === 'graph-led', 'First-screen command shelf should stay graph-led');
+  assert(
+    (await attribute(page, '.product-value-strip', 'data-benchmark-alignment')) === 'careerhacker-memory-graph-first',
+    'First-screen command shelf should declare the benchmark graph-first alignment',
+  );
+  assert(
+    (await attribute(page, '.product-value-strip', 'data-first-screen-density')) === 'compact-command-shelf',
+    'First-screen command shelf should use compact density',
+  );
   assert((await page.locator('text=Run Memory Session').count()) === 0, 'Old English memory-session CTA should not be visible');
   assert((await page.locator('text=Save session').count()) === 0, 'Old English memory-session save CTA should not be visible');
   assert(

@@ -508,8 +508,16 @@ describe('buildInitialAppShellEvidenceLayout', () => {
 
   test('renders the private diary-to-memory product surface with visible evidence contracts', () => {
     const html = renderAppShellHtml();
+    const documentHtml = renderAppShellDocument();
 
     expect(html).toContain('class="product-value-strip"');
+    expect(html).toContain('data-command-shelf="graph-led"');
+    expect(html).toContain('data-benchmark-alignment="careerhacker-memory-graph-first"');
+    expect(html).toContain('data-visible-priority="capture-import-ai-session"');
+    expect(html).toContain('data-first-screen-density="compact-command-shelf"');
+    expect(documentHtml).toContain('.product-value-strip[data-command-shelf="graph-led"]');
+    expect(documentHtml).toContain('.prototype-entry-dock[data-entry-dock="diary-start"]');
+    expect(documentHtml).toContain('.first-run-guide[data-first-run-guide="diary-memory-ai"]');
     expect(html).toContain('오늘 쓴 고민을 과거 기억과 연결해서 답하게 한다');
     expect(html).toContain('앱에서는 빠르게 쓰고, 웹에서는 일기 DB만 가져온다');
     expect(html).toContain('data-prototype-flow="tonight-usable"');

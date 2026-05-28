@@ -1727,6 +1727,74 @@ const APP_SHELL_STYLES = `
   .service-flow-steps span {
     color: #a7a7ad;
   }
+  .product-value-strip[data-command-shelf="graph-led"] {
+    top: 84px;
+    left: 26px;
+    width: min(430px, calc(100% - 520px));
+    max-height: min(620px, calc(100vh - 136px));
+    grid-template-columns: 1fr;
+    gap: 9px;
+    overflow: auto;
+    scrollbar-width: thin;
+  }
+  .product-value-strip[data-command-shelf="graph-led"] .prototype-goal-copy p:not(.eyebrow) {
+    display: none;
+  }
+  .product-value-strip[data-command-shelf="graph-led"] .service-flow-steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .product-value-strip[data-command-shelf="graph-led"] .service-flow-steps li {
+    min-height: 48px;
+    padding: 7px;
+  }
+  .product-value-strip[data-command-shelf="graph-led"] .memory-intake-hub {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .product-value-strip[data-command-shelf="graph-led"] .memory-intake-copy span,
+  .product-value-strip[data-command-shelf="graph-led"] .memory-intake-action span {
+    display: none;
+  }
+  .product-value-strip[data-command-shelf="graph-led"] .memory-intake-actions,
+  .product-value-strip[data-command-shelf="graph-led"] .memory-intake-notion-actions {
+    grid-template-columns: 1fr;
+  }
+  .product-value-strip[data-command-shelf="graph-led"] .memory-intake-draft {
+    grid-template-columns: 1fr;
+  }
+  .product-value-strip[data-command-shelf="graph-led"] .memory-intake-draft textarea {
+    min-height: 52px;
+  }
+  .product-value-strip[data-command-shelf="graph-led"] .memory-intake-result {
+    grid-template-columns: 1fr;
+  }
+  .product-value-strip[data-command-shelf="graph-led"] .prototype-entry-dock[data-entry-dock="diary-start"],
+  .product-value-strip[data-command-shelf="graph-led"] .first-run-guide[data-first-run-guide="diary-memory-ai"] {
+    margin-top: 0;
+    padding: 6px;
+    background: rgba(255, 255, 255, 0.035);
+  }
+  .product-value-strip[data-command-shelf="graph-led"] .prototype-entry-dock[data-entry-dock="diary-start"] {
+    grid-template-columns: 1fr;
+  }
+  .product-value-strip[data-command-shelf="graph-led"] .first-run-guide[data-first-run-guide="diary-memory-ai"] {
+    grid-template-columns: 1fr;
+  }
+  .product-value-strip[data-command-shelf="graph-led"] .first-run-guide-status {
+    border-right: 0;
+    padding-right: 0;
+  }
+  .product-value-strip[data-command-shelf="graph-led"] .first-run-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .product-value-strip[data-command-shelf="graph-led"] .entry-dock-note,
+  .product-value-strip[data-command-shelf="graph-led"] .first-run-guide-status span,
+  .product-value-strip[data-command-shelf="graph-led"] .first-run-action[data-guide-state="ready"]::after {
+    display: none;
+  }
+  .product-value-strip[data-command-shelf="graph-led"] + .product-main-grid .graph-stage {
+    min-height: calc(100vh - 128px);
+  }
   .product-main-grid {
     width: 100%;
     margin: 0;
@@ -2423,7 +2491,7 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
         <button class="ask-submit" type="submit" aria-label="질문하기" data-control="ask-second-brain">→</button>
       </form>
 
-      <section class="product-value-strip" aria-label="Private memory product value">
+      <section class="product-value-strip" aria-label="Private memory product value" data-command-shelf="graph-led" data-benchmark-alignment="careerhacker-memory-graph-first" data-visible-priority="capture-import-ai-session" data-first-screen-density="compact-command-shelf">
         <div class="prototype-goal-copy">
           <p class="eyebrow">개인 일기 세컨브레인</p>
           <h2>오늘 쓴 고민을 과거 기억과 연결해서 답하게 한다</h2>
