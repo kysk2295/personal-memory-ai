@@ -2,7 +2,7 @@
 
 Status: active local execution plan  
 Owner: Ko Yunseo  
-Updated: 2026-05-28, release checklist, live Ask follow-up/save-back, and Notion graph rehydration
+Updated: 2026-05-28, capture hint controls, release checklist, live Ask follow-up/save-back, and Notion graph rehydration
 Supersedes for local Codex work: `docs/product/product-master-plan-2026-05-26.md`
 
 ## 1. Product Definition
@@ -105,7 +105,7 @@ Status values:
 | Capture | Fast diary to `MemoryRecord` | `done-foundation` | `fastDiaryCapture` and ingestion loop exist. |
 | Capture | Mobile/PWA capture UI | `done-foundation` | `/capture/` renders a mobile-first local/private quick diary capture surface. |
 | Capture | Voice capture | `later` | In PRD direction, not MVP-critical. |
-| Capture | Emotion/project/decision hints | `done-foundation` | Data contract exists; full UI still planned. |
+| Capture | Emotion/project/decision hints | `prototype-ui` | `/capture/` exposes editable emotion, project, topic, decision, and outcome hint controls and Quick save posts them to `/api/capture` as private `MemoryRecord` metadata. |
 | Import | Notion/Obsidian/Markdown preview | `done-foundation` | Preview/dedupe contract exists. Local files support Markdown/Text/JSON/Obsidian-style exports, and the web/API now expose direct Notion source discovery plus database preview paths gated by the user's Notion integration token. Notion database imports include paginated database results plus supported paginated page child block text so body notes are preserved with property metadata. |
 | Import | Apply/undo import state model | `done-foundation` | Batch state model tracks preview, applied, skipped, graph evidence, and undone states. |
 | Import | File upload/import UI | `prototype-ui` | Local Markdown/Text/JSON upload and paste surface can build preview candidates, call owner-scoped preview/apply APIs, and show applied memories in graph/timeline feedback without reload. |

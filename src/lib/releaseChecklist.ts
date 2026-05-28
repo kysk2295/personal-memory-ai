@@ -69,6 +69,7 @@ export function buildReleaseChecklist(input: BuildReleaseChecklistInput): Releas
       'artifacts/web-second-brain-product-surface/local-graph-density-playwright.png',
       'artifacts/web-second-brain-product-surface/local-graph-interactions-playwright.png',
       'artifacts/web-second-brain-product-surface/local-memory-search-detail-playwright.png',
+      'artifacts/web-second-brain-product-surface/local-app-capture-playwright.png',
     ],
     prohibitedActions: ['push_remote', 'merge_main', 'deploy_production', 'print_secrets'],
     humanApprovalRequiredFor: ['remote_push', 'main_merge', 'production_deploy', 'secret_access'],

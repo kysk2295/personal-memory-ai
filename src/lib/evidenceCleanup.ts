@@ -5,6 +5,7 @@ function isEvidenceRecord(record: MemoryRecord): boolean {
   const rawText = record.rawText;
   return (
     rawText.includes('Imported local memory playwright-') ||
+    rawText.includes('playwright-capture-') ||
     sourceRef.startsWith('personal-memory-ai://saved-artifacts/') ||
     sourceRef.startsWith('personal-memory-ai://feedback/')
   );

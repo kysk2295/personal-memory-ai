@@ -62,6 +62,7 @@ Ko Yunseo corrected the product split: `app` and `web` are separate surfaces wit
   - optional emotion/decision/project hints
   - conversion into `MemoryRecord`
   - local/prototype/native status label
+- Current `/capture/` prototype includes editable emotion, project, topic, decision, and outcome hint controls plus private `/api/capture` Quick save.
 - Web second-brain surface must include:
   - graph workspace
   - Ask My Past Self input/output area

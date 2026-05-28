@@ -10,6 +10,7 @@ const benchmarkScreenshot = resolve(outputDir, 'benchmark-careerhacker-memory-pl
 const localScreenshot = resolve(outputDir, 'local-graph-density-playwright.png');
 const interactionScreenshot = resolve(outputDir, 'local-graph-interactions-playwright.png');
 const searchScreenshot = resolve(outputDir, 'local-memory-search-detail-playwright.png');
+const captureScreenshot = resolve(outputDir, 'local-app-capture-playwright.png');
 const shouldCleanupEvidenceRecords = process.env.PMI_EVIDENCE_KEEP_RECORDS !== 'true';
 
 function assert(condition: unknown, message: string): asserts condition {
@@ -416,6 +417,35 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   await page.screenshot({ path: searchScreenshot, fullPage: false });
 }
 
+async function verifyCaptureInteractions(page: Page): Promise<void> {
+  const localUrl = process.env.PMI_LOCAL_URL ?? pathToFileURL(resolve('dist/index.html')).href;
+  const captureUrl = localUrl.startsWith('http') ? new URL('/capture/', localUrl).toString() : pathToFileURL(resolve('dist/capture/index.html')).href;
+  await page.goto(captureUrl, { waitUntil: 'load', timeout: 30_000 });
+  await page.locator('.capture-app-shell').waitFor({ state: 'attached', timeout: 10_000 });
+  assert((await attribute(page, '.capture-app-shell', 'data-privacy-scope')) === 'private', 'Capture app should stay private by default');
+  assert((await attribute(page, '.capture-app-shell', 'data-quick-save-endpoint')) === '/api/capture', 'Capture app should target the private capture API');
+  assert((await attribute(page, '[data-capture-hints-panel="manual"]', 'aria-label')) === 'Quick save diary form', 'Capture app should expose manual hint controls');
+  await page.locator('#quick-diary-text').fill(`Playwright capture memory playwright-capture-${Date.now()} with manual hints.`);
+  await page.locator('[data-control="capture-emotion-hints"]').fill('focused, relieved');
+  await page.locator('[data-control="capture-project-hints"]').fill('personal-memory-ai');
+  await page.locator('[data-control="capture-topic-hints"]').fill('app capture, local-first');
+  await page.locator('[data-control="capture-decision-hint"]').selectOption('chosen');
+  await page.locator('[data-control="capture-outcome-hint"]').fill('capture saved into the private vault');
+  await page.locator('[data-control="quick-diary-save"]').click();
+  if (captureUrl.startsWith('http')) {
+    await page.waitForFunction(
+      () => document.querySelector('.capture-app-shell')?.getAttribute('data-quick-save-state') === 'saved',
+      null,
+      { timeout: 10_000 },
+    );
+    const capturedMemoryId = await attribute(page, '.capture-app-shell', 'data-last-captured-memory');
+    assert(Boolean(capturedMemoryId), 'Capture app should expose the saved memory id after quick save');
+  } else {
+    assert((await attribute(page, '.capture-app-shell', 'data-quick-save-state')) === 'saved', 'Static capture preview should mark local save state');
+  }
+  await page.screenshot({ path: captureScreenshot, fullPage: false });
+}
+
 async function cleanupEvidenceRecords(): Promise<number> {
   const localUrl = process.env.PMI_LOCAL_URL;
   if (!shouldCleanupEvidenceRecords || !localUrl?.startsWith('http')) return 0;
@@ -443,6 +473,8 @@ try {
 
   const localPage = await context.newPage();
   await verifyLocalInteractions(localPage);
+  const capturePage = await context.newPage();
+  await verifyCaptureInteractions(capturePage);
   const evidenceCleanupDeletedCount = await cleanupEvidenceRecords();
 
   console.log(
@@ -452,6 +484,7 @@ try {
         localScreenshot,
         interactionScreenshot,
         searchScreenshot,
+        captureScreenshot,
         evidenceCleanupDeletedCount,
         verified: [
           'cytoscape data graph ready',
@@ -483,6 +516,8 @@ try {
           'memory provenance export action',
           'memory provenance download action',
           'evidence cleanup',
+          'app capture manual hints',
+          'app capture quick save',
         ],
       },
       null,

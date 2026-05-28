@@ -15,7 +15,8 @@ const CAPTURE_STYLES = `
   }
   button,
   textarea,
-  input {
+  input,
+  select {
     font: inherit;
   }
   .capture-app-shell {
@@ -119,6 +120,26 @@ const CAPTURE_STYLES = `
     font-size: 20px;
     line-height: 1.35;
   }
+  .capture-hint-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 9px;
+  }
+  .capture-hint-grid label {
+    display: grid;
+    gap: 5px;
+  }
+  .capture-hint-grid input,
+  .capture-hint-grid select {
+    min-width: 0;
+    min-height: 38px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.055);
+    color: #f4f4f4;
+    padding: 8px 9px;
+    font-size: 13px;
+  }
   .capture-hints,
   .capture-memory-meta {
     display: flex;
@@ -155,6 +176,10 @@ const CAPTURE_STYLES = `
     color: #ff8797;
     font-size: 11px;
     overflow-wrap: anywhere;
+  }
+  .capture-app-shell[data-quick-save-state="saved"] .capture-save-button {
+    background: #2f9b65;
+    border-color: rgba(47, 155, 101, 0.9);
   }
   @media (min-width: 860px) {
     .capture-app-shell {
@@ -198,9 +223,39 @@ export function renderAppCaptureHtml(): string {
         <h1>Quick Diary</h1>
         <p>앱에서는 길게 분석하지 않고 바로 기록한다. 저장된 일기는 로컬 우선으로 private MemoryRecord가 되고 웹 세컨브레인 그래프에 연결된다.</p>
       </section>
-      <form class="capture-card" aria-label="Quick save diary form">
+      <form class="capture-card" aria-label="Quick save diary form" data-capture-hints-panel="manual">
         <label for="quick-diary-text">Today</label>
-        <textarea id="quick-diary-text" readonly>${escapeHtml(state.draft.text)}</textarea>
+        <textarea id="quick-diary-text" name="text">${escapeHtml(state.draft.text)}</textarea>
+        <div class="capture-hint-grid" aria-label="Manual capture hint controls">
+          <label>Emotion
+            <input name="emotionHints" data-control="capture-emotion-hints" value="${escapeHtml(
+              state.draft.emotionHints.join(', '),
+            )}" />
+          </label>
+          <label>Project
+            <input name="projectHints" data-control="capture-project-hints" value="${escapeHtml(
+              state.draft.projectHints.join(', '),
+            )}" />
+          </label>
+          <label>Topic
+            <input name="topicHints" data-control="capture-topic-hints" value="${escapeHtml(
+              state.draft.topicHints.join(', '),
+            )}" />
+          </label>
+          <label>Decision
+            <select name="decisionHint" data-control="capture-decision-hint">
+              ${['none', 'pending', 'chosen', 'avoided', 'reversed']
+                .map(
+                  (value) =>
+                    `<option value="${value}"${value === state.draft.decisionHint ? ' selected' : ''}>${value}</option>`,
+                )
+                .join('')}
+            </select>
+          </label>
+          <label>Outcome
+            <input name="outcomeHint" data-control="capture-outcome-hint" value="" />
+          </label>
+        </div>
         <div class="capture-hints" aria-label="Capture hints">
           ${state.draft.emotionHints.map((hint) => `<span>${escapeHtml(hint)}</span>`).join('')}
           ${state.draft.projectHints.map((hint) => `<span>${escapeHtml(hint)}</span>`).join('')}
@@ -224,12 +279,61 @@ export function renderAppCaptureHtml(): string {
         )}</code></p>
       </section>
       <div class="capture-actions">
-        <button class="capture-save-button" type="button">Quick save</button>
+        <button class="capture-save-button" type="submit" data-control="quick-diary-save" form="quick-diary-form">Quick save</button>
         <a class="capture-secondary-link" href="/">Open graph</a>
       </div>
     </section>
   </main>`;
 }
+
+const CAPTURE_SCRIPT = `
+(() => {
+  const captureShell = document.querySelector('.capture-app-shell');
+  const form = document.querySelector('[data-capture-hints-panel="manual"]');
+  const saveButton = document.querySelector('[data-control="quick-diary-save"]');
+  if (!captureShell || !form) return;
+  form.setAttribute('id', 'quick-diary-form');
+  const quickSaveEndpoint = captureShell.getAttribute('data-quick-save-endpoint') || '/api/capture';
+  const quickSaveMethod = captureShell.getAttribute('data-quick-save-method') || 'POST';
+  const splitList = (value) => String(value || '').split(',').map((item) => item.trim()).filter(Boolean);
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const formData = new FormData(form);
+    const payload = {
+      text: String(formData.get('text') || ''),
+      capturedAt: new Date().toISOString(),
+      deviceId: 'pwa-local-device',
+      emotionHints: splitList(formData.get('emotionHints')),
+      projectHints: splitList(formData.get('projectHints')),
+      topicHints: splitList(formData.get('topicHints')),
+      decisionHint: String(formData.get('decisionHint') || 'none'),
+      outcomeHint: String(formData.get('outcomeHint') || ''),
+    };
+    captureShell.setAttribute('data-quick-save-state', 'saving');
+    saveButton?.setAttribute('aria-busy', 'true');
+    try {
+      if (window.location.protocol !== 'file:') {
+        const response = await fetch(quickSaveEndpoint, {
+          method: quickSaveMethod,
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if (!response.ok) throw new Error('capture failed with ' + response.status);
+        const body = await response.json().catch(() => ({}));
+        const memoryId = body.createdMemoryIds?.[0] || body.record?.id || '';
+        captureShell.setAttribute('data-last-captured-memory', memoryId);
+      }
+      captureShell.setAttribute('data-quick-save-state', 'saved');
+      if (saveButton) saveButton.textContent = 'Saved';
+    } catch (error) {
+      captureShell.setAttribute('data-quick-save-state', 'error');
+      captureShell.setAttribute('data-quick-save-error', String(error?.message || error));
+    } finally {
+      saveButton?.setAttribute('aria-busy', 'false');
+    }
+  });
+})();
+`;
 
 export function renderPwaManifest(): string {
   return JSON.stringify(
@@ -259,6 +363,6 @@ export function renderAppCaptureDocument(): string {
     <title>Personal Memory AI Capture</title>
     <style>${CAPTURE_STYLES}</style>
   </head>
-  <body>${renderAppCaptureHtml()}</body>
+  <body>${renderAppCaptureHtml()}<script>${CAPTURE_SCRIPT}</script></body>
 </html>`;
 }

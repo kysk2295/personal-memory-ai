@@ -22,6 +22,9 @@ describe('release checklist', () => {
     ]);
     expect(checklist.prohibitedActions).toEqual(['push_remote', 'merge_main', 'deploy_production', 'print_secrets']);
     expect(checklist.humanApprovalRequiredFor).toEqual(['remote_push', 'main_merge', 'production_deploy', 'secret_access']);
+    expect(checklist.evidenceArtifacts).toContain(
+      'artifacts/web-second-brain-product-surface/local-app-capture-playwright.png',
+    );
     expect(JSON.stringify(checklist)).not.toContain('DATABASE_URL');
     expect(JSON.stringify(checklist)).not.toContain('secret-password');
     expect(JSON.stringify(checklist)).not.toContain('sk-');

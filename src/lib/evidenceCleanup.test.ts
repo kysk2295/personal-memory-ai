@@ -24,6 +24,12 @@ describe('selectEvidenceCleanupMemoryIds', () => {
         rawText: 'User correction: Playwright feedback smoke.',
       }),
       normalizeMemoryRecord({
+        id: 'mem_capture_playwright',
+        sourceType: 'mobile',
+        sourceRef: 'app-capture://pwa-local-device/2026-05-28T00%3A00%3A00.000Z',
+        rawText: 'Playwright capture memory playwright-capture-123 with manual hints.',
+      }),
+      normalizeMemoryRecord({
         id: 'mem_real_notion',
         sourceType: 'notion',
         sourceRef: 'notion://data-source/journal/page/real',
@@ -31,6 +37,11 @@ describe('selectEvidenceCleanupMemoryIds', () => {
       }),
     ];
 
-    expect(selectEvidenceCleanupMemoryIds(records)).toEqual(['mem_playwright_import', 'mem_saved_artifact', 'mem_feedback']);
+    expect(selectEvidenceCleanupMemoryIds(records)).toEqual([
+      'mem_playwright_import',
+      'mem_saved_artifact',
+      'mem_feedback',
+      'mem_capture_playwright',
+    ]);
   });
 });
