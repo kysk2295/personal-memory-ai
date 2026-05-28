@@ -110,19 +110,32 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
     'Guided service flow should start at capture',
   );
   assert((await attribute(page, '.second-brain-shell', 'data-workflow-focus')) === 'capture', 'Workflow focus should start at capture');
+  assert((await attribute(page, '.second-brain-shell', 'data-workflow-focus-mode')) === 'guided-collapse', 'Workflow focus should use guided collapse mode');
+  assert((await attribute(page, '.second-brain-shell', 'data-workflow-active-section')) === 'capture', 'Workflow active section should start at capture');
+  assert((await attribute(page, '.second-brain-shell', 'data-workflow-collapsed-section-count')) === '2', 'Two workflow sections should be collapsed at start');
+  assert((await attribute(page, '.product-value-strip', 'data-focus-collapse')) === 'enabled', 'Product command shelf should enable focus collapse');
   assert((await attribute(page, '[data-flow-focus-switcher="core-workflow"]', 'data-flow-focus-current')) === 'capture', 'Flow focus switcher should start at capture');
   assert((await attribute(page, '[data-workflow-section="capture"]', 'data-workflow-section-state')) === 'focused', 'Capture section should start focused');
+  assert((await attribute(page, '[data-workflow-section="capture"]', 'data-workflow-section-visibility')) === 'active', 'Capture section should start active');
+  assert((await attribute(page, '[data-workflow-section="graph"]', 'data-workflow-section-visibility')) === 'collapsed', 'Graph section should start collapsed');
+  assert(((await page.locator('[data-workflow-focus-note]').textContent()) || '').includes('기록 인입 허브'), 'Focus note should explain the visible capture step');
   await page.locator('[data-flow-focus-action="graph"]').click();
   assert((await attribute(page, '.second-brain-shell', 'data-workflow-focus')) === 'graph', 'Graph focus action should switch workflow focus');
+  assert((await attribute(page, '.second-brain-shell', 'data-workflow-active-section')) === 'graph', 'Graph focus should become active section');
   assert((await attribute(page, '[data-flow-focus-switcher="core-workflow"]', 'data-flow-focus-current')) === 'graph', 'Flow focus switcher should track graph mode');
   assert((await attribute(page, '[data-workflow-section="graph"]', 'data-workflow-section-state')) === 'focused', 'Graph section should become focused');
+  assert((await attribute(page, '[data-workflow-section="graph"]', 'data-workflow-section-visibility')) === 'active', 'Graph section should become active');
+  assert((await attribute(page, '[data-workflow-section="capture"]', 'data-workflow-section-visibility')) === 'collapsed', 'Capture section should collapse in graph focus');
   assert(((await page.locator('[data-flow-focus-label]').textContent()) || '').includes('세컨브레인'), 'Graph focus should use Korean second-brain label');
   await page.locator('[data-flow-focus-action="ai"]').click();
   assert((await attribute(page, '.second-brain-shell', 'data-workflow-focus')) === 'ai', 'AI focus action should switch workflow focus');
   assert((await attribute(page, '[data-workflow-section="ai"]', 'data-workflow-section-state')) === 'focused', 'AI section should become focused');
+  assert((await attribute(page, '[data-workflow-section="ai"]', 'data-workflow-section-visibility')) === 'active', 'AI section should become active');
+  assert(((await page.locator('[data-workflow-next-action]').textContent()) || '').includes('결과 저장'), 'AI focus should expose a Korean next action');
   assert(((await page.locator('[data-flow-focus-label]').textContent()) || '').includes('AI 결과'), 'AI focus should use Korean result label');
   await page.locator('[data-flow-focus-action="capture"]').click();
   assert((await attribute(page, '.second-brain-shell', 'data-workflow-focus')) === 'capture', 'Capture focus action should return to capture mode');
+  assert((await attribute(page, '[data-workflow-section="capture"]', 'data-workflow-section-visibility')) === 'active', 'Capture section should return to active');
   for (const step of ['capture', 'graph', 'related', 'ai', 'save']) {
     assert((await page.locator(`[data-guided-flow-step="${step}"]`).count()) === 1, `Missing guided service flow step ${step}`);
   }
@@ -557,9 +570,10 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
     null,
     { timeout: 20_000 },
   );
+  const intakeSessionSourceMemory = await attribute(page, '[data-memory-session-panel]', 'data-session-source-memory');
   assert(
-    (await attribute(page, '[data-memory-session-panel]', 'data-session-source-memory')) === intakeAppliedMemoryId,
-    'Intake result session button should run the guided session from the applied diary memory',
+    intakeSessionSourceMemory === intakeAppliedMemoryId,
+    `Intake result session button should run the guided session from the applied diary memory; expected ${intakeAppliedMemoryId}, got ${intakeSessionSourceMemory}`,
   );
   await page.waitForFunction(() => {
     const graph = document.querySelector('#memory-graph-cytoscape');

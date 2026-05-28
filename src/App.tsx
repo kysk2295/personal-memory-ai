@@ -377,11 +377,13 @@ const APP_SHELL_STYLES = `
     font-size: 10px;
   }
   .flow-focus-actions {
+    min-width: 0;
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 6px;
   }
   .flow-focus-actions button {
+    min-width: 0;
     min-height: 32px;
     border: 1px solid rgba(117, 122, 143, 0.14);
     border-radius: 8px;
@@ -390,6 +392,9 @@ const APP_SHELL_STYLES = `
     padding: 6px 8px;
     font-size: 11px;
     font-weight: 800;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .flow-focus-actions button[data-flow-focus-active="true"] {
     border-color: rgba(225, 29, 63, 0.3);
@@ -397,14 +402,31 @@ const APP_SHELL_STYLES = `
     color: #ffffff;
   }
   [data-workflow-section] {
-    transition: border-color 160ms ease, background 160ms ease, opacity 160ms ease;
+    transition: border-color 160ms ease, background 160ms ease, opacity 160ms ease, max-height 180ms ease;
   }
   [data-workflow-section-state="focused"] {
     border-color: rgba(225, 29, 63, 0.34) !important;
     background: rgba(255, 247, 249, 0.88) !important;
   }
   [data-workflow-section-state="muted"] {
-    opacity: 0.72;
+    opacity: 0.58;
+  }
+  .product-value-strip[data-focus-collapse="enabled"] [data-workflow-section-visibility="active"] {
+    max-height: none;
+    opacity: 1;
+  }
+  .product-value-strip[data-focus-collapse="enabled"] [data-workflow-section-visibility="collapsed"] {
+    max-height: 82px;
+    overflow: hidden;
+    position: relative;
+  }
+  .product-value-strip[data-focus-collapse="enabled"] [data-workflow-section-visibility="collapsed"]::after {
+    content: "";
+    position: absolute;
+    inset: auto 0 0;
+    height: 28px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.92));
+    pointer-events: none;
   }
   .prototype-goal-copy {
     min-width: 0;
@@ -2798,6 +2820,12 @@ const APP_SHELL_STYLES = `
   .product-value-strip[data-command-shelf="graph-led"] .guided-flow-actions {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+  .product-value-strip[data-command-shelf="graph-led"] .flow-focus-switcher {
+    grid-template-columns: 1fr;
+  }
+  .product-value-strip[data-command-shelf="graph-led"] .flow-focus-actions {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
   .product-value-strip[data-command-shelf="graph-led"] .prototype-journey-cockpit {
     grid-template-columns: 1fr;
   }
@@ -3709,7 +3737,7 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
     return `<main class="second-brain-shell"><aside class="brain-sidebar"><section class="brain-title"><p class="eyebrow">지식 그래프</p><h1>내 세컨브레인</h1><p>${escapeHtml(layout.northStar)}</p></section></aside></main>`;
   }
 
-  return `<main class="second-brain-shell" data-prototype-ux="korean-usable-mvp" data-product-goal="quick-diary-to-private-second-brain-ai" data-labels="visible" data-spacing="normal" data-layout-mode="free" data-layout-explainer="Free mode keeps the graph organic for open-ended memory exploration." data-layout-version="0" data-filter-semantic="on" data-filter-reflective="on" data-filter-procedural="on" data-filter-episodic="on" data-filter-thesis="on" data-filter-source="on" data-graph-renderer="cytoscape-pending" data-benchmark-reference="https://www.careerhackeralex.com/memory" data-memory-node-count="${memoryNodeCount}" data-rendered-memory-node-count="${renderedMemoryNodeCount}" data-graph-node-count="${graphNodeCount}" data-graph-edge-count="${graphEdgeCount}" data-surface-mode="graph-first" data-rail-mode="collapsed-evidence-drawer" data-first-screen-contract="korean-diary-flow-graph-dominant" data-panel-visibility="secondary-drawer" data-interaction-contract="capture-import-select-related-session-save" data-workflow-focus="capture">
+  return `<main class="second-brain-shell" data-prototype-ux="korean-usable-mvp" data-product-goal="quick-diary-to-private-second-brain-ai" data-labels="visible" data-spacing="normal" data-layout-mode="free" data-layout-explainer="Free mode keeps the graph organic for open-ended memory exploration." data-layout-version="0" data-filter-semantic="on" data-filter-reflective="on" data-filter-procedural="on" data-filter-episodic="on" data-filter-thesis="on" data-filter-source="on" data-graph-renderer="cytoscape-pending" data-benchmark-reference="https://www.careerhackeralex.com/memory" data-memory-node-count="${memoryNodeCount}" data-rendered-memory-node-count="${renderedMemoryNodeCount}" data-graph-node-count="${graphNodeCount}" data-graph-edge-count="${graphEdgeCount}" data-surface-mode="graph-first" data-rail-mode="collapsed-evidence-drawer" data-first-screen-contract="korean-diary-flow-graph-dominant" data-panel-visibility="secondary-drawer" data-interaction-contract="capture-import-select-related-session-save" data-workflow-focus="capture" data-workflow-focus-mode="guided-collapse" data-workflow-active-section="capture" data-workflow-collapsed-section-count="2">
     <aside class="brain-sidebar" aria-label="세컨브레인 그래프 조절">
       <div class="sidebar-topline">
         <a class="home-button" href="/" aria-label="home">←</a>
@@ -3809,7 +3837,7 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
         <button class="ask-submit" type="submit" aria-label="질문하기" data-control="ask-second-brain">→</button>
       </form>
 
-      <section class="product-value-strip" aria-label="Private memory product value" data-command-shelf="graph-led" data-benchmark-alignment="careerhacker-memory-graph-first" data-visible-priority="capture-import-ai-session" data-first-screen-density="compact-command-shelf">
+      <section class="product-value-strip" aria-label="Private memory product value" data-command-shelf="graph-led" data-benchmark-alignment="careerhacker-memory-graph-first" data-visible-priority="capture-import-ai-session" data-first-screen-density="compact-command-shelf" data-focus-collapse="enabled">
         <div class="prototype-goal-copy">
           <p class="eyebrow">개인 일기 세컨브레인</p>
           <h2>오늘 쓴 고민을 과거 기억과 연결해서 답하게 한다</h2>
@@ -3819,6 +3847,8 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
           <div class="flow-focus-copy">
             <strong data-flow-focus-label>기록부터</strong>
             <span data-flow-focus-summary>앱처럼 빠르게 쓰거나 일기 DB를 가져와 첫 기억을 만든다.</span>
+            <span data-workflow-focus-note>현재는 기록 인입 허브만 크게 본다. 그래프와 AI 결과는 아래에 접어둔다.</span>
+            <span data-workflow-next-action>다음 · 일기를 쓰거나 일기 DB를 가져오기</span>
           </div>
           <div class="flow-focus-actions" aria-label="흐름 단계 선택">
             <button type="button" data-flow-focus-action="capture" data-flow-focus-active="true">기록부터</button>
@@ -3885,7 +3915,7 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
             ${diaryInboxHtml}
           </div>
         </section>
-        <section class="memory-intake-hub" data-memory-intake-hub="app-web-diary" data-workflow-section="capture" data-workflow-section-state="focused" data-intake-stage="capture-or-import" data-intake-source-scope="diary-only" data-intake-result="graph-handoff" data-intake-last-action="none" data-intake-draft-state="idle" aria-label="기록 인입 허브">
+        <section class="memory-intake-hub" data-memory-intake-hub="app-web-diary" data-workflow-section="capture" data-workflow-section-state="focused" data-workflow-section-visibility="active" data-intake-stage="capture-or-import" data-intake-source-scope="diary-only" data-intake-result="graph-handoff" data-intake-last-action="none" data-intake-draft-state="idle" aria-label="기록 인입 허브">
           <div class="memory-intake-copy">
             <strong>기록 인입 허브</strong>
             <span>앱에서 짧게 쓰거나, 웹에서 일기만 붙여넣거나, 습관리스트 Notion DB를 불러오면 곧바로 개인 세컨브레인 그래프와 AI 세션으로 이어진다.</span>
@@ -4003,7 +4033,7 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
             <button type="button" class="first-run-action" data-guide-action="save-session" data-guide-state="ready">결과를 기억으로 저장</button>
           </div>
         </section>
-        <section class="selected-memory-path-panel" data-selected-memory-path="graph-related-session" data-workflow-section="graph" data-workflow-section-state="muted" data-selected-memory-source="${escapeHtml(currentFlowMemoryId)}" data-selected-memory-related-count="${currentFlowRelatedCount}" aria-label="선택한 기억에서 AI 세션으로 이어지는 경로">
+        <section class="selected-memory-path-panel" data-selected-memory-path="graph-related-session" data-workflow-section="graph" data-workflow-section-state="muted" data-workflow-section-visibility="collapsed" data-selected-memory-source="${escapeHtml(currentFlowMemoryId)}" data-selected-memory-related-count="${currentFlowRelatedCount}" aria-label="선택한 기억에서 AI 세션으로 이어지는 경로">
           <div class="selected-path-current">
             <p class="eyebrow">선택한 기억</p>
             <h3 data-selected-path-title>${escapeHtml(currentFlowEntry?.title ?? '그래프에서 기억을 선택하세요')}</h3>
@@ -4184,7 +4214,7 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
               <button type="button" data-reader-action="session">AI 세션</button>
             </div>
           </section>
-          <section class="memory-session-panel" aria-label="기억 AI 세션" data-memory-session-panel data-workflow-section="ai" data-workflow-section-state="muted" data-session-state="idle" data-session-source-memory="" data-session-related-memory-count="0">
+          <section class="memory-session-panel" aria-label="기억 AI 세션" data-memory-session-panel data-workflow-section="ai" data-workflow-section-state="muted" data-workflow-section-visibility="collapsed" data-session-state="idle" data-session-source-memory="" data-session-related-memory-count="0">
             <div>
               <p class="eyebrow">기억 AI 세션</p>
               <h3>선택한 기억 하나로 질문 · 결정 · 주간 패턴을 이어서 실행</h3>
@@ -4277,6 +4307,8 @@ const GRAPH_CONTROL_SCRIPT = `
   const flowFocusSwitcher = document.querySelector('[data-flow-focus-switcher="core-workflow"]');
   const flowFocusLabel = flowFocusSwitcher?.querySelector('[data-flow-focus-label]');
   const flowFocusSummary = flowFocusSwitcher?.querySelector('[data-flow-focus-summary]');
+  const flowFocusNote = flowFocusSwitcher?.querySelector('[data-workflow-focus-note]');
+  const flowFocusNextAction = flowFocusSwitcher?.querySelector('[data-workflow-next-action]');
   const flowFocusActions = Array.from(document.querySelectorAll('[data-flow-focus-action]'));
   const workflowSections = Array.from(document.querySelectorAll('[data-workflow-section]'));
   const relatedMemoryWorkbench = document.querySelector('[data-related-memory-workbench="selected-diary-comparison"]');
@@ -4435,6 +4467,7 @@ const GRAPH_CONTROL_SCRIPT = `
   let cytoscapeGraph = null;
   let layoutVersion = Number(shell.getAttribute('data-layout-version') || '0');
   let lastLocalImportPreview = null;
+  let lastLocalImportPreviewKind = 'idle';
   let lastLocalImportUndoAction = null;
   let lastAskFollowUpContext = null;
   let lastReplayRelatedContext = null;
@@ -4450,26 +4483,45 @@ const GRAPH_CONTROL_SCRIPT = `
     capture: {
       label: '기록부터',
       summary: '앱처럼 빠르게 쓰거나 일기 DB를 가져와 첫 기억을 만든다.',
+      note: '현재는 기록 인입 허브만 크게 본다. 그래프와 AI 결과는 아래에 접어둔다.',
+      next: '다음 · 일기를 쓰거나 일기 DB를 가져오기',
     },
     graph: {
       label: '세컨브레인 보기',
       summary: '그래프에서 현재 기억과 연관 과거 기억 경로를 확인한다.',
+      note: '현재는 선택한 기억과 연관 과거 기억 노드만 크게 본다. 기록과 AI 결과는 접어둔다.',
+      next: '다음 · 연관 기억을 확인하고 AI 세션 실행',
     },
     ai: {
       label: 'AI 결과',
       summary: '질문, 결정 되짚기, 주간 패턴 결과와 저장 상태를 확인한다.',
+      note: '현재는 AI가 근거로 삼은 기억과 결과 보드만 크게 본다. 기록과 그래프 경로는 접어둔다.',
+      next: '다음 · 결과 저장 또는 다시 질문하기',
     },
+  };
+
+  const updateWorkflowFocusSummary = (focus) => {
+    const copy = workflowFocusCopy[focus] || workflowFocusCopy.capture;
+    if (flowFocusLabel) flowFocusLabel.textContent = copy.label;
+    if (flowFocusSummary) flowFocusSummary.textContent = copy.summary;
+    if (flowFocusNote) flowFocusNote.textContent = copy.note;
+    if (flowFocusNextAction) flowFocusNextAction.textContent = copy.next;
   };
 
   const setWorkflowFocus = (focus) => {
     focus = workflowFocusCopy[focus] ? focus : 'capture';
     shell.setAttribute('data-workflow-focus', focus);
+    shell.setAttribute('data-workflow-active-section', focus);
     flowFocusSwitcher?.setAttribute('data-flow-focus-current', focus);
-    if (flowFocusLabel) flowFocusLabel.textContent = workflowFocusCopy[focus].label;
-    if (flowFocusSummary) flowFocusSummary.textContent = workflowFocusCopy[focus].summary;
+    updateWorkflowFocusSummary(focus);
+    let collapsedCount = 0;
     workflowSections.forEach((section) => {
-      section.setAttribute('data-workflow-section-state', section.getAttribute('data-workflow-section') === focus ? 'focused' : 'muted');
+      const isActive = section.getAttribute('data-workflow-section') === focus;
+      if (!isActive) collapsedCount += 1;
+      section.setAttribute('data-workflow-section-state', isActive ? 'focused' : 'muted');
+      section.setAttribute('data-workflow-section-visibility', isActive ? 'active' : 'collapsed');
     });
+    shell.setAttribute('data-workflow-collapsed-section-count', String(collapsedCount));
     flowFocusActions.forEach((button) => {
       button.setAttribute('data-flow-focus-active', String(button.getAttribute('data-flow-focus-action') === focus));
     });
@@ -5162,11 +5214,25 @@ const GRAPH_CONTROL_SCRIPT = `
   };
 
   const getIntakeMemorySessionContext = () => {
-    const sourceMemoryId = intakeSessionResult?.getAttribute('data-intake-applied-memory') || '';
-    const relatedMemoryIds = String(intakeRelatedBundle?.getAttribute('data-intake-related-memory-ids') || '')
+    const sourceMemoryId =
+      intakeSessionResult?.getAttribute('data-intake-applied-memory') ||
+      memoryIntakeHub?.getAttribute('data-intake-applied-memory') ||
+      shell.getAttribute('data-import-session-source-memory') ||
+      '';
+    const relatedFromBundle = String(intakeRelatedBundle?.getAttribute('data-intake-related-memory-ids') || '')
       .split(',')
       .map((item) => item.trim())
       .filter(Boolean);
+    const relatedFromChips = Array.from(intakeRelatedBundle?.querySelectorAll('[data-intake-related-memory-id]') || [])
+      .map((item) => item.getAttribute('data-intake-related-memory-id') || '')
+      .filter(Boolean);
+    const relatedMemoryIds = relatedFromBundle.length
+      ? relatedFromBundle
+      : relatedFromChips.length
+        ? relatedFromChips
+        : Array.from(relatedMemoryList?.querySelectorAll('[data-related-memory-id]') || [])
+            .map((item) => item.getAttribute('data-related-memory-id') || '')
+            .filter(Boolean);
     if (!sourceMemoryId || !relatedMemoryIds.length) return null;
     return { sourceMemoryId, relatedMemoryIds };
   };
@@ -7519,6 +7585,7 @@ const GRAPH_CONTROL_SCRIPT = `
         }
         if (!response.ok) throw new Error('notion import preview failed with ' + response.status);
         lastLocalImportPreview = (await response.json()).preview;
+        lastLocalImportPreviewKind = 'notion-diary';
       }
       const records = lastLocalImportPreview?.records || [];
       renderImportPreviewRows(records);
@@ -7530,7 +7597,7 @@ const GRAPH_CONTROL_SCRIPT = `
       }
       importApplyButton?.removeAttribute('disabled');
       setInteractionState('notion-import-preview-ready');
-      if (pendingIntakeNotionApplyAfterPreview) {
+      if (pendingIntakeNotionApplyAfterPreview && memoryIntakeHub?.getAttribute('data-intake-last-action') === 'apply-notion-diary') {
         pendingIntakeNotionApplyAfterPreview = false;
         importApplyButton?.click();
       }
@@ -7543,6 +7610,7 @@ const GRAPH_CONTROL_SCRIPT = `
 
   importPreviewButton?.addEventListener('click', async () => {
     if (!importUploadPanel) return;
+    const previewKind = pendingIntakeApplyAfterPreview ? 'manual-diary' : 'local-upload';
     if (!pendingIntakeApplyAfterPreview && memoryIntakeHub?.getAttribute('data-intake-last-action') === 'apply-diary') {
       memoryIntakeHub.setAttribute('data-intake-last-action', 'local-import');
     }
@@ -7572,6 +7640,7 @@ const GRAPH_CONTROL_SCRIPT = `
         });
         if (!response.ok) throw new Error('import preview failed with ' + response.status);
         lastLocalImportPreview = (await response.json()).preview;
+        lastLocalImportPreviewKind = previewKind;
       } else {
         lastLocalImportPreview = {
           batchId: draft.batchId,
@@ -7586,6 +7655,7 @@ const GRAPH_CONTROL_SCRIPT = `
             },
           })),
         };
+        lastLocalImportPreviewKind = previewKind;
       }
       renderImportPreviewRows(lastLocalImportPreview.records);
       importUploadPanel.setAttribute('data-import-upload-state', 'preview-ready');
@@ -7605,6 +7675,7 @@ const GRAPH_CONTROL_SCRIPT = `
 
   importApplyButton?.addEventListener('click', async () => {
     if (!importUploadPanel || !lastLocalImportPreview) return;
+    const applyKind = lastLocalImportPreviewKind;
     const importApplyEndpoint = importUploadPanel.getAttribute('data-import-apply-endpoint') || '';
     importUploadPanel.setAttribute('data-import-upload-state', 'applying');
     let appliedMemoryId = '';
@@ -7636,7 +7707,7 @@ const GRAPH_CONTROL_SCRIPT = `
         lastLocalImportUndoAction = { enabled: true, appliedMemoryRecordIds: createdMemoryIds };
         renderAppliedImportFeedback(createdMemoryIds, graphEvidenceRecords);
         if (lastLocalImportUndoAction.enabled) importUndoButton?.removeAttribute('disabled');
-        const isIntakeDiaryApply = memoryIntakeHub?.getAttribute('data-intake-last-action') === 'apply-diary';
+        const isIntakeDiaryApply = applyKind === 'manual-diary';
         if (!isIntakeDiaryApply) {
           shell.setAttribute('data-graph-rehydrate-state', 'ready');
           shell.setAttribute('data-graph-rebuild-state', 'rebuilt');
@@ -7655,12 +7726,13 @@ const GRAPH_CONTROL_SCRIPT = `
         }
       }
       importUploadPanel.setAttribute('data-import-upload-state', 'applied');
-      if (memoryIntakeHub?.getAttribute('data-intake-last-action') === 'apply-diary') {
+      if (applyKind === 'manual-diary') {
         memoryIntakeHub?.setAttribute('data-intake-draft-state', 'applied');
         memoryIntakeHub?.setAttribute('data-intake-result', 'graph-applied');
+        memoryIntakeHub?.setAttribute('data-intake-last-action', 'apply-diary');
         updateIntakeSessionResult(appliedMemoryId || shell.getAttribute('data-import-session-source-memory') || '');
       }
-      if (memoryIntakeHub?.getAttribute('data-intake-last-action') === 'apply-notion-diary') {
+      if (applyKind === 'notion-diary' && memoryIntakeHub?.getAttribute('data-intake-last-action') === 'apply-notion-diary') {
         memoryIntakeHub?.setAttribute('data-intake-result', 'notion-graph-applied');
         updateIntakeSessionResult(appliedMemoryId || shell.getAttribute('data-import-session-source-memory') || '');
       }
@@ -7833,9 +7905,15 @@ const GRAPH_CONTROL_SCRIPT = `
   });
   intakeSaveAiResultButton?.addEventListener('click', saveLatestIntakeAiResult);
   intakeRunSessionButton?.addEventListener('click', () => {
+    const context = getIntakeMemorySessionContext();
     intakeSessionResult?.setAttribute('data-intake-next-step', 'memory-session-running');
     memoryIntakeHub?.setAttribute('data-intake-next-step', 'memory-session-running');
-    void runMemorySession(getIntakeMemorySessionContext());
+    if (context) setWorkflowFocus('ai');
+    void runMemorySession(context).then(() => {
+      if (context && shell.getAttribute('data-memory-session-state') === 'completed') {
+        setMemorySessionState('completed', context);
+      }
+    });
   });
   captureHandoffRunSessionButton?.addEventListener('click', () => {
     updateCaptureHandoffBanner('session-running', captureHandoffBanner?.getAttribute('data-capture-handoff-memory') || shell.getAttribute('data-capture-handoff-selected-memory') || '', captureHandoffBanner?.getAttribute('data-capture-handoff-related-count') || shell.getAttribute('data-capture-handoff-related-count') || '0');
