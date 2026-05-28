@@ -282,11 +282,29 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   assert((await attribute(page, '.second-brain-shell', 'data-graph-rebuild-state')) === 'rebuilt', 'Shell should rebuild Cytoscape after import rehydration');
   const rehydratedMemoryNodeCount = Number(await attribute(page, '.second-brain-shell', 'data-rehydrated-memory-node-count'));
   assert(rehydratedMemoryNodeCount > 8, 'Rehydrated app shell should include newly imported private memories');
+  const importedMemoryId = (await attribute(page, '.second-brain-shell', 'data-import-session-source-memory')) || '';
+  assert(importedMemoryId, 'Import handoff should expose the imported memory session source');
+  assert((await attribute(page, '.second-brain-shell', 'data-active-memory')) === importedMemoryId, 'Import handoff should select the imported memory');
+  assert(
+    Number(await attribute(page, '.second-brain-shell', 'data-import-session-related-memory-count')) > 0,
+    'Import handoff should expose related memories for the imported memory',
+  );
+  assert((await attribute(page, '.second-brain-shell', 'data-import-session-state')) === 'ready', 'Import handoff should prepare a memory session');
   const rebuiltGraphStats = await page.evaluate(() => {
     const graph = (window as any).__personalMemoryGraph;
     return graph?.stats;
   });
   assert(rebuiltGraphStats?.memoryNodeCount > 8, 'Rebuilt Cytoscape graph should include newly imported private memories');
+  await page.locator('[data-control="run-memory-session"]').click();
+  await page.waitForFunction(
+    () => document.querySelector('.second-brain-shell')?.getAttribute('data-memory-session-state') === 'completed',
+    null,
+    { timeout: 20_000 },
+  );
+  assert(
+    (await attribute(page, '[data-memory-session-panel]', 'data-session-source-memory')) === importedMemoryId,
+    'Imported memory handoff should run the guided session from the imported memory',
+  );
   await page.locator('[data-control="undo-local-import"]').click();
   await page.waitForFunction(() => document.querySelector('[data-import-upload-panel="local-file"]')?.getAttribute('data-import-upload-state') === 'undone');
   assert((await attribute(page, '.second-brain-shell', 'data-interaction-state')) === 'import-undone', 'Shell should expose local import undo state');
@@ -661,6 +679,7 @@ try {
           'feedback correction action',
           'local import upload preview',
           'local import upload apply',
+          'import to guided memory session handoff',
           'applied import graph feedback',
           'applied import timeline append',
           'app shell rehydration after import',

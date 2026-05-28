@@ -235,6 +235,7 @@ No remote push, main merge, production deploy, or secret access is allowed witho
 - L85: related context API grounding.
 - L86: related context result evidence.
 - L87: guided memory session.
+- L88: import to guided memory session handoff.
 
 ## 6. Active Next Loops
 
@@ -1673,6 +1674,22 @@ Acceptance:
 - session action carries the selected source memory and related memory ids through Ask, Decision Replay, and Weekly Report
 - session panel shows source memory, related memory count, and step states for Ask/Replay/Weekly
 - Playwright verifies the full graph selection to guided session completion path
+
+Implemented:
+
+- `src/App.tsx`
+- `scripts/verify-playwright-evidence.ts`
+
+### L88 — Import To Guided Memory Session Handoff
+
+Goal: after a diary/local import is applied, automatically select the new memory in the graph and make it ready for a Guided Memory Session.
+
+Acceptance:
+
+- import apply rehydrates the owner-scoped graph and selects the first created memory
+- selected imported memory exposes related past-memory count and session-ready state
+- imported memory can immediately run Guided Memory Session through Ask, Decision Replay, and Weekly Report
+- undo clears import session handoff state with the imported memory cleanup
 
 Implemented:
 

@@ -3553,12 +3553,30 @@ const GRAPH_CONTROL_SCRIPT = `
     shell.setAttribute('data-import-undone-count', String(deletedCount || 0));
     shell.setAttribute('data-import-applied-memory-ids', '');
     shell.setAttribute('data-graph-import-pending', 'false');
+    shell.setAttribute('data-import-session-source-memory', '');
+    shell.setAttribute('data-import-session-related-memory-count', '0');
+    shell.setAttribute('data-import-session-state', 'undone');
     if (importAppliedFeedback) importAppliedFeedback.setAttribute('data-import-applied-count', '0');
     if (importAppliedMemoryList) importAppliedMemoryList.innerHTML = '';
     if (importUndoButton) importUndoButton.setAttribute('disabled', '');
   };
 
-  const rehydrateAppShellAfterImport = async () => {
+  const prepareImportedMemorySession = (targetMemoryId) => {
+    if (!targetMemoryId) return;
+    const selected = selectHandoffMemoryFromGraph(targetMemoryId);
+    if (!selected) return;
+    shell.setAttribute('data-import-session-source-memory', targetMemoryId);
+    shell.setAttribute('data-import-session-related-memory-count', shell.getAttribute('data-related-memory-count') || '0');
+    shell.setAttribute('data-import-session-state', 'ready');
+    setMemorySessionState('ready', {
+      sourceMemoryId: targetMemoryId,
+      relatedMemoryIds: Array.from(relatedMemoryList?.querySelectorAll('[data-related-memory-id]') || [])
+        .map((item) => item.getAttribute('data-related-memory-id') || '')
+        .filter(Boolean),
+    });
+  };
+
+  const rehydrateAppShellAfterImport = async (targetMemoryId) => {
     if (window.location.protocol === 'file:') return;
     shell.setAttribute('data-graph-rehydrate-state', 'loading');
     try {
@@ -3584,7 +3602,11 @@ const GRAPH_CONTROL_SCRIPT = `
       if (searchCount) searchCount.textContent = String(appShell.primaryNodes?.length || 0) + ' / ' + String(appShell.primaryNodes?.length || 0);
       if (timelinePanel) timelinePanel.setAttribute('data-timeline-entry-count', String(appShell.memoryTimeline?.entries?.length || 0));
       rebuildCytoscapeGraphFromModel(memoryGraph);
-      selectHandoffMemoryFromGraph(handoffMemoryId);
+      if (targetMemoryId) {
+        prepareImportedMemorySession(targetMemoryId);
+      } else {
+        selectHandoffMemoryFromGraph(handoffMemoryId);
+      }
     } catch (error) {
       shell.setAttribute('data-graph-rehydrate-state', 'error');
       shell.setAttribute('data-graph-rehydrate-error', String(error?.message || error));
@@ -3805,7 +3827,7 @@ const GRAPH_CONTROL_SCRIPT = `
         lastLocalImportUndoAction = body.undoAction || null;
         renderAppliedImportFeedback(body.createdMemoryIds || [], body.graphEvidenceRecords || []);
         if (lastLocalImportUndoAction?.enabled) importUndoButton?.removeAttribute('disabled');
-        await rehydrateAppShellAfterImport();
+        await rehydrateAppShellAfterImport(body.createdMemoryIds?.[0] || '');
       }
       importUploadPanel.setAttribute('data-import-upload-state', 'applied');
       setInteractionState('import-applied');
