@@ -1089,6 +1089,10 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(documentHtml).toContain("useNowRouteBoard?.setAttribute('data-use-now-route-ai-state'");
     expect(documentHtml).toContain("useNowRouteBoard?.setAttribute('data-use-now-route-save-state'");
     expect(documentHtml).toContain("shell.setAttribute('data-use-now-route-state'");
+    expect(documentHtml).toContain("updateUseNowRouteBoard({");
+    expect(documentHtml).toContain("state: state === 'completed' ? 'ai-workbench'");
+    expect(documentHtml).toContain("aiState: state === 'completed' ? 'answered'");
+    expect(documentHtml).toContain("saveState: state === 'completed' ? 'ready'");
     expect(documentHtml).toContain("useNowRouteActions.forEach((button) =>");
     expect(documentHtml).toContain('const updateFlowCoach =');
     expect(documentHtml).toContain("flowCoach?.setAttribute('data-flow-coach-stage', stage)");

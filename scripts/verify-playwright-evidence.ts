@@ -743,6 +743,22 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
     intakeSessionSourceMemory === intakeAppliedMemoryId,
     `Intake result session button should run the guided session from the applied diary memory; expected ${intakeAppliedMemoryId}, got ${intakeSessionSourceMemory}`,
   );
+  assert(
+    (await attribute(page, '[data-use-now-route-board="live"]', 'data-use-now-route-memory')) === intakeAppliedMemoryId,
+    'Use-now route board should keep the applied diary memory after guided AI session',
+  );
+  assert(
+    (await attribute(page, '[data-use-now-route-board="live"]', 'data-use-now-route-state')) === 'ai-workbench',
+    'Use-now route board should move to AI workbench after guided AI session completes',
+  );
+  assert(
+    (await attribute(page, '[data-use-now-route-board="live"]', 'data-use-now-route-ai-state')) === 'answered',
+    'Use-now route board should show answered AI state after guided session',
+  );
+  assert(
+    (await attribute(page, '[data-use-now-route-board="live"]', 'data-use-now-route-save-state')) === 'ready',
+    'Use-now route board should show save-ready state after guided session',
+  );
   await page.waitForFunction(() => {
     const graph = document.querySelector('#memory-graph-cytoscape');
     const fallback = document.querySelector('.graph-workspace');

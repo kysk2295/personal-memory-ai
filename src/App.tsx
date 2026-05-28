@@ -5978,6 +5978,13 @@ const GRAPH_CONTROL_SCRIPT = `
           currentCitationList('data-live-weekly-highlighted-memories').length,
         saveState: state === 'completed' ? 'ready' : 'idle',
       });
+      updateUseNowRouteBoard({
+        state: state === 'completed' ? 'ai-workbench' : state === 'running' ? 'ai-workbench' : 'related',
+        sourceMemoryId: context.sourceMemoryId,
+        relatedCount: context.relatedMemoryIds.length,
+        aiState: state === 'completed' ? 'answered' : state === 'running' ? 'running' : 'ready',
+        saveState: state === 'completed' ? 'ready' : 'idle',
+      });
       updateSelectedMemoryReader({
         sourceMemoryId: context.sourceMemoryId,
         relatedCount: context.relatedMemoryIds.length,
@@ -6002,12 +6009,16 @@ const GRAPH_CONTROL_SCRIPT = `
       updateGuidedServiceFlow('ai', {
         sourceMemoryId: context?.sourceMemoryId || shell.getAttribute('data-active-memory') || '',
         relatedCount: context?.relatedMemoryIds?.length ?? shell.getAttribute('data-related-memory-count') ?? '0',
+        aiState: 'running',
+        saveState: 'idle',
       });
       updateFlowCoach('ai-running', 'wait-for-session', 'AI 고민 세션 실행 중', '질문, 결정 되짚기, 주간 패턴을 같은 기억 묶음으로 처리하고 있다.');
     } else if (state === 'completed') {
       updateGuidedServiceFlow('ai', {
         sourceMemoryId: context?.sourceMemoryId || shell.getAttribute('data-active-memory') || '',
         relatedCount: context?.relatedMemoryIds?.length ?? shell.getAttribute('data-related-memory-count') ?? '0',
+        aiState: 'answered',
+        saveState: 'ready',
       });
       updateFlowCoach('ai-ready', 'save-session', 'AI 세션이 끝났다', '결과가 준비됐다. 세션 저장을 누르면 이 판단도 미래의 과거 기억으로 남는다.');
     }
