@@ -1344,6 +1344,23 @@ Implemented:
 - `src/lib/appShellEvidenceLayout.test.ts`
 - `scripts/verify-playwright-evidence.ts`
 
+### L70 — Lightweight App Shell And Memory Search API
+
+Goal: keep the first web rehydration path small enough for large local vaults while preserving full-vault search through an explicit API.
+
+Acceptance:
+
+- `/api/memory/search` returns owner-scoped, paged, lightweight memory records
+- search results never expose another user's private memory ids
+- app-shell HTTP payload caps record, primary-node, and timeline samples
+- memory graph stats still preserve the full memory count and rendered graph count
+- large raw text bodies are summarized in both app-shell and search responses
+
+Implemented:
+
+- `src/lib/personalMemoryApi.ts`
+- `src/lib/personalMemoryApi.test.ts`
+
 ## 8. MVP Time Estimate
 
 Assuming focused local development without major dependency or deployment blockers:

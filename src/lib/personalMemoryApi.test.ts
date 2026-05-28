@@ -1018,6 +1018,92 @@ describe('personal memory API boundary', () => {
     expect(JSON.stringify(response.body)).not.toContain('Large app shell raw body '.repeat(20).trim());
   });
 
+  test('caps app shell record, search, and timeline samples while preserving full graph stats', async () => {
+    const store = createMemoryStore({ env: {} });
+    const records = Array.from({ length: 350 }, (_, index) => ({
+      ...personalMemoryRecords[0],
+      id: `mem_large_app_shell_sample_${index}`,
+      summary: `Large app shell sample ${index}`,
+      rawText: `Large app shell sample raw body ${index} `.repeat(100),
+      observedAt: `2026-05-${String((index % 28) + 1).padStart(2, '0')}`,
+    }));
+    for (const record of records) {
+      await store.create('user-a', record);
+    }
+
+    const response = await handlePersonalMemoryApiRequest({
+      store,
+      userId: 'user-a',
+      request: {
+        method: 'GET',
+        path: '/api/app-shell',
+      },
+    });
+
+    expect(response.statusCode).toBe(200);
+    const body = response.body as {
+      appShell: {
+        records: MemoryRecord[];
+        primaryNodes: unknown[];
+        memoryTimeline: { entries: unknown[]; summary: { totalMemoryCount: number } };
+      };
+      memoryGraph: { stats: { memoryNodeCount: number; renderedMemoryNodeCount: number } };
+    };
+    expect(body.memoryGraph.stats.memoryNodeCount).toBe(353);
+    expect(body.memoryGraph.stats.renderedMemoryNodeCount).toBe(300);
+    expect(body.appShell.records).toHaveLength(300);
+    expect(body.appShell.primaryNodes).toHaveLength(100);
+    expect(body.appShell.memoryTimeline.entries).toHaveLength(100);
+    expect(body.appShell.memoryTimeline.summary.totalMemoryCount).toBe(353);
+  });
+
+  test('searches owner-scoped memories with lightweight paged results', async () => {
+    const store = createMemoryStore({ env: {} });
+    await store.create('user-a', {
+      ...personalMemoryRecords[0],
+      id: 'mem_search_large_launch_note',
+      summary: 'Launch search result memory.',
+      rawText: 'Large searchable-vault-result body '.repeat(1_000),
+      topicTags: ['launch'],
+    });
+    await store.create('user-a', {
+      ...personalMemoryRecords[1],
+      id: 'mem_search_unmatched_note',
+      summary: 'Quiet unrelated memory.',
+      rawText: 'Nothing about the requested term.',
+      topicTags: ['quiet'],
+    });
+    await store.create('user-b', {
+      ...personalMemoryRecords[2],
+      id: 'mem_other_user_search_guard',
+      summary: 'Launch search result for somebody else.',
+      rawText: 'This should stay private.',
+      topicTags: ['launch'],
+    });
+
+    const response = await handlePersonalMemoryApiRequest({
+      store,
+      userId: 'user-a',
+      request: {
+        method: 'POST',
+        path: '/api/memory/search',
+      body: {
+          query: 'searchable-vault-result',
+          limit: 1,
+        },
+      },
+    });
+
+    expect(response.statusCode).toBe(200);
+    const body = response.body as { totalMatchCount: number; limit: number; records: MemoryRecord[] };
+    expect(body.totalMatchCount).toBe(1);
+    expect(body.limit).toBe(1);
+    expect(body.records.map((record) => record.id)).toEqual(['mem_search_large_launch_note']);
+    expect(body.records[0].rawText.length).toBeLessThanOrEqual(240);
+    expect(JSON.stringify(response.body)).not.toContain('mem_other_user_search_guard');
+    expect(JSON.stringify(response.body)).not.toContain('Large searchable-vault-result body '.repeat(20).trim());
+  });
+
   test('persists user feedback corrections inside one private memory scope', async () => {
     const store = createMemoryStore({ env: {} });
     await store.create('user-a', personalMemoryRecords[0]);

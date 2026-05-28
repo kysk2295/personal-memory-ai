@@ -11,10 +11,11 @@ import { buildMemoryGraphModel } from './memoryGraphModel';
 import {
   buildMemoryReviewLedgerEntry,
   buildMemoryReviewLedgerRecord,
+  isMemoryReviewLedgerRecord,
   listMemoryReviewLedgerEntries,
 } from './memoryReviewLedger';
 import { buildMemoryProvenanceExport } from './memoryProvenanceExport';
-import { summarizeRawText } from './memoryRecord';
+import { summarizeRawText, type MemoryRecord } from './memoryRecord';
 import type { MemoryStore } from './memoryStore';
 import { queryNotionDatabaseImportCandidates, queryNotionImportSources, type NotionFetch } from './notionImport';
 import { answerPersonalMemoryQuestion } from './personalMemoryAgent';
@@ -33,6 +34,7 @@ export type PersonalMemoryApiPath =
   | '/api/app-shell'
   | '/api/capture'
   | '/api/memory/detail'
+  | '/api/memory/search'
   | '/api/memory/provenance-download'
   | '/api/memory/provenance-export'
   | '/api/memory/review-history'
@@ -102,6 +104,12 @@ interface ImportUndoBody {
 
 interface MemoryDetailBody {
   memoryId?: string;
+}
+
+interface MemorySearchBody {
+  query?: string;
+  limit?: number;
+  offset?: number;
 }
 
 interface MemoryProvenanceExportBody {
@@ -199,13 +207,75 @@ function notionConnectorErrorResponse(error: unknown, fallbackError: string): Pe
   return { statusCode: 502, body: { error: fallbackError } };
 }
 
-function lightweightAppShellRecords<T extends { records: Array<{ rawText: string }> }>(appShell: T): T {
+const APP_SHELL_RECORD_SAMPLE_LIMIT = 300;
+const APP_SHELL_SEARCH_SAMPLE_LIMIT = 100;
+const APP_SHELL_TIMELINE_SAMPLE_LIMIT = 100;
+
+function lightweightAppShellRecords<
+  T extends {
+    records: Array<{ rawText: string }>;
+    primaryNodes?: unknown[];
+    memoryTimeline?: { entries?: unknown[] };
+  },
+>(appShell: T): T {
   return {
     ...appShell,
-    records: appShell.records.map((record) => ({
+    records: appShell.records.slice(0, APP_SHELL_RECORD_SAMPLE_LIMIT).map((record) => ({
       ...record,
       rawText: summarizeRawText(record.rawText, 240),
     })),
+    primaryNodes: appShell.primaryNodes?.slice(0, APP_SHELL_SEARCH_SAMPLE_LIMIT),
+    memoryTimeline: appShell.memoryTimeline
+      ? {
+          ...appShell.memoryTimeline,
+          entries: appShell.memoryTimeline.entries?.slice(0, APP_SHELL_TIMELINE_SAMPLE_LIMIT),
+        }
+      : appShell.memoryTimeline,
+  };
+}
+
+function normalizeSearchLimit(value: unknown): number {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return 25;
+  return Math.max(1, Math.min(100, Math.floor(value)));
+}
+
+function normalizeSearchOffset(value: unknown): number {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return 0;
+  return Math.max(0, Math.floor(value));
+}
+
+function searchableMemoryText(record: MemoryRecord): string {
+  return [
+    record.summary,
+    record.rawText,
+    record.memoryType,
+    record.sourceType,
+    record.sourceRef,
+    record.observedAt,
+    record.decisionSignal,
+    record.outcomeText,
+    ...record.emotionTags,
+    ...record.topicTags,
+    ...record.projectTags,
+    ...record.peopleTags,
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLocaleLowerCase();
+}
+
+function compareNewestMemoryFirst(left: MemoryRecord, right: MemoryRecord): number {
+  const rightDate = right.observedAt ?? right.createdAt;
+  const leftDate = left.observedAt ?? left.createdAt;
+  const dateComparison = rightDate.localeCompare(leftDate);
+  if (dateComparison !== 0) return dateComparison;
+  return left.id.localeCompare(right.id);
+}
+
+function lightweightMemoryRecord(record: MemoryRecord): MemoryRecord {
+  return {
+    ...record,
+    rawText: summarizeRawText(record.rawText, 240),
   };
 }
 
@@ -262,6 +332,28 @@ export async function handlePersonalMemoryApiRequest(
     if (!memory) return { statusCode: 404, body: { error: 'memory_not_found' } };
     const reviewHistory = listMemoryReviewLedgerEntries(await store.listByUser(userId), memory.id);
     return { statusCode: 200, body: { memory, reviewHistory } };
+  }
+
+  if (request.path === '/api/memory/search') {
+    if (request.method !== 'POST') return methodNotAllowed();
+    const body = readBody<MemorySearchBody>(request.body);
+    const query = sanitizeOptionalText(body?.query)?.toLocaleLowerCase() ?? '';
+    const limit = normalizeSearchLimit(body?.limit);
+    const offset = normalizeSearchOffset(body?.offset);
+    const records = (await store.listByUser(userId))
+      .filter((record) => !isMemoryReviewLedgerRecord(record))
+      .filter((record) => !query || searchableMemoryText(record).includes(query))
+      .sort(compareNewestMemoryFirst);
+    return {
+      statusCode: 200,
+      body: {
+        query,
+        limit,
+        offset,
+        totalMatchCount: records.length,
+        records: records.slice(offset, offset + limit).map(lightweightMemoryRecord),
+      },
+    };
   }
 
   if (request.path === '/api/memory/review-history') {
