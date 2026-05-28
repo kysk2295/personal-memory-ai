@@ -2405,7 +2405,7 @@ const APP_SHELL_STYLES = `
     pointer-events: auto;
     top: 84px;
     left: 18px;
-    width: min(300px, calc(100vw - 36px));
+    width: min(248px, calc(100vw - 36px));
     max-height: calc(100vh - 96px);
     grid-template-columns: 1fr;
     gap: 9px;

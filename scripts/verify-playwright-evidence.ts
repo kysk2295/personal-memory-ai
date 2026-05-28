@@ -170,6 +170,22 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
     return !(inspector.right <= rail.left || rail.right <= inspector.left || inspector.bottom <= rail.top || rail.bottom <= inspector.top);
   });
   assert(!inspectorRailOverlap, 'Selected memory inspector should not overlap the AI session/evidence rail');
+  const commandShelfRailOverlap = await page.evaluate(() => {
+    const shelf = document.querySelector('.product-value-strip[data-command-shelf="graph-led"]')?.getBoundingClientRect();
+    const rail = document.querySelector('.product-rail')?.getBoundingClientRect();
+    if (!shelf || !rail) return true;
+    return !(shelf.right <= rail.left || rail.right <= shelf.left || shelf.bottom <= rail.top || rail.bottom <= shelf.top);
+  });
+  assert(!commandShelfRailOverlap, 'Diary handoff shelf should not overlap the AI session/evidence rail');
+  const importApplyClickable = await page.evaluate(() => {
+    const button = document.querySelector('[data-control="apply-local-import"]');
+    if (!button) return false;
+    button.scrollIntoView({ block: 'center' });
+    const box = button.getBoundingClientRect();
+    const hit = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2);
+    return hit === button || Boolean(hit?.closest('[data-control="apply-local-import"]'));
+  });
+  assert(importApplyClickable, 'Local import apply button should not be covered by the diary handoff shelf');
   await page.locator('[data-guide-action="import-diary"]').click();
   assert((await attribute(page, '.second-brain-shell', 'data-first-run-last-action')) === 'import-diary', 'First-run import action should update shell state');
   assert((await attribute(page, '.second-brain-shell', 'data-interaction-state')) === 'diary-import-focused', 'First-run import action should focus diary import');
