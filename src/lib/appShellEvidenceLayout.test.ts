@@ -671,6 +671,12 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('data-related-insight-action="replay"');
     expect(html).toContain('data-related-insight-action="weekly"');
     expect(html).toContain('과거 기억으로 질문하기');
+    expect(html).toContain('data-grounded-action-result="related-memory-ai"');
+    expect(html).toContain('data-grounded-action-state="idle"');
+    expect(html).toContain('근거 있는 실행 결과');
+    expect(html).toContain('data-grounded-action-source');
+    expect(html).toContain('data-grounded-action-summary');
+    expect(html).toContain('data-grounded-action-save-next');
 
     expect(html).toContain('class="product-rail"');
     expect(html).toContain('빠른 일기 기록');
@@ -904,6 +910,10 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(documentHtml).toContain('relatedInsightReasonList.replaceChildren()');
     expect(documentHtml).toContain("reasonCard.setAttribute('data-related-insight-memory-id', item.id)");
     expect(documentHtml).toContain("setInteractionState('related-insight-ask-ready')");
+    expect(documentHtml).toContain("const groundedActionResult = document.querySelector('[data-grounded-action-result=\"related-memory-ai\"]')");
+    expect(documentHtml).toContain('const renderGroundedActionResult = (kind, context, citationCount) =>');
+    expect(documentHtml).toContain("groundedActionResult?.setAttribute('data-grounded-action-state', 'ready')");
+    expect(documentHtml).toContain("groundedActionResult?.setAttribute('data-grounded-action-kind', kind)");
     expect(documentHtml).toContain("cytoscapeGraph.elements().removeClass('related-memory related-facet related-edge')");
     expect(documentHtml).toContain("candidate.addClass('related-memory')");
     expect(documentHtml).toContain("facetNode.addClass('related-facet')");

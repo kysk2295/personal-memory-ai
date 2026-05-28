@@ -681,6 +681,14 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
       Number(await attribute(page, '[data-context-result="ask-related"]', 'data-context-related-memory-count')) > 0,
       'Ask result should render a related-context evidence badge',
     );
+    assert(
+      (await attribute(page, '[data-grounded-action-result="related-memory-ai"]', 'data-grounded-action-kind')) === 'ask',
+      'Grounded action result strip should summarize Ask action context',
+    );
+    assert(
+      (await attribute(page, '[data-grounded-action-result="related-memory-ai"]', 'data-grounded-action-source')) === firstCitation,
+      'Grounded action result strip should preserve selected source memory',
+    );
   }
   await page.locator('[data-control="replay-with-related-memory-context"]').click();
   assert((await attribute(page, '.second-brain-shell', 'data-replay-context-source-memory')) === firstCitation, 'Related-memory replay action should seed the selected memory as context');
@@ -701,6 +709,10 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
       Number(await attribute(page, '[data-context-result="replay-related"]', 'data-context-related-memory-count')) > 0,
       'Decision Replay result should render a related-context evidence badge',
     );
+    assert(
+      (await attribute(page, '[data-grounded-action-result="related-memory-ai"]', 'data-grounded-action-kind')) === 'replay',
+      'Grounded action result strip should summarize Decision Replay context',
+    );
   }
   await page.locator('[data-control="report-with-related-memory-context"]').click();
   assert((await attribute(page, '.second-brain-shell', 'data-weekly-context-source-memory')) === firstCitation, 'Related-memory report action should seed the selected memory as context');
@@ -720,6 +732,10 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
     assert(
       Number(await attribute(page, '[data-context-result="weekly-related"]', 'data-context-related-memory-count')) > 0,
       'Weekly Report result should render a related-context evidence badge',
+    );
+    assert(
+      (await attribute(page, '[data-grounded-action-result="related-memory-ai"]', 'data-grounded-action-kind')) === 'weekly',
+      'Grounded action result strip should summarize Weekly Report context',
     );
     await page.locator('[data-control="run-memory-session"]').click();
     await page.waitForFunction(

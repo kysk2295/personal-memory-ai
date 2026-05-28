@@ -1346,6 +1346,35 @@ const APP_SHELL_STYLES = `
     font-weight: 760;
     cursor: pointer;
   }
+  .grounded-action-result {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: minmax(120px, 0.42fr) minmax(0, 1fr);
+    gap: 8px;
+    min-width: 0;
+    border: 1px solid rgba(225, 29, 63, 0.16);
+    border-radius: 8px;
+    background: rgba(255, 241, 243, 0.78);
+    padding: 9px 10px;
+  }
+  .grounded-action-result strong,
+  .grounded-action-result span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .grounded-action-result strong {
+    color: #9f1239;
+    font-size: 12px;
+  }
+  .grounded-action-result span {
+    color: #7f4b56;
+    font-size: 11px;
+  }
+  .grounded-action-result[data-grounded-action-state="ready"] {
+    border-color: rgba(225, 29, 63, 0.3);
+    background: rgba(255, 228, 233, 0.88);
+  }
   .citation-row { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 14px; }
   .citation-row a {
     color: #5f56d8;
@@ -2272,6 +2301,16 @@ const APP_SHELL_STYLES = `
     background: rgba(20, 184, 166, 0.12);
     color: #9bf2e8;
   }
+  .grounded-action-result {
+    border-color: rgba(225, 29, 63, 0.22);
+    background: rgba(38, 14, 19, 0.78);
+  }
+  .grounded-action-result strong {
+    color: #ff9aaa;
+  }
+  .grounded-action-result span {
+    color: #d8a8af;
+  }
   .selected-path-action {
     border-color: rgba(255, 255, 255, 0.1);
     background: rgba(255, 255, 255, 0.065);
@@ -3136,6 +3175,11 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
               <button type="button" data-related-insight-action="weekly">주간 패턴 보기</button>
             </div>
           </section>
+          <section class="grounded-action-result" data-grounded-action-result="related-memory-ai" data-grounded-action-state="idle" data-grounded-action-kind="none" data-grounded-action-source="${escapeHtml(currentFlowMemoryId)}" data-grounded-action-related-count="${currentFlowRelatedCount}" data-grounded-action-citation-count="0" aria-label="관련 기억 기반 AI 실행 결과">
+            <strong>근거 있는 실행 결과</strong>
+            <span data-grounded-action-summary>질문, 결정 되짚기, 주간 패턴을 실행하면 선택한 기억과 관련 과거 기억 수가 여기에 남는다.</span>
+            <span data-grounded-action-save-next>결과가 나오면 세션 저장으로 미래 기억에 남길 수 있다.</span>
+          </section>
           <div class="selected-path-actions" aria-label="AI 세션 준비">
             <button type="button" class="selected-path-action" data-selected-path-action="ask">질문</button>
             <button type="button" class="selected-path-action" data-selected-path-action="replay">결정</button>
@@ -3265,6 +3309,9 @@ const GRAPH_CONTROL_SCRIPT = `
   const relatedInsightBridge = document.querySelector('[data-related-insight-bridge="diary-to-past-memory-actions"]');
   const relatedInsightReasonList = relatedInsightBridge?.querySelector('[data-related-insight-reason-list]');
   const relatedInsightActions = Array.from(document.querySelectorAll('[data-related-insight-action]'));
+  const groundedActionResult = document.querySelector('[data-grounded-action-result="related-memory-ai"]');
+  const groundedActionSummary = groundedActionResult?.querySelector('[data-grounded-action-summary]');
+  const groundedActionSaveNext = groundedActionResult?.querySelector('[data-grounded-action-save-next]');
   const askWithRelatedMemoryButton = inspector?.querySelector('[data-control="ask-with-related-memory-context"]');
   const replayWithRelatedMemoryButton = inspector?.querySelector('[data-control="replay-with-related-memory-context"]');
   const reportWithRelatedMemoryButton = inspector?.querySelector('[data-control="report-with-related-memory-context"]');
@@ -4805,6 +4852,38 @@ const GRAPH_CONTROL_SCRIPT = `
     shell.setAttribute('data-' + kind + '-result-context-source-memory', context.sourceMemoryId);
     shell.setAttribute('data-' + kind + '-result-context-related-memory-count', String(relatedMemoryIds.length));
     shell.setAttribute('data-' + kind + '-result-context-related-memories', relatedMemoryIds.join(','));
+    renderGroundedActionResult(kind, context, shell.getAttribute('data-' + kind + '-citation-count') || String(relatedMemoryIds.length + 1));
+  };
+
+  const renderGroundedActionResult = (kind, context, citationCount) => {
+    if (!groundedActionResult || !context?.sourceMemoryId) return;
+    const relatedMemoryIds = Array.from(new Set(context.relatedMemoryIds || [])).filter(Boolean);
+    const labels = {
+      ask: '질문',
+      replay: '결정 되짚기',
+      weekly: '주간 패턴',
+    };
+    const actionLabel = labels[kind] || 'AI 실행';
+    groundedActionResult?.setAttribute('data-grounded-action-state', 'ready');
+    groundedActionResult?.setAttribute('data-grounded-action-kind', kind);
+    groundedActionResult?.setAttribute('data-grounded-action-source', context.sourceMemoryId);
+    groundedActionResult?.setAttribute('data-grounded-action-related-count', String(relatedMemoryIds.length));
+    groundedActionResult?.setAttribute('data-grounded-action-citation-count', String(citationCount || '0'));
+    if (groundedActionSummary) {
+      groundedActionSummary.textContent =
+        actionLabel +
+        ' 결과가 ' +
+        context.sourceMemoryId +
+        '와 연관 과거 기억 ' +
+        String(relatedMemoryIds.length) +
+        '개를 근거로 생성됐다.';
+    }
+    if (groundedActionSaveNext) {
+      groundedActionSaveNext.textContent = '이 결과는 세션 저장을 누르면 다음 고민에서 다시 불러올 미래 기억이 된다.';
+    }
+    shell.setAttribute('data-grounded-action-kind', kind);
+    shell.setAttribute('data-grounded-action-source', context.sourceMemoryId);
+    shell.setAttribute('data-grounded-action-related-count', String(relatedMemoryIds.length));
   };
 
   const askSecondBrain = async () => {
