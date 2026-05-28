@@ -1134,6 +1134,23 @@ Implemented:
 - `src/lib/personalMemoryApi.ts`
 - `src/lib/personalMemoryApi.test.ts`
 
+### L58 — Notion Rate Limit Retry
+
+Goal: make direct Notion import less brittle when the Notion API temporarily rate limits source discovery, database query, or page block fetch calls.
+
+Acceptance:
+
+- Notion API calls retry once after HTTP `429`
+- `Retry-After` is read when present and capped so the local UI is not blocked for a long time
+- the token remains server-side and is not included in source/candidate payloads
+- source discovery regression covers 429 then success
+- live smoke still sees Notion `429` after retry, so import should be retried after the rate limit window clears
+
+Implemented:
+
+- `src/lib/notionImport.ts`
+- `src/lib/notionImport.test.ts`
+
 ## 8. MVP Time Estimate
 
 Assuming focused local development without major dependency or deployment blockers:

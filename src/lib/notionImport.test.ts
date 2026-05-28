@@ -435,4 +435,41 @@ describe('notion import connector', () => {
     ]);
     expect(JSON.stringify(sources)).not.toContain('secret_live_token');
   });
+
+  test('retries Notion source discovery once after a rate limit response', async () => {
+    const calls: string[] = [];
+    const fetchNotion = async (url: string) => {
+      calls.push(url);
+      if (calls.length === 1) {
+        return {
+          ok: false,
+          status: 429,
+          headers: { get: (name: string) => (name.toLowerCase() === 'retry-after' ? '0' : null) },
+          json: async () => ({}),
+        };
+      }
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          results: [
+            {
+              object: 'data_source',
+              id: 'source_retry',
+              title: [{ plain_text: 'Retry source' }],
+            },
+          ],
+        }),
+      };
+    };
+
+    const sources = await queryNotionImportSources({
+      notionToken: 'secret_live_token',
+      fetchNotion,
+    });
+
+    expect(calls).toEqual(['https://api.notion.com/v1/search', 'https://api.notion.com/v1/search']);
+    expect(sources).toEqual([{ id: 'source_retry', title: 'Retry source', object: 'data_source' }]);
+    expect(JSON.stringify(sources)).not.toContain('secret_live_token');
+  });
 });

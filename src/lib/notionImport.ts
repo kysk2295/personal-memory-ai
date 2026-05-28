@@ -18,6 +18,7 @@ export interface BuildNotionImportCandidatesInput {
 export interface NotionFetchResponse {
   ok: boolean;
   status: number;
+  headers?: { get(name: string): string | null };
   json: () => Promise<unknown>;
 }
 
@@ -64,6 +65,31 @@ export interface QueryNotionImportSourcesInput {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function retryDelayMs(response: NotionFetchResponse): number {
+  const retryAfter = response.headers?.get('retry-after');
+  if (!retryAfter) return 250;
+  const seconds = Number(retryAfter);
+  if (Number.isFinite(seconds)) return Math.min(Math.max(seconds * 1_000, 0), 1_000);
+  const retryAt = new Date(retryAfter).getTime();
+  if (Number.isNaN(retryAt)) return 250;
+  return Math.min(Math.max(retryAt - Date.now(), 0), 1_000);
+}
+
+async function fetchNotionWithRateLimitRetry(
+  fetchNotion: NotionFetch,
+  url: string,
+  init: { method: string; headers: Record<string, string>; body?: string },
+): Promise<NotionFetchResponse> {
+  const firstResponse = await fetchNotion(url, init);
+  if (firstResponse.status !== 429) return firstResponse;
+  await sleep(retryDelayMs(firstResponse));
+  return fetchNotion(url, init);
 }
 
 function plainTextList(value: unknown): string[] {
@@ -188,7 +214,8 @@ async function queryNotionPageBlocks(input: {
   let nextCursor: string | undefined;
   do {
     const cursorParam = nextCursor ? `&start_cursor=${encodeURIComponent(nextCursor)}` : '';
-    const response = await input.fetchNotion(
+    const response = await fetchNotionWithRateLimitRetry(
+      input.fetchNotion,
       `https://api.notion.com/v1/blocks/${input.pageId}/children?page_size=50${cursorParam}`,
       {
         method: 'GET',
@@ -219,7 +246,7 @@ export async function queryNotionDatabaseImportCandidates(
   const validPages: NotionImportPage[] = [];
   let nextCursor: string | undefined;
   do {
-    const response = await fetchNotion(`https://api.notion.com/v1/data_sources/${input.databaseId}/query`, {
+    const response = await fetchNotionWithRateLimitRetry(fetchNotion, `https://api.notion.com/v1/data_sources/${input.databaseId}/query`, {
       method: 'POST',
       headers: {
         authorization: `Bearer ${input.notionToken}`,
@@ -283,7 +310,7 @@ function sourceFromSearchResult(result: unknown): NotionImportSource | null {
 
 export async function queryNotionImportSources(input: QueryNotionImportSourcesInput): Promise<NotionImportSource[]> {
   const fetchNotion = input.fetchNotion ?? fetch;
-  const response = await fetchNotion('https://api.notion.com/v1/search', {
+  const response = await fetchNotionWithRateLimitRetry(fetchNotion, 'https://api.notion.com/v1/search', {
     method: 'POST',
     headers: {
       authorization: `Bearer ${input.notionToken}`,
