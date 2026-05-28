@@ -1393,6 +1393,7 @@ Acceptance:
 - live count-only resume discovered 50 sources: 24 successful duplicate-only scans, 26 still rate-limited, 0 new created records
 - resume runs can be bounded with `PMI_NOTION_MAX_SOURCES` and report attempted/remaining source counts for heartbeat-sized batches
 - Notion resume source discovery now defaults to the diary database name `습관리스트` so broad workspace imports are not repeated by accident; override with `PMI_NOTION_SOURCE_QUERY` or explicit `--source=` ids only when intentional.
+- `npm run import:notion:prune-sources` provides a dry-run source-group cleanup plan so already-imported broad Notion sources can be pruned after the exact `습관리스트` source id is known.
 
 Implemented:
 
