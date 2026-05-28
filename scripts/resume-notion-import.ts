@@ -2,7 +2,9 @@ import { Pool } from 'pg';
 import { personalMemoryRecords } from '../src/lib/__fixtures__/personalMemoryRecords';
 import { createMemoryStoreRuntime } from '../src/lib/memoryStoreRuntime';
 import { queryNotionImportSources } from '../src/lib/notionImport';
-import { importNotionSourcesToMemoryStore } from '../src/lib/notionImportResume';
+import { filterNotionImportSourcesByQuery, importNotionSourcesToMemoryStore } from '../src/lib/notionImportResume';
+
+const DEFAULT_NOTION_SOURCE_QUERY = '습관리스트';
 
 function splitSourceIds(value: string | undefined): string[] {
   return (value ?? '')
@@ -17,6 +19,13 @@ function readSourceIdsFromArgs(): string[] {
     if (arg.startsWith('--source=')) ids.push(arg.slice('--source='.length));
   }
   return ids.map((item) => item.trim()).filter(Boolean);
+}
+
+function readSourceQueryFromArgs(): string | undefined {
+  for (const arg of process.argv.slice(2)) {
+    if (arg.startsWith('--source-query=')) return arg.slice('--source-query='.length).trim();
+  }
+  return undefined;
 }
 
 function jsonLine(value: unknown): void {
@@ -39,6 +48,7 @@ const runtime = await createMemoryStoreRuntime({
 
 try {
   let sourceIds = [...splitSourceIds(process.env.PMI_NOTION_SOURCE_IDS), ...readSourceIdsFromArgs()];
+  const sourceQuery = readSourceQueryFromArgs() || process.env.PMI_NOTION_SOURCE_QUERY || DEFAULT_NOTION_SOURCE_QUERY;
   if (!sourceIds.length && process.env.PMI_NOTION_DISCOVER_SOURCES === 'true') {
     let sources;
     try {
@@ -54,8 +64,14 @@ try {
       });
       process.exit(1);
     }
-    sourceIds = sources.map((source) => source.id);
-    jsonLine({ status: 'sources_discovered', sourceCount: sourceIds.length });
+    const selectedSources = filterNotionImportSourcesByQuery(sources, sourceQuery);
+    sourceIds = selectedSources.map((source) => source.id);
+    jsonLine({
+      status: 'sources_discovered',
+      sourceCount: sources.length,
+      selectedSourceCount: sourceIds.length,
+      sourceQueryApplied: Boolean(sourceQuery),
+    });
   }
 
   if (!sourceIds.length) {

@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { createMemoryStore } from './createMemoryStore';
-import { importNotionSourcesToMemoryStore } from './notionImportResume';
+import { filterNotionImportSourcesByQuery, importNotionSourcesToMemoryStore } from './notionImportResume';
 
 describe('importNotionSourcesToMemoryStore', () => {
   test('imports multiple Notion source ids with count-only resume-safe reporting', async () => {
@@ -115,5 +115,18 @@ describe('importNotionSourcesToMemoryStore', () => {
     expect(result.attemptedSourceCount).toBe(2);
     expect(result.remainingSourceCount).toBe(1);
     expect(queriedSourceIds).toEqual(['source_1', 'source_2']);
+  });
+
+  test('filters discovered Notion sources to diary-like databases without exposing titles in reports', () => {
+    const sources = filterNotionImportSourcesByQuery(
+      [
+        { id: 'source_diary', title: 'Private diary database title', object: 'data_source' },
+        { id: 'source_tasks', title: 'Tasks database title', object: 'data_source' },
+        { id: 'source_journal', title: 'Daily Journal', object: 'data_source' },
+      ],
+      'diary,journal,일기',
+    );
+
+    expect(sources.map((source) => source.id)).toEqual(['source_diary', 'source_journal']);
   });
 });

@@ -1,7 +1,7 @@
 import { buildImportPreview } from './importPreview';
 import { applyImportPreviewToMemoryStore } from './memoryIngestion';
 import type { MemoryStore } from './memoryStore';
-import { queryNotionDatabaseImportCandidates, type NotionFetch } from './notionImport';
+import { queryNotionDatabaseImportCandidates, type NotionFetch, type NotionImportSource } from './notionImport';
 
 export type NotionResumeImportStatus = 'completed' | 'completed_with_skips' | 'failed';
 
@@ -40,6 +40,25 @@ function failureGroupForError(error: unknown): string {
 
 function incrementFailureGroup(target: Record<string, number>, key: string): void {
   target[key] = (target[key] ?? 0) + 1;
+}
+
+function queryTerms(value: string): string[] {
+  return value
+    .split(',')
+    .map((term) => term.trim().toLocaleLowerCase())
+    .filter(Boolean);
+}
+
+export function filterNotionImportSourcesByQuery(
+  sources: readonly NotionImportSource[],
+  query: string | undefined,
+): NotionImportSource[] {
+  const terms = queryTerms(query ?? '');
+  if (!terms.length) return [...sources];
+  return sources.filter((source) => {
+    const title = source.title.toLocaleLowerCase();
+    return terms.some((term) => title.includes(term));
+  });
 }
 
 export async function importNotionSourcesToMemoryStore(
