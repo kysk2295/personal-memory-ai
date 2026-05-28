@@ -434,6 +434,49 @@ const APP_SHELL_STYLES = `
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 7px;
   }
+  .memory-intake-draft {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    align-items: stretch;
+  }
+  .memory-intake-draft label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+  .memory-intake-draft textarea {
+    min-width: 0;
+    min-height: 58px;
+    border: 1px solid rgba(20, 184, 166, 0.18);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.76);
+    color: #33524d;
+    padding: 8px 9px;
+    font: inherit;
+    font-size: 11px;
+    line-height: 1.4;
+    resize: none;
+  }
+  .memory-intake-draft-actions {
+    display: grid;
+    gap: 6px;
+    align-content: stretch;
+  }
+  .memory-intake-draft-actions button {
+    min-width: 92px;
+    border: 1px solid rgba(20, 184, 166, 0.2);
+    border-radius: 8px;
+    background: rgba(20, 184, 166, 0.1);
+    color: #0f766e;
+    padding: 6px 8px;
+    font-size: 11px;
+    font-weight: 780;
+  }
   .memory-intake-action {
     min-width: 0;
     border: 1px solid rgba(20, 184, 166, 0.2);
@@ -1526,6 +1569,15 @@ const APP_SHELL_STYLES = `
     border-color: rgba(255, 255, 255, 0.08);
     background: rgba(255, 255, 255, 0.055);
   }
+  .memory-intake-draft textarea,
+  .memory-intake-draft-actions button {
+    border-color: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.055);
+    color: #f0f0f2;
+  }
+  .memory-intake-draft textarea::placeholder {
+    color: #8c8c92;
+  }
   .memory-intake-copy strong,
   .memory-intake-action {
     color: #f0f0f2;
@@ -2059,7 +2111,8 @@ const APP_SHELL_STYLES = `
     .product-value-strip { grid-template-columns: 1fr; }
     .privacy-actions { justify-content: flex-start; }
     .memory-intake-hub,
-    .memory-intake-actions {
+    .memory-intake-actions,
+    .memory-intake-draft {
       grid-template-columns: 1fr;
     }
     .selected-path-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -2263,7 +2316,7 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
           <span>내보내기</span>
           <span>삭제</span>
         </div>
-        <section class="memory-intake-hub" data-memory-intake-hub="app-web-diary" data-intake-stage="capture-or-import" data-intake-source-scope="diary-only" data-intake-result="graph-handoff" data-intake-last-action="none" aria-label="기록 인입 허브">
+        <section class="memory-intake-hub" data-memory-intake-hub="app-web-diary" data-intake-stage="capture-or-import" data-intake-source-scope="diary-only" data-intake-result="graph-handoff" data-intake-last-action="none" data-intake-draft-state="idle" aria-label="기록 인입 허브">
           <div class="memory-intake-copy">
             <strong>기록 인입 허브</strong>
             <span>앱에서 짧게 쓰거나, 웹에서 일기만 붙여넣거나, 습관리스트 Notion DB를 불러오면 곧바로 개인 세컨브레인 그래프와 AI 세션으로 이어진다.</span>
@@ -2272,6 +2325,14 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
             <a class="memory-intake-action primary" href="/capture/" data-intake-action="quick-capture"><strong>앱 빠른 기록</strong><span>채팅처럼 쓰고 저장 후 그래프로 이동</span></a>
             <button type="button" class="memory-intake-action" data-intake-action="paste-diary"><strong>웹 일기 붙여넣기</strong><span>긴 일기/Markdown을 미리보기 후 적용</span></button>
             <button type="button" class="memory-intake-action" data-intake-action="notion-diary-db"><strong>습관리스트 Notion DB</strong><span>일기 데이터베이스만 선택해서 가져오기</span></button>
+          </div>
+          <div class="memory-intake-draft">
+            <label for="intake-diary-draft">오늘의 일기를 바로 붙여넣기</label>
+            <textarea id="intake-diary-draft" data-control="intake-diary-draft" placeholder="오늘의 일기를 바로 붙여넣기"></textarea>
+            <div class="memory-intake-draft-actions">
+              <button type="button" data-control="intake-preview-diary">미리보기 만들기</button>
+              <button type="button" data-control="intake-apply-diary">그래프에 적용</button>
+            </div>
           </div>
         </section>
         <div class="prototype-entry-dock" data-entry-dock="diary-start" aria-label="첫 화면 일기 시작 액션">
@@ -2449,6 +2510,9 @@ const GRAPH_CONTROL_SCRIPT = `
   const importPasteText = document.querySelector('[data-control="local-import-paste-text"]');
   const focusLocalImportButton = document.querySelector('[data-control="focus-local-import"]');
   const memoryIntakeHub = document.querySelector('[data-memory-intake-hub="app-web-diary"]');
+  const intakeDiaryDraft = document.querySelector('[data-control="intake-diary-draft"]');
+  const intakePreviewDiaryButton = document.querySelector('[data-control="intake-preview-diary"]');
+  const intakeApplyDiaryButton = document.querySelector('[data-control="intake-apply-diary"]');
   const intakeActions = Array.from(document.querySelectorAll('[data-intake-action]'));
   const firstRunGuideActions = Array.from(document.querySelectorAll('[data-guide-action]'));
   const importPreviewButton = document.querySelector('[data-control="preview-local-import"]');
@@ -4526,6 +4590,41 @@ const GRAPH_CONTROL_SCRIPT = `
     importPasteText?.scrollIntoView({ block: 'center', behavior: 'smooth' });
     importPasteText?.focus();
     setInteractionState('diary-import-focused');
+  });
+  const syncIntakeDraftToImportPaste = () => {
+    if (!intakeDiaryDraft || !importPasteText) return false;
+    importPasteText.value = intakeDiaryDraft.value;
+    importPasteText.dispatchEvent(new Event('input', { bubbles: true }));
+    memoryIntakeHub?.setAttribute('data-intake-draft-length', String(intakeDiaryDraft.value.trim().length));
+    return Boolean(intakeDiaryDraft.value.trim());
+  };
+  intakePreviewDiaryButton?.addEventListener('click', () => {
+    if (!syncIntakeDraftToImportPaste()) {
+      memoryIntakeHub?.setAttribute('data-intake-draft-state', 'empty');
+      setInteractionState('intake-diary-draft-empty');
+      return;
+    }
+    memoryIntakeHub?.setAttribute('data-intake-last-action', 'preview-diary');
+    memoryIntakeHub?.setAttribute('data-intake-draft-state', 'preview-requested');
+    shell.setAttribute('data-intake-last-action', 'preview-diary');
+    importPreviewButton?.click();
+    setInteractionState('intake-diary-preview-requested');
+  });
+  intakeApplyDiaryButton?.addEventListener('click', () => {
+    if (!syncIntakeDraftToImportPaste()) {
+      memoryIntakeHub?.setAttribute('data-intake-draft-state', 'empty');
+      setInteractionState('intake-diary-draft-empty');
+      return;
+    }
+    memoryIntakeHub?.setAttribute('data-intake-last-action', 'apply-diary');
+    memoryIntakeHub?.setAttribute('data-intake-draft-state', 'apply-requested');
+    shell.setAttribute('data-intake-last-action', 'apply-diary');
+    if (importApplyButton?.hasAttribute('disabled')) {
+      importPreviewButton?.click();
+    } else {
+      importApplyButton?.click();
+    }
+    setInteractionState('intake-diary-apply-requested');
   });
   intakeActions.forEach((button) => {
     button.addEventListener('click', (event) => {

@@ -531,6 +531,13 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('data-intake-action="notion-diary-db"');
     expect(html).toContain('data-intake-result="graph-handoff"');
     expect(html).toContain('data-intake-last-action="none"');
+    expect(html).toContain('data-intake-draft-state="idle"');
+    expect(html).toContain('data-control="intake-diary-draft"');
+    expect(html).toContain('data-control="intake-preview-diary"');
+    expect(html).toContain('data-control="intake-apply-diary"');
+    expect(html).toContain('오늘의 일기를 바로 붙여넣기');
+    expect(html).toContain('미리보기 만들기');
+    expect(html).toContain('그래프에 적용');
     expect(html).toContain('data-service-flow="diary-to-second-brain"');
     expect(html).toContain('data-service-flow-step="quick-diary-capture"');
     expect(html).toContain('빠른 일기');
@@ -705,8 +712,14 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(documentHtml).toContain('원자 기억');
     expect(documentHtml).toContain('const selectMemory = (node) =>');
     expect(documentHtml).toContain('const memoryIntakeHub = document.querySelector');
+    expect(documentHtml).toContain('const intakeDiaryDraft = document.querySelector');
+    expect(documentHtml).toContain('const intakePreviewDiaryButton = document.querySelector');
+    expect(documentHtml).toContain('const intakeApplyDiaryButton = document.querySelector');
     expect(documentHtml).toContain('intakeActions.forEach((button) =>');
     expect(documentHtml).toContain("memoryIntakeHub?.setAttribute('data-intake-last-action'");
+    expect(documentHtml).toContain("importPasteText.value = intakeDiaryDraft.value");
+    expect(documentHtml).toContain("memoryIntakeHub?.setAttribute('data-intake-draft-state', 'preview-requested')");
+    expect(documentHtml).toContain("memoryIntakeHub?.setAttribute('data-intake-draft-state', 'apply-requested')");
     expect(documentHtml).toContain("setInteractionState('intake-paste-diary-focused')");
     expect(documentHtml).toContain("setInteractionState('intake-notion-diary-ready')");
     expect(documentHtml).toContain('const applyMemorySearch = (query) =>');

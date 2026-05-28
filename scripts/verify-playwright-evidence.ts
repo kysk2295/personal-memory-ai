@@ -126,6 +126,9 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   assert((await attribute(page, '[data-memory-intake-hub="app-web-diary"]', 'data-intake-source-scope')) === 'diary-only', 'Diary intake hub should stay diary scoped');
   assert((await attribute(page, '[data-memory-intake-hub="app-web-diary"]', 'data-intake-result')) === 'graph-handoff', 'Diary intake hub should advertise graph handoff');
   assert((await attribute(page, '[data-intake-action="quick-capture"]', 'href'))?.endsWith('/capture/'), 'Intake quick capture should open capture app');
+  assert((await page.locator('[data-control="intake-diary-draft"]').count()) === 1, 'Expected first-screen web diary draft textarea');
+  assert((await page.locator('[data-control="intake-preview-diary"]').count()) === 1, 'Expected first-screen web diary preview action');
+  assert((await page.locator('[data-control="intake-apply-diary"]').count()) === 1, 'Expected first-screen web diary apply action');
   for (const action of ['quick-capture', 'paste-diary', 'notion-diary-db']) {
     assert((await page.locator(`[data-intake-action="${action}"]`).count()) === 1, `Expected intake action ${action}`);
   }
@@ -137,6 +140,7 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   }
   assert((await page.locator('text=지금 일기 쓰기').count()) > 0, 'Expected first-run write diary action copy');
   assert(Number(await attribute(page, '[data-first-run-guide="diary-memory-ai"]', 'data-flow-related-memory-count')) > 0, 'Expected first-run guide to expose related memory count');
+  assert((await attribute(page, '[data-import-upload-panel="local-file"]', 'data-import-upload-state')) === 'idle', 'Expected local import upload panel to start idle');
   const inspectorRailOverlap = await page.evaluate(() => {
     const inspector = document.querySelector('.memory-inspector')?.getBoundingClientRect();
     const rail = document.querySelector('.product-rail')?.getBoundingClientRect();
@@ -157,6 +161,14 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   assert((await attribute(page, '[data-notion-import-panel="database"]', 'data-notion-source-scope')) === 'diary-only', 'Notion intake should remain diary scoped');
   assert((await page.locator('[data-control="notion-database-id"]').inputValue()) === '습관리스트', 'Notion diary intake should prefill the 습관리스트 database cue');
   assert((await attribute(page, '.second-brain-shell', 'data-interaction-state')) === 'intake-notion-diary-ready', 'Intake Notion action should prepare diary database import');
+  const intakeDraft = `오늘 회의에서 또 혼자 해결하려는 마음이 올라왔다 ${Date.now()}`;
+  await page.locator('[data-control="intake-diary-draft"]').fill(intakeDraft);
+  await page.locator('[data-control="intake-preview-diary"]').click();
+  await page.waitForFunction(() => document.querySelector('[data-import-upload-panel="local-file"]')?.getAttribute('data-import-upload-state') === 'preview-ready');
+  assert((await attribute(page, '[data-memory-intake-hub="app-web-diary"]', 'data-intake-draft-state')) === 'preview-requested', 'Intake draft preview should update hub draft state');
+  assert((await attribute(page, '.second-brain-shell', 'data-interaction-state')) === 'import-preview-ready', 'Intake draft preview should reuse the import preview pipeline');
+  assert((await page.locator('[data-control="local-import-paste-text"]').inputValue()) === intakeDraft, 'Intake draft should sync into the private import paste field');
+  assert((await attribute(page, '[data-import-upload-panel="local-file"]', 'data-import-upload-candidate-count')) === '1', 'Intake draft preview should create one import candidate');
   const initialMemoryNodeCount = Number(await attribute(page, '.second-brain-shell', 'data-memory-node-count'));
   const initialRenderedMemoryNodeCount = Number(await attribute(page, '.second-brain-shell', 'data-rendered-memory-node-count'));
   const initialGraphNodeCount = Number(await attribute(page, '.second-brain-shell', 'data-graph-node-count'));
@@ -209,7 +221,7 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   assert((await attribute(page, '[data-save-artifact-action="weekly_report"]', 'data-artifact-save-endpoint')) === '/api/capture', 'Expected saved artifact action to expose capture endpoint');
   assert((await attribute(page, '[data-feedback-panel="user-correction"]', 'data-feedback-state')) === 'ready', 'Expected feedback panel to start ready');
   assert((await attribute(page, '[data-feedback-panel="user-correction"]', 'data-feedback-endpoint')) === '/api/feedback', 'Expected feedback panel to target feedback API');
-  assert((await attribute(page, '[data-import-upload-panel="local-file"]', 'data-import-upload-state')) === 'idle', 'Expected local import upload panel to start idle');
+  assert((await attribute(page, '[data-import-upload-panel="local-file"]', 'data-import-upload-state')) === 'preview-ready', 'Expected intake draft preview to prepare the local import upload panel');
   assert((await attribute(page, '[data-import-upload-panel="local-file"]', 'data-import-preview-endpoint')) === '/api/import/preview', 'Expected local import upload panel to target import preview API');
   assert((await attribute(page, '[data-import-upload-panel="local-file"]', 'data-import-apply-endpoint')) === '/api/import/apply', 'Expected local import upload panel to target import apply API');
   assert(Number(await attribute(page, '[data-memory-timeline-panel="pmi025"]', 'data-timeline-entry-count')) >= 8, 'Expected timeline panel to render private memories');
