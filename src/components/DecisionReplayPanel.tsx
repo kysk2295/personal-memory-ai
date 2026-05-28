@@ -47,19 +47,19 @@ function renderSimilarDecision(decision: SimilarPastDecision): string {
   )}">
     <div>
       <strong>${escapeHtml(decision.summary)}</strong>
-      <p><span>outcome</span> ${escapeHtml(outcome)}</p>
+      <p><span>결과</span> ${escapeHtml(outcome)}</p>
     </div>
     <div class="decision-columns">
       <div>
-        <span>emotions</span>
+        <span>감정</span>
         ${renderTagList(`Past decision ${decision.memoryId} emotions`, decision.emotions)}
       </div>
       <div>
-        <span>choices</span>
+        <span>선택지</span>
         ${renderTagList(`Past decision ${decision.memoryId} choices`, decision.choices.length ? decision.choices : ['none captured'])}
       </div>
     </div>
-    <ol class="decision-citations" aria-label="Decision Replay citations for ${escapeHtml(decision.memoryId)}">
+    <ol class="decision-citations" aria-label="결정 되짚기 인용 ${escapeHtml(decision.memoryId)}">
       ${decision.citations.slice(0, 1).map(renderCitation).join('')}
     </ol>
   </article>`;
@@ -71,51 +71,51 @@ export function renderDecisionReplayPanel(layout: InitialAppShellEvidenceLayout)
   const pattern = replay.pattern;
   const saveAction = findSavedArtifactAction(layout.savedArtifactActions, 'decision_replay');
 
-  return `<section class="decision-replay-flow" aria-label="Decision Replay cited visual flow" data-replay-highlight="${escapeHtml(
+  return `<section class="decision-replay-flow" aria-label="결정 되짚기 인용 흐름" data-replay-highlight="${escapeHtml(
     currentDecisionHighlightId,
   )}" data-replay-endpoint="/api/replay" data-replay-state="ready">
     <div class="section-header">
       <div>
-        <p class="eyebrow">Decision Replay</p>
-        <h2>Current choice replayed against past outcomes</h2>
+        <p class="eyebrow">결정 되짚기</p>
+        <h2>지금 선택을 과거 결과와 비교</h2>
       </div>
       ${renderStatus(replay.status)}
     </div>
-    <p class="section-intro">Replay stays visible as a product pillar, but the screen now edits the story down to the current decision, recommendation, and the strongest similar memories.</p>
+    <p class="section-intro">현재 고민, 추천, 가장 비슷한 과거 기억만 남겨서 결정의 반복 패턴을 확인한다.</p>
     <div class="decision-current-card" data-current-decision-id="${escapeHtml(currentDecisionHighlightId)}">
-      <label for="decision-replay-current">Current decision</label>
+      <label for="decision-replay-current">지금 결정</label>
       <input id="decision-replay-current" type="text" value="${escapeHtml(replay.currentDecision.prompt)}" data-control="decision-replay-current" />
-      <button type="button" class="save-artifact-action" data-control="run-decision-replay">Replay decision</button>
+      <button type="button" class="save-artifact-action" data-control="run-decision-replay">결정 되짚기 실행</button>
       <div class="decision-columns">
         <div>
-          <span>emotions</span>
-          ${renderTagList('Current decision emotions', replay.currentDecision.emotions)}
+          <span>감정</span>
+          ${renderTagList('현재 결정 감정', replay.currentDecision.emotions)}
         </div>
         <div>
-          <span>choices</span>
-          ${renderTagList('Current decision choices', replay.currentDecision.choices)}
+          <span>선택지</span>
+          ${renderTagList('현재 결정 선택지', replay.currentDecision.choices)}
         </div>
       </div>
-      ${renderTagList('Current decision topics', replay.currentDecision.topicTags)}
+      ${renderTagList('현재 결정 주제', replay.currentDecision.topicTags)}
     </div>
-    <div class="decision-recommendation" aria-label="Decision Replay recommendation and uncertainty" data-live-replay-result="recommendation">
+    <div class="decision-recommendation" aria-label="결정 되짚기 추천과 불확실성" data-live-replay-result="recommendation">
       <div class="panel-topline">
         <span>${escapeHtml(replay.evidenceLabel)}</span>
-        <span>confidence <strong>${Math.round(replay.confidence * 100)}%</strong></span>
+        <span>신뢰도 <strong>${Math.round(replay.confidence * 100)}%</strong></span>
       </div>
       <h3>${escapeHtml(replay.recommendation)}</h3>
       <p>${escapeHtml(replay.uncertainty)}</p>
       ${
         pattern
           ? `<p><strong>${escapeHtml(pattern.title)}</strong>: ${escapeHtml(pattern.explanation)}</p>`
-          : '<p>No sufficient personal pattern is shown without cited support.</p>'
+          : '<p>인용 근거가 충분하지 않으면 개인 패턴을 보여주지 않는다.</p>'
       }
       ${renderSavedArtifactActionButton(saveAction)}
     </div>
-    <div class="similar-decision-list" aria-label="Similar past decisions with citations">
+    <div class="similar-decision-list" aria-label="비슷한 과거 결정과 인용">
       ${replay.similarPastDecisions.slice(0, 2).map(renderSimilarDecision).join('')}
     </div>
-    <div class="graph-highlight-manifest decision-highlight-manifest" aria-label="Decision Replay graph highlights">
+    <div class="graph-highlight-manifest decision-highlight-manifest" aria-label="결정 되짚기 그래프 하이라이트">
       ${replay.graphHighlightIds
         .slice(0, 5)
         .map((highlightId) => `<span data-highlight-id="${escapeHtml(highlightId)}">${escapeHtml(highlightId)}</span>`)

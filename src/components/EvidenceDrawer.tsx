@@ -17,22 +17,22 @@ export function renderEvidenceDrawer(layout: InitialAppShellEvidenceLayout): str
   const items = layout.evidenceDrawer.items;
   const questionHighlightId = layout.ask.graphHighlightIds[0] ?? '';
 
-  return `<aside class="evidence-drawer" aria-label="Graph evidence drawer">
+  return `<aside class="evidence-drawer" aria-label="그래프 근거 서랍">
     <div class="section-header compact">
       <div>
-        <p class="eyebrow">Evidence drawer</p>
-        <h2>Every answer stays traceable to remembered evidence</h2>
+        <p class="eyebrow">근거 서랍</p>
+        <h2>모든 답변은 기억 근거로 되돌아간다</h2>
       </div>
       ${renderStatus(layout.evidenceDrawer.status)}
     </div>
-    <p class="drawer-principle">This is the trust surface. Ask, pattern, import preview, and Decision Replay stay grounded in source, date, citation id, and memory trace.</p>
+    <p class="drawer-principle">질문, 패턴, 가져오기 미리보기, 결정 되짚기는 출처·날짜·인용 id·기억 경로에 묶인다.</p>
     <article class="drawer-current-question" data-current-question-id="${escapeHtml(questionHighlightId)}">
-      <strong>Current question</strong>
+      <strong>현재 질문</strong>
       <p>${escapeHtml(layout.askQuestion)}</p>
       <code>${escapeHtml(questionHighlightId)}</code>
     </article>
     <article class="drawer-current-question" data-current-decision-id="${escapeHtml(`decision:${layout.replay.currentDecision.id}`)}">
-      <strong>Current decision</strong>
+      <strong>현재 결정</strong>
       <p>${escapeHtml(layout.replay.currentDecision.prompt)}</p>
       <code>${escapeHtml(`decision:${layout.replay.currentDecision.id}`)}</code>
     </article>
@@ -52,7 +52,7 @@ export function renderEvidenceDrawer(layout: InitialAppShellEvidenceLayout): str
               ${renderStatus(item.status)}
             </div>
             <p>${escapeHtml(item.citation)}</p>
-            <p><strong>why connected</strong> ${escapeHtml(traceLabel || item.highlightId)}</p>
+            <p><strong>연결 이유</strong> ${escapeHtml(traceLabel || item.highlightId)}</p>
             <code>${escapeHtml(item.highlightId)}</code>
             <code>trace ${escapeHtml(traceLabel)}</code>
           </article>`;

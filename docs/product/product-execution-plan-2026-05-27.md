@@ -1715,6 +1715,33 @@ Implemented:
 - `src/App.tsx`
 - `scripts/verify-playwright-evidence.ts`
 
+### L90 — Korean Usable Prototype UX Rebuild
+
+Goal: make the first screen usable tonight for the user's intended workflow: quick diary or diary import, private second brain graph, related past-memory nodes, grounded AI session, and saveback as future memory.
+
+Acceptance:
+
+- root shell declares `data-prototype-ux="korean-usable-mvp"`
+- first screen exposes a Korean primary flow: 빠른 일기, 일기 DB 가져오기, 내 세컨브레인, 연관 과거 기억, AI 고민 세션, 다시 기억으로 저장
+- LLM Wiki/Obsidian concept is visible as product language: 원자 기억, 위키 노드, 인용, 보존/회상/성찰, 출처·패턴·인용 구조
+- core controls are Koreanized, including AI 세션 실행 and 세션 저장
+- Playwright rejects the old visible English session CTA strings and verifies the end-to-end session still runs
+
+Implemented:
+
+- `src/App.tsx`
+- `src/components/AskMyPastSelfPanel.tsx`
+- `src/components/DecisionReplayPanel.tsx`
+- `src/components/WeeklyReportPanel.tsx`
+- `src/components/EvidenceDrawer.tsx`
+- `src/components/PatternPanel.tsx`
+- `src/components/PrivacyControlPanel.tsx`
+- `src/components/MemoryDetailTimelinePanel.tsx`
+- `src/components/MemoryGraph.tsx`
+- `src/lib/savedArtifactActions.ts`
+- `scripts/verify-playwright-evidence.ts`
+- `docs/superpowers/plans/2026-05-28-korean-prototype-ux-rebuild.md`
+
 ## 8. MVP Time Estimate
 
 Assuming focused local development without major dependency or deployment blockers:

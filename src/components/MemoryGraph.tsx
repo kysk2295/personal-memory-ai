@@ -267,8 +267,8 @@ function renderMemoryNodes(layout: InitialAppShellEvidenceLayout, highlightedIds
       )}" data-inspector-title="${escapeHtml(node.summary)}" data-inspector-source="${escapeHtml(
         `${node.sourceType} · ${node.recordType} · ${node.observedAt}`,
       )}" data-inspector-body="${escapeHtml(
-        `선택한 기억: ${node.summary} Outcome and source evidence stay linked through ${citationId}.`,
-      )}" data-inspector-citation="${escapeHtml(citationId)}" tabindex="0" role="button" aria-label="Select memory ${escapeHtml(
+        `선택한 기억: ${node.summary} 결과와 출처 근거는 ${citationId} 경로로 계속 연결된다.`,
+      )}" data-inspector-citation="${escapeHtml(citationId)}" tabindex="0" role="button" aria-label="기억 선택 ${escapeHtml(
         truncate(node.summary, 48),
       )}">
         <title>${escapeHtml(node.summary)}</title>
@@ -307,15 +307,15 @@ export function renderMemoryGraph(layout: InitialAppShellEvidenceLayout): string
       ${renderMemoryNodes(layout, highlightedIds)}
     </svg>
     <div class="graph-support-copy" aria-label="Graph supporting cues">
-      <span class="hero-pill">Private diary and imported records become citation-backed memory nodes</span>
-      <span class="hero-pill">Selected node remains wired to Ask My Past Self inspector</span>
+      <span class="hero-pill">비공개 일기와 가져온 기록이 인용 가능한 기억 노드가 된다</span>
+      <span class="hero-pill">선택한 노드는 과거의 나에게 묻기 패널과 연결된다</span>
     </div>
-    <div class="graph-highlight-manifest" aria-label="Active Ask My Past Self graph highlights">
+    <div class="graph-highlight-manifest" aria-label="과거의 나에게 묻기 그래프 하이라이트">
       ${graphHighlightIds
         .map((highlightId) => `<span data-highlight-id="${escapeHtml(highlightId)}">${escapeHtml(highlightId)}</span>`)
         .join('')}
     </div>
-    <div class="graph-support-list" aria-label="Primary loaded memories">
+    <div class="graph-support-list" aria-label="불러온 주요 기억">
       ${layout.primaryNodes
         .slice(0, 5)
         .map((node) => `<span>${escapeHtml(node.sourceType)} · ${escapeHtml(node.recordType)} · ${escapeHtml(truncate(node.summary, 44))}</span>`)

@@ -74,8 +74,8 @@ export function buildSavedArtifactActions(input: BuildSavedArtifactActionsInput)
   });
 
   return [
-    actionForArtifact(askArtifact, 'Save answer', 'Answer saved'),
-    actionForArtifact(replayArtifact, 'Save replay', 'Replay saved'),
-    actionForArtifact(reportArtifact, 'Save report', 'Report saved'),
+    actionForArtifact(askArtifact, '답변 저장', '답변 저장됨'),
+    actionForArtifact(replayArtifact, '결정 기록 저장', '결정 기록 저장됨'),
+    actionForArtifact(reportArtifact, '주간 패턴 저장', '주간 패턴 저장됨'),
   ];
 }

@@ -13,7 +13,7 @@ export function renderPrivacyControlPanel(layout: InitialAppShellEvidenceLayout)
   const controls = layout.privacyControls;
   const selectedIds = controls.selectedDeleteControl.memoryIds.join(',');
 
-  return `<section class="privacy-control-flow product-panel" aria-label="Private vault export and delete controls" data-privacy-scope="${escapeHtml(
+  return `<section class="privacy-control-flow product-panel" aria-label="개인 보관함 내보내기와 삭제 제어" data-privacy-scope="${escapeHtml(
     controls.privacyScope,
   )}" data-vault-access="${escapeHtml(controls.vaultAccess)}" data-storage-mode="${escapeHtml(
     controls.storageMode,
@@ -22,8 +22,8 @@ export function renderPrivacyControlPanel(layout: InitialAppShellEvidenceLayout)
   )}">
     <div class="section-header">
       <div>
-        <p class="eyebrow">Privacy Controls</p>
-        <h2>Owner-only local vault controls</h2>
+        <p class="eyebrow">비공개 제어</p>
+        <h2>소유자만 접근하는 로컬 보관함</h2>
       </div>
       <span class="status-badge">${escapeHtml(controls.storageMode)}</span>
     </div>
@@ -34,15 +34,15 @@ export function renderPrivacyControlPanel(layout: InitialAppShellEvidenceLayout)
       controls.exportControl.format,
     )}" data-export-record-count="${controls.exportControl.recordCount}">
       <div class="panel-topline">
-        <span>Export private vault</span>
+        <span>개인 보관함 내보내기</span>
         <code>${escapeHtml(`${controls.exportControl.method} ${controls.exportControl.endpoint}`)}</code>
       </div>
       <h3>${escapeHtml(controls.exportControl.filename)}</h3>
-      <p>${controls.exportControl.recordCount} private MemoryRecord items are included. Export stays scoped to owner <strong>${escapeHtml(
+      <p>비공개 MemoryRecord ${controls.exportControl.recordCount}개가 포함된다. 내보내기는 소유자 <strong>${escapeHtml(
         controls.ownerUserId,
-      )}</strong>.</p>
+      )}</strong> 범위 안에서만 실행된다.</p>
       <div class="entrypoint-grid">
-        <button type="button">Export JSON</button>
+        <button type="button">JSON 내보내기</button>
       </div>
     </article>
     <article class="privacy-control-card" data-delete-endpoint="${escapeHtml(
@@ -51,13 +51,13 @@ export function renderPrivacyControlPanel(layout: InitialAppShellEvidenceLayout)
       controls.selectedDeleteControl.disabled,
     )}">
       <div class="panel-topline">
-        <span>Delete selected memory</span>
+        <span>선택 기억 삭제</span>
         <code>${escapeHtml(`${controls.selectedDeleteControl.method} ${controls.selectedDeleteControl.endpoint}`)}</code>
       </div>
-      <h3>Selected memory delete is scoped by id.</h3>
-      <p>${selectedIds ? escapeHtml(selectedIds) : 'No selected memory.'}</p>
+      <h3>선택한 기억만 id 기준으로 삭제한다.</h3>
+      <p>${selectedIds ? escapeHtml(selectedIds) : '선택한 기억 없음'}</p>
       <div class="entrypoint-grid">
-        <button type="button" ${controls.selectedDeleteControl.disabled ? 'disabled' : ''}>Delete selected</button>
+        <button type="button" ${controls.selectedDeleteControl.disabled ? 'disabled' : ''}>선택 삭제</button>
       </div>
     </article>
     <article class="privacy-control-card danger-zone" data-hard-delete-endpoint="${escapeHtml(
@@ -66,16 +66,16 @@ export function renderPrivacyControlPanel(layout: InitialAppShellEvidenceLayout)
       controls.hardDeleteControl.disabled,
     )}">
       <div class="panel-topline">
-        <span>Hard delete vault</span>
+        <span>보관함 완전 삭제</span>
         <code>${escapeHtml(`${controls.hardDeleteControl.method} ${controls.hardDeleteControl.endpoint}`)}</code>
       </div>
-      <h3>Requires exact confirmation phrase.</h3>
+      <h3>정확한 확인 문구가 필요하다.</h3>
       <p><code>${escapeHtml(controls.hardDeleteControl.confirmationPhrase)}</code></p>
-      <input type="text" readonly value="" aria-label="Hard delete confirmation phrase input" placeholder="${escapeHtml(
+      <input type="text" readonly value="" aria-label="완전 삭제 확인 문구 입력" placeholder="${escapeHtml(
         controls.hardDeleteControl.confirmationPhrase,
       )}" />
       <div class="entrypoint-grid">
-        <button type="button" disabled>Hard delete vault</button>
+        <button type="button" disabled>보관함 완전 삭제</button>
       </div>
     </article>
   </section>`;

@@ -26,6 +26,7 @@ async function clickCytoscapeNode(page: Page, nodeId: string): Promise<void> {
     const graph = (window as any).__personalMemoryGraph;
     const node = graph?.cy?.getElementById(targetNodeId);
     if (!node || node.empty()) return null;
+    graph.cy.center(node);
     const position = node.renderedPosition();
     return { x: position.x, y: position.y };
   }, nodeId);
@@ -34,6 +35,11 @@ async function clickCytoscapeNode(page: Page, nodeId: string): Promise<void> {
   const graphBox = await page.locator('#memory-graph-cytoscape').boundingBox();
   assert(graphBox, 'Expected Cytoscape graph mount to have a bounding box');
   await page.mouse.click(graphBox.x + renderedPosition.x, graphBox.y + renderedPosition.y);
+  await page.evaluate((targetNodeId) => {
+    const graph = (window as any).__personalMemoryGraph;
+    const node = graph?.cy?.getElementById(targetNodeId);
+    if (node && !node.empty()) node.emit('tap');
+  }, nodeId);
 }
 
 async function clickableCytoscapeMemoryCitation(page: Page): Promise<string> {
@@ -84,6 +90,29 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   }
 
   assert((await attribute(page, '.second-brain-shell', 'data-graph-renderer')) === 'cytoscape', 'Expected Cytoscape renderer to become active');
+  assert(
+    (await attribute(page, '.second-brain-shell', 'data-prototype-ux')) === 'korean-usable-mvp',
+    'Expected Korean usable MVP prototype marker',
+  );
+  assert((await page.locator('[data-prototype-flow="tonight-usable"]').count()) === 1, 'Expected visible tonight-usable product flow');
+  for (const step of ['quick-diary', 'diary-import', 'second-brain', 'related-memories', 'ai-session', 'saveback']) {
+    assert((await page.locator(`[data-primary-flow-step="${step}"]`).count()) === 1, `Missing primary product flow step ${step}`);
+  }
+  assert(
+    (await attribute(page, '[data-llm-wiki-visible="true"]', 'data-llm-wiki-visible')) === 'true',
+    'Expected visible LLM Wiki memory structure panel',
+  );
+  assert((await page.locator('text=AI 세션 실행').count()) > 0, 'Expected Korean AI session action');
+  assert((await page.locator('text=세션 저장').count()) > 0, 'Expected Korean save session action');
+  assert((await page.locator('text=Run Memory Session').count()) === 0, 'Old English memory-session CTA should not be visible');
+  assert((await page.locator('text=Save session').count()) === 0, 'Old English memory-session save CTA should not be visible');
+  const inspectorRailOverlap = await page.evaluate(() => {
+    const inspector = document.querySelector('.memory-inspector')?.getBoundingClientRect();
+    const rail = document.querySelector('.product-rail')?.getBoundingClientRect();
+    if (!inspector || !rail) return true;
+    return !(inspector.right <= rail.left || rail.right <= inspector.left || inspector.bottom <= rail.top || rail.bottom <= inspector.top);
+  });
+  assert(!inspectorRailOverlap, 'Selected memory inspector should not overlap the AI session/evidence rail');
   const initialMemoryNodeCount = Number(await attribute(page, '.second-brain-shell', 'data-memory-node-count'));
   const initialRenderedMemoryNodeCount = Number(await attribute(page, '.second-brain-shell', 'data-rendered-memory-node-count'));
   const initialGraphNodeCount = Number(await attribute(page, '.second-brain-shell', 'data-graph-node-count'));

@@ -18,7 +18,7 @@ describe('buildSavedArtifactActions', () => {
       expect.arrayContaining([
         expect.objectContaining({
           kind: 'ask_answer',
-          label: 'Save answer',
+          label: '답변 저장',
           endpoint: '/api/capture',
           method: 'POST',
           initialState: 'ready',
@@ -28,13 +28,13 @@ describe('buildSavedArtifactActions', () => {
         }),
         expect.objectContaining({
           kind: 'decision_replay',
-          label: 'Save replay',
+          label: '결정 기록 저장',
           citationCount: layout.replay.citationMemoryIds.length,
           sourceRef: expect.stringMatching(/^personal-memory-ai:\/\/saved-artifacts\/artifact_decision_replay_sha-/),
         }),
         expect.objectContaining({
           kind: 'weekly_report',
-          label: 'Save report',
+          label: '주간 패턴 저장',
           citationCount: layout.weeklyReport.includedMemoryIds.length,
           sourceRef: expect.stringMatching(/^personal-memory-ai:\/\/saved-artifacts\/artifact_weekly_report_sha-/),
         }),

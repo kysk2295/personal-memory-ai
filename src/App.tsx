@@ -84,7 +84,7 @@ const APP_SHELL_STYLES = `
     margin: 6px 0 0;
     font-size: 42px;
     line-height: 0.94;
-    letter-spacing: -0.06em;
+    letter-spacing: 0;
   }
   .brain-title p {
     margin: 12px 0 0;
@@ -334,9 +334,12 @@ const APP_SHELL_STYLES = `
     box-shadow: 0 16px 36px rgba(165, 170, 197, 0.14);
     padding: 12px 14px;
     display: grid;
-    grid-template-columns: minmax(260px, 0.78fr) minmax(0, 1.22fr) auto;
+    grid-template-columns: minmax(250px, 0.62fr) minmax(0, 1.38fr) auto;
     gap: 14px;
     align-items: center;
+  }
+  .prototype-goal-copy {
+    min-width: 0;
   }
   .product-value-strip h2 {
     margin: 0;
@@ -372,7 +375,7 @@ const APP_SHELL_STYLES = `
     padding: 0;
     list-style: none;
     display: grid;
-    grid-template-columns: repeat(5, minmax(86px, 1fr));
+    grid-template-columns: repeat(6, minmax(86px, 1fr));
     gap: 6px;
   }
   .service-flow-steps li {
@@ -404,13 +407,13 @@ const APP_SHELL_STYLES = `
     flex: 1;
     min-height: 0;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(320px, 420px);
+    grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
     gap: 16px;
     align-items: stretch;
   }
   .graph-stage {
     position: relative;
-    min-height: 650px;
+    min-height: 680px;
     margin-top: 0;
     display: grid;
     place-items: center;
@@ -436,7 +439,7 @@ const APP_SHELL_STYLES = `
     content: "";
     position: absolute;
     inset: 4% 2% 2%;
-    border-radius: 28px;
+    border-radius: 8px;
     background:
       radial-gradient(circle at 58% 51%, rgba(143, 128, 255, 0.08), transparent 0 24%),
       linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(250, 250, 255, 0.82));
@@ -475,19 +478,19 @@ const APP_SHELL_STYLES = `
     left: 34px;
     bottom: 30px;
     z-index: 2;
-    max-width: 380px;
+    max-width: 470px;
     display: flex;
     flex-wrap: wrap;
     gap: 7px;
     align-items: center;
-    color: #8e94a6;
+    color: #6f7688;
     font-size: 11px;
     line-height: 1.35;
   }
   .wiki-compiler-strip strong { color: #5d6272; }
   .wiki-node-chip {
     border: 1px solid rgba(114, 120, 144, 0.12);
-    border-radius: 999px;
+    border-radius: 8px;
     padding: 5px 8px;
     background: rgba(255, 255, 255, 0.75);
   }
@@ -533,12 +536,13 @@ const APP_SHELL_STYLES = `
   }
   .memory-inspector {
     position: absolute;
-    right: 28px;
+    right: auto;
+    left: 28px;
     bottom: 28px;
     z-index: 3;
-    width: min(390px, calc(100% - 56px));
+    width: min(430px, calc(100% - 56px));
     border: 1px solid rgba(120, 126, 149, 0.16);
-    border-radius: 24px;
+    border-radius: 8px;
     background: rgba(255, 255, 255, 0.92);
     backdrop-filter: blur(14px);
     box-shadow: 0 16px 42px rgba(175, 180, 206, 0.2);
@@ -548,7 +552,7 @@ const APP_SHELL_STYLES = `
     margin: 6px 0 8px;
     font-size: 21px;
     line-height: 1.08;
-    letter-spacing: -0.04em;
+    letter-spacing: 0;
     color: #5e6374;
   }
   .memory-inspector p { margin: 0; color: #7c8295; font-size: 12px; line-height: 1.55; }
@@ -558,6 +562,9 @@ const APP_SHELL_STYLES = `
     margin-top: 12px;
     padding-top: 12px;
     border-top: 1px solid rgba(120, 126, 149, 0.13);
+  }
+  .related-memory-strip .related-memory-action {
+    min-width: 0;
   }
   .related-memory-strip strong {
     color: #626779;
@@ -572,7 +579,7 @@ const APP_SHELL_STYLES = `
   .related-memory-action {
     justify-self: start;
     border: 1px solid rgba(20, 184, 166, 0.2);
-    border-radius: 999px;
+    border-radius: 8px;
     background: rgba(20, 184, 166, 0.08);
     color: #0f766e;
     padding: 6px 9px;
@@ -613,9 +620,23 @@ const APP_SHELL_STYLES = `
     display: flex;
     flex-direction: column;
     gap: 12px;
-    max-height: calc(100vh - 126px);
+    max-height: calc(100vh - 172px);
     overflow: auto;
     padding: 2px 2px 18px;
+  }
+  .product-rail::before {
+    content: "AI 세션과 근거";
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    display: block;
+    border: 1px solid rgba(117, 122, 143, 0.16);
+    border-radius: 8px;
+    background: rgba(15, 16, 20, 0.94);
+    color: #f3f4f8;
+    padding: 9px 11px;
+    font-size: 12px;
+    font-weight: 780;
   }
   .product-rail > * { flex: 0 0 auto; }
   .product-panel,
@@ -760,6 +781,9 @@ const APP_SHELL_STYLES = `
     color: #0f766e;
     font-size: 11px;
     font-weight: 760;
+  }
+  .memory-session-steps strong[data-session-status-label] {
+    color: #0f766e;
   }
   .ask-question-row,
   .decision-current-card {
@@ -1442,28 +1466,28 @@ const APP_SHELL_STYLES = `
     color: #ff8797;
   }
   .product-rail {
-    position: absolute;
-    right: 22px;
-    bottom: 18px;
+    position: relative;
+    right: auto;
+    bottom: auto;
     z-index: 5;
-    width: min(420px, calc(100vw - 330px));
-    max-height: min(560px, calc(100vh - 144px));
+    width: 100%;
+    max-height: calc(100vh - 172px);
     overflow: auto;
     padding: 0 8px 10px;
     border: 1px solid rgba(214, 31, 60, 0.3);
     border-radius: 8px;
     background: rgba(12, 12, 12, 0.9);
     box-shadow: 0 24px 64px rgba(0, 0, 0, 0.46);
-    transform: translateY(calc(100% - 52px));
+    transform: none;
     transition: transform 180ms ease, background 180ms ease, border-color 180ms ease;
   }
   .product-rail:hover,
   .product-rail:focus-within {
-    transform: translateY(0);
+    transform: none;
     background: rgba(13, 13, 13, 0.96);
   }
   .product-rail::before {
-    content: attr(data-benchmark-drawer-tab);
+    content: "AI 세션과 근거";
     position: sticky;
     top: 0;
     z-index: 2;
@@ -1781,42 +1805,42 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
     .join('');
 
   if (variant === 'plain' || variant === 'topbar-only' || variant === 'debug-text') {
-    return `<main class="second-brain-shell"><aside class="brain-sidebar"><section class="brain-title"><p class="eyebrow">지식 그래프</p><h1>Second Brain</h1><p>${escapeHtml(layout.northStar)}</p></section></aside></main>`;
+    return `<main class="second-brain-shell"><aside class="brain-sidebar"><section class="brain-title"><p class="eyebrow">지식 그래프</p><h1>내 세컨브레인</h1><p>${escapeHtml(layout.northStar)}</p></section></aside></main>`;
   }
 
-  return `<main class="second-brain-shell" data-labels="visible" data-spacing="normal" data-layout-mode="free" data-layout-explainer="Free mode keeps the graph organic for open-ended memory exploration." data-layout-version="0" data-filter-semantic="on" data-filter-reflective="on" data-filter-procedural="on" data-filter-episodic="on" data-filter-thesis="on" data-filter-source="on" data-graph-renderer="cytoscape-pending" data-benchmark-reference="https://www.careerhackeralex.com/memory" data-memory-node-count="${memoryNodeCount}" data-rendered-memory-node-count="${renderedMemoryNodeCount}" data-graph-node-count="${graphNodeCount}" data-graph-edge-count="${graphEdgeCount}" data-surface-mode="graph-first" data-rail-mode="collapsed-evidence-drawer" data-first-screen-contract="benchmark-graph-dominant" data-panel-visibility="secondary-drawer" data-interaction-contract="filter-select-space-rearrange">
-    <aside class="brain-sidebar" aria-label="Second Brain graph controls">
+  return `<main class="second-brain-shell" data-prototype-ux="korean-usable-mvp" data-product-goal="quick-diary-to-private-second-brain-ai" data-labels="visible" data-spacing="normal" data-layout-mode="free" data-layout-explainer="Free mode keeps the graph organic for open-ended memory exploration." data-layout-version="0" data-filter-semantic="on" data-filter-reflective="on" data-filter-procedural="on" data-filter-episodic="on" data-filter-thesis="on" data-filter-source="on" data-graph-renderer="cytoscape-pending" data-benchmark-reference="https://www.careerhackeralex.com/memory" data-memory-node-count="${memoryNodeCount}" data-rendered-memory-node-count="${renderedMemoryNodeCount}" data-graph-node-count="${graphNodeCount}" data-graph-edge-count="${graphEdgeCount}" data-surface-mode="graph-first" data-rail-mode="collapsed-evidence-drawer" data-first-screen-contract="korean-diary-flow-graph-dominant" data-panel-visibility="secondary-drawer" data-interaction-contract="capture-import-select-related-session-save">
+    <aside class="brain-sidebar" aria-label="세컨브레인 그래프 조절">
       <div class="sidebar-topline">
         <a class="home-button" href="/" aria-label="home">←</a>
         <div class="locale-toggle" role="group" aria-label="언어">
-          <button type="button" aria-pressed="true">KO</button>
-          <button type="button" aria-pressed="false">EN</button>
+          <button type="button" aria-pressed="true">한</button>
+          <button type="button" aria-pressed="false">영</button>
         </div>
       </div>
 
       <section class="brain-title">
         <p class="eyebrow">지식 그래프</p>
-        <h1>Second Brain</h1>
+        <h1>내 세컨브레인</h1>
         <p>${escapeHtml(layout.northStar)} 일기, 가져온 기록, 결정의 결과가 하나의 기억 그래프로 연결된다.</p>
       </section>
 
       <div class="graph-meta-line" aria-label="Memory graph scale">
-        <span><strong data-live-count="memory-nodes">${memoryNodeCount}</strong> memories</span>
+        <span><strong data-live-count="memory-nodes">${memoryNodeCount}</strong> 기억</span>
         <span class="graph-meta-dot">·</span>
-        <span><strong data-live-count="rendered-memory-nodes">${renderedMemoryNodeCount}</strong> rendered</span>
+        <span><strong data-live-count="rendered-memory-nodes">${renderedMemoryNodeCount}</strong> 표시</span>
         <span class="graph-meta-dot">·</span>
-        <span><strong data-live-count="graph-nodes">${graphNodeCount}</strong> graph nodes</span>
+        <span><strong data-live-count="graph-nodes">${graphNodeCount}</strong> 노드</span>
         <span class="graph-meta-dot">·</span>
-        <span><strong data-live-count="graph-edges">${graphEdgeCount}</strong> edges</span>
+        <span><strong data-live-count="graph-edges">${graphEdgeCount}</strong> 엣지</span>
         <span class="graph-meta-dot">·</span>
-        <span>last woven from diary + imports</span>
+        <span>일기와 가져온 기록 기반</span>
       </div>
 
       <section class="memory-search-control" aria-label="Memory search" data-memory-search-endpoint="/api/memory/search">
         <input type="search" data-control="memory-search" placeholder="기억 검색" aria-label="기억 검색" autocomplete="off" />
         <div class="memory-search-meta">
           <span data-search-count>${layout.primaryNodes.length} / ${layout.primaryNodes.length}</span>
-          <span>private vault</span>
+          <span>개인 보관함</span>
         </div>
         <div class="memory-search-results" data-search-results="memory" aria-label="Memory search results">
           ${layout.primaryNodes.map(renderMemorySearchResult).join('')}
@@ -1847,10 +1871,10 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
       <section class="legend-section" aria-label="Graph layout modes">
         <p class="legend-title">레이아웃</p>
         <div class="layout-modes">
-          <button type="button" class="layout-button active" data-layout-choice="free" aria-pressed="true">Free</button>
-          <button type="button" class="layout-button" data-layout-choice="constellation" aria-pressed="false">Constellation</button>
-          <button type="button" class="layout-button" data-layout-choice="hierarchy" aria-pressed="false">Hierarchy</button>
-          <button type="button" class="layout-button" data-layout-choice="timeline" aria-pressed="false">Timeline</button>
+          <button type="button" class="layout-button active" data-layout-choice="free" aria-pressed="true">자유</button>
+          <button type="button" class="layout-button" data-layout-choice="constellation" aria-pressed="false">별자리</button>
+          <button type="button" class="layout-button" data-layout-choice="hierarchy" aria-pressed="false">계층</button>
+          <button type="button" class="layout-button" data-layout-choice="timeline" aria-pressed="false">시간</button>
         </div>
       </section>
 
@@ -1876,26 +1900,27 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
       <p class="sidebar-footer">대시보드가 아니라 기억을 탐색하는 작업공간. 상태 라벨과 내부 구현 목록은 첫 인상에서 제거하고, 그래프와 질문 입력을 전면에 둔다.</p>
     </aside>
 
-    <section class="brain-canvas" aria-label="Personal Memory AI Second Brain canvas">
-      <form class="ask-memory-bar" aria-label="Ask Second Brain" data-ask-endpoint="/api/ask">
+    <section class="brain-canvas" aria-label="개인 기억 AI 세컨브레인 캔버스">
+      <form class="ask-memory-bar" aria-label="세컨브레인에게 묻기" data-ask-endpoint="/api/ask">
         <span class="ask-lock" aria-hidden="true">⌘</span>
-        <span class="benchmark-signin-cta" data-auth-cta="private-second-brain">Sign in to ask the Second Brain</span>
-        <input id="ask-memory-bar-question" name="question" value="${escapeHtml(layout.askQuestion)}" aria-label="Ask My Past Self question" />
-        <button class="ask-submit" type="submit" aria-label="Ask" data-control="ask-second-brain">→</button>
+        <span class="benchmark-signin-cta" data-auth-cta="private-second-brain">내 기억에게 묻기</span>
+        <input id="ask-memory-bar-question" name="question" value="${escapeHtml(layout.askQuestion)}" aria-label="과거의 나에게 묻기" />
+        <button class="ask-submit" type="submit" aria-label="질문하기" data-control="ask-second-brain">→</button>
       </form>
 
       <section class="product-value-strip" aria-label="Private memory product value">
-        <div>
-          <p class="eyebrow">Private Personal Memory AI</p>
-          <h2>나보다 나를 더 잘 아는 개인 기억 AI</h2>
-          <p>앱에서 쓴 일기와 가져온 기록이 개인 기억 그래프로 연결된다. 공유는 공개가 아니라, 현재 일기와 과거 기억이 같은 맥락 안에서 함께 떠오른다는 뜻이다.</p>
+        <div class="prototype-goal-copy">
+          <p class="eyebrow">개인 일기 세컨브레인</p>
+          <h2>오늘 쓴 고민을 과거 기억과 연결해서 답하게 한다</h2>
+          <p>앱에서는 빠르게 쓰고, 웹에서는 일기 DB만 가져온다. 기억은 공개 공유가 아니라 내 안에서만 현재 일기와 과거 기억이 함께 떠오르는 구조다.</p>
         </div>
-        <ol class="service-flow-steps" aria-label="Diary to Second Brain service flow" data-service-flow="diary-to-second-brain" data-service-flow-primary-entry="app-or-web-diary" data-service-flow-graph-source="actual-memory-records">
-          <li data-service-flow-step="quick-diary-capture"><strong>앱에서 빠르게 기록</strong><span>모바일/PWA 일기 캡처</span></li>
-          <li data-service-flow-step="diary-database-load"><strong>웹에서 전체 일기 불러오기</strong><span>습관리스트/일기 DB만 선택</span></li>
-          <li data-service-flow-step="second-brain-graph"><strong>세컨브레인 그래프 생성</strong><span>실제 MemoryRecord 기반</span></li>
-          <li data-service-flow-step="related-memory-nodes"><strong>연관된 과거 기억 노드 표시</strong><span>감정·결정·결과 엣지</span></li>
-          <li data-service-flow-step="ask-report"><strong>Ask와 Weekly Report로 해결</strong><span>인용 근거가 있을 때만 답변</span></li>
+        <ol class="prototype-flow-board service-flow-steps" aria-label="Diary to Second Brain service flow" data-prototype-flow="tonight-usable" data-service-flow="diary-to-second-brain" data-service-flow-primary-entry="app-or-web-diary" data-service-flow-graph-source="actual-memory-records">
+          <li data-primary-flow-step="quick-diary" data-service-flow-step="quick-diary-capture"><strong>빠른 일기</strong><span>앱/PWA에서 바로 기록</span></li>
+          <li data-primary-flow-step="diary-import" data-service-flow-step="diary-database-load"><strong>일기 DB 가져오기</strong><span>습관리스트/일기 DB만 선택</span></li>
+          <li data-primary-flow-step="second-brain" data-service-flow-step="second-brain-graph"><strong>내 세컨브레인</strong><span>MemoryRecord 그래프 생성</span></li>
+          <li data-primary-flow-step="related-memories" data-service-flow-step="related-memory-nodes"><strong>연관 과거 기억</strong><span>감정·결정·결과 엣지</span></li>
+          <li data-primary-flow-step="ai-session" data-service-flow-step="ask-report"><strong>AI 고민 세션</strong><span>인용 근거로만 답변</span></li>
+          <li data-primary-flow-step="saveback"><strong>다시 기억으로 저장</strong><span>세션 결과가 미래 근거가 됨</span></li>
         </ol>
         <div class="privacy-actions" aria-label="Privacy and control actions">
           <span>비공개 기본값</span>
@@ -1911,12 +1936,13 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
           ${renderMemoryGraphPayload(memoryGraph)}
           ${renderSavedArtifactPayload(layout)}
           ${variant === 'no-svg' ? '' : renderMemoryGraph(layout)}
-          <aside class="wiki-compiler-strip" aria-label="LLM Wiki compiler preview" data-wiki-compiler="pmi017">
-            <span><strong data-live-count="wiki-atoms">${layout.compiledWiki.atomCount}</strong> canonical memory atoms</span>
-            <span><strong data-live-count="wiki-nodes">${layout.compiledWiki.nodeCount}</strong> compiled wiki nodes</span>
-            <span><strong data-live-count="wiki-citations">${layout.compiledWiki.citationCount}</strong> citations</span>
-            <span data-memory-ops="retain-recall-reflect">retain ${layout.compiledWiki.operationCounts.retain} · recall ${layout.compiledWiki.operationCounts.recall} · reflect ${layout.compiledWiki.operationCounts.reflect}</span>
-            <span data-memory-freshness="strengthening-stable-stale">freshness ${layout.compiledWiki.freshnessCounts.strengthening}/${layout.compiledWiki.freshnessCounts.stable}/${layout.compiledWiki.freshnessCounts.stale}</span>
+          <aside class="wiki-compiler-strip" aria-label="LLM Wiki memory structure preview" data-wiki-compiler="pmi017" data-llm-wiki-visible="true">
+            <span><strong data-live-count="wiki-atoms">${layout.compiledWiki.atomCount}</strong> 원자 기억</span>
+            <span><strong data-live-count="wiki-nodes">${layout.compiledWiki.nodeCount}</strong> 위키 노드</span>
+            <span><strong data-live-count="wiki-citations">${layout.compiledWiki.citationCount}</strong> 인용</span>
+            <span data-memory-ops="retain-recall-reflect">보존 ${layout.compiledWiki.operationCounts.retain} · 회상 ${layout.compiledWiki.operationCounts.recall} · 성찰 ${layout.compiledWiki.operationCounts.reflect}</span>
+            <span data-memory-freshness="strengthening-stable-stale">강화/안정/오래됨 ${layout.compiledWiki.freshnessCounts.strengthening}/${layout.compiledWiki.freshnessCounts.stable}/${layout.compiledWiki.freshnessCounts.stale}</span>
+            <span>출처·패턴·인용 구조</span>
             ${layout.compiledWiki.nodes
               .filter((node) => node.type === 'pattern' || node.type === 'concept')
               .sort((left, right) => (left.type === right.type ? left.id.localeCompare(right.id) : left.type === 'pattern' ? -1 : 1))
@@ -1930,36 +1956,36 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
               .join('')}
           </aside>
 
-          <article class="memory-inspector" aria-label="Ask My Past Self cited question flow" data-inspector-panel="pmi015">
-            <p class="eyebrow">Ask My Past Self · cited path</p>
+          <article class="memory-inspector" aria-label="과거의 나에게 묻기 인용 경로" data-inspector-panel="pmi015">
+            <p class="eyebrow">과거의 나에게 묻기 · 인용 경로</p>
             <h2 data-inspector-headline>${escapeHtml(layout.ask.recommendation)}</h2>
-            <p class="memory-inspector-source" data-inspector-source>selected path · 3 cited memories</p>
-            <p data-inspector-body>반복된 <span class="pill-red">anxiety → feature addition → launch delay</span> 경로만 근거로 답한다. Decision Replay는 현재 결정을 과거 결과와 비교하고, Evidence drawer는 출처·날짜·기억 원문으로 되돌아간다.</p>
+            <p class="memory-inspector-source" data-inspector-source>선택 경로 · 인용 기억 3개</p>
+            <p data-inspector-body>반복된 <span class="pill-red">불안 → 기능 추가 → 출시 지연</span> 경로만 근거로 답한다. 결정 되짚기는 현재 결정을 과거 결과와 비교하고, 근거 서랍은 출처·날짜·기억 원문으로 되돌아간다.</p>
             <div class="related-memory-strip" data-related-memory-strip="selected-node" data-related-memory-count="0">
               <strong>연관된 과거 기억</strong>
               <div class="related-memory-list" data-related-memory-list></div>
-              <button type="button" class="related-memory-action" data-control="ask-with-related-memory-context">이 맥락으로 Ask</button>
-              <button type="button" class="related-memory-action" data-control="replay-with-related-memory-context">이 맥락으로 Decision</button>
-              <button type="button" class="related-memory-action" data-control="report-with-related-memory-context">이 맥락으로 Weekly</button>
-              <button type="button" class="related-memory-action primary" data-control="run-memory-session">Run Memory Session</button>
+              <button type="button" class="related-memory-action" data-control="ask-with-related-memory-context">이 맥락으로 질문</button>
+              <button type="button" class="related-memory-action" data-control="replay-with-related-memory-context">이 맥락으로 결정 되짚기</button>
+              <button type="button" class="related-memory-action" data-control="report-with-related-memory-context">이 맥락으로 주간 패턴</button>
+              <button type="button" class="related-memory-action primary" data-control="run-memory-session">AI 세션 실행</button>
             </div>
-            <div class="citation-row" aria-label="Ask My Past Self citations" data-inspector-citations>${citationLinks}</div>
+            <div class="citation-row" aria-label="과거의 나에게 묻기 인용" data-inspector-citations>${citationLinks}</div>
           </article>
         </div>
 
-        <aside class="product-rail" aria-label="Cited memory product rail" data-rail-mode="collapsed-evidence-drawer" data-benchmark-drawer-tab="evidence-reports">
-          <section class="memory-session-panel" aria-label="Guided Memory Session" data-memory-session-panel data-session-state="idle" data-session-source-memory="" data-session-related-memory-count="0">
+        <aside class="product-rail" aria-label="인용 기억 제품 레일" data-rail-mode="persistent-evidence-rail" data-benchmark-drawer-tab="AI 세션과 근거">
+          <section class="memory-session-panel" aria-label="기억 AI 세션" data-memory-session-panel data-session-state="idle" data-session-source-memory="" data-session-related-memory-count="0">
             <div>
-              <p class="eyebrow">Guided Memory Session</p>
-              <h3>선택한 기억 하나로 Ask · Decision · Weekly를 이어서 실행</h3>
+              <p class="eyebrow">기억 AI 세션</p>
+              <h3>선택한 기억 하나로 질문 · 결정 · 주간 패턴을 이어서 실행</h3>
             </div>
             <p data-memory-session-summary>그래프에서 기억을 선택하면 관련 과거 기억을 같은 맥락으로 묶어 세 가지 AI 작업을 한 번에 실행한다.</p>
             <ol class="memory-session-steps" aria-label="Guided memory session steps">
-              <li data-memory-session-step="ask" data-session-step-state="idle"><span>Ask</span><strong>idle</strong></li>
-              <li data-memory-session-step="replay" data-session-step-state="idle"><span>Decision Replay</span><strong>idle</strong></li>
-              <li data-memory-session-step="weekly" data-session-step-state="idle"><span>Weekly Report</span><strong>idle</strong></li>
+              <li data-memory-session-step="ask" data-session-step-state="idle"><span>질문</span><strong>대기</strong></li>
+              <li data-memory-session-step="replay" data-session-step-state="idle"><span>결정 되짚기</span><strong>대기</strong></li>
+              <li data-memory-session-step="weekly" data-session-step-state="idle"><span>주간 패턴</span><strong>대기</strong></li>
             </ol>
-            <button type="button" class="save-artifact-action" data-control="save-memory-session" data-artifact-save-state="idle" data-artifact-save-endpoint="/api/capture" data-artifact-save-method="POST">Save session</button>
+            <button type="button" class="save-artifact-action" data-control="save-memory-session" data-artifact-save-state="idle" data-artifact-save-endpoint="/api/capture" data-artifact-save-method="POST">세션 저장</button>
           </section>
           ${renderAskMyPastSelfPanel(layout)}
           ${renderPrivacyControlPanel(layout)}
@@ -2415,7 +2441,11 @@ const GRAPH_CONTROL_SCRIPT = `
     if (!item) return;
     item.setAttribute('data-session-step-state', state);
     const status = item.querySelector('strong');
-    if (status) status.textContent = state;
+    if (status) {
+      status.setAttribute('data-session-status-label', state);
+      status.textContent =
+        state === 'completed' ? '완료' : state === 'running' ? '실행 중' : state === 'failed' ? '실패' : '대기';
+    }
   };
 
   const setMemorySessionState = (state, context) => {
@@ -2430,11 +2460,11 @@ const GRAPH_CONTROL_SCRIPT = `
     }
     if (memorySessionSaveButton && state === 'completed') {
       memorySessionSaveButton.setAttribute('data-artifact-save-state', 'ready');
-      memorySessionSaveButton.textContent = 'Save session';
+      memorySessionSaveButton.textContent = '세션 저장';
     }
     if (memorySessionSummary && context?.sourceMemoryId) {
       memorySessionSummary.textContent =
-        context.sourceMemoryId + ' 기억과 관련 과거 기억 ' + String(context.relatedMemoryIds.length) + '개로 Ask, Decision Replay, Weekly Report를 실행한다.';
+        context.sourceMemoryId + ' 기억과 관련 과거 기억 ' + String(context.relatedMemoryIds.length) + '개로 질문, 결정 되짚기, 주간 패턴을 실행한다.';
     }
   };
 
@@ -2847,10 +2877,10 @@ const GRAPH_CONTROL_SCRIPT = `
   };
 
   const layoutExplainers = {
-    free: 'Free mode keeps the graph organic for open-ended memory exploration.',
+    free: '자유 모드는 기억 탐색을 위해 그래프를 유기적으로 유지한다.',
     constellation: 'Constellation pins decision and thesis nodes around the selected memory.',
-    hierarchy: 'Hierarchy stacks memories under source, pattern, decision, and outcome nodes.',
-    timeline: 'Timeline stretches the graph from old diary traces to recent imports.',
+    hierarchy: '계층 모드는 출처, 패턴, 결정, 결과 노드 아래 기억을 정리한다.',
+    timeline: '시간 모드는 오래된 일기 흔적부터 최근 가져오기까지 펼쳐 보여준다.',
   };
 
   const runCytoscapeLayoutMode = (mode) => {
@@ -3049,7 +3079,7 @@ const GRAPH_CONTROL_SCRIPT = `
           String(result.savedArtifact.citationMemoryIds?.length || 0),
         );
         askSaveButton.setAttribute('data-artifact-save-state', 'ready');
-        askSaveButton.textContent = 'Save answer';
+        askSaveButton.textContent = '답변 저장';
       }
       shell.setAttribute('data-live-ask-artifact-id', result.savedArtifact.id);
     }
@@ -3080,11 +3110,11 @@ const GRAPH_CONTROL_SCRIPT = `
     badge.setAttribute('data-context-related-memory-count', String(relatedMemoryIds.length));
     badge.setAttribute('data-context-related-memories', relatedMemoryIds.join(','));
     badge.innerHTML =
-      '<strong>Selected memory context</strong><span>' +
+      '<strong>선택한 기억 맥락</strong><span>' +
       escapeText(context.sourceMemoryId) +
       ' + ' +
       String(relatedMemoryIds.length) +
-      ' related memories</span>';
+      '개의 연관 기억</span>';
     shell.setAttribute('data-' + kind + '-result-context-source-memory', context.sourceMemoryId);
     shell.setAttribute('data-' + kind + '-result-context-related-memory-count', String(relatedMemoryIds.length));
     shell.setAttribute('data-' + kind + '-result-context-related-memories', relatedMemoryIds.join(','));
@@ -3194,13 +3224,13 @@ const GRAPH_CONTROL_SCRIPT = `
     return {
       id: artifactId,
       kind: 'memory_session',
-      title: 'Guided Memory Session: ' + sourceMemoryId,
+      title: '기억 AI 세션: ' + sourceMemoryId,
       body: [
         'Source memory: ' + sourceMemoryId,
         'Related memories: ' + relatedMemoryIds.join(', '),
         'Ask citations: ' + askCitationMemoryIds.join(', '),
-        'Decision Replay citations: ' + replayCitationMemoryIds.join(', '),
-        'Weekly Report citations: ' + weeklyCitationMemoryIds.join(', '),
+        '결정 되짚기 인용: ' + replayCitationMemoryIds.join(', '),
+        '주간 패턴 인용: ' + weeklyCitationMemoryIds.join(', '),
         'Citations: ' + citationMemoryIds.join(', '),
       ].join('\\n'),
       createdAt,
@@ -3467,7 +3497,7 @@ const GRAPH_CONTROL_SCRIPT = `
       }
     }
     feedbackPanel.setAttribute('data-feedback-state', 'submitted');
-    feedbackSubmit.textContent = feedbackSubmit.getAttribute('data-feedback-submitted-label') || 'Feedback saved';
+    feedbackSubmit.textContent = feedbackSubmit.getAttribute('data-feedback-submitted-label') || '피드백 저장됨';
     shell.setAttribute('data-last-feedback-memory-target', targetMemoryId);
     setInteractionState('feedback-submitted');
   });
@@ -4104,7 +4134,7 @@ export function renderAppShellDocument(variant: RenderVariant = 'full'): string 
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Personal Memory AI Second Brain</title>
+    <title>개인 기억 AI 세컨브레인</title>
     <style>${APP_SHELL_STYLES}</style>
   </head>
   <body>${renderAppShellHtml(variant)}<script src="vendor/cytoscape.min.js"></script><script data-graph-control-script="pmi019">${GRAPH_CONTROL_SCRIPT}</script></body>

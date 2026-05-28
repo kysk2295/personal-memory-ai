@@ -75,7 +75,7 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     ]);
     expect(shell.savedArtifactActions[0]).toEqual(
       expect.objectContaining({
-        label: 'Save answer',
+        label: '답변 저장',
         endpoint: '/api/capture',
         initialState: 'ready',
         sourceRef: expect.stringContaining('personal-memory-ai://saved-artifacts/'),
@@ -251,7 +251,9 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('"graphLabel":"Anxiety before the memory import demo led to...');
     expect(html).toContain('data-surface-mode="graph-first"');
     expect(html).toContain('data-rail-mode="collapsed-evidence-drawer"');
-    expect(html).toContain('data-interaction-contract="filter-select-space-rearrange"');
+    expect(html).toContain('data-prototype-ux="korean-usable-mvp"');
+    expect(html).toContain('data-product-goal="quick-diary-to-private-second-brain-ai"');
+    expect(html).toContain('data-interaction-contract="capture-import-select-related-session-save"');
     expect(html).toContain('data-layout-mode="free"');
     expect(html).toContain('data-layout-version="0"');
     expect(html).toContain('data-filter-semantic="on"');
@@ -310,8 +312,8 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('data-memory-node-count="8"');
     expect(html).toContain('data-rendered-memory-node-count="8"');
     expect(html).toContain('data-graph-density="benchmark-dense"');
-    expect(html).toContain('<strong data-live-count="memory-nodes">8</strong> memories');
-    expect(html).toContain('<strong data-live-count="rendered-memory-nodes">8</strong> rendered');
+    expect(html).toContain('<strong data-live-count="memory-nodes">8</strong> 기억');
+    expect(html).toContain('<strong data-live-count="rendered-memory-nodes">8</strong> 표시');
     expect(html).toContain('data-filter-kind="semantic"');
     expect(html).toContain('data-filter-kind="thesis"');
     expect(html).toContain('data-filter-active="true"');
@@ -327,8 +329,9 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('data-inspector-title=');
     expect(html).toContain('data-inspector-panel="pmi015"');
     expect(html).toContain('data-wiki-compiler="pmi017"');
-    expect(html).toContain('canonical memory atoms');
-    expect(html).toContain('compiled wiki nodes');
+    expect(html).toContain('원자 기억');
+    expect(html).toContain('위키 노드');
+    expect(html).toContain('data-llm-wiki-visible="true"');
     expect(html).toContain('data-memory-ops="retain-recall-reflect"');
     expect(html).toContain('data-memory-freshness="strengthening-stable-stale"');
     expect(html).toContain('data-memory-atom-id="atom:mem_api_artifact_ask_answer_sha-');
@@ -338,14 +341,14 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('data-filter-chip="episodic"');
     expect(html).toContain('class="control-action subtle reset-graph-filters"');
     expect(html).toContain('class="ask-memory-bar"');
-    expect(html).toContain('Second Brain');
+    expect(html).toContain('내 세컨브레인');
     expect(html).toContain('지식 그래프');
     expect(html).toContain('노드 유형');
     expect(html).toContain('엣지 유형');
-    expect(html).toContain('Initial loaded memory-brain graph');
-    expect(html).toContain('Ask My Past Self');
-    expect(html).toContain('Decision Replay');
-    expect(html).toContain('Evidence drawer');
+    expect(html).toContain('내 기억에게 묻기');
+    expect(html).toContain('과거의 나에게 묻기');
+    expect(html).toContain('결정 되짚기');
+    expect(html).toContain('근거 서랍');
     expect(html).not.toContain('class="count-card"');
     expect(html).not.toContain('class="story-grid"');
     expect(html).not.toContain('class="editorial-band"');
@@ -357,7 +360,7 @@ describe('buildInitialAppShellEvidenceLayout', () => {
   test('constrains benchmark graph controls to the left rail and keeps product panels secondary', () => {
     const documentHtml = renderAppShellDocument();
 
-    expect(documentHtml).toContain('data-first-screen-contract="benchmark-graph-dominant"');
+    expect(documentHtml).toContain('data-first-screen-contract="korean-diary-flow-graph-dominant"');
     expect(documentHtml).toContain('data-panel-visibility="secondary-drawer"');
     expect(documentHtml).toContain('.memory-search-result {');
     expect(documentHtml).toContain('width: 100%;');
@@ -368,14 +371,14 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(documentHtml).toContain('data-layout-choice="constellation"');
     expect(documentHtml).toContain('data-layout-choice="hierarchy"');
     expect(documentHtml).toContain('data-layout-choice="timeline"');
-    expect(documentHtml).toContain('Sign in to ask the Second Brain');
+    expect(documentHtml).toContain('내 기억에게 묻기');
     expect(documentHtml).toContain('grid-template-columns: auto auto minmax(0, 1fr) auto;');
-    expect(documentHtml).toContain('data-benchmark-drawer-tab="evidence-reports"');
+    expect(documentHtml).toContain('data-benchmark-drawer-tab="AI 세션과 근거"');
     expect(documentHtml).toContain("shell.setAttribute('data-layout-mode', mode)");
     expect(documentHtml).toContain("shell.setAttribute('data-layout-explainer'");
     expect(documentHtml).toContain('Constellation pins decision and thesis nodes around the selected memory.');
-    expect(documentHtml).toContain('Hierarchy stacks memories under source, pattern, decision, and outcome nodes.');
-    expect(documentHtml).toContain('Timeline stretches the graph from old diary traces to recent imports.');
+    expect(documentHtml).toContain('계층 모드는 출처, 패턴, 결정, 결과 노드 아래 기억을 정리한다.');
+    expect(documentHtml).toContain('시간 모드는 오래된 일기 흔적부터 최근 가져오기까지 펼쳐 보여준다.');
   });
 
   test('wires memory review comparison cards for immediate post-edit inspection', () => {
@@ -442,7 +445,7 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     const shell = buildInitialAppShellEvidenceLayout();
     const html = renderAppShellHtml();
 
-    expect(html).toContain('aria-label="Ask My Past Self cited question flow"');
+    expect(html).toContain('aria-label="과거의 나에게 묻기 인용 질문 흐름"');
     expect(html).toContain('data-ask-endpoint="/api/ask"');
     expect(html).toContain('data-control="ask-second-brain"');
     expect(html).toContain('id="ask-my-past-self-question"');
@@ -451,9 +454,9 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain(
       '<a href="#evidence-mem_launch_may_anxiety_scope_delay" class="citation-ref" data-citation-ref="mem_launch_may_anxiety_scope_delay">[mem_launch_may_anxiety_scope_delay]</a>',
     );
-    expect(html).toContain('aria-label="Ask My Past Self citations"');
+    expect(html).toContain('aria-label="과거의 나에게 묻기 인용"');
     expect(html).toContain('data-coaching-brief="citation-bounded"');
-    expect(html).toContain('aria-label="Citation-bounded coaching brief"');
+    expect(html).toContain('aria-label="인용 기반 코칭 요약"');
     expect(html).toContain('data-coaching-next-action="freeze-scope"');
     expect(html).toContain('data-coaching-next-action="user-feedback"');
     expect(html).toContain('data-coaching-boundary="cited-personal-memories"');
@@ -471,7 +474,7 @@ describe('buildInitialAppShellEvidenceLayout', () => {
       'data-highlight-id="outcome:launch-delayed-by-two-days-after-adding-graph-filters"',
     );
     expect(html).toContain('data-current-question-id="question:이번에도-기능을-더-넣어야-할까"');
-    expect(html).toContain('Evidence drawer');
+    expect(html).toContain('근거 서랍');
 
     for (const highlightId of shell.ask.graphHighlightIds) {
       expect(html).toContain(highlightId);
@@ -486,19 +489,21 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     const html = renderAppShellHtml();
 
     expect(html).toContain('class="product-value-strip"');
-    expect(html).toContain('나보다 나를 더 잘 아는 개인 기억 AI');
-    expect(html).toContain('앱에서 쓴 일기와 가져온 기록이 개인 기억 그래프로 연결된다');
+    expect(html).toContain('오늘 쓴 고민을 과거 기억과 연결해서 답하게 한다');
+    expect(html).toContain('앱에서는 빠르게 쓰고, 웹에서는 일기 DB만 가져온다');
+    expect(html).toContain('data-prototype-flow="tonight-usable"');
     expect(html).toContain('data-service-flow="diary-to-second-brain"');
     expect(html).toContain('data-service-flow-step="quick-diary-capture"');
-    expect(html).toContain('앱에서 빠르게 기록');
+    expect(html).toContain('빠른 일기');
     expect(html).toContain('data-service-flow-step="diary-database-load"');
-    expect(html).toContain('웹에서 전체 일기 불러오기');
+    expect(html).toContain('일기 DB 가져오기');
     expect(html).toContain('data-service-flow-step="second-brain-graph"');
-    expect(html).toContain('세컨브레인 그래프 생성');
+    expect(html).toContain('내 세컨브레인');
     expect(html).toContain('data-service-flow-step="related-memory-nodes"');
-    expect(html).toContain('연관된 과거 기억 노드 표시');
+    expect(html).toContain('연관 과거 기억');
     expect(html).toContain('data-service-flow-step="ask-report"');
-    expect(html).toContain('Ask와 Weekly Report로 해결');
+    expect(html).toContain('AI 고민 세션');
+    expect(html).toContain('다시 기억으로 저장');
     expect(html).toContain('data-service-flow-primary-entry="app-or-web-diary"');
     expect(html).toContain('data-service-flow-graph-source="actual-memory-records"');
     expect(html).toContain('비공개 기본값');
@@ -507,12 +512,12 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).not.toContain('public shared memory');
 
     expect(html).toContain('class="product-rail"');
-    expect(html).toContain('Fast diary capture');
-    expect(html).toContain('Import existing memories');
+    expect(html).toContain('빠른 일기 기록');
+    expect(html).toContain('기존 기억 가져오기');
     expect(html).toContain('aria-label="App capture prototype"');
     expect(html).toContain('id="fast-diary-capture"');
     expect(html).toContain('data-capture-memory-id="mem_captured_ship_note"');
-    expect(html).toContain('app-capture contract/prototype');
+    expect(html).toContain('앱 기록 프로토타입');
     expect(html).toContain('aria-label="Import preview apply undo"');
     expect(html).toContain('aria-label="Local file import upload"');
     expect(html).toContain('data-import-upload-panel="local-file"');
@@ -531,43 +536,43 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('data-import-applied-feedback="local-upload"');
     expect(html).toContain('data-import-applied-count="0"');
     expect(html).toContain('data-import-applied-memory-list');
-    expect(html).toContain('Markdown, JSON, Obsidian export');
-    expect(html).toContain('Apply import');
-    expect(html).toContain('Undo import');
+    expect(html).toContain('Markdown, JSON, Obsidian 내보내기');
+    expect(html).toContain('가져오기 적용');
+    expect(html).toContain('되돌리기');
     expect(html).toContain('data-import-duplicate-state="duplicate"');
     expect(html).toContain('data-import-duplicate-state="new"');
 
     expect(html).toContain('data-ask-answer-contract="citations-or-insufficient-evidence"');
     expect(html).toContain('data-insufficient-evidence-state="available"');
-    expect(html).toContain('aria-label="Ask My Past Self citations"');
+    expect(html).toContain('aria-label="과거의 나에게 묻기 인용"');
     expect(html).toContain('href="#evidence-mem_launch_may_anxiety_scope_delay"');
 
     expect(html).toContain('data-replay-outcome="launch delayed by two days after adding graph filters"');
     expect(html).toContain('data-replay-citation-id="mem_launch_may_anxiety_scope_delay"');
 
-    expect(html).toContain('Weekly Pattern Report');
-    expect(html).toContain('aria-label="Weekly Report cited memory summary"');
+    expect(html).toContain('주간 패턴');
+    expect(html).toContain('aria-label="주간 패턴 인용 기억 요약"');
     expect(html).toContain('data-weekly-report-id="weekly_report_2026-05-01_2026-05-20"');
     expect(html).toContain('data-weekly-report-generated-at="2026-05-27T11:00:00.000Z"');
     expect(html).toContain('data-weekly-report-endpoint="/api/report/weekly"');
     expect(html).toContain('data-weekly-report-window-start="2026-05-01"');
     expect(html).toContain('data-weekly-report-window-end="2026-05-20"');
     expect(html).toContain('data-weekly-included-memory-count="3"');
-    expect(html).toContain('aria-label="Weekly Report included memories"');
-    expect(html).toContain('2026-05-01 to 2026-05-20');
+    expect(html).toContain('aria-label="주간 패턴 포함 기억"');
+    expect(html).toContain('2026-05-01 ~ 2026-05-20');
     expect(html).toContain('data-weekly-aggregate-kind="emotions"');
     expect(html).toContain('data-weekly-aggregate-value="anxiety"');
     expect(html).toContain('data-weekly-pattern-id="pattern_anxiety_scope_expansion_launch_delay"');
-    expect(html).toContain('Need at least 2 MemoryRecord citations in the weekly window.');
+    expect(html).toContain('주간 범위 안에 최소 2개의 MemoryRecord 인용이 필요하다.');
     expect(html).toContain('data-pattern-memory-id="mem_launch_may_anxiety_scope_delay"');
     expect(html).toContain('data-pattern-memory-id="mem_launch_june_anxiety_scope_delay"');
 
-    expect(html).toContain('why connected');
+    expect(html).toContain('연결 이유');
     expect(html).toContain('data-evidence-source=');
     expect(html).toContain('data-evidence-date=');
     expect(html).toContain('data-evidence-raw-excerpt=');
 
-    expect(html).toContain('aria-label="Private vault export and delete controls"');
+    expect(html).toContain('aria-label="개인 보관함 내보내기와 삭제 제어"');
     expect(html).toContain('data-privacy-scope="private"');
     expect(html).toContain('data-vault-access="owner-only"');
     expect(html).toContain('data-storage-mode="local-prototype"');
@@ -586,11 +591,11 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     const shell = buildInitialAppShellEvidenceLayout();
     const html = renderAppShellHtml();
 
-    expect(html).toContain('<label for="decision-replay-current">Current decision</label>');
+    expect(html).toContain('<label for="decision-replay-current">지금 결정</label>');
     expect(html).toContain('id="decision-replay-current"');
     expect(html).toContain('Should I add more Decision Replay polish before review?');
-    expect(html).toContain('Decision Replay');
-    expect(html).toContain('Pattern detection');
+    expect(html).toContain('결정 되짚기');
+    expect(html).toContain('패턴 감지');
     expect(html).toContain('data-replay-memory-id="mem_launch_may_anxiety_scope_delay"');
     expect(html).toContain('data-replay-memory-id="mem_launch_june_anxiety_scope_delay"');
     expect(html).toContain(
@@ -613,8 +618,8 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(documentHtml).toContain('.second-brain-shell');
     expect(documentHtml).toContain('background: #080808;');
     expect(documentHtml).toContain('data-rail-mode="collapsed-evidence-drawer"');
-    expect(documentHtml).toContain('transform: translateY(calc(100% - 52px));');
-    expect(documentHtml).toContain('Personal Memory AI Second Brain');
+    expect(documentHtml).toContain('transform: none;');
+    expect(documentHtml).toContain('개인 기억 AI 세컨브레인');
     expect(documentHtml).toContain('data-graph-control-script="pmi019"');
     expect(documentHtml).toContain('vendor/cytoscape.min.js');
     expect(documentHtml).toContain('.second-brain-shell[data-graph-renderer="cytoscape"] .graph-workspace');
@@ -628,7 +633,7 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(documentHtml).toContain("shell.setAttribute('data-graph-renderer', 'cytoscape')");
     expect(documentHtml).toContain('data-inspector-panel="pmi015"');
     expect(documentHtml).toContain('data-wiki-compiler="pmi017"');
-    expect(documentHtml).toContain('canonical memory atoms');
+    expect(documentHtml).toContain('원자 기억');
     expect(documentHtml).toContain('const selectMemory = (node) =>');
     expect(documentHtml).toContain('const applyMemorySearch = (query) =>');
     expect(documentHtml).toContain("node.setAttribute('data-search-match', String(match))");
