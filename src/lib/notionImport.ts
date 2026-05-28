@@ -216,19 +216,30 @@ export async function queryNotionDatabaseImportCandidates(
 ): Promise<ImportPreviewCandidate[]> {
   const fetchNotion = input.fetchNotion ?? fetch;
   const pageSize = input.pageSize ?? 25;
-  const response = await fetchNotion(`https://api.notion.com/v1/data_sources/${input.databaseId}/query`, {
-    method: 'POST',
-    headers: {
-      authorization: `Bearer ${input.notionToken}`,
-      'notion-version': '2025-09-03',
-      'content-type': 'application/json',
-    },
-    body: JSON.stringify({ page_size: pageSize }),
-  });
-  if (!response.ok) throw new Error(`notion_query_failed:${response.status}`);
-  const body = await response.json();
-  const pages = isRecord(body) && Array.isArray(body.results) ? body.results : [];
-  const validPages = pages.filter((page): page is NotionImportPage => isRecord(page));
+  const validPages: NotionImportPage[] = [];
+  let nextCursor: string | undefined;
+  do {
+    const response = await fetchNotion(`https://api.notion.com/v1/data_sources/${input.databaseId}/query`, {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${input.notionToken}`,
+        'notion-version': '2025-09-03',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        page_size: pageSize,
+        ...(nextCursor ? { start_cursor: nextCursor } : {}),
+      }),
+    });
+    if (!response.ok) {
+      if (validPages.length) break;
+      throw new Error(`notion_query_failed:${response.status}`);
+    }
+    const body = await response.json();
+    const pages = isRecord(body) && Array.isArray(body.results) ? body.results : [];
+    validPages.push(...pages.filter((page): page is NotionImportPage => isRecord(page)));
+    nextCursor = isRecord(body) && body.has_more === true && typeof body.next_cursor === 'string' ? body.next_cursor : undefined;
+  } while (nextCursor);
   const pageBlocksByPageId: Record<string, NotionImportBlock[]> = {};
   await Promise.all(
     validPages.map(async (page) => {

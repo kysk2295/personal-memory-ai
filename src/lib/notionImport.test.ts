@@ -92,6 +92,122 @@ describe('notion import connector', () => {
     expect(candidates[0]?.sourceRef).toBe('notion://data-source/db_launch/page/page-1');
   });
 
+  test('follows paginated Notion data source query pages before building candidates', async () => {
+    const calls: Array<{ url: string; init: { method?: string; headers?: Record<string, string>; body?: string } }> = [];
+    const pageTwo = {
+      id: 'page-2',
+      url: 'https://www.notion.so/page-2',
+      created_time: '2026-05-23T01:00:00.000Z',
+      last_edited_time: '2026-05-24T03:00:00.000Z',
+      properties: {
+        Name: {
+          type: 'title',
+          title: [{ plain_text: 'Second journal page' }],
+        },
+        Reflection: {
+          type: 'rich_text',
+          rich_text: [{ plain_text: 'The second API page should become a candidate.' }],
+        },
+      },
+    };
+    const fetchNotion = async (url: string, init: { method?: string; headers?: Record<string, string>; body?: string }) => {
+      calls.push({ url, init });
+      if (url.includes('/blocks/')) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({ results: [] }),
+        };
+      }
+      if (init.body === JSON.stringify({ page_size: 25 })) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            has_more: true,
+            next_cursor: 'cursor_query_2',
+            results: notionQueryResponse.results,
+          }),
+        };
+      }
+      if (init.body === JSON.stringify({ page_size: 25, start_cursor: 'cursor_query_2' })) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            has_more: false,
+            next_cursor: null,
+            results: [pageTwo],
+          }),
+        };
+      }
+      throw new Error(`unexpected_body:${init.body ?? ''}`);
+    };
+
+    const candidates = await queryNotionDatabaseImportCandidates({
+      databaseId: 'db_launch',
+      notionToken: 'secret_live_token',
+      createdAt: '2026-05-28T00:00:00.000Z',
+      fetchNotion,
+    });
+
+    expect(calls.filter((call) => call.url === 'https://api.notion.com/v1/data_sources/db_launch/query')).toEqual([
+      expect.objectContaining({ init: expect.objectContaining({ body: JSON.stringify({ page_size: 25 }) }) }),
+      expect.objectContaining({ init: expect.objectContaining({ body: JSON.stringify({ page_size: 25, start_cursor: 'cursor_query_2' }) }) }),
+    ]);
+    expect(calls.map((call) => call.url)).toContain('https://api.notion.com/v1/blocks/page-1/children?page_size=50');
+    expect(calls.map((call) => call.url)).toContain('https://api.notion.com/v1/blocks/page-2/children?page_size=50');
+    expect(candidates.map((candidate) => candidate.sourceRef)).toEqual([
+      'notion://data-source/db_launch/page/page-1',
+      'notion://data-source/db_launch/page/page-2',
+    ]);
+    expect(candidates[1]?.rawText).toContain('The second API page should become a candidate.');
+    expect(JSON.stringify(candidates)).not.toContain('secret_live_token');
+  });
+
+  test('keeps already fetched Notion database pages when a later query page fails', async () => {
+    const fetchNotion = async (url: string, init: { method?: string; headers?: Record<string, string>; body?: string }) => {
+      if (url.includes('/blocks/')) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({ results: [] }),
+        };
+      }
+      if (init.body === JSON.stringify({ page_size: 25 })) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            has_more: true,
+            next_cursor: 'cursor_query_2',
+            results: notionQueryResponse.results,
+          }),
+        };
+      }
+      if (init.body === JSON.stringify({ page_size: 25, start_cursor: 'cursor_query_2' })) {
+        return {
+          ok: false,
+          status: 503,
+          json: async () => ({}),
+        };
+      }
+      throw new Error(`unexpected_body:${init.body ?? ''}`);
+    };
+
+    const candidates = await queryNotionDatabaseImportCandidates({
+      databaseId: 'db_launch',
+      notionToken: 'secret_live_token',
+      createdAt: '2026-05-28T00:00:00.000Z',
+      fetchNotion,
+    });
+
+    expect(candidates).toHaveLength(1);
+    expect(candidates[0]?.sourceRef).toBe('notion://data-source/db_launch/page/page-1');
+    expect(candidates[0]?.rawText).toContain('Launch scope journal');
+    expect(JSON.stringify(candidates)).not.toContain('secret_live_token');
+  });
+
   test('includes Notion page child block text in import candidates without exposing the token', async () => {
     const calls: Array<{ url: string; init: { method?: string; headers?: Record<string, string>; body?: string } }> = [];
     const fetchNotion = async (url: string, init: { method?: string; headers?: Record<string, string>; body?: string }) => {
