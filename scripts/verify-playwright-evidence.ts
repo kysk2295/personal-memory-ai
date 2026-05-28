@@ -122,6 +122,13 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   assert((await page.locator('[data-entry-dock="diary-start"]').count()) === 1, 'Expected first-screen diary entry dock');
   assert((await page.locator('[data-primary-entry-action="quick-diary"]').count()) === 1, 'Expected first-screen quick diary action');
   assert((await attribute(page, '[data-primary-entry-action="quick-diary"]', 'href'))?.endsWith('/capture/'), 'Quick diary action should open the capture app');
+  assert((await page.locator('[data-memory-intake-hub="app-web-diary"]').count()) === 1, 'Expected first-screen diary intake hub');
+  assert((await attribute(page, '[data-memory-intake-hub="app-web-diary"]', 'data-intake-source-scope')) === 'diary-only', 'Diary intake hub should stay diary scoped');
+  assert((await attribute(page, '[data-memory-intake-hub="app-web-diary"]', 'data-intake-result')) === 'graph-handoff', 'Diary intake hub should advertise graph handoff');
+  assert((await attribute(page, '[data-intake-action="quick-capture"]', 'href'))?.endsWith('/capture/'), 'Intake quick capture should open capture app');
+  for (const action of ['quick-capture', 'paste-diary', 'notion-diary-db']) {
+    assert((await page.locator(`[data-intake-action="${action}"]`).count()) === 1, `Expected intake action ${action}`);
+  }
   assert((await page.locator('[data-control="focus-local-import"]').count()) === 1, 'Expected first-screen diary import focus action');
   assert((await page.locator('[data-first-run-guide="diary-memory-ai"]').count()) === 1, 'Expected first-run diary memory AI guide');
   assert((await attribute(page, '[data-first-run-guide="diary-memory-ai"]', 'data-first-run-stage')) === 'entry-to-session', 'Expected first-run guide to start at entry-to-session');
@@ -142,6 +149,14 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   assert((await attribute(page, '.second-brain-shell', 'data-interaction-state')) === 'diary-import-focused', 'First-run import action should focus diary import');
   await page.locator('[data-control="focus-local-import"]').click();
   assert((await attribute(page, '.second-brain-shell', 'data-interaction-state')) === 'diary-import-focused', 'First-screen import action should focus diary import');
+  await page.locator('[data-intake-action="paste-diary"]').click();
+  assert((await attribute(page, '[data-memory-intake-hub="app-web-diary"]', 'data-intake-last-action')) === 'paste-diary', 'Intake paste action should update hub state');
+  assert((await attribute(page, '.second-brain-shell', 'data-interaction-state')) === 'intake-paste-diary-focused', 'Intake paste action should focus the diary paste import');
+  await page.locator('[data-intake-action="notion-diary-db"]').click();
+  assert((await attribute(page, '[data-memory-intake-hub="app-web-diary"]', 'data-intake-last-action')) === 'notion-diary-db', 'Intake Notion action should update hub state');
+  assert((await attribute(page, '[data-notion-import-panel="database"]', 'data-notion-source-scope')) === 'diary-only', 'Notion intake should remain diary scoped');
+  assert((await page.locator('[data-control="notion-database-id"]').inputValue()) === '습관리스트', 'Notion diary intake should prefill the 습관리스트 database cue');
+  assert((await attribute(page, '.second-brain-shell', 'data-interaction-state')) === 'intake-notion-diary-ready', 'Intake Notion action should prepare diary database import');
   const initialMemoryNodeCount = Number(await attribute(page, '.second-brain-shell', 'data-memory-node-count'));
   const initialRenderedMemoryNodeCount = Number(await attribute(page, '.second-brain-shell', 'data-rendered-memory-node-count'));
   const initialGraphNodeCount = Number(await attribute(page, '.second-brain-shell', 'data-graph-node-count'));

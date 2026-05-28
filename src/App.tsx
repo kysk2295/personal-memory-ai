@@ -403,6 +403,74 @@ const APP_SHELL_STYLES = `
     color: #be123c;
   }
   .entry-dock-action.primary strong { color: #be123c; }
+  .memory-intake-hub {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: minmax(190px, 0.7fr) minmax(0, 1.3fr);
+    gap: 10px;
+    border: 1px solid rgba(20, 184, 166, 0.18);
+    border-radius: 8px;
+    background: rgba(240, 253, 250, 0.72);
+    padding: 10px;
+  }
+  .memory-intake-copy {
+    min-width: 0;
+    display: grid;
+    gap: 4px;
+    align-content: center;
+  }
+  .memory-intake-copy strong {
+    color: #0f766e;
+    font-size: 13px;
+    line-height: 1.2;
+  }
+  .memory-intake-copy span {
+    color: #57716d;
+    font-size: 11px;
+    line-height: 1.45;
+  }
+  .memory-intake-actions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 7px;
+  }
+  .memory-intake-action {
+    min-width: 0;
+    border: 1px solid rgba(20, 184, 166, 0.2);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.74);
+    color: #0f766e;
+    padding: 8px 9px;
+    text-align: left;
+    text-decoration: none;
+    font: inherit;
+    font-size: 11px;
+    line-height: 1.3;
+  }
+  .memory-intake-action strong,
+  .memory-intake-action span {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .memory-intake-action strong {
+    white-space: nowrap;
+  }
+  .memory-intake-action span {
+    margin-top: 2px;
+    color: #5e7773;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+  .memory-intake-action.primary {
+    border-color: rgba(225, 29, 63, 0.26);
+    background: rgba(225, 29, 63, 0.1);
+    color: #be123c;
+  }
+  .memory-intake-action.primary span {
+    color: #9f5c6a;
+  }
   .first-run-guide {
     grid-column: 1 / -1;
     border: 1px solid rgba(84, 91, 113, 0.14);
@@ -1452,9 +1520,27 @@ const APP_SHELL_STYLES = `
     justify-content: flex-start;
   }
   .product-value-strip .privacy-actions span,
-  .service-flow-steps li {
+  .service-flow-steps li,
+  .memory-intake-hub,
+  .memory-intake-action {
     border-color: rgba(255, 255, 255, 0.08);
     background: rgba(255, 255, 255, 0.055);
+  }
+  .memory-intake-copy strong,
+  .memory-intake-action {
+    color: #f0f0f2;
+  }
+  .memory-intake-copy span,
+  .memory-intake-action span {
+    color: #aaaab1;
+  }
+  .memory-intake-action.primary {
+    border-color: rgba(214, 31, 60, 0.34);
+    background: rgba(214, 31, 60, 0.12);
+    color: #ff8797;
+  }
+  .memory-intake-action.primary span {
+    color: #d7a7af;
   }
   .service-flow-steps strong {
     color: #f0f0f2;
@@ -1972,6 +2058,10 @@ const APP_SHELL_STYLES = `
     .ask-memory-bar { grid-template-columns: auto minmax(0, 1fr) auto; }
     .product-value-strip { grid-template-columns: 1fr; }
     .privacy-actions { justify-content: flex-start; }
+    .memory-intake-hub,
+    .memory-intake-actions {
+      grid-template-columns: 1fr;
+    }
     .selected-path-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .decision-columns { grid-template-columns: 1fr; }
   }
@@ -2173,6 +2263,17 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
           <span>내보내기</span>
           <span>삭제</span>
         </div>
+        <section class="memory-intake-hub" data-memory-intake-hub="app-web-diary" data-intake-stage="capture-or-import" data-intake-source-scope="diary-only" data-intake-result="graph-handoff" data-intake-last-action="none" aria-label="기록 인입 허브">
+          <div class="memory-intake-copy">
+            <strong>기록 인입 허브</strong>
+            <span>앱에서 짧게 쓰거나, 웹에서 일기만 붙여넣거나, 습관리스트 Notion DB를 불러오면 곧바로 개인 세컨브레인 그래프와 AI 세션으로 이어진다.</span>
+          </div>
+          <div class="memory-intake-actions" aria-label="기록 인입 액션">
+            <a class="memory-intake-action primary" href="/capture/" data-intake-action="quick-capture"><strong>앱 빠른 기록</strong><span>채팅처럼 쓰고 저장 후 그래프로 이동</span></a>
+            <button type="button" class="memory-intake-action" data-intake-action="paste-diary"><strong>웹 일기 붙여넣기</strong><span>긴 일기/Markdown을 미리보기 후 적용</span></button>
+            <button type="button" class="memory-intake-action" data-intake-action="notion-diary-db"><strong>습관리스트 Notion DB</strong><span>일기 데이터베이스만 선택해서 가져오기</span></button>
+          </div>
+        </section>
         <div class="prototype-entry-dock" data-entry-dock="diary-start" aria-label="첫 화면 일기 시작 액션">
           <a class="entry-dock-action primary" href="/capture/" data-primary-entry-action="quick-diary">
             <strong>앱처럼 빠른 일기 쓰기</strong>
@@ -2347,6 +2448,8 @@ const GRAPH_CONTROL_SCRIPT = `
   const importFileInput = document.querySelector('[data-control="local-import-file-input"]');
   const importPasteText = document.querySelector('[data-control="local-import-paste-text"]');
   const focusLocalImportButton = document.querySelector('[data-control="focus-local-import"]');
+  const memoryIntakeHub = document.querySelector('[data-memory-intake-hub="app-web-diary"]');
+  const intakeActions = Array.from(document.querySelectorAll('[data-intake-action]'));
   const firstRunGuideActions = Array.from(document.querySelectorAll('[data-guide-action]'));
   const importPreviewButton = document.querySelector('[data-control="preview-local-import"]');
   const importApplyButton = document.querySelector('[data-control="apply-local-import"]');
@@ -4423,6 +4526,30 @@ const GRAPH_CONTROL_SCRIPT = `
     importPasteText?.scrollIntoView({ block: 'center', behavior: 'smooth' });
     importPasteText?.focus();
     setInteractionState('diary-import-focused');
+  });
+  intakeActions.forEach((button) => {
+    button.addEventListener('click', (event) => {
+      const action = button.getAttribute('data-intake-action') || '';
+      memoryIntakeHub?.setAttribute('data-intake-last-action', action);
+      shell.setAttribute('data-intake-last-action', action);
+      if (action === 'quick-capture') return;
+      event.preventDefault();
+      if (action === 'paste-diary') {
+        importPasteText?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        importPasteText?.focus();
+        memoryIntakeHub?.setAttribute('data-intake-stage', 'paste-diary-focused');
+        setInteractionState('intake-paste-diary-focused');
+        return;
+      }
+      if (action === 'notion-diary-db') {
+        if (notionDatabaseId && !notionDatabaseId.value.trim()) notionDatabaseId.value = '습관리스트';
+        notionImportPanel?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        notionDatabaseId?.focus();
+        memoryIntakeHub?.setAttribute('data-intake-stage', 'notion-diary-ready');
+        notionImportPanel?.setAttribute('data-notion-source-scope', 'diary-only');
+        setInteractionState('intake-notion-diary-ready');
+      }
+    });
   });
   firstRunGuideActions.forEach((button) => {
     button.addEventListener('click', () => {
