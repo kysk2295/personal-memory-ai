@@ -1656,7 +1656,7 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
         <span>last woven from diary + imports</span>
       </div>
 
-      <section class="memory-search-control" aria-label="Memory search">
+      <section class="memory-search-control" aria-label="Memory search" data-memory-search-endpoint="/api/memory/search">
         <input type="search" data-control="memory-search" placeholder="기억 검색" aria-label="기억 검색" autocomplete="off" />
         <div class="memory-search-meta">
           <span data-search-count>${layout.primaryNodes.length} / ${layout.primaryNodes.length}</span>
@@ -1814,7 +1814,9 @@ const GRAPH_CONTROL_SCRIPT = `
   const filterTargets = Array.from(document.querySelectorAll('[data-filter-kind]'));
   const memorySearchInput = document.querySelector('[data-control="memory-search"]');
   const memorySearchCount = document.querySelector('[data-search-count]');
-  const memorySearchResults = Array.from(document.querySelectorAll('[data-search-result="memory"]'));
+  const memorySearchContainer = document.querySelector('[data-search-results="memory"]');
+  const memorySearchEndpoint = document.querySelector('[data-memory-search-endpoint]')?.getAttribute('data-memory-search-endpoint') || '';
+  let memorySearchResults = Array.from(document.querySelectorAll('[data-search-result="memory"]'));
   const timelinePanel = document.querySelector('[data-memory-timeline-panel="pmi025"]');
   const timelineItems = Array.from(document.querySelectorAll('[data-control="timeline-select-memory"]'));
   const saveArtifactButtons = Array.from(document.querySelectorAll('[data-control="save-artifact"]'));
@@ -2373,6 +2375,70 @@ const GRAPH_CONTROL_SCRIPT = `
     setInteractionState(normalized ? 'search-active' : 'search-idle');
   };
 
+  const wireMemorySearchResult = (result) => {
+    result.addEventListener('click', () => {
+      const citation = result.getAttribute('data-search-citation') || '';
+      const node = memoryNodes.find((item) => item.getAttribute('data-inspector-citation') === citation);
+      if (node) selectMemory(node);
+      shell.setAttribute('data-search-selected-memory', citation);
+      setInteractionState('search-result-selected');
+    });
+  };
+
+  const renderLiveMemorySearchResults = (records, totalMatchCount, query) => {
+    if (!memorySearchContainer) return;
+    memorySearchContainer.replaceChildren();
+    records.forEach((record) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'memory-search-result';
+      button.setAttribute('data-search-result', 'memory');
+      button.setAttribute('data-search-result-active', 'true');
+      button.setAttribute('data-search-citation', record.id || '');
+      button.setAttribute(
+        'data-search-text',
+        [record.summary, record.memoryType, record.sourceType, record.observedAt, record.id].filter(Boolean).join(' ').toLocaleLowerCase(),
+      );
+      const title = document.createElement('strong');
+      title.textContent = record.summary || record.id || 'Untitled memory';
+      const meta = document.createElement('span');
+      meta.textContent = [record.sourceType, record.memoryType, record.observedAt || record.createdAt?.slice?.(0, 10)].filter(Boolean).join(' · ');
+      button.append(title, meta);
+      wireMemorySearchResult(button);
+      memorySearchContainer.append(button);
+    });
+    memorySearchResults = Array.from(memorySearchContainer.querySelectorAll('[data-search-result="memory"]'));
+    if (memorySearchCount) {
+      memorySearchCount.textContent = records.length + ' / ' + totalMatchCount;
+      memorySearchCount.setAttribute('data-search-count-value', String(records.length));
+      memorySearchCount.setAttribute('data-search-total-count', String(totalMatchCount));
+    }
+    shell.setAttribute('data-search-mode', 'remote');
+    shell.setAttribute('data-search-query', String(query || '').trim().toLocaleLowerCase());
+    shell.setAttribute('data-search-result-count', String(records.length));
+    shell.setAttribute('data-search-total-count', String(totalMatchCount));
+    setInteractionState('search-remote-ready');
+  };
+
+  const fetchRemoteMemorySearch = async (query) => {
+    const normalized = String(query || '').trim();
+    if (!memorySearchEndpoint || window.location.protocol === 'file:' || normalized.length < 5) return;
+    shell.setAttribute('data-search-mode', 'remote-loading');
+    try {
+      const response = await fetch(memorySearchEndpoint, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ query: normalized, limit: 20 }),
+      });
+      if (!response.ok) throw new Error('memory search failed with ' + response.status);
+      const body = await response.json();
+      renderLiveMemorySearchResults(body.records || [], body.totalMatchCount || 0, normalized);
+    } catch (error) {
+      shell.setAttribute('data-search-mode', 'remote-error');
+      shell.setAttribute('data-search-error', String(error?.message || error));
+    }
+  };
+
   spacingButtons.forEach((button) => {
     button.addEventListener('click', () => setSpacing(button.getAttribute('data-spacing') || 'normal'));
   });
@@ -2384,20 +2450,11 @@ const GRAPH_CONTROL_SCRIPT = `
   if (memorySearchInput) {
     memorySearchInput.addEventListener('input', () => {
       applyMemorySearch(memorySearchInput.value);
+      void fetchRemoteMemorySearch(memorySearchInput.value);
     });
   }
 
-  memorySearchResults.forEach((result) => {
-    result.addEventListener('click', () => {
-      const citation = result.getAttribute('data-search-citation') || '';
-      const node = memoryNodes.find((item) => item.getAttribute('data-inspector-citation') === citation);
-      if (node) {
-        selectMemory(node);
-        shell.setAttribute('data-search-selected-memory', citation);
-        setInteractionState('search-result-selected');
-      }
-    });
-  });
+  memorySearchResults.forEach(wireMemorySearchResult);
 
   timelineItems.forEach((item) => {
     item.addEventListener('click', () => {

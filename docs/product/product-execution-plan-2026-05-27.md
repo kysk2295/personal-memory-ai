@@ -1361,6 +1361,24 @@ Implemented:
 - `src/lib/personalMemoryApi.ts`
 - `src/lib/personalMemoryApi.test.ts`
 
+### L71 — Web Search Uses Full-Vault Memory API
+
+Goal: connect the sidebar search UI to the full private vault without forcing all memories into the first-page HTML or app-shell payload.
+
+Acceptance:
+
+- search control declares `/api/memory/search` as its remote search endpoint
+- local rendered graph filtering remains instant for short queries
+- longer queries fetch paged lightweight results from the private memory API
+- returned remote search rows can still select matching rendered graph memories when they are present
+- Playwright verifies the remote search API from the browser context without exposing memory titles or body text
+
+Implemented:
+
+- `src/App.tsx`
+- `src/lib/appShellEvidenceLayout.test.ts`
+- `scripts/verify-playwright-evidence.ts`
+
 ## 8. MVP Time Estimate
 
 Assuming focused local development without major dependency or deployment blockers:

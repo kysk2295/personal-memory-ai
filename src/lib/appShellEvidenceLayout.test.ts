@@ -258,6 +258,7 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('class="brain-sidebar"');
     expect(html).toContain('class="brain-canvas"');
     expect(html).toContain('class="graph-meta-line"');
+    expect(html).toContain('data-memory-search-endpoint="/api/memory/search"');
     expect(html).toContain('data-control="memory-search"');
     expect(html).toContain('data-search-results="memory"');
     expect(html).toContain('data-search-count');
@@ -634,6 +635,9 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(documentHtml).toContain('data-live-count="memory-nodes"');
     expect(documentHtml).toContain('liveCountTargets.memoryNodes');
     expect(documentHtml).toContain("searchCount.textContent = String(appShell.primaryNodes?.length || 0)");
+    expect(documentHtml).toContain('fetch(memorySearchEndpoint');
+    expect(documentHtml).toContain('renderLiveMemorySearchResults');
+    expect(documentHtml).toContain("shell.setAttribute('data-search-mode', 'remote')");
     expect(documentHtml).toContain('const rebuildCytoscapeGraphFromModel =');
     expect(documentHtml).toContain('cytoscapeGraph.elements().remove()');
     expect(documentHtml).toContain('void rehydrateAppShellAfterImport()');

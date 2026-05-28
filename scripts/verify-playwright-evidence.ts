@@ -109,6 +109,24 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
       (await attribute(page, '[data-privacy-scope="private"]', 'data-memory-backend')) === 'local-file',
       'Expected live health to expose local-file backend without a path',
     );
+    const searchApiProbe = await page.evaluate(async () => {
+      const response = await fetch('/api/memory/search', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ query: 'notion', limit: 3 }),
+      });
+      const body = await response.json();
+      return {
+        ok: response.ok,
+        totalMatchCount: body.totalMatchCount,
+        records: body.records?.length ?? 0,
+        maxRawTextLength: Math.max(0, ...(body.records || []).map((record: { rawText?: string }) => record.rawText?.length || 0)),
+      };
+    });
+    assert(searchApiProbe.ok, 'Expected remote memory search API to respond');
+    assert(searchApiProbe.totalMatchCount >= searchApiProbe.records, 'Expected remote memory search total count to cover returned records');
+    assert(searchApiProbe.records <= 3, 'Expected remote memory search API to respect the requested limit');
+    assert(searchApiProbe.maxRawTextLength <= 240, 'Expected remote memory search API to return lightweight raw text');
   }
   const savedArtifactManifest = await page.locator('#saved-artifact-actions').textContent();
   assert(savedArtifactManifest?.includes('"endpoint":"/api/capture"'), 'Expected saved artifact manifest to target capture API');
@@ -416,6 +434,7 @@ try {
         verified: [
           'cytoscape data graph ready',
           'data-derived graph stats',
+          'remote memory search api',
           'saved artifact action',
           'saved artifact persistence manifest',
           'feedback correction action',
