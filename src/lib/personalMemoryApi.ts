@@ -137,17 +137,24 @@ interface AskBody {
   followUpContext?: PersonalMemoryFollowUpContext;
 }
 
+interface RelatedMemoryContextBody {
+  sourceMemoryId?: string;
+  relatedMemoryIds?: string[];
+}
+
 interface ReplayBody {
   question?: string;
   queryId?: string;
   createdAt?: string;
-  currentDecision: CurrentDecision;
+  currentDecision: CurrentDecision & { relatedMemoryContext?: RelatedMemoryContextBody };
+  relatedMemoryContext?: RelatedMemoryContextBody;
 }
 
 interface WeeklyReportBody {
   startDate: string;
   endDate: string;
   generatedAt?: string;
+  relatedMemoryContext?: RelatedMemoryContextBody;
 }
 
 interface WeeklyReportScheduleEvaluateBody {
@@ -199,6 +206,36 @@ function sanitizeOptionalStringList(value: unknown): string[] | undefined {
     .filter((item): item is string => typeof item === 'string')
     .map((item) => item.trim())
     .filter(Boolean);
+}
+
+function contextMemoryIdsFromRelatedContext(context: RelatedMemoryContextBody | undefined): string[] {
+  if (!context) return [];
+  return Array.from(
+    new Set(
+      [context.sourceMemoryId, ...(Array.isArray(context.relatedMemoryIds) ? context.relatedMemoryIds : [])]
+        .filter((item): item is string => typeof item === 'string')
+        .map((item) => item.trim())
+        .filter(Boolean),
+    ),
+  ).sort();
+}
+
+function followUpContextFromRelatedContext(
+  context: RelatedMemoryContextBody | undefined,
+): PersonalMemoryFollowUpContext | undefined {
+  const previousCitationMemoryIds = contextMemoryIdsFromRelatedContext(context);
+  if (!previousCitationMemoryIds.length) return undefined;
+  return {
+    previousQuestion: 'selected-memory-related-context',
+    previousCitationMemoryIds,
+  };
+}
+
+function currentDecisionWithoutRelatedContext(
+  currentDecision: ReplayBody['currentDecision'],
+): CurrentDecision {
+  const { relatedMemoryContext: _relatedMemoryContext, ...sanitizedCurrentDecision } = currentDecision;
+  return sanitizedCurrentDecision;
 }
 
 function notionConnectorErrorResponse(error: unknown, fallbackError: string): PersonalMemoryApiResponse<{ error: string }> {
@@ -526,15 +563,26 @@ export async function handlePersonalMemoryApiRequest(
   if (request.path === '/api/replay') {
     if (request.method !== 'POST') return methodNotAllowed();
     const body = readBody<ReplayBody>(request.body);
+    const relatedMemoryContext = body.relatedMemoryContext ?? body.currentDecision.relatedMemoryContext;
+    const currentDecision = currentDecisionWithoutRelatedContext(body.currentDecision);
     const result = await answerPersonalMemoryQuestion({
       store,
       userId,
-      question: body.question ?? body.currentDecision.prompt,
-      currentDecision: body.currentDecision,
+      question: body.question ?? currentDecision.prompt,
+      currentDecision,
+      followUpContext: followUpContextFromRelatedContext(relatedMemoryContext),
       queryId: body.queryId,
       createdAt: body.createdAt,
     });
-    return { statusCode: 200, body: { replay: result.replay, graphEvidence: result.graphEvidence } };
+    return {
+      statusCode: 200,
+      body: {
+        replay: result.replay,
+        graphEvidence: result.graphEvidence,
+        conversationContext: result.conversationContext,
+        loadedMemoryIds: result.loadedMemoryIds,
+      },
+    };
   }
 
   if (request.path === '/api/report/weekly') {
@@ -545,6 +593,7 @@ export async function handlePersonalMemoryApiRequest(
       startDate: body.startDate,
       endDate: body.endDate,
       generatedAt: body.generatedAt,
+      contextMemoryIds: contextMemoryIdsFromRelatedContext(body.relatedMemoryContext),
     });
     return { statusCode: 200, body: { weeklyReport } };
   }

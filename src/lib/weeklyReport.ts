@@ -28,6 +28,7 @@ export interface GenerateWeeklyReportInput {
   endDate: string;
   generatedAt?: string;
   minimumEvidenceCount?: number;
+  contextMemoryIds?: string[];
 }
 
 export interface WeeklyReport {
@@ -109,8 +110,9 @@ export function generateWeeklyReport(input: GenerateWeeklyReportInput): WeeklyRe
     startDate: input.startDate,
     endDate: input.endDate,
   };
+  const contextMemoryIds = new Set(input.contextMemoryIds ?? []);
   const includedRecords = input.records
-    .filter((record) => isInWindow(record, window))
+    .filter((record) => isInWindow(record, window) || contextMemoryIds.has(record.id))
     .slice()
     .sort(compareRecordsByReportOrder);
   const minimumEvidenceCount = input.minimumEvidenceCount ?? DEFAULT_MINIMUM_EVIDENCE_COUNT;

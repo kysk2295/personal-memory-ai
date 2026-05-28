@@ -793,14 +793,29 @@ describe('personal memory API boundary', () => {
             emotions: ['anxiety'],
             choices: ['add feature', 'freeze'],
             topicTags: ['launch', 'feature addition'],
+            relatedMemoryContext: {
+              sourceMemoryId: 'mem_launch_may_anxiety_scope_delay',
+              relatedMemoryIds: ['mem_freeze_vs_feature_addition', 'mem_other_user_api_private', 'missing-memory'],
+            },
           },
         },
       },
     });
 
     expect(replay.statusCode).toBe(200);
-    const replayBody = replay.body as { replay: NonNullable<PersonalMemoryAgentResult['replay']> };
+    const replayBody = replay.body as {
+      replay: NonNullable<PersonalMemoryAgentResult['replay']>;
+      conversationContext: PersonalMemoryAgentResult['conversationContext'];
+    };
     expect(replayBody.replay.evidenceLabel).toBe('sufficient_evidence');
+    expect(replayBody.conversationContext.anchoredCitationMemoryIds).toEqual([
+      'mem_freeze_vs_feature_addition',
+      'mem_launch_may_anxiety_scope_delay',
+    ]);
+    expect(replayBody.replay.citationMemoryIds).toEqual(
+      expect.arrayContaining(['mem_freeze_vs_feature_addition', 'mem_launch_may_anxiety_scope_delay']),
+    );
+    expect(JSON.stringify(replay.body)).not.toContain('mem_other_user_api_private');
 
     const report = await handlePersonalMemoryApiRequest({
       store,
@@ -810,8 +825,12 @@ describe('personal memory API boundary', () => {
         path: '/api/report/weekly',
         body: {
           startDate: '2026-05-01',
-          endDate: '2026-05-20',
+          endDate: '2026-05-01',
           generatedAt: '2026-05-27T13:10:00.000Z',
+          relatedMemoryContext: {
+            sourceMemoryId: 'mem_launch_may_anxiety_scope_delay',
+            relatedMemoryIds: ['mem_freeze_vs_feature_addition', 'mem_other_user_api_private', 'missing-memory'],
+          },
         },
       },
     });
@@ -820,9 +839,9 @@ describe('personal memory API boundary', () => {
     const reportBody = report.body as { weeklyReport: WeeklyReport };
     expect(reportBody.weeklyReport.includedMemoryIds).toEqual([
       'mem_launch_may_anxiety_scope_delay',
-      'mem_launch_june_anxiety_scope_delay',
       'mem_freeze_vs_feature_addition',
     ]);
+    expect(reportBody.weeklyReport.totalMemoryRecords).toBe(2);
     expect(JSON.stringify(report.body)).not.toContain('mem_other_user_api_private');
   });
 

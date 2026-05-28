@@ -232,6 +232,7 @@ No remote push, main merge, production deploy, or secret access is allowed witho
 - L82: related-memory Ask context handoff.
 - L83: related-memory Decision Replay context handoff.
 - L84: related-memory Weekly Report context handoff.
+- L85: related context API grounding.
 
 ## 6. Active Next Loops
 
@@ -1626,6 +1627,23 @@ Implemented:
 - `src/App.tsx`
 - `src/lib/appShellEvidenceLayout.test.ts`
 - `scripts/verify-playwright-evidence.ts`
+
+### L85 — Related Context API Grounding
+
+Goal: make the related-memory context from graph actions affect backend Replay and Weekly Report evidence, without leaking unsanitized ids across users.
+
+Acceptance:
+
+- `/api/replay` converts related-memory context into scoped follow-up anchors
+- replay responses expose conversation context and loaded ids without echoing raw foreign ids
+- `/api/report/weekly` includes owner-scoped related context memories even outside the selected date window
+- tests prove other-user ids inside related-memory context do not leak
+
+Implemented:
+
+- `src/lib/personalMemoryApi.ts`
+- `src/lib/weeklyReport.ts`
+- `src/lib/personalMemoryApi.test.ts`
 
 ## 8. MVP Time Estimate
 
