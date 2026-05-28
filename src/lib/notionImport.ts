@@ -184,18 +184,31 @@ async function queryNotionPageBlocks(input: {
   notionToken: string;
   fetchNotion: NotionFetch;
 }): Promise<NotionImportBlock[]> {
-  const response = await input.fetchNotion(`https://api.notion.com/v1/blocks/${input.pageId}/children?page_size=50`, {
-    method: 'GET',
-    headers: {
-      authorization: `Bearer ${input.notionToken}`,
-      'notion-version': '2025-09-03',
-      'content-type': 'application/json',
-    },
-  });
-  if (!response.ok) throw new Error(`notion_blocks_failed:${response.status}`);
-  const body = await response.json();
-  const blocks = isRecord(body) && Array.isArray(body.results) ? body.results : [];
-  return blocks.filter((block): block is NotionImportBlock => isRecord(block));
+  const blocks: NotionImportBlock[] = [];
+  let nextCursor: string | undefined;
+  do {
+    const cursorParam = nextCursor ? `&start_cursor=${encodeURIComponent(nextCursor)}` : '';
+    const response = await input.fetchNotion(
+      `https://api.notion.com/v1/blocks/${input.pageId}/children?page_size=50${cursorParam}`,
+      {
+        method: 'GET',
+        headers: {
+          authorization: `Bearer ${input.notionToken}`,
+          'notion-version': '2025-09-03',
+          'content-type': 'application/json',
+        },
+      },
+    );
+    if (!response.ok) {
+      if (blocks.length) return blocks;
+      throw new Error(`notion_blocks_failed:${response.status}`);
+    }
+    const body = await response.json();
+    const pageBlocks = isRecord(body) && Array.isArray(body.results) ? body.results : [];
+    blocks.push(...pageBlocks.filter((block): block is NotionImportBlock => isRecord(block)));
+    nextCursor = isRecord(body) && body.has_more === true && typeof body.next_cursor === 'string' ? body.next_cursor : undefined;
+  } while (nextCursor);
+  return blocks;
 }
 
 export async function queryNotionDatabaseImportCandidates(

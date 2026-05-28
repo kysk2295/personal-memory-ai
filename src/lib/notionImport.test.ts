@@ -154,6 +154,118 @@ describe('notion import connector', () => {
     expect(JSON.stringify(candidates)).not.toContain('secret_live_token');
   });
 
+  test('follows paginated Notion page child blocks in import order', async () => {
+    const calls: Array<{ url: string; init: { method?: string; headers?: Record<string, string>; body?: string } }> = [];
+    const fetchNotion = async (url: string, init: { method?: string; headers?: Record<string, string>; body?: string }) => {
+      calls.push({ url, init });
+      if (url === 'https://api.notion.com/v1/blocks/page-1/children?page_size=50') {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            has_more: true,
+            next_cursor: 'cursor_page_2',
+            results: [
+              {
+                object: 'block',
+                type: 'paragraph',
+                paragraph: {
+                  rich_text: [{ plain_text: 'First block page journal context.' }],
+                },
+              },
+            ],
+          }),
+        };
+      }
+      if (url === 'https://api.notion.com/v1/blocks/page-1/children?page_size=50&start_cursor=cursor_page_2') {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            has_more: false,
+            next_cursor: null,
+            results: [
+              {
+                object: 'block',
+                type: 'quote',
+                quote: {
+                  rich_text: [{ plain_text: 'Second block page outcome evidence.' }],
+                },
+              },
+            ],
+          }),
+        };
+      }
+      return {
+        ok: true,
+        status: 200,
+        json: async () => notionQueryResponse,
+      };
+    };
+
+    const candidates = await queryNotionDatabaseImportCandidates({
+      databaseId: 'db_launch',
+      notionToken: 'secret_live_token',
+      createdAt: '2026-05-28T00:00:00.000Z',
+      fetchNotion,
+    });
+
+    expect(calls.map((call) => call.url)).toEqual([
+      'https://api.notion.com/v1/data_sources/db_launch/query',
+      'https://api.notion.com/v1/blocks/page-1/children?page_size=50',
+      'https://api.notion.com/v1/blocks/page-1/children?page_size=50&start_cursor=cursor_page_2',
+    ]);
+    expect(candidates[0]?.rawText).toContain('First block page journal context.\nSecond block page outcome evidence.');
+    expect(JSON.stringify(candidates)).not.toContain('secret_live_token');
+  });
+
+  test('keeps already fetched Notion block text when a later child block page fails', async () => {
+    const fetchNotion = async (url: string, init: { method?: string; headers?: Record<string, string>; body?: string }) => {
+      if (url === 'https://api.notion.com/v1/blocks/page-1/children?page_size=50') {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            has_more: true,
+            next_cursor: 'cursor_page_2',
+            results: [
+              {
+                object: 'block',
+                type: 'paragraph',
+                paragraph: {
+                  rich_text: [{ plain_text: 'Fetched block text should stay importable.' }],
+                },
+              },
+            ],
+          }),
+        };
+      }
+      if (url === 'https://api.notion.com/v1/blocks/page-1/children?page_size=50&start_cursor=cursor_page_2') {
+        return {
+          ok: false,
+          status: 502,
+          json: async () => ({}),
+        };
+      }
+      return {
+        ok: true,
+        status: 200,
+        json: async () => notionQueryResponse,
+      };
+    };
+
+    const candidates = await queryNotionDatabaseImportCandidates({
+      databaseId: 'db_launch',
+      notionToken: 'secret_live_token',
+      createdAt: '2026-05-28T00:00:00.000Z',
+      fetchNotion,
+    });
+
+    expect(candidates[0]?.rawText).toContain('Fetched block text should stay importable.');
+    expect(candidates[0]?.sourceRef).toBe('notion://data-source/db_launch/page/page-1');
+    expect(JSON.stringify(candidates)).not.toContain('secret_live_token');
+  });
+
   test('lists accessible Notion import sources without exposing the token', async () => {
     const calls: Array<{ url: string; init: { method?: string; headers?: Record<string, string>; body?: string } }> = [];
     const fetchNotion = async (url: string, init: { method?: string; headers?: Record<string, string>; body?: string }) => {

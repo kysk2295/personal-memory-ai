@@ -2,7 +2,7 @@
 
 Status: active local execution plan  
 Owner: Ko Yunseo  
-Updated: 2026-05-28, Notion page block import
+Updated: 2026-05-28, Notion block pagination import
 Supersedes for local Codex work: `docs/product/product-master-plan-2026-05-26.md`
 
 ## 1. Product Definition
@@ -106,7 +106,7 @@ Status values:
 | Capture | Mobile/PWA capture UI | `done-foundation` | `/capture/` renders a mobile-first local/private quick diary capture surface. |
 | Capture | Voice capture | `later` | In PRD direction, not MVP-critical. |
 | Capture | Emotion/project/decision hints | `done-foundation` | Data contract exists; full UI still planned. |
-| Import | Notion/Obsidian/Markdown preview | `done-foundation` | Preview/dedupe contract exists. Local files support Markdown/Text/JSON/Obsidian-style exports, and the web/API now expose direct Notion source discovery plus database preview paths gated by the user's Notion integration token. Notion database imports include supported page child block text so body notes are preserved with property metadata. |
+| Import | Notion/Obsidian/Markdown preview | `done-foundation` | Preview/dedupe contract exists. Local files support Markdown/Text/JSON/Obsidian-style exports, and the web/API now expose direct Notion source discovery plus database preview paths gated by the user's Notion integration token. Notion database imports include supported paginated page child block text so body notes are preserved with property metadata. |
 | Import | Apply/undo import state model | `done-foundation` | Batch state model tracks preview, applied, skipped, graph evidence, and undone states. |
 | Import | File upload/import UI | `prototype-ui` | Local Markdown/Text/JSON upload and paste surface can build preview candidates, call owner-scoped preview/apply APIs, and show applied memories in graph/timeline feedback without reload. |
 | Memory Store | Fixture user isolation | `done-foundation` | Tests cover user-scoped records. |
@@ -220,6 +220,7 @@ No remote push, main merge, production deploy, or secret access is allowed witho
 - L51: direct Notion database import preview.
 - L52: Notion import source discovery.
 - L53: Notion page block import fidelity.
+- L54: Notion block pagination import.
 
 ## 6. Active Next Loops
 
