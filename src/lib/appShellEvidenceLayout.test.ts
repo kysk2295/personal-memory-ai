@@ -456,7 +456,15 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(documentHtml).toContain('data-control="preview-notion-import"');
     expect(documentHtml).toContain('data-notion-source-list');
     expect(documentHtml).toContain('data-notion-import-summary');
+    expect(documentHtml).toContain('const findBestDiaryNotionSource =');
+    expect(documentHtml).toContain('const selectNotionSource =');
+    expect(documentHtml).toContain("'습관리스트'");
+    expect(documentHtml).toContain("'습관'");
+    expect(documentHtml).toContain("'일기'");
+    expect(documentHtml).toContain("notionImportPanel?.setAttribute('data-notion-auto-selected-source'");
+    expect(documentHtml).toContain("selectNotionSource(autoSelectedSource, 'auto')");
     expect(documentHtml).toContain("setInteractionState('notion-import-token-required')");
+    expect(documentHtml).toContain("setInteractionState('notion-source-auto-selected')");
     expect(documentHtml).toContain("setInteractionState('notion-sources-ready')");
     expect(documentHtml).toContain("setInteractionState('notion-sources-rate-limited')");
     expect(documentHtml).toContain("setInteractionState('notion-import-rate-limited')");

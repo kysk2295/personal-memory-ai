@@ -4617,14 +4617,52 @@ const GRAPH_CONTROL_SCRIPT = `
       .join('');
   };
 
+  const diaryNotionSourceTerms = ['습관리스트', '습관리', '습관', '일기', '다이어리', 'diary', 'journal', 'habit', 'daily'];
+  const findBestDiaryNotionSource = (sources) => {
+    const sourceList = Array.isArray(sources) ? sources : [];
+    return (
+      sourceList.find((source) => {
+        const sourceText = String(source?.title || source?.id || '').toLowerCase();
+        return diaryNotionSourceTerms.some((term) => sourceText.includes(term.toLowerCase()));
+      }) || null
+    );
+  };
+  const selectNotionSource = (source, mode = 'manual') => {
+    const sourceId = String(source?.id || '');
+    const sourceTitle = String(source?.title || sourceId || '선택한 소스');
+    if (!sourceId) return false;
+    if (notionDatabaseId) notionDatabaseId.value = sourceId;
+    notionImportPanel?.setAttribute('data-notion-selected-source', sourceId);
+    notionImportPanel?.setAttribute('data-notion-selected-source-title', sourceTitle);
+    notionImportPanel?.setAttribute('data-notion-auto-selected-source', mode === 'auto' ? 'true' : 'false');
+    memoryIntakeHub?.setAttribute('data-intake-selected-notion-source', sourceId);
+    memoryIntakeHub?.setAttribute('data-intake-selected-notion-source-title', sourceTitle);
+    memoryIntakeHub?.setAttribute('data-intake-selected-notion-source-mode', mode);
+    memoryIntakeHub?.setAttribute('data-intake-result', 'notion-source-selected');
+    memoryIntakeHub?.setAttribute('data-intake-next-step', 'notion-preview-ready');
+    intakeSessionResult?.setAttribute('data-intake-selected-notion-source', sourceId);
+    intakeSessionResult?.setAttribute('data-intake-selected-notion-source-title', sourceTitle);
+    intakeSessionResult?.setAttribute('data-intake-next-step', 'notion-preview-ready');
+    if (mode === 'auto') {
+      setIntakeNotionState('source-selected', sourceTitle + ' 소스를 자동으로 선택했다. 이제 습관리스트 미리보기 또는 Notion 그래프 적용을 바로 실행할 수 있다.');
+      setInteractionState('notion-source-auto-selected');
+      return true;
+    }
+    setIntakeNotionState('source-selected', sourceTitle + ' 소스를 선택했다. 이제 습관리스트 미리보기 또는 Notion 그래프 적용을 실행할 수 있다.');
+    setInteractionState('notion-source-selected');
+    return true;
+  };
+
   const renderNotionSourceRows = (sources) => {
-    if (!notionSourceList) return;
+    if (!notionSourceList) return false;
     notionSourceList.innerHTML = (sources || [])
       .slice(0, 5)
       .map(
         (source) =>
           '<button type="button" data-control="select-notion-source" data-notion-source-id="' +
           escapeText(source.id || '') +
+          '" data-notion-source-title="' +
+          escapeText(source.title || source.id || 'Untitled source') +
           '"><strong>' +
           escapeText(source.title || source.id || 'Untitled source') +
           '</strong><span>' +
@@ -4634,18 +4672,19 @@ const GRAPH_CONTROL_SCRIPT = `
       .join('');
     Array.from(notionSourceList.querySelectorAll('[data-control="select-notion-source"]')).forEach((button) => {
       button.addEventListener('click', () => {
-        const sourceId = button.getAttribute('data-notion-source-id') || '';
-        const sourceTitle = button.querySelector('strong')?.textContent || sourceId || '선택한 소스';
-        if (notionDatabaseId) notionDatabaseId.value = sourceId;
-        memoryIntakeHub?.setAttribute('data-intake-selected-notion-source', sourceId);
-        memoryIntakeHub?.setAttribute('data-intake-result', 'notion-source-selected');
-        memoryIntakeHub?.setAttribute('data-intake-next-step', 'notion-preview-ready');
-        intakeSessionResult?.setAttribute('data-intake-selected-notion-source', sourceId);
-        intakeSessionResult?.setAttribute('data-intake-next-step', 'notion-preview-ready');
-        setIntakeNotionState('source-selected', sourceTitle + ' 소스를 선택했다. 이제 습관리스트 미리보기 또는 Notion 그래프 적용을 실행할 수 있다.');
-        setInteractionState('notion-source-selected');
+        selectNotionSource({
+          id: button.getAttribute('data-notion-source-id') || '',
+          title: button.getAttribute('data-notion-source-title') || button.querySelector('strong')?.textContent || '',
+        });
       });
     });
+    const autoSelectedSource = findBestDiaryNotionSource(sources);
+    const currentDatabaseId = notionDatabaseId?.value?.trim() || '';
+    const shouldAutoSelect =
+      memoryIntakeHub?.getAttribute('data-intake-last-action')?.includes('notion') &&
+      autoSelectedSource &&
+      (!currentDatabaseId || currentDatabaseId === '습관리스트' || currentDatabaseId === autoSelectedSource.id);
+    return shouldAutoSelect ? selectNotionSource(autoSelectedSource, 'auto') : false;
   };
 
   const renderAppliedImportFeedback = (createdMemoryIds, graphEvidenceRecords) => {
@@ -4862,15 +4901,15 @@ const GRAPH_CONTROL_SCRIPT = `
         if (!response.ok) throw new Error('notion source search failed with ' + response.status);
         const body = await response.json();
         const sources = body?.sources || [];
-        renderNotionSourceRows(sources);
         notionImportPanel.setAttribute('data-notion-sources-state', 'ready');
         notionImportPanel.setAttribute('data-notion-source-count', String(sources.length));
         if (notionImportSummary) notionImportSummary.textContent = sources.length + ' Notion sources';
-        if (memoryIntakeHub?.getAttribute('data-intake-last-action')?.includes('notion')) {
+        const didAutoSelectSource = renderNotionSourceRows(sources);
+        if (memoryIntakeHub?.getAttribute('data-intake-last-action')?.includes('notion') && !didAutoSelectSource) {
           setIntakeNotionState('sources-ready', String(sources.length) + '개의 Notion 소스 후보를 찾았다. 습관리스트를 선택하면 미리보기와 그래프 적용이 이어진다.');
         }
       }
-      setInteractionState('notion-sources-ready');
+      if (shell.getAttribute('data-interaction-state') !== 'notion-source-auto-selected') setInteractionState('notion-sources-ready');
     } catch (error) {
       notionImportPanel.setAttribute('data-notion-sources-state', 'error');
       shell.setAttribute('data-notion-sources-error', String(error?.message || error));

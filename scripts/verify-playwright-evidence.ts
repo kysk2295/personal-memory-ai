@@ -178,15 +178,29 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
     const state = document.querySelector('[data-notion-import-panel="database"]')?.getAttribute('data-notion-sources-state');
     return state === 'token-required' || state === 'source-required' || state === 'rate-limited' || state === 'ready' || state === 'error';
   });
+  const notionSourcesState = await attribute(page, '[data-notion-import-panel="database"]', 'data-notion-sources-state');
   const notionSourceIntakeResult = await attribute(page, '[data-memory-intake-hub="app-web-diary"]', 'data-intake-result');
-  assert(
-    ['notion-token-required', 'notion-source-required', 'notion-rate-limited', 'notion-sources-ready'].includes(notionSourceIntakeResult),
-    'First-screen Notion source search should expose a concrete Notion source state',
-  );
+  if (notionSourcesState === 'ready') {
+    const selectedNotionSource = await attribute(page, '[data-memory-intake-hub="app-web-diary"]', 'data-intake-selected-notion-source');
+    const selectedNotionSourceMode = await attribute(page, '[data-memory-intake-hub="app-web-diary"]', 'data-intake-selected-notion-source-mode');
+    assert(notionSourceIntakeResult === 'notion-source-selected', 'Ready Notion sources should auto-select the diary/habit source');
+    assert(Boolean(selectedNotionSource), 'Ready Notion sources should set a selected Notion source id');
+    assert(selectedNotionSourceMode === 'auto', 'First-screen Notion source discovery should auto-select diary/habit candidates');
+    assert(
+      (await page.locator('[data-control="notion-database-id"]').inputValue()) === selectedNotionSource,
+      'The selected Notion diary source should be copied into the import database field',
+    );
+  } else {
+    assert(
+      ['notion-token-required', 'notion-source-required', 'notion-rate-limited', 'notion-sources-ready'].includes(notionSourceIntakeResult),
+      'First-screen Notion source search should expose a concrete Notion source gate state',
+    );
+  }
   assert(
     (await page.locator('text=Notion 연결이 필요하다').count()) +
       (await page.locator('text=습관리스트 소스를 먼저 선택해야 한다').count()) +
       (await page.locator('text=Notion이 잠시 제한 중이다').count()) +
+      (await page.locator('text=소스를 자동으로 선택했다').count()) +
       (await page.locator('text=습관리스트 소스 후보를 찾았다').count()) >=
       1,
     'Intake result should explain the Notion source search gate in Korean',
