@@ -76,7 +76,7 @@ npm run build
   - `src/lib/notionImport.ts`
   - `TASKS/PMI-055-notion-database-pagination-import.md`
   - `docs/superpowers/plans/2026-05-28-notion-database-pagination-import.md`
-- local commit hash for the bounded slice: pending local commit.
+- local commit hash for the bounded slice: `0425333`.
 
 ## Output requirements
 
