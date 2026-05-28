@@ -557,6 +557,11 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('data-intake-flow-step="related"');
     expect(html).toContain('data-intake-flow-step="ai"');
     expect(html).toContain('data-intake-flow-step="save"');
+    expect(html).toContain('data-capture-handoff-banner="selected-memory-session"');
+    expect(html).toContain('data-capture-handoff-banner-state="idle"');
+    expect(html).toContain('data-capture-handoff-related-count="0"');
+    expect(html).toContain('data-control="capture-handoff-run-session"');
+    expect(html).toContain('방금 저장한 일기');
     expect(html).toContain('data-intake-related-bundle="past-memory-nodes"');
     expect(html).toContain('data-intake-related-bundle-count="0"');
     expect(html).toContain('data-intake-ai-action-result="idle"');
@@ -768,6 +773,10 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(documentHtml).toContain("memoryIntakeHub?.setAttribute('data-intake-applied-memory', appliedMemoryId)");
     expect(documentHtml).toContain("memoryIntakeHub?.setAttribute('data-intake-next-step', 'memory-session-ready')");
     expect(documentHtml).toContain('const setIntakeFlowStepState =');
+    expect(documentHtml).toContain('const updateCaptureHandoffBanner =');
+    expect(documentHtml).toContain("captureHandoffBanner?.setAttribute('data-capture-handoff-banner-state', state)");
+    expect(documentHtml).toContain("captureHandoffRunSessionButton?.addEventListener('click'");
+    expect(documentHtml).toContain("updateCaptureHandoffBanner('ready'");
     expect(documentHtml).toContain("setIntakeFlowStepState('graph', 'done')");
     expect(documentHtml).toContain("setIntakeFlowStepState('related', related.length ? 'ready' : 'loading')");
     expect(documentHtml).toContain("setIntakeFlowStepState('ai', state === 'answered' ? 'done'");
@@ -883,6 +892,7 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(documentHtml).toContain("shell.setAttribute('data-capture-handoff-state', 'selected')");
     expect(documentHtml).toContain("shell.setAttribute('data-capture-handoff-start-mode', 'session')");
     expect(documentHtml).toContain("shell.setAttribute('data-capture-handoff-session-state', 'ready')");
+    expect(documentHtml).toContain("updateCaptureHandoffBanner('session-ready'");
     expect(documentHtml).toContain("setInteractionState('capture-handoff-selected')");
     expect(documentHtml).toContain("setInteractionState('diary-import-focused')");
     expect(documentHtml).toContain('prepareHandoffSessionFromQuery()');

@@ -583,6 +583,48 @@ const APP_SHELL_STYLES = `
     border-color: rgba(190, 18, 60, 0.34);
     background: rgba(190, 18, 60, 0.1);
   }
+  .capture-handoff-banner {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px;
+    align-items: center;
+    border: 1px solid rgba(225, 29, 63, 0.22);
+    border-radius: 8px;
+    background: rgba(225, 29, 63, 0.08);
+    padding: 10px;
+  }
+  .capture-handoff-banner strong,
+  .capture-handoff-banner span {
+    display: block;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .capture-handoff-banner strong {
+    color: #be123c;
+    font-size: 12px;
+    line-height: 1.25;
+  }
+  .capture-handoff-banner span {
+    margin-top: 2px;
+    color: #82515b;
+    font-size: 11px;
+    line-height: 1.35;
+  }
+  .capture-handoff-banner button {
+    min-width: 98px;
+    min-height: 34px;
+    border: 1px solid rgba(225, 29, 63, 0.28);
+    border-radius: 8px;
+    background: rgba(225, 29, 63, 0.12);
+    color: #be123c;
+    padding: 7px 9px;
+    font-size: 11px;
+    font-weight: 780;
+  }
+  .capture-handoff-banner[data-capture-handoff-banner-state="idle"] {
+    display: none;
+  }
   .memory-intake-related-bundle {
     grid-column: 1 / -1;
     display: grid;
@@ -2604,6 +2646,13 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
             <button type="button" data-control="intake-run-session" disabled>AI 세션 실행</button>
           </div>
         </section>
+        <section class="capture-handoff-banner" data-capture-handoff-banner="selected-memory-session" data-capture-handoff-banner-state="idle" data-capture-handoff-memory="" data-capture-handoff-related-count="0" aria-label="앱 기록에서 넘어온 기억">
+          <div>
+            <strong data-capture-handoff-title>방금 저장한 일기</strong>
+            <span data-capture-handoff-summary>앱에서 저장한 일기가 그래프에서 선택되면 연관 과거 기억과 AI 세션 준비 상태를 여기서 보여준다.</span>
+          </div>
+          <button type="button" data-control="capture-handoff-run-session">AI 세션 실행</button>
+        </section>
         <div class="prototype-entry-dock" data-entry-dock="diary-start" aria-label="첫 화면 일기 시작 액션">
           <a class="entry-dock-action primary" href="/capture/" data-primary-entry-action="quick-diary">
             <strong>앱처럼 빠른 일기 쓰기</strong>
@@ -2799,6 +2848,10 @@ const GRAPH_CONTROL_SCRIPT = `
   const intakeRunWeeklyButton = document.querySelector('[data-control="intake-run-weekly-report"]');
   const intakeSaveAiResultButton = document.querySelector('[data-control="intake-save-ai-result"]');
   const intakeRunSessionButton = document.querySelector('[data-control="intake-run-session"]');
+  const captureHandoffBanner = document.querySelector('[data-capture-handoff-banner="selected-memory-session"]');
+  const captureHandoffTitle = captureHandoffBanner?.querySelector('[data-capture-handoff-title]');
+  const captureHandoffSummary = captureHandoffBanner?.querySelector('[data-capture-handoff-summary]');
+  const captureHandoffRunSessionButton = document.querySelector('[data-control="capture-handoff-run-session"]');
   const intakeActions = Array.from(document.querySelectorAll('[data-intake-action]'));
   const firstRunGuideActions = Array.from(document.querySelectorAll('[data-guide-action]'));
   const importPreviewButton = document.querySelector('[data-control="preview-local-import"]');
@@ -3542,6 +3595,24 @@ const GRAPH_CONTROL_SCRIPT = `
     if (node) selectMemory(node);
   };
 
+  const updateCaptureHandoffBanner = (state, memoryId, relatedCount) => {
+    const normalizedMemoryId = String(memoryId || '').replace(/^memory:/, '');
+    const count = String(relatedCount || shell.getAttribute('data-related-memory-count') || '0');
+    captureHandoffBanner?.setAttribute('data-capture-handoff-banner-state', state);
+    captureHandoffBanner?.setAttribute('data-capture-handoff-memory', normalizedMemoryId);
+    captureHandoffBanner?.setAttribute('data-capture-handoff-related-count', count);
+    shell.setAttribute('data-capture-handoff-banner-state', state);
+    shell.setAttribute('data-capture-handoff-related-count', count);
+    if (captureHandoffTitle) {
+      captureHandoffTitle.textContent =
+        state === 'session-ready' ? '방금 저장한 일기로 AI 세션 준비 완료' : '방금 저장한 일기가 그래프에 선택됐다';
+    }
+    if (captureHandoffSummary) {
+      captureHandoffSummary.textContent =
+        normalizedMemoryId + ' 기억에서 연관 과거 기억 ' + count + '개를 찾았다. 바로 질문, 결정 되짚기, 주간 패턴 세션을 실행할 수 있다.';
+    }
+  };
+
   const selectHandoffMemoryFromGraph = (citation) => {
     if (!citation) return false;
     const normalizedCitation = String(citation).replace(/^memory:/, '');
@@ -3578,6 +3649,7 @@ const GRAPH_CONTROL_SCRIPT = `
     renderRelatedMemoryEvidence(normalizedCitation);
     shell.setAttribute('data-capture-handoff-selected-memory', normalizedCitation);
     shell.setAttribute('data-capture-handoff-state', 'selected');
+    updateCaptureHandoffBanner('ready', normalizedCitation, shell.getAttribute('data-related-memory-count') || '0');
     setInteractionState('capture-handoff-selected');
     return true;
   };
@@ -4837,6 +4909,7 @@ const GRAPH_CONTROL_SCRIPT = `
     if (!prepared) return false;
     shell.setAttribute('data-capture-handoff-start-mode', 'session');
     shell.setAttribute('data-capture-handoff-session-state', 'ready');
+    updateCaptureHandoffBanner('session-ready', handoffMemoryId, shell.getAttribute('data-import-session-related-memory-count') || shell.getAttribute('data-related-memory-count') || '0');
     return true;
   };
 
@@ -5352,6 +5425,10 @@ const GRAPH_CONTROL_SCRIPT = `
     intakeSessionResult?.setAttribute('data-intake-next-step', 'memory-session-running');
     memoryIntakeHub?.setAttribute('data-intake-next-step', 'memory-session-running');
     void runMemorySession(getIntakeMemorySessionContext());
+  });
+  captureHandoffRunSessionButton?.addEventListener('click', () => {
+    captureHandoffBanner?.setAttribute('data-capture-handoff-banner-state', 'session-running');
+    void runMemorySession();
   });
   selectedPathActions.forEach((button) => {
     button.addEventListener('click', () => {

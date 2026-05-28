@@ -890,6 +890,24 @@ async function verifyCaptureInteractions(page: Page): Promise<void> {
     assert((await attribute(page, '.capture-app-shell', 'data-quick-save-state')) === 'saved', 'Static capture preview should mark local save state');
   }
   await page.screenshot({ path: captureScreenshot, fullPage: false });
+  if (captureUrl.startsWith('http')) {
+    const sessionHandoffHref = await attribute(page, '[data-control="open-captured-memory-session"]', 'href');
+    assert(Boolean(sessionHandoffHref), 'Capture app should expose a session handoff href before navigating to second brain');
+    await page.goto(new URL(sessionHandoffHref || '/', captureUrl).toString(), { waitUntil: 'load', timeout: 30_000 });
+    await page.locator('.second-brain-shell').waitFor({ state: 'attached', timeout: 10_000 });
+    await page.waitForFunction(
+      () =>
+        document
+          .querySelector('[data-capture-handoff-banner="selected-memory-session"]')
+          ?.getAttribute('data-capture-handoff-banner-state') === 'session-ready',
+      null,
+      { timeout: 12_000 },
+    );
+    assert(
+      (await attribute(page, '[data-capture-handoff-banner="selected-memory-session"]', 'data-capture-handoff-related-count')) !== '0',
+      'Capture handoff banner should expose related memories after opening the AI session handoff',
+    );
+  }
 }
 
 async function cleanupEvidenceRecords(): Promise<number> {
