@@ -40,7 +40,20 @@ const runtime = await createMemoryStoreRuntime({
 try {
   let sourceIds = [...splitSourceIds(process.env.PMI_NOTION_SOURCE_IDS), ...readSourceIdsFromArgs()];
   if (!sourceIds.length && process.env.PMI_NOTION_DISCOVER_SOURCES === 'true') {
-    const sources = await queryNotionImportSources({ notionToken });
+    let sources;
+    try {
+      sources = await queryNotionImportSources({ notionToken });
+    } catch (error) {
+      const message = String(error);
+      jsonLine({
+        status: 'failed',
+        sourceCount: 0,
+        failureGroups: {
+          [message.includes(':429') ? '429:notion_rate_limited' : 'unknown:notion_source_discovery_failed']: 1,
+        },
+      });
+      process.exit(1);
+    }
     sourceIds = sources.map((source) => source.id);
     jsonLine({ status: 'sources_discovered', sourceCount: sourceIds.length });
   }
@@ -55,10 +68,11 @@ try {
     store: runtime.store,
     userId,
     notionToken,
-    sourceIds: Array.from(new Set(sourceIds)),
-    createdAt: new Date().toISOString(),
-    pageSize: process.env.PMI_NOTION_PAGE_SIZE ? Number(process.env.PMI_NOTION_PAGE_SIZE) : undefined,
-  });
+      sourceIds: Array.from(new Set(sourceIds)),
+      createdAt: new Date().toISOString(),
+      pageSize: process.env.PMI_NOTION_PAGE_SIZE ? Number(process.env.PMI_NOTION_PAGE_SIZE) : undefined,
+      maxSources: process.env.PMI_NOTION_MAX_SOURCES ? Number(process.env.PMI_NOTION_MAX_SOURCES) : undefined,
+    });
   const after = await runtime.store.listByUser(userId);
   jsonLine({
     ...report,

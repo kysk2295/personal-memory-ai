@@ -12,6 +12,7 @@ export interface ImportNotionSourcesToMemoryStoreInput {
   sourceIds: readonly string[];
   createdAt: string;
   pageSize?: number;
+  maxSources?: number;
   includeDuplicateRecords?: boolean;
   fetchNotion?: NotionFetch;
 }
@@ -19,6 +20,8 @@ export interface ImportNotionSourcesToMemoryStoreInput {
 export interface NotionResumeImportReport {
   status: NotionResumeImportStatus;
   sourceCount: number;
+  attemptedSourceCount: number;
+  remainingSourceCount: number;
   successfulSources: number;
   appliedSources: number;
   previewRecordCount: number;
@@ -49,7 +52,13 @@ export async function importNotionSourcesToMemoryStore(
   let createdCount = 0;
   let skippedPreviewRecordCount = 0;
 
-  for (const sourceId of input.sourceIds) {
+  const maxSources =
+    typeof input.maxSources === 'number' && Number.isFinite(input.maxSources)
+      ? Math.max(1, Math.floor(input.maxSources))
+      : input.sourceIds.length;
+  const attemptedSourceIds = input.sourceIds.slice(0, maxSources);
+
+  for (const sourceId of attemptedSourceIds) {
     try {
       const candidates = await queryNotionDatabaseImportCandidates({
         databaseId: sourceId,
@@ -87,6 +96,8 @@ export async function importNotionSourcesToMemoryStore(
   return {
     status: failureCount ? (successfulSources || createdCount ? 'completed_with_skips' : 'failed') : 'completed',
     sourceCount: input.sourceIds.length,
+    attemptedSourceCount: attemptedSourceIds.length,
+    remainingSourceCount: Math.max(input.sourceIds.length - attemptedSourceIds.length, 0),
     successfulSources,
     appliedSources,
     previewRecordCount,

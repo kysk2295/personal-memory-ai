@@ -60,6 +60,8 @@ describe('importNotionSourcesToMemoryStore', () => {
     expect(result).toEqual({
       status: 'completed_with_skips',
       sourceCount: 2,
+      attemptedSourceCount: 2,
+      remainingSourceCount: 0,
       successfulSources: 1,
       appliedSources: 1,
       previewRecordCount: 1,
@@ -77,5 +79,41 @@ describe('importNotionSourcesToMemoryStore', () => {
     expect(JSON.stringify(result)).not.toContain('secret_live_token');
     expect(JSON.stringify(result)).not.toContain('Private Notion title');
     expect(JSON.stringify(result)).not.toContain('Private Notion body');
+  });
+
+  test('limits each resume run to a bounded source batch', async () => {
+    const store = createMemoryStore({ env: {} });
+    const queriedSourceIds: string[] = [];
+    const fetchNotion = async (url: string) => {
+      const match = url.match(/data_sources\/([^/]+)\/query/);
+      if (match?.[1]) queriedSourceIds.push(match[1]);
+      if (url.includes('/blocks/')) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({ results: [] }),
+        };
+      }
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({ results: [] }),
+      };
+    };
+
+    const result = await importNotionSourcesToMemoryStore({
+      store,
+      userId: 'user-a',
+      notionToken: 'secret_live_token',
+      sourceIds: ['source_1', 'source_2', 'source_3'],
+      createdAt: '2026-05-28T00:00:00.000Z',
+      maxSources: 2,
+      fetchNotion,
+    });
+
+    expect(result.sourceCount).toBe(3);
+    expect(result.attemptedSourceCount).toBe(2);
+    expect(result.remainingSourceCount).toBe(1);
+    expect(queriedSourceIds).toEqual(['source_1', 'source_2']);
   });
 });

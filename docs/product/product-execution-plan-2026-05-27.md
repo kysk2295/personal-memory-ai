@@ -1391,6 +1391,7 @@ Acceptance:
 - accessible source discovery can feed the resume run without printing source titles
 - script output includes before/after memory counts but no private Notion content
 - live count-only resume discovered 50 sources: 24 successful duplicate-only scans, 26 still rate-limited, 0 new created records
+- resume runs can be bounded with `PMI_NOTION_MAX_SOURCES` and report attempted/remaining source counts for heartbeat-sized batches
 
 Implemented:
 
