@@ -37,8 +37,10 @@ function dateOnly(createdAt: string): string {
 
 export function createUserFeedbackMemoryRecord(input: UserFeedbackMemoryInput): MemoryRecord {
   const createdAt = input.createdAt ?? new Date().toISOString();
-  const feedbackId = input.feedbackId ?? `feedback-${stableHash([createdAt, input.correctionText].join('\u001f'))}`;
   const targetMemoryIds = input.targetMemoryIds ?? [];
+  const feedbackId =
+    input.feedbackId ??
+    `feedback-${stableHash([input.correctionText, targetMemoryIds.join(','), input.targetArtifactId ?? ''].join('\u001f'))}`;
   const rawText = [
     `User correction: ${input.correctionText}`,
     `Target memories: ${targetMemoryIds.join(', ') || 'none'}`,

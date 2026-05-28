@@ -1251,6 +1251,22 @@ Implemented:
 
 - `scripts/verify-playwright-evidence.ts`
 
+### L65 — Idempotent Feedback Corrections
+
+Goal: prevent repeated clicks of the same feedback correction from accumulating duplicate private feedback memories in the durable local vault.
+
+Acceptance:
+
+- feedback memory ids are stable for the same correction text, target memory ids, and target artifact id
+- submission time still updates `createdAt` on the upserted memory record
+- different correction/target combinations remain distinct
+- Playwright evidence can submit feedback without unbounded duplicate growth
+
+Implemented:
+
+- `src/lib/userFeedbackMemory.ts`
+- `src/lib/userFeedbackMemory.test.ts`
+
 ## 8. MVP Time Estimate
 
 Assuming focused local development without major dependency or deployment blockers:

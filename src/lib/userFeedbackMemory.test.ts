@@ -52,4 +52,23 @@ describe('user feedback memory', () => {
     expect((await store.listByUser('user-a')).map((record) => record.id)).toEqual(saved.createdMemoryIds);
     expect(await store.listByUser('user-b')).toEqual([]);
   });
+
+  test('uses a stable memory id for the same correction target across repeated submissions', () => {
+    const first = createUserFeedbackMemoryRecord({
+      createdAt: '2026-05-28T03:05:00.000Z',
+      correctionText: 'Decision Replay보다 먼저 citation을 보여줘야 한다.',
+      targetMemoryIds: ['mem_freeze_vs_feature_addition'],
+      targetArtifactId: 'artifact_ask_answer_sha-test',
+    });
+    const second = createUserFeedbackMemoryRecord({
+      createdAt: '2026-05-28T03:06:00.000Z',
+      correctionText: 'Decision Replay보다 먼저 citation을 보여줘야 한다.',
+      targetMemoryIds: ['mem_freeze_vs_feature_addition'],
+      targetArtifactId: 'artifact_ask_answer_sha-test',
+    });
+
+    expect(second.id).toBe(first.id);
+    expect(second.sourceRef).toBe(first.sourceRef);
+    expect(second.createdAt).toBe('2026-05-28T03:06:00.000Z');
+  });
 });
