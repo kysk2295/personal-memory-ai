@@ -794,6 +794,26 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
     Number(await attribute(page, '[data-use-now-route-path="related-memory"]', 'data-use-now-route-path-related-count')) > 0,
     'Route-board related path strip should expose related past-memory count',
   );
+  await page.locator('[data-use-now-action="run-ai"]').click();
+  await page.waitForFunction(
+    (memoryId) =>
+      document.querySelector('.second-brain-shell')?.getAttribute('data-memory-session-state') === 'completed' &&
+      document.querySelector('[data-memory-session-panel]')?.getAttribute('data-session-source-memory') === memoryId,
+    savedIntakeAiMemoryId,
+    { timeout: 20_000 },
+  );
+  assert(
+    (await attribute(page, '[data-memory-session-panel]', 'data-session-source-memory')) === savedIntakeAiMemoryId,
+    'Route-board AI run after saved-memory reentry should use the saved future memory as session source',
+  );
+  assert(
+    (await attribute(page, '[data-use-now-route-board="live"]', 'data-use-now-route-ai-state')) === 'answered',
+    'Route-board AI run after saved-memory reentry should show answered state',
+  );
+  assert(
+    (await attribute(page, '[data-use-now-route-board="live"]', 'data-use-now-route-save-state')) === 'ready',
+    'Route-board AI run after saved-memory reentry should become save-ready again',
+  );
   await page.locator('[data-control="intake-run-session"]').click();
   await page.waitForFunction(
     () => document.querySelector('.second-brain-shell')?.getAttribute('data-memory-session-state') === 'completed',
