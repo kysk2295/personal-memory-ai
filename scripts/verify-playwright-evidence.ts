@@ -933,6 +933,17 @@ async function verifyCaptureInteractions(page: Page): Promise<void> {
       (await attribute(page, '[data-capture-handoff-banner="selected-memory-session"]', 'data-capture-handoff-save-state')) === 'saved',
       'Capture handoff banner should mark the completed session as saved',
     );
+    const handoffSavedMemoryId = await attribute(page, '[data-capture-handoff-banner="selected-memory-session"]', 'data-capture-handoff-saved-memory');
+    assert(Boolean(handoffSavedMemoryId?.startsWith('mem_api_')), 'Capture handoff banner should expose the saved future memory id');
+    assert(
+      (await attribute(page, '[data-capture-handoff-banner="selected-memory-session"]', 'data-capture-handoff-reentry-state')) === 'ready',
+      'Capture handoff banner should expose saved memory reentry controls',
+    );
+    const savedGraphHref = await attribute(page, '[data-control="open-saved-session-memory-graph"]', 'href');
+    const savedSessionHref = await attribute(page, '[data-control="open-saved-session-memory-session"]', 'href');
+    assert(Boolean(savedGraphHref?.includes('memory=' + encodeURIComponent(handoffSavedMemoryId || ''))), 'Saved session graph link should reopen the future memory');
+    assert(Boolean(savedSessionHref?.includes('memory=' + encodeURIComponent(handoffSavedMemoryId || ''))), 'Saved session AI link should reopen the future memory');
+    assert(Boolean(savedSessionHref?.includes('start=session')), 'Saved session AI link should restart a session from the future memory');
   }
 }
 

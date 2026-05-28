@@ -622,6 +622,41 @@ const APP_SHELL_STYLES = `
     font-size: 11px;
     font-weight: 780;
   }
+  .capture-handoff-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 7px;
+  }
+  .capture-handoff-reentry {
+    grid-column: 1 / -1;
+    display: none;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    border-top: 1px solid rgba(225, 29, 63, 0.16);
+    padding-top: 8px;
+  }
+  .capture-handoff-reentry span {
+    flex: 1 1 150px;
+    margin: 0;
+    color: #7f1d1d;
+    font-weight: 760;
+  }
+  .capture-handoff-reentry a {
+    flex: 0 0 auto;
+    border: 1px solid rgba(225, 29, 63, 0.24);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.72);
+    color: #9f1239;
+    padding: 7px 9px;
+    font-size: 11px;
+    font-weight: 780;
+    text-decoration: none;
+  }
+  .capture-handoff-banner[data-capture-handoff-reentry-state="ready"] .capture-handoff-reentry {
+    display: flex;
+  }
   .capture-handoff-banner[data-capture-handoff-banner-state="idle"] {
     display: none;
   }
@@ -2646,12 +2681,19 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
             <button type="button" data-control="intake-run-session" disabled>AI 세션 실행</button>
           </div>
         </section>
-        <section class="capture-handoff-banner" data-capture-handoff-banner="selected-memory-session" data-capture-handoff-banner-state="idle" data-capture-handoff-memory="" data-capture-handoff-related-count="0" aria-label="앱 기록에서 넘어온 기억">
+        <section class="capture-handoff-banner" data-capture-handoff-banner="selected-memory-session" data-capture-handoff-banner-state="idle" data-capture-handoff-memory="" data-capture-handoff-related-count="0" data-capture-handoff-saved-memory="" data-capture-handoff-reentry-state="idle" aria-label="앱 기록에서 넘어온 기억">
           <div>
             <strong data-capture-handoff-title>방금 저장한 일기</strong>
             <span data-capture-handoff-summary>앱에서 저장한 일기가 그래프에서 선택되면 연관 과거 기억과 AI 세션 준비 상태를 여기서 보여준다.</span>
           </div>
-          <button type="button" data-control="capture-handoff-run-session">AI 세션 실행</button>
+          <div class="capture-handoff-actions">
+            <button type="button" data-control="capture-handoff-run-session">AI 세션 실행</button>
+          </div>
+          <div class="capture-handoff-reentry" data-capture-handoff-reentry="saved-session-memory">
+            <span>저장된 세션 기억으로 다시 열기</span>
+            <a href="#" data-control="open-saved-session-memory-graph">그래프에서 보기</a>
+            <a href="#" data-control="open-saved-session-memory-session">AI 세션으로 열기</a>
+          </div>
         </section>
         <div class="prototype-entry-dock" data-entry-dock="diary-start" aria-label="첫 화면 일기 시작 액션">
           <a class="entry-dock-action primary" href="/capture/" data-primary-entry-action="quick-diary">
@@ -2852,6 +2894,8 @@ const GRAPH_CONTROL_SCRIPT = `
   const captureHandoffTitle = captureHandoffBanner?.querySelector('[data-capture-handoff-title]');
   const captureHandoffSummary = captureHandoffBanner?.querySelector('[data-capture-handoff-summary]');
   const captureHandoffRunSessionButton = document.querySelector('[data-control="capture-handoff-run-session"]');
+  const captureHandoffSavedGraphLink = document.querySelector('[data-control="open-saved-session-memory-graph"]');
+  const captureHandoffSavedSessionLink = document.querySelector('[data-control="open-saved-session-memory-session"]');
   const intakeActions = Array.from(document.querySelectorAll('[data-intake-action]'));
   const firstRunGuideActions = Array.from(document.querySelectorAll('[data-guide-action]'));
   const importPreviewButton = document.querySelector('[data-control="preview-local-import"]');
@@ -3622,6 +3666,18 @@ const GRAPH_CONTROL_SCRIPT = `
           ? normalizedMemoryId + ' 세션 결과가 저장됐다. 다음 고민에서 이 결과도 과거 근거로 다시 불러올 수 있다.'
           : normalizedMemoryId + ' 기억에서 연관 과거 기억 ' + count + '개를 찾았다. 바로 질문, 결정 되짚기, 주간 패턴 세션을 실행할 수 있다.';
     }
+  };
+
+  const updateCaptureHandoffReentry = (savedMemoryId) => {
+    if (!savedMemoryId) return;
+    const graphUrl = '/?memory=' + encodeURIComponent(savedMemoryId);
+    const sessionUrl = graphUrl + '&start=session';
+    captureHandoffBanner?.setAttribute('data-capture-handoff-saved-memory', savedMemoryId);
+    captureHandoffBanner?.setAttribute('data-capture-handoff-reentry-state', 'ready');
+    shell.setAttribute('data-capture-handoff-saved-memory', savedMemoryId);
+    shell.setAttribute('data-capture-handoff-reentry-state', 'ready');
+    captureHandoffSavedGraphLink?.setAttribute('href', graphUrl);
+    captureHandoffSavedSessionLink?.setAttribute('href', sessionUrl);
   };
 
   const selectHandoffMemoryFromGraph = (citation) => {
@@ -4406,6 +4462,7 @@ const GRAPH_CONTROL_SCRIPT = `
       memorySessionSaveButton.textContent = '세션 저장 완료';
       if (captureHandoffBanner?.getAttribute('data-capture-handoff-banner-state') === 'session-completed') {
         updateCaptureHandoffBanner('session-saved', shell.getAttribute('data-memory-session-source-memory') || memorySessionPanel?.getAttribute('data-session-source-memory') || '', shell.getAttribute('data-memory-session-related-memory-count') || memorySessionPanel?.getAttribute('data-session-related-memory-count') || '0');
+        updateCaptureHandoffReentry(savedMemoryId);
       }
       setInteractionState('memory-session-saved');
       return;
@@ -4439,6 +4496,7 @@ const GRAPH_CONTROL_SCRIPT = `
       memorySessionSaveButton.textContent = '세션 저장 완료';
       if (captureHandoffBanner?.getAttribute('data-capture-handoff-banner-state') === 'session-completed') {
         updateCaptureHandoffBanner('session-saved', shell.getAttribute('data-memory-session-source-memory') || memorySessionPanel?.getAttribute('data-session-source-memory') || '', shell.getAttribute('data-memory-session-related-memory-count') || memorySessionPanel?.getAttribute('data-session-related-memory-count') || '0');
+        updateCaptureHandoffReentry(savedMemoryId);
       }
       setInteractionState('memory-session-saved');
     } catch (error) {
