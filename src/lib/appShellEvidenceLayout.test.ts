@@ -876,6 +876,15 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('data-related-workbench-action="session"');
     expect(html).toContain('과거 기억 비교');
     expect(html).toContain('비교할 과거 기억');
+    expect(html).toContain('data-related-workbench-inspector="active-past-memory"');
+    expect(html).toContain('data-related-workbench-inspector-state="ready"');
+    expect(html).toContain('data-related-workbench-active-reason=');
+    expect(html).toContain('data-related-workbench-next-action="ask"');
+    expect(html).toContain('data-related-workbench-inspector-current-label');
+    expect(html).toContain('data-related-workbench-inspector-past-label');
+    expect(html).toContain('data-related-workbench-inspector-reason-label');
+    expect(html).toContain('data-related-workbench-inspector-next-label');
+    expect(html).toContain('연결 이유와 다음 행동');
     expect(html).toContain('data-related-insight-bridge="diary-to-past-memory-actions"');
     expect(html).toContain('data-related-insight-source="mem_freeze_vs_feature_addition"');
     expect(html).toContain('왜 이 기억이 떠올랐나');
@@ -1256,6 +1265,11 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(documentHtml).toContain("workbenchItem.setAttribute('data-related-workbench-memory-id', item.id)");
     expect(documentHtml).toContain('setActiveRelatedWorkbenchMemory(item.id)');
     expect(documentHtml).toContain("relatedMemoryWorkbench?.setAttribute('data-related-workbench-active-memory', memoryId)");
+    expect(documentHtml).toContain("const relatedWorkbenchInspector = relatedMemoryWorkbench?.querySelector('[data-related-workbench-inspector=\"active-past-memory\"]')");
+    expect(documentHtml).toContain("relatedMemoryWorkbench?.setAttribute('data-related-workbench-active-reason', activeReason)");
+    expect(documentHtml).toContain("relatedWorkbenchInspector?.setAttribute('data-related-workbench-inspector-active-memory', memoryId)");
+    expect(documentHtml).toContain("relatedWorkbenchInspectorReasonLabel.textContent = '연결 이유 · ' + (activeReason || '선택 전')");
+    expect(documentHtml).toContain("relatedWorkbenchInspectorNextLabel.textContent = '다음 행동 · ' + nextActionLabel");
     expect(documentHtml).toContain("shell.setAttribute('data-selected-path-source-memory', citation)");
     expect(documentHtml).toContain("selectedPathActions.forEach((button) =>");
     expect(documentHtml).toContain("shell.setAttribute('data-related-memory-source', citation)");

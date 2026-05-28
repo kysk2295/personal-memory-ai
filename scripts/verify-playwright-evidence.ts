@@ -1138,6 +1138,23 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
     (await attribute(page, '[data-related-memory-workbench="selected-diary-comparison"]', 'data-related-workbench-active-memory')) === comparisonTargetId,
     'Related memory comparison workbench should track the active past memory',
   );
+  const comparisonTargetReason = await comparisonTarget.getAttribute('data-related-workbench-reason');
+  assert(
+    (await attribute(page, '[data-related-memory-workbench="selected-diary-comparison"]', 'data-related-workbench-active-reason')) === comparisonTargetReason,
+    'Related memory comparison workbench should expose why the active past memory is connected',
+  );
+  assert(
+    (await attribute(page, '[data-related-workbench-inspector="active-past-memory"]', 'data-related-workbench-inspector-active-memory')) === comparisonTargetId,
+    'Related memory inspector should follow the clicked past memory',
+  );
+  assert(
+    ((await page.locator('[data-related-workbench-inspector-reason-label]').textContent()) || '').includes(comparisonTargetReason || ''),
+    'Related memory inspector should show the active connection reason',
+  );
+  assert(
+    (await attribute(page, '[data-related-memory-workbench="selected-diary-comparison"]', 'data-related-workbench-next-action')) === 'ask',
+    'Related memory comparison should recommend Ask as the default grounded action',
+  );
   assert(
     (await attribute(page, '.second-brain-shell', 'data-active-memory')) === firstCitation,
     'Related memory comparison should not replace the selected diary source memory',

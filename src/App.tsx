@@ -1849,7 +1849,7 @@ const APP_SHELL_STYLES = `
   .related-memory-workbench {
     grid-column: 1 / -1;
     display: grid;
-    grid-template-columns: minmax(180px, 0.54fr) minmax(0, 1fr) minmax(150px, 0.44fr);
+    grid-template-columns: minmax(170px, 0.42fr) minmax(0, 0.86fr) minmax(180px, 0.52fr) minmax(132px, 0.34fr);
     gap: 8px;
     min-width: 0;
     border: 1px solid rgba(225, 29, 63, 0.14);
@@ -1859,6 +1859,7 @@ const APP_SHELL_STYLES = `
   }
   .related-workbench-summary,
   .related-workbench-list,
+  .related-workbench-inspector,
   .related-workbench-actions {
     min-width: 0;
   }
@@ -1916,6 +1917,30 @@ const APP_SHELL_STYLES = `
   }
   .related-workbench-item span {
     color: #7f4b56;
+    font-size: 10px;
+  }
+  .related-workbench-inspector {
+    display: grid;
+    gap: 5px;
+    align-content: start;
+    border: 1px solid rgba(20, 184, 166, 0.18);
+    border-radius: 8px;
+    background: rgba(240, 253, 250, 0.66);
+    padding: 7px;
+  }
+  .related-workbench-inspector > strong {
+    color: #0f766e;
+    font-size: 11px;
+  }
+  .related-workbench-inspector-grid {
+    display: grid;
+    gap: 4px;
+  }
+  .related-workbench-inspector-grid span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #51635f;
     font-size: 10px;
   }
   .related-workbench-actions {
@@ -3326,6 +3351,16 @@ const APP_SHELL_STYLES = `
     border-color: rgba(225, 29, 63, 0.4);
     background: rgba(225, 29, 63, 0.16);
   }
+  .related-workbench-inspector {
+    border-color: rgba(20, 184, 166, 0.24);
+    background: rgba(9, 31, 29, 0.72);
+  }
+  .related-workbench-inspector > strong {
+    color: #99f6e4;
+  }
+  .related-workbench-inspector-grid span {
+    color: #b9d7d0;
+  }
   .related-workbench-actions button {
     border-color: rgba(225, 29, 63, 0.28);
     background: rgba(225, 29, 63, 0.13);
@@ -4046,6 +4081,7 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
     firstFlowRelatedEntry?.facetLabels.find((facet) => currentFlowEntry?.facetLabels.includes(facet)) ??
     firstFlowRelatedEntry?.memoryType ??
     '감정/결정/결과';
+  const firstFlowNextActionLabel = firstFlowRelatedEntry ? '과거 기억으로 질문하기' : '연관 기억 먼저 선택';
   const currentFlowRelatedHtml = currentFlowRelatedEntries
     .map((entry) => {
       const sharedFacet = entry.facetLabels.find((facet) => currentFlowEntry?.facetLabels.includes(facet)) ?? entry.memoryType;
@@ -4483,7 +4519,7 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
               <span data-action-rail-next>연관 기억을 확인하고 AI 액션을 고른다.</span>
             </div>
           </section>
-          <section class="related-memory-workbench" data-related-memory-workbench="selected-diary-comparison" data-related-workbench-source="${escapeHtml(currentFlowMemoryId)}" data-related-workbench-active-memory="${escapeHtml(firstFlowRelatedEntry?.memoryId ?? '')}" data-related-workbench-count="${currentFlowRelatedCount}" aria-label="선택 일기와 과거 기억 비교">
+          <section class="related-memory-workbench" data-related-memory-workbench="selected-diary-comparison" data-related-workbench-source="${escapeHtml(currentFlowMemoryId)}" data-related-workbench-active-memory="${escapeHtml(firstFlowRelatedEntry?.memoryId ?? '')}" data-related-workbench-active-reason="${escapeHtml(firstFlowSharedFacet)}" data-related-workbench-next-action="ask" data-related-workbench-count="${currentFlowRelatedCount}" aria-label="선택 일기와 과거 기억 비교">
             <div class="related-workbench-summary">
               <strong>과거 기억 비교</strong>
               <span>현재 일기 · <b data-related-workbench-source-label>${escapeHtml(currentFlowEntry?.title ?? currentFlowMemoryId)}</b></span>
@@ -4498,6 +4534,15 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
                 })
                 .join('')}
             </div>
+            <section class="related-workbench-inspector" data-related-workbench-inspector="active-past-memory" data-related-workbench-inspector-state="${firstFlowRelatedEntry ? 'ready' : 'empty'}" data-related-workbench-inspector-active-memory="${escapeHtml(firstFlowRelatedEntry?.memoryId ?? '')}" data-related-workbench-inspector-next-action="ask" aria-label="선택한 과거 기억 연결 이유">
+              <strong>연결 이유와 다음 행동</strong>
+              <div class="related-workbench-inspector-grid">
+                <span data-related-workbench-inspector-current-label>현재 기억 · ${escapeHtml(currentFlowEntry?.title ?? currentFlowMemoryId)}</span>
+                <span data-related-workbench-inspector-past-label>과거 기억 · ${escapeHtml(firstFlowRelatedEntry?.title ?? '선택 전')}</span>
+                <span data-related-workbench-inspector-reason-label>연결 이유 · ${escapeHtml(firstFlowSharedFacet)}</span>
+                <span data-related-workbench-inspector-next-label>다음 행동 · ${escapeHtml(firstFlowNextActionLabel)}</span>
+              </div>
+            </section>
             <div class="related-workbench-actions" aria-label="비교한 기억으로 실행">
               <button type="button" data-related-workbench-action="ask">질문</button>
               <button type="button" data-related-workbench-action="replay">결정</button>
@@ -4770,6 +4815,11 @@ const GRAPH_CONTROL_SCRIPT = `
   const relatedWorkbenchSourceLabel = relatedMemoryWorkbench?.querySelector('[data-related-workbench-source-label]');
   const relatedWorkbenchActiveLabel = relatedMemoryWorkbench?.querySelector('[data-related-workbench-active-label]');
   const relatedWorkbenchList = relatedMemoryWorkbench?.querySelector('[data-related-workbench-list]');
+  const relatedWorkbenchInspector = relatedMemoryWorkbench?.querySelector('[data-related-workbench-inspector="active-past-memory"]');
+  const relatedWorkbenchInspectorCurrentLabel = relatedWorkbenchInspector?.querySelector('[data-related-workbench-inspector-current-label]');
+  const relatedWorkbenchInspectorPastLabel = relatedWorkbenchInspector?.querySelector('[data-related-workbench-inspector-past-label]');
+  const relatedWorkbenchInspectorReasonLabel = relatedWorkbenchInspector?.querySelector('[data-related-workbench-inspector-reason-label]');
+  const relatedWorkbenchInspectorNextLabel = relatedWorkbenchInspector?.querySelector('[data-related-workbench-inspector-next-label]');
   const relatedWorkbenchActions = Array.from(document.querySelectorAll('[data-related-workbench-action]'));
   const selectedMemoryReader = document.querySelector('[data-selected-memory-reader="graph-node-body"]');
   const selectedMemoryReaderTitle = selectedMemoryReader?.querySelector('[data-reader-title]');
@@ -5393,13 +5443,34 @@ const GRAPH_CONTROL_SCRIPT = `
   const setActiveRelatedWorkbenchMemory = (memoryId) => {
     relatedMemoryWorkbench?.setAttribute('data-related-workbench-active-memory', memoryId);
     shell.setAttribute('data-related-workbench-active-memory', memoryId);
+    let activeReason = '';
+    let activeTitle = memoryId || '선택 전';
     Array.from(relatedWorkbenchList?.querySelectorAll('[data-related-workbench-memory-id]') || []).forEach((item) => {
       const isActive = item.getAttribute('data-related-workbench-memory-id') === memoryId;
       item.setAttribute('data-related-workbench-active', String(isActive));
-      if (isActive && relatedWorkbenchActiveLabel) {
-        relatedWorkbenchActiveLabel.textContent = item.querySelector('strong')?.textContent || memoryId;
+      if (isActive) {
+        activeReason = item.getAttribute('data-related-workbench-reason') || '';
+        activeTitle = item.querySelector('strong')?.textContent || memoryId || '선택 전';
+        if (relatedWorkbenchActiveLabel) {
+          relatedWorkbenchActiveLabel.textContent = activeTitle;
+        }
       }
     });
+    const nextAction = memoryId ? 'ask' : 'none';
+    const nextActionLabel = memoryId ? '과거 기억으로 질문하기' : '연관 기억 먼저 선택';
+    const sourceLabel = relatedWorkbenchSourceLabel?.textContent || relatedMemoryWorkbench?.getAttribute('data-related-workbench-source') || '현재 기억';
+    relatedMemoryWorkbench?.setAttribute('data-related-workbench-active-reason', activeReason);
+    relatedMemoryWorkbench?.setAttribute('data-related-workbench-next-action', nextAction);
+    relatedWorkbenchInspector?.setAttribute('data-related-workbench-inspector-state', memoryId ? 'ready' : 'empty');
+    relatedWorkbenchInspector?.setAttribute('data-related-workbench-inspector-active-memory', memoryId);
+    relatedWorkbenchInspector?.setAttribute('data-related-workbench-inspector-next-action', nextAction);
+    if (relatedWorkbenchInspectorCurrentLabel) relatedWorkbenchInspectorCurrentLabel.textContent = '현재 기억 · ' + sourceLabel;
+    if (relatedWorkbenchInspectorPastLabel) relatedWorkbenchInspectorPastLabel.textContent = '과거 기억 · ' + activeTitle;
+    if (relatedWorkbenchInspectorReasonLabel) relatedWorkbenchInspectorReasonLabel.textContent = '연결 이유 · ' + (activeReason || '선택 전');
+    if (relatedWorkbenchInspectorNextLabel) relatedWorkbenchInspectorNextLabel.textContent = '다음 행동 · ' + nextActionLabel;
+    if (memoryPathReason) memoryPathReason.textContent = activeReason || '연결 이유 없음';
+    if (memoryPathPast) memoryPathPast.textContent = memoryId ? activeTitle : '연관 과거 기억 없음';
+    if (memoryPathAction) memoryPathAction.textContent = nextActionLabel;
   };
 
   const actionCenterLabels = {
@@ -5836,7 +5907,6 @@ const GRAPH_CONTROL_SCRIPT = `
           .join(' · ');
       }
     }
-    renderRelatedMemoryWorkbench(citation, related);
     updateSelectedAiActionCenter({ sourceMemoryId: citation, relatedCount: related.length, lastAction: 'none', citationCount: 0, saveState: 'idle' });
     updateMemoryActionRail({ sourceMemoryId: citation, relatedCount: related.length, stage: related.length ? 'related-ready' : 'ready', activeAction: 'none', saveState: 'idle' });
     commandRail?.setAttribute('data-command-rail-state', related.length ? 'ready' : 'empty');
@@ -5860,6 +5930,7 @@ const GRAPH_CONTROL_SCRIPT = `
     if (useNowRoutePathCurrent) useNowRoutePathCurrent.textContent = citation;
     if (useNowRoutePathReason) useNowRoutePathReason.textContent = related.length ? related[0].reason : '연결 이유 없음';
     if (useNowRoutePathPast) useNowRoutePathPast.textContent = related.length ? related[0].label : '연관 과거 기억 없음';
+    renderRelatedMemoryWorkbench(citation, related);
     relatedInsightBridge?.setAttribute('data-related-insight-source', citation);
     relatedInsightBridge?.setAttribute('data-related-insight-count', String(related.length));
     if (relatedInsightReasonList) {
@@ -9118,6 +9189,11 @@ const GRAPH_CONTROL_SCRIPT = `
     button.addEventListener('click', () => {
       const action = button.getAttribute('data-related-workbench-action');
       relatedMemoryWorkbench?.setAttribute('data-related-workbench-last-action', action || '');
+      relatedMemoryWorkbench?.setAttribute('data-related-workbench-next-action', action || 'none');
+      relatedWorkbenchInspector?.setAttribute('data-related-workbench-inspector-next-action', action || 'none');
+      if (relatedWorkbenchInspectorNextLabel) {
+        relatedWorkbenchInspectorNextLabel.textContent = '다음 행동 · ' + (workbenchActionLabels[action || 'none'] || '대기');
+      }
       shell.setAttribute('data-related-workbench-last-action', action || '');
       if (action === 'ask') {
         askWithRelatedMemoryContext();
