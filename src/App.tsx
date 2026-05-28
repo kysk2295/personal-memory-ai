@@ -4207,7 +4207,7 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
             <span class="use-now-route-next" data-use-now-route-next-label>일기를 쓰거나 가져오면 이 경로가 그래프와 AI 작업대로 이어진다.</span>
             <section class="use-now-flow-receipt" data-use-now-flow-receipt="live-service-flow" data-use-now-flow-receipt-state="capture" data-use-now-flow-receipt-memory="${escapeHtml(
               currentFlowMemoryId,
-            )}" data-use-now-flow-receipt-related-count="${currentFlowRelatedCount}" data-use-now-flow-receipt-ai-state="idle" data-use-now-flow-receipt-save-state="idle" data-use-now-flow-receipt-next-action="write-or-import" aria-label="서비스 흐름 영수증">
+            )}" data-use-now-flow-receipt-related-count="${currentFlowRelatedCount}" data-use-now-flow-receipt-ai-state="idle" data-use-now-flow-receipt-save-state="idle" data-use-now-flow-receipt-saved-memory="" data-use-now-flow-receipt-next-action="write-or-import" aria-label="서비스 흐름 영수증">
               <strong>서비스 흐름 영수증</strong>
               <div class="use-now-flow-receipt-grid" aria-label="현재 서비스 흐름 값">
                 <span data-flow-receipt-route-label>단계 · 기록/가져오기</span>
@@ -4215,6 +4215,7 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
                 <span data-flow-receipt-related-label>연관 기억 · ${currentFlowRelatedCount}개</span>
                 <span data-flow-receipt-ai-label>AI · 대기</span>
                 <span data-flow-receipt-save-label>저장 · 대기</span>
+                <span data-flow-receipt-saved-memory-label>저장 기억 · 아직 없음</span>
                 <span data-flow-receipt-next-action-label>다음 행동 · 일기 쓰기/가져오기</span>
               </div>
             </section>
@@ -4756,6 +4757,7 @@ const GRAPH_CONTROL_SCRIPT = `
   const flowReceiptRelatedLabel = useNowFlowReceipt?.querySelector('[data-flow-receipt-related-label]');
   const flowReceiptAiLabel = useNowFlowReceipt?.querySelector('[data-flow-receipt-ai-label]');
   const flowReceiptSaveLabel = useNowFlowReceipt?.querySelector('[data-flow-receipt-save-label]');
+  const flowReceiptSavedMemoryLabel = useNowFlowReceipt?.querySelector('[data-flow-receipt-saved-memory-label]');
   const flowReceiptNextActionLabel = useNowFlowReceipt?.querySelector('[data-flow-receipt-next-action-label]');
   const useNowRoutePath = useNowRouteBoard?.querySelector('[data-use-now-route-path="related-memory"]');
   const useNowRoutePathCurrent = useNowRouteBoard?.querySelector('[data-use-now-route-path-current]');
@@ -5024,6 +5026,7 @@ const GRAPH_CONTROL_SCRIPT = `
     );
     const aiState = detail.aiState || useNowRouteBoard.getAttribute('data-use-now-route-ai-state') || 'idle';
     const saveState = detail.saveState || useNowRouteBoard.getAttribute('data-use-now-route-save-state') || 'idle';
+    const savedMemoryId = detail.savedMemoryId || shell.getAttribute('data-last-saved-memory') || shell.getAttribute('data-last-saved-session-memory') || '';
     const reentryState = saveState === 'saved' && selectedMemory ? 'ready' : 'disabled';
     const nextAction =
       detail.nextAction ||
@@ -5057,6 +5060,7 @@ const GRAPH_CONTROL_SCRIPT = `
     useNowFlowReceipt?.setAttribute('data-use-now-flow-receipt-related-count', relatedCount);
     useNowFlowReceipt?.setAttribute('data-use-now-flow-receipt-ai-state', aiState);
     useNowFlowReceipt?.setAttribute('data-use-now-flow-receipt-save-state', saveState);
+    useNowFlowReceipt?.setAttribute('data-use-now-flow-receipt-saved-memory', savedMemoryId);
     useNowFlowReceipt?.setAttribute('data-use-now-flow-receipt-next-action', nextAction);
     shell.setAttribute('data-use-now-flow-receipt-state', state);
     shell.setAttribute('data-use-now-flow-receipt-next-action', nextAction);
@@ -5090,6 +5094,7 @@ const GRAPH_CONTROL_SCRIPT = `
     if (flowReceiptRelatedLabel) flowReceiptRelatedLabel.textContent = '연관 기억 · ' + relatedCount + '개';
     if (flowReceiptAiLabel) flowReceiptAiLabel.textContent = 'AI · ' + (useNowAiStateLabels[aiState] || aiState);
     if (flowReceiptSaveLabel) flowReceiptSaveLabel.textContent = '저장 · ' + (useNowSaveStateLabels[saveState] || saveState);
+    if (flowReceiptSavedMemoryLabel) flowReceiptSavedMemoryLabel.textContent = '저장 기억 · ' + (savedMemoryId || '아직 없음');
     if (flowReceiptNextActionLabel) flowReceiptNextActionLabel.textContent = '다음 행동 · ' + nextActionLabel;
     if (useNowRoutePathCurrent) useNowRoutePathCurrent.textContent = selectedMemory || '대기';
     if (useNowRouteOpenSavedButton) {
@@ -6542,14 +6547,15 @@ const GRAPH_CONTROL_SCRIPT = `
         }
         setIntakeFlowStepState('save', 'done');
         updateIntakeGraphStatusBoard({ memoryId: savedMemoryId || 'saved-memory', nextAction: 'reopen-saved-memory', aiState: 'saved', saveState: 'saved' });
-        updateKoreanAiWorkbench({
-          sourceMemoryId: savedMemoryId || 'saved-memory',
-          lastAction,
-          actionState: 'saved',
-          nextAction: 'open-saved-memory',
-          saveState: 'saved',
-        });
-        updateFlowCoach(
+	        updateKoreanAiWorkbench({
+	          sourceMemoryId: savedMemoryId || 'saved-memory',
+	          lastAction,
+	          actionState: 'saved',
+	          nextAction: 'open-saved-memory',
+	          saveState: 'saved',
+	        });
+	        updateUseNowRouteBoard({ state: 'save', sourceMemoryId: savedMemoryId, aiState: 'saved', saveState: 'saved', nextAction: 'open-saved-memory', savedMemoryId });
+	        updateFlowCoach(
           'saved',
           'reopen-saved-memory',
           '미래 기억으로 저장됐다',
@@ -7645,12 +7651,13 @@ const GRAPH_CONTROL_SCRIPT = `
         updateCaptureHandoffBanner('session-saved', shell.getAttribute('data-memory-session-source-memory') || memorySessionPanel?.getAttribute('data-session-source-memory') || '', shell.getAttribute('data-memory-session-related-memory-count') || memorySessionPanel?.getAttribute('data-session-related-memory-count') || '0');
         updateCaptureHandoffReentry(savedMemoryId);
       }
-      updateGuidedServiceFlow('save', {
-        sourceMemoryId: shell.getAttribute('data-memory-session-source-memory') || memorySessionPanel?.getAttribute('data-session-source-memory') || '',
-        relatedCount: shell.getAttribute('data-memory-session-related-memory-count') || memorySessionPanel?.getAttribute('data-session-related-memory-count') || '0',
-        savedMemoryId,
-      });
-      updateFlowCoach(
+	      updateGuidedServiceFlow('save', {
+	        sourceMemoryId: shell.getAttribute('data-memory-session-source-memory') || memorySessionPanel?.getAttribute('data-session-source-memory') || '',
+	        relatedCount: shell.getAttribute('data-memory-session-related-memory-count') || memorySessionPanel?.getAttribute('data-session-related-memory-count') || '0',
+	        savedMemoryId,
+	      });
+	      updateUseNowRouteBoard({ state: 'save', sourceMemoryId: savedMemoryId, aiState: 'saved', saveState: 'saved', nextAction: 'open-saved-memory', savedMemoryId });
+	      updateFlowCoach(
         'saved',
         'reopen-saved-memory',
         'AI 세션이 미래 기억으로 저장됐다',
@@ -7734,12 +7741,13 @@ const GRAPH_CONTROL_SCRIPT = `
         updateCaptureHandoffBanner('session-saved', captureHandoffSaveSource, captureHandoffSaveRelatedCount);
         updateCaptureHandoffReentry(savedMemoryId);
       }
-      updateGuidedServiceFlow('save', {
-        sourceMemoryId: captureHandoffSaveSource || shell.getAttribute('data-memory-session-source-memory') || '',
-        relatedCount: captureHandoffSaveRelatedCount,
-        savedMemoryId,
-      });
-      updateFlowCoach(
+	      updateGuidedServiceFlow('save', {
+	        sourceMemoryId: captureHandoffSaveSource || shell.getAttribute('data-memory-session-source-memory') || '',
+	        relatedCount: captureHandoffSaveRelatedCount,
+	        savedMemoryId,
+	      });
+	      updateUseNowRouteBoard({ state: 'save', sourceMemoryId: savedMemoryId, aiState: 'saved', saveState: 'saved', nextAction: 'open-saved-memory', savedMemoryId });
+	      updateFlowCoach(
         'saved',
         'reopen-saved-memory',
         'AI 세션이 미래 기억으로 저장됐다',

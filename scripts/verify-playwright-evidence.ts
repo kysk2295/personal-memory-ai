@@ -768,6 +768,18 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
     'Use-now route board should enable saved-memory reentry after AI result saveback',
   );
   assert(
+    (await attribute(page, '[data-use-now-flow-receipt="live-service-flow"]', 'data-use-now-flow-receipt-saved-memory')) === savedIntakeAiMemoryId,
+    'Use-now flow receipt should expose the saved future memory id after AI result saveback',
+  );
+  assert(
+    (await attribute(page, '[data-use-now-flow-receipt="live-service-flow"]', 'data-use-now-flow-receipt-next-action')) === 'open-saved-memory',
+    'Use-now flow receipt should point to saved-memory reentry after AI result saveback',
+  );
+  assert(
+    Boolean(((await page.locator('[data-flow-receipt-saved-memory-label]').textContent()) || '').includes(savedIntakeAiMemoryId || '')),
+    'Use-now flow receipt should show the saved future memory label after AI result saveback',
+  );
+  assert(
     (await attribute(page, '[data-use-now-action="open-saved-memory"]', 'data-use-now-action-enabled')) === 'true',
     'Use-now route board should enable the saved-memory reentry action after AI result saveback',
   );

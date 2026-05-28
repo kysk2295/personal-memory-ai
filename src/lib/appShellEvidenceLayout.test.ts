@@ -562,7 +562,9 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('data-use-now-flow-receipt="live-service-flow"');
     expect(html).toContain('data-use-now-flow-receipt-state="capture"');
     expect(html).toContain('data-use-now-flow-receipt-memory="mem_freeze_vs_feature_addition"');
+    expect(html).toContain('data-use-now-flow-receipt-saved-memory=""');
     expect(html).toContain('data-flow-receipt-route-label');
+    expect(html).toContain('data-flow-receipt-saved-memory-label');
     expect(html).toContain('data-flow-receipt-next-action-label');
     expect(html).toContain('서비스 흐름 영수증');
     expect(documentHtml).toContain('.product-value-strip[data-command-shelf="graph-led"]');
@@ -1101,8 +1103,11 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(documentHtml).toContain("useNowRouteBoard?.setAttribute('data-use-now-route-save-state'");
     expect(documentHtml).toContain("useNowRouteBoard?.setAttribute('data-use-now-route-reentry-state'");
     expect(documentHtml).toContain("useNowFlowReceipt?.setAttribute('data-use-now-flow-receipt-state', state)");
+    expect(documentHtml).toContain("useNowFlowReceipt?.setAttribute('data-use-now-flow-receipt-saved-memory', savedMemoryId)");
     expect(documentHtml).toContain("useNowFlowReceipt?.setAttribute('data-use-now-flow-receipt-next-action', nextAction)");
+    expect(documentHtml).toContain("flowReceiptSavedMemoryLabel.textContent = '저장 기억 · ' + (savedMemoryId || '아직 없음')");
     expect(documentHtml).toContain("flowReceiptNextActionLabel.textContent = '다음 행동 · ' + nextActionLabel");
+    expect(documentHtml).toContain("updateUseNowRouteBoard({ state: 'save', sourceMemoryId: savedMemoryId, aiState: 'saved', saveState: 'saved', nextAction: 'open-saved-memory', savedMemoryId })");
     expect(documentHtml).toContain("useNowRoutePath?.setAttribute('data-use-now-route-path-state'");
     expect(documentHtml).toContain("useNowRoutePath?.setAttribute('data-use-now-route-path-source', citation)");
     expect(documentHtml).toContain("useNowRoutePathReason.textContent = related.length ? related[0].reason : '연결 이유 없음'");
