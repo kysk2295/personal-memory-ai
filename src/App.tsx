@@ -1960,10 +1960,69 @@ const APP_SHELL_STYLES = `
   }
   .product-value-strip .privacy-actions span,
   .service-flow-steps li,
+  .diary-inbox,
+  .diary-inbox-item,
   .memory-intake-hub,
   .memory-intake-action {
     border-color: rgba(255, 255, 255, 0.08);
     background: rgba(255, 255, 255, 0.055);
+  }
+  .diary-inbox {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: minmax(150px, 0.55fr) minmax(0, 1fr);
+    gap: 8px;
+    padding: 8px;
+    border-radius: 8px;
+  }
+  .diary-inbox-heading {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+  }
+  .diary-inbox-heading strong {
+    color: #f0f0f2;
+    font-size: 12px;
+  }
+  .diary-inbox-heading span {
+    color: #a7a7ad;
+    font-size: 11px;
+    line-height: 1.35;
+  }
+  .diary-inbox-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+    min-width: 0;
+  }
+  .diary-inbox-item {
+    display: grid;
+    gap: 4px;
+    min-height: 56px;
+    padding: 7px;
+    border: 1px solid;
+    border-radius: 8px;
+    color: #d7d7db;
+    text-align: left;
+    cursor: pointer;
+  }
+  .diary-inbox-item strong,
+  .diary-inbox-item span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .diary-inbox-item strong {
+    color: #f0f0f2;
+    font-size: 11px;
+  }
+  .diary-inbox-item span {
+    color: #9f9fa5;
+    font-size: 10px;
+  }
+  .diary-inbox-item[data-diary-inbox-active="true"] {
+    border-color: rgba(214, 31, 60, 0.48);
+    background: rgba(214, 31, 60, 0.13);
   }
   .memory-intake-draft textarea,
   .memory-intake-draft-actions button {
@@ -2015,6 +2074,15 @@ const APP_SHELL_STYLES = `
   .product-value-strip[data-command-shelf="graph-led"] .service-flow-steps li {
     min-height: 48px;
     padding: 7px;
+  }
+  .product-value-strip[data-command-shelf="graph-led"] .diary-inbox {
+    grid-template-columns: 1fr;
+  }
+  .product-value-strip[data-command-shelf="graph-led"] .diary-inbox-list {
+    grid-template-columns: 1fr;
+  }
+  .product-value-strip[data-command-shelf="graph-led"] .diary-inbox-heading span {
+    display: none;
   }
   .product-value-strip[data-command-shelf="graph-led"] .memory-intake-hub {
     grid-template-columns: 1fr;
@@ -2595,6 +2663,8 @@ const APP_SHELL_STYLES = `
     .product-value-strip { grid-template-columns: 1fr; }
     .privacy-actions { justify-content: flex-start; }
     .memory-intake-hub,
+    .diary-inbox,
+    .diary-inbox-list,
     .memory-intake-actions,
     .memory-intake-draft {
       grid-template-columns: 1fr;
@@ -2666,6 +2736,36 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
     .map((memoryId) => layout.memoryTimeline.entries.find((entry) => entry.memoryId === memoryId))
     .filter((entry): entry is NonNullable<typeof entry> => Boolean(entry))
     .slice(0, 4);
+  const diaryInboxPreferredIds = ['mem_captured_ship_note', 'mem_unrelated_calm_import', currentFlowMemoryId];
+  const diaryInboxSeen = new Set<string>();
+  const diaryInboxEntries = [
+    ...diaryInboxPreferredIds
+      .map((memoryId) => layout.memoryTimeline.entries.find((entry) => entry.memoryId === memoryId))
+      .filter((entry): entry is NonNullable<typeof entry> => Boolean(entry)),
+    ...layout.memoryTimeline.entries.filter((entry) => {
+      const searchable = [entry.memoryId, entry.sourceLabel, entry.title, entry.rawExcerpt, entry.memoryType].join(' ').toLocaleLowerCase();
+      return (
+        searchable.includes('mobile') ||
+        searchable.includes('markdown') ||
+        searchable.includes('notion') ||
+        searchable.includes('paste') ||
+        searchable.includes('diary') ||
+        searchable.includes('일기')
+      );
+    }),
+  ]
+    .filter((entry) => {
+      if (diaryInboxSeen.has(entry.memoryId)) return false;
+      diaryInboxSeen.add(entry.memoryId);
+      return true;
+    })
+    .slice(0, 5);
+  const diaryInboxHtml = diaryInboxEntries
+    .map(
+      (entry) =>
+        `<button type="button" class="diary-inbox-item" data-control="diary-inbox-select-memory" data-diary-inbox-memory-id="${escapeHtml(entry.memoryId)}" data-diary-inbox-active="${entry.memoryId === currentFlowMemoryId ? 'true' : 'false'}"><strong>${escapeHtml(entry.title)}</strong><span>${escapeHtml(`${entry.observedAt} · ${entry.sourceLabel}`)}</span></button>`,
+    )
+    .join('');
   const firstFlowRelatedEntry = currentFlowRelatedEntries[0];
   const firstFlowSharedFacet =
     firstFlowRelatedEntry?.facetLabels.find((facet) => currentFlowEntry?.facetLabels.includes(facet)) ??
@@ -2806,6 +2906,15 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
           <span>내보내기</span>
           <span>삭제</span>
         </div>
+        <section class="diary-inbox" data-diary-inbox="app-web-diary-sources" data-diary-inbox-count="${diaryInboxEntries.length}" data-diary-inbox-active-memory="${escapeHtml(currentFlowMemoryId)}" aria-label="앱과 웹에서 들어온 일기">
+          <div class="diary-inbox-heading">
+            <strong>오늘 들어온 일기</strong>
+            <span>앱 빠른 기록과 웹 가져오기가 내 세컨브레인 그래프로 들어온 기록이다.</span>
+          </div>
+          <div class="diary-inbox-list" data-diary-inbox-list>
+            ${diaryInboxHtml}
+          </div>
+        </section>
         <section class="memory-intake-hub" data-memory-intake-hub="app-web-diary" data-intake-stage="capture-or-import" data-intake-source-scope="diary-only" data-intake-result="graph-handoff" data-intake-last-action="none" data-intake-draft-state="idle" aria-label="기록 인입 허브">
           <div class="memory-intake-copy">
             <strong>기록 인입 허브</strong>
@@ -3089,6 +3198,8 @@ const GRAPH_CONTROL_SCRIPT = `
   const importPasteText = document.querySelector('[data-control="local-import-paste-text"]');
   const focusLocalImportButton = document.querySelector('[data-control="focus-local-import"]');
   const memoryIntakeHub = document.querySelector('[data-memory-intake-hub="app-web-diary"]');
+  const diaryInbox = document.querySelector('[data-diary-inbox="app-web-diary-sources"]');
+  const diaryInboxItems = Array.from(document.querySelectorAll('[data-control="diary-inbox-select-memory"]'));
   const intakeDiaryDraft = document.querySelector('[data-control="intake-diary-draft"]');
   const intakePreviewDiaryButton = document.querySelector('[data-control="intake-preview-diary"]');
   const intakeApplyDiaryButton = document.querySelector('[data-control="intake-apply-diary"]');
@@ -3216,6 +3327,14 @@ const GRAPH_CONTROL_SCRIPT = `
     const currentTimelineItems = Array.from(timelinePanel?.querySelectorAll('[data-control="timeline-select-memory"]') || timelineItems);
     currentTimelineItems.forEach((item) => {
       item.setAttribute('data-timeline-active', String(item.getAttribute('data-timeline-memory-id') === citation));
+    });
+  };
+
+  const updateDiaryInboxSelection = (citation) => {
+    if (!citation) return;
+    diaryInbox?.setAttribute('data-diary-inbox-active-memory', citation);
+    diaryInboxItems.forEach((item) => {
+      item.setAttribute('data-diary-inbox-active', String(item.getAttribute('data-diary-inbox-memory-id') === citation));
     });
   };
 
@@ -3503,6 +3622,7 @@ const GRAPH_CONTROL_SCRIPT = `
     if (memoryPathPast) memoryPathPast.textContent = related.length ? related[0].label : '연관 과거 기억 없음';
     if (memoryPathAction) memoryPathAction.textContent = related.length ? '질문/결정/주간/세션' : '먼저 기억 선택';
     relatedMemoryStrip.setAttribute('data-related-memory-count', String(related.length));
+    updateDiaryInboxSelection(citation);
     shell.setAttribute('data-selected-path-source-memory', citation);
     shell.setAttribute('data-selected-path-related-memory-count', String(related.length));
     shell.setAttribute('data-selected-path-related-memories', related.map((item) => item.id).join(','));
@@ -4754,6 +4874,14 @@ const GRAPH_CONTROL_SCRIPT = `
     }
     memorySessionSaveButton.setAttribute('data-artifact-save-state', 'saving');
     shell.setAttribute('data-memory-session-save-state', 'saving');
+    const shouldUpdateCaptureHandoffAfterSave =
+      captureHandoffBanner?.getAttribute('data-capture-handoff-banner-state') === 'session-completed';
+    const captureHandoffSaveSource =
+      shell.getAttribute('data-memory-session-source-memory') || memorySessionPanel?.getAttribute('data-session-source-memory') || '';
+    const captureHandoffSaveRelatedCount =
+      shell.getAttribute('data-memory-session-related-memory-count') ||
+      memorySessionPanel?.getAttribute('data-session-related-memory-count') ||
+      '0';
     try {
       const response = await fetch(endpoint, {
         method,
@@ -4779,8 +4907,8 @@ const GRAPH_CONTROL_SCRIPT = `
       }
       memorySessionSaveButton.setAttribute('data-artifact-save-state', 'saved');
       memorySessionSaveButton.textContent = '세션 저장 완료';
-      if (captureHandoffBanner?.getAttribute('data-capture-handoff-banner-state') === 'session-completed') {
-        updateCaptureHandoffBanner('session-saved', shell.getAttribute('data-memory-session-source-memory') || memorySessionPanel?.getAttribute('data-session-source-memory') || '', shell.getAttribute('data-memory-session-related-memory-count') || memorySessionPanel?.getAttribute('data-session-related-memory-count') || '0');
+      if (shouldUpdateCaptureHandoffAfterSave) {
+        updateCaptureHandoffBanner('session-saved', captureHandoffSaveSource, captureHandoffSaveRelatedCount);
         updateCaptureHandoffReentry(savedMemoryId);
       }
       updateFlowCoach(
@@ -4957,6 +5085,16 @@ const GRAPH_CONTROL_SCRIPT = `
         shell.setAttribute('data-timeline-selected-memory', citation);
         setInteractionState('timeline-item-selected');
       }
+    });
+  });
+
+  diaryInboxItems.forEach((item) => {
+    item.addEventListener('click', () => {
+      const citation = item.getAttribute('data-diary-inbox-memory-id') || '';
+      if (!citation) return;
+      selectMemoryByCitation(citation);
+      updateDiaryInboxSelection(citation);
+      setInteractionState('diary-inbox-memory-selected');
     });
   });
 
@@ -5881,12 +6019,8 @@ const GRAPH_CONTROL_SCRIPT = `
     memoryIntakeHub?.setAttribute('data-intake-last-action', 'apply-diary');
     memoryIntakeHub?.setAttribute('data-intake-draft-state', 'apply-requested');
     shell.setAttribute('data-intake-last-action', 'apply-diary');
-    if (importApplyButton?.hasAttribute('disabled')) {
-      pendingIntakeApplyAfterPreview = true;
-      importPreviewButton?.click();
-    } else {
-      importApplyButton?.click();
-    }
+    pendingIntakeApplyAfterPreview = true;
+    importPreviewButton?.click();
     setInteractionState('intake-diary-apply-requested');
   });
   const prepareNotionDiaryIntake = (action) => {

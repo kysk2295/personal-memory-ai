@@ -536,6 +536,13 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('앱처럼 빠른 일기 쓰기');
     expect(html).toContain('일기 붙여넣어 가져오기');
     expect(html).toContain('data-memory-intake-hub="app-web-diary"');
+    expect(html).toContain('data-diary-inbox="app-web-diary-sources"');
+    expect(html).toContain('data-diary-inbox-count=');
+    expect(html).toContain('data-diary-inbox-active-memory="mem_freeze_vs_feature_addition"');
+    expect(html).toContain('오늘 들어온 일기');
+    expect(html).toContain('data-diary-inbox-memory-id="mem_captured_ship_note"');
+    expect(html).toContain('data-diary-inbox-memory-id="mem_unrelated_calm_import"');
+    expect(html).toContain('data-control="diary-inbox-select-memory"');
     expect(html).toContain('data-intake-stage="capture-or-import"');
     expect(html).toContain('data-intake-source-scope="diary-only"');
     expect(html).toContain('기록 인입 허브');
@@ -787,6 +794,10 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(documentHtml).toContain('const intakeApplyDiaryButton = document.querySelector');
     expect(documentHtml).toContain('intakeActions.forEach((button) =>');
     expect(documentHtml).toContain("memoryIntakeHub?.setAttribute('data-intake-last-action'");
+    expect(documentHtml).toContain("const diaryInbox = document.querySelector('[data-diary-inbox=\"app-web-diary-sources\"]')");
+    expect(documentHtml).toContain("diaryInbox?.setAttribute('data-diary-inbox-active-memory', citation)");
+    expect(documentHtml).toContain("diaryInboxItems.forEach((item) =>");
+    expect(documentHtml).toContain("setInteractionState('diary-inbox-memory-selected')");
     expect(documentHtml).toContain("importPasteText.value = intakeDiaryDraft.value");
     expect(documentHtml).toContain("memoryIntakeHub?.setAttribute('data-intake-draft-state', 'preview-requested')");
     expect(documentHtml).toContain("memoryIntakeHub?.setAttribute('data-intake-draft-state', 'apply-requested')");

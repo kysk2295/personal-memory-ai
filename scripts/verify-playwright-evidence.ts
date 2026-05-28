@@ -217,8 +217,12 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
     'First-screen Notion apply should expose a concrete Notion intake state',
   );
   assert(
-    (await page.locator('text=Notion 연결이 필요하다').count()) + (await page.locator('text=습관리스트 소스를 먼저 선택해야 한다').count()) + (await page.locator('text=Notion이 잠시 제한 중이다').count()) >= 1,
-    'Intake result should explain the Notion gate in Korean',
+    (await page.locator('text=Notion 연결이 필요하다').count()) +
+      (await page.locator('text=습관리스트 소스를 먼저 선택해야 한다').count()) +
+      (await page.locator('text=Notion이 잠시 제한 중이다').count()) +
+      (await page.locator('text=습관리스트 미리보기가 준비됐다').count()) >=
+      1,
+    'Intake result should explain the Notion gate or preview state in Korean',
   );
   const intakeDraft = `오늘 회의에서 또 혼자 해결하려는 마음이 올라왔다 ${Date.now()}`;
   await page.locator('[data-control="intake-diary-draft"]').fill(intakeDraft);
@@ -335,6 +339,24 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   assert(
     (await attribute(page, `[data-timeline-memory-id="${intakeAppliedMemoryId}"]`, 'data-timeline-active')) === 'true',
     'Expected applied intake memory to be active in the timeline',
+  );
+  assert((await page.locator('[data-diary-inbox="app-web-diary-sources"]').count()) === 1, 'Expected diary inbox to render app/web diary sources');
+  assert(
+    Number(await attribute(page, '[data-diary-inbox="app-web-diary-sources"]', 'data-diary-inbox-count')) >= 2,
+    'Diary inbox should expose captured/imported diary entries',
+  );
+  await page.locator('[data-diary-inbox-memory-id="mem_captured_ship_note"]').click();
+  assert(
+    (await attribute(page, '[data-diary-inbox="app-web-diary-sources"]', 'data-diary-inbox-active-memory')) === 'mem_captured_ship_note',
+    'Diary inbox click should select captured diary memory',
+  );
+  assert(
+    (await attribute(page, '.second-brain-shell', 'data-interaction-state')) === 'diary-inbox-memory-selected',
+    'Diary inbox click should expose handoff interaction state',
+  );
+  assert(
+    (await attribute(page, '[data-command-rail="selected-memory-actions"]', 'data-command-rail-source')) === 'mem_captured_ship_note',
+    'Diary inbox click should update selected command rail',
   );
 
   const graphStats = await page.evaluate(() => {
