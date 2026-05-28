@@ -29,5 +29,6 @@ export interface MemoryStore {
 
 export function resolveMemoryBackendMode(env: Record<string, string | undefined>): MemoryBackendMode {
   if (env.MEMORY_BACKEND_MODE === 'local-file') return 'local-file';
+  if (env.PMI_LOCAL_DURABLE_STORE === 'true') return 'local-file';
   return env.MEMORY_BACKEND_MODE === 'postgres' ? 'postgres' : 'fixture';
 }

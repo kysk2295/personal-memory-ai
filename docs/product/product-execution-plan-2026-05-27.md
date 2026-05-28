@@ -1183,6 +1183,23 @@ Implemented:
 - `src/App.tsx`
 - `src/lib/appShellEvidenceLayout.test.ts`
 
+### L61 — Durable Local Store Activation Flag
+
+Goal: make the local private vault easier to run without remembering the lower-level backend mode value.
+
+Acceptance:
+
+- `PMI_LOCAL_DURABLE_STORE=true` selects the `local-file` backend
+- `MEMORY_BACKEND_MODE=local-file` remains supported
+- fixture mode remains the default when no durable flag/backend mode is provided
+- local-file CRUD, embeddings, delete, and hard delete persistence are covered by store-level tests
+
+Implemented:
+
+- `src/lib/memoryStore.ts`
+- `src/lib/memoryStore.test.ts`
+- `src/lib/memoryStoreRuntime.test.ts`
+
 ## 8. MVP Time Estimate
 
 Assuming focused local development without major dependency or deployment blockers:

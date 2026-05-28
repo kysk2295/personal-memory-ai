@@ -139,4 +139,25 @@ describe('createMemoryStoreRuntime', () => {
       await rm(dir, { recursive: true, force: true });
     }
   });
+
+  test('uses local-file storage when durable local mode is enabled without backend mode', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'personal-memory-ai-durable-'));
+    const localStorePath = join(dir, 'vault.json');
+    try {
+      const runtime = await createMemoryStoreRuntime({
+        env: {
+          PMI_LOCAL_DURABLE_STORE: 'true',
+          LOCAL_MEMORY_STORE_PATH: localStorePath,
+        },
+        fixtureSeedRecords: personalMemoryRecords.slice(0, 1),
+        seedUserId: 'local-user',
+      });
+
+      expect(runtime.backendMode).toBe('local-file');
+      expect((await runtime.store.listByUser('local-user')).map((record) => record.id)).toEqual([personalMemoryRecords[0].id]);
+      await runtime.close();
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
 });

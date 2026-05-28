@@ -1,4 +1,7 @@
 import { describe, expect, test } from 'vitest';
+import { mkdtemp, rm } from 'node:fs/promises';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
 import { createMemoryStore } from './createMemoryStore';
 import { normalizeMemoryRecord } from './memoryRecord';
 import { PostgresMemoryStore, type PgClient, type PgQueryResult } from './postgresMemoryStore';
@@ -67,6 +70,58 @@ describe('createMemoryStore', () => {
     expect(() => createMemoryStore({ env: { MEMORY_BACKEND_MODE: 'postgres' } })).toThrow(
       'postgresClient is required when MEMORY_BACKEND_MODE=postgres',
     );
+  });
+
+  test('local-file mode persists CRUD, embeddings, and deletes across store instances', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'personal-memory-store-'));
+    const path = join(dir, 'vault.json');
+    try {
+      const firstStore = createMemoryStore({
+        env: {
+          MEMORY_BACKEND_MODE: 'local-file',
+          LOCAL_MEMORY_STORE_PATH: path,
+        },
+      });
+      await firstStore.create('user-a', record);
+      await firstStore.create('user-b', { ...record, id: 'mem_other_user_local_file' });
+      await firstStore.update('user-a', { ...record, summary: 'Updated local-file summary.' });
+      await firstStore.saveEmbedding({
+        userId: 'user-a',
+        memoryId: record.id,
+        embedding: [0.1, 0.2, 0.3],
+        model: 'text-embedding-3-small',
+      });
+
+      const secondStore = createMemoryStore({
+        env: {
+          MEMORY_BACKEND_MODE: 'local-file',
+          LOCAL_MEMORY_STORE_PATH: path,
+        },
+      });
+      expect((await secondStore.listByUser('user-a')).map((item) => item.summary)).toEqual(['Updated local-file summary.']);
+      expect((await secondStore.semanticSearch('user-a', [0.1, 0.2, 0.3], 1))[0]?.memory.id).toBe(record.id);
+      expect(await secondStore.deleteByIds('user-a', [record.id])).toBe(1);
+
+      const thirdStore = createMemoryStore({
+        env: {
+          MEMORY_BACKEND_MODE: 'local-file',
+          LOCAL_MEMORY_STORE_PATH: path,
+        },
+      });
+      expect(await thirdStore.listByUser('user-a')).toEqual([]);
+      expect((await thirdStore.listByUser('user-b')).map((item) => item.id)).toEqual(['mem_other_user_local_file']);
+      expect(await thirdStore.hardDeleteUserData('user-b')).toBe(1);
+
+      const fourthStore = createMemoryStore({
+        env: {
+          MEMORY_BACKEND_MODE: 'local-file',
+          LOCAL_MEMORY_STORE_PATH: path,
+        },
+      });
+      expect(await fourthStore.listByUser('user-b')).toEqual([]);
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
   });
 });
 
