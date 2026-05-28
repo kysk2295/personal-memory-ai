@@ -290,7 +290,7 @@ export async function queryNotionImportSources(input: QueryNotionImportSourcesIn
       'notion-version': '2025-09-03',
       'content-type': 'application/json',
     },
-    body: JSON.stringify({ page_size: 50 }),
+    body: JSON.stringify({ page_size: 50, filter: { property: 'object', value: 'data_source' } }),
   });
   if (!response.ok) throw new Error(`notion_search_failed:${response.status}`);
   const body = await response.json();

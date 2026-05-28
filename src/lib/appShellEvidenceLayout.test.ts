@@ -308,7 +308,7 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('class="memory-node obsidian-memory-node');
     expect(html).toContain('data-memory-node-count="8"');
     expect(html).toContain('data-graph-density="benchmark-dense"');
-    expect(html).toContain('<strong>8</strong> memories');
+    expect(html).toContain('<strong data-live-count="memory-nodes">8</strong> memories');
     expect(html).toContain('data-filter-kind="semantic"');
     expect(html).toContain('data-filter-kind="thesis"');
     expect(html).toContain('data-filter-active="true"');
@@ -624,8 +624,12 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(documentHtml).toContain("fetch('/api/app-shell'");
     expect(documentHtml).toContain("shell.setAttribute('data-graph-rehydrate-state', 'ready')");
     expect(documentHtml).toContain("shell.setAttribute('data-rehydrated-memory-node-count'");
+    expect(documentHtml).toContain('data-live-count="memory-nodes"');
+    expect(documentHtml).toContain('liveCountTargets.memoryNodes');
+    expect(documentHtml).toContain("searchCount.textContent = String(appShell.primaryNodes?.length || 0)");
     expect(documentHtml).toContain('const rebuildCytoscapeGraphFromModel =');
     expect(documentHtml).toContain('cytoscapeGraph.elements().remove()');
+    expect(documentHtml).toContain('void rehydrateAppShellAfterImport()');
     expect(documentHtml).toContain("shell.setAttribute('data-graph-rebuild-state', 'rebuilt')");
   });
 });

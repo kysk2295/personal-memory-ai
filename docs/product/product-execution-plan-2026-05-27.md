@@ -2,7 +2,7 @@
 
 Status: active local execution plan  
 Owner: Ko Yunseo  
-Updated: 2026-05-28, Notion database pagination import
+Updated: 2026-05-28, live Notion graph rehydration
 Supersedes for local Codex work: `docs/product/product-master-plan-2026-05-26.md`
 
 ## 1. Product Definition
@@ -222,6 +222,7 @@ No remote push, main merge, production deploy, or secret access is allowed witho
 - L53: Notion page block import fidelity.
 - L54: Notion block pagination import.
 - L55: Notion database pagination import.
+- L56: live Notion graph rehydration.
 
 ## 6. Active Next Loops
 
@@ -1085,6 +1086,27 @@ Implemented:
 - `src/lib/notionImport.test.ts`
 - `TASKS/PMI-053-notion-page-block-import.md`
 - `docs/superpowers/plans/2026-05-28-notion-page-block-import.md`
+
+### L56 — Live Notion Graph Rehydration
+
+Goal: make live Notion imports visible in the web graph immediately when the page loads from the local HTTP server.
+
+Acceptance:
+
+- Notion source discovery uses Notion search filtered to `data_source` objects so page-only search results do not hide databases
+- source discovery remains token-safe and covered by a focused regression test
+- app shell rehydrates from `/api/app-shell` on initial HTTP page load
+- Cytoscape graph stats, sidebar graph counts, search count, and wiki count chips update from the live private store
+- Playwright evidence accepts live stores with more than the initial fixture count and verifies graph stats still match DOM markers
+- live Notion apply smoke imported 86 records into the current local fixture server, growing the graph from 44 to 145 nodes
+
+Implemented:
+
+- `src/lib/notionImport.ts`
+- `src/lib/notionImport.test.ts`
+- `src/App.tsx`
+- `src/lib/appShellEvidenceLayout.test.ts`
+- `scripts/verify-playwright-evidence.ts`
 
 ## 8. MVP Time Estimate
 

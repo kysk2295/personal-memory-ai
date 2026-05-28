@@ -66,13 +66,23 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   await page.goto(localUrl, { waitUntil: 'load', timeout: 30_000 });
   await page.locator('.obsidian-memory-graph').waitFor({ state: 'attached', timeout: 10_000 });
   await page.locator('[data-graph-library="cytoscape"][data-cytoscape-ready="true"]').waitFor({ timeout: 10_000 });
+  if (localUrl.startsWith('http')) {
+    await page.waitForFunction(
+      () => document.querySelector('.second-brain-shell')?.getAttribute('data-graph-rehydrate-state') === 'ready',
+      null,
+      { timeout: 10_000 },
+    );
+  }
 
   assert((await attribute(page, '.second-brain-shell', 'data-graph-renderer')) === 'cytoscape', 'Expected Cytoscape renderer to become active');
-  assert((await attribute(page, '.second-brain-shell', 'data-memory-node-count')) === '8', 'Expected data-derived memory count marker');
-  assert((await attribute(page, '.second-brain-shell', 'data-graph-node-count')) === '44', 'Expected data-derived graph node count marker');
-  assert((await attribute(page, '.second-brain-shell', 'data-graph-edge-count')) === '56', 'Expected data-derived graph edge count marker');
-  assert((await attribute(page, '#memory-graph-cytoscape', 'data-cytoscape-node-count')) === '44', 'Expected Cytoscape node count to match graph payload');
-  assert((await attribute(page, '#memory-graph-cytoscape', 'data-cytoscape-edge-count')) === '56', 'Expected Cytoscape edge count to match graph payload');
+  const initialMemoryNodeCount = Number(await attribute(page, '.second-brain-shell', 'data-memory-node-count'));
+  const initialGraphNodeCount = Number(await attribute(page, '.second-brain-shell', 'data-graph-node-count'));
+  const initialGraphEdgeCount = Number(await attribute(page, '.second-brain-shell', 'data-graph-edge-count'));
+  assert(initialMemoryNodeCount >= 8, 'Expected data-derived memory count marker');
+  assert(initialGraphNodeCount >= 44, 'Expected data-derived graph node count marker');
+  assert(initialGraphEdgeCount >= 56, 'Expected data-derived graph edge count marker');
+  assert(Number(await attribute(page, '#memory-graph-cytoscape', 'data-cytoscape-node-count')) === initialGraphNodeCount, 'Expected Cytoscape node count to match graph payload');
+  assert(Number(await attribute(page, '#memory-graph-cytoscape', 'data-cytoscape-edge-count')) === initialGraphEdgeCount, 'Expected Cytoscape edge count to match graph payload');
   assert((await page.locator('#memory-graph-cytoscape canvas').count()) > 0, 'Expected Cytoscape to render a canvas');
   assert((await page.locator('#saved-artifact-actions').count()) === 1, 'Expected saved artifact payload manifest');
   const savedArtifactManifest = await page.locator('#saved-artifact-actions').textContent();
@@ -85,7 +95,7 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   assert((await attribute(page, '[data-import-upload-panel="local-file"]', 'data-import-upload-state')) === 'idle', 'Expected local import upload panel to start idle');
   assert((await attribute(page, '[data-import-upload-panel="local-file"]', 'data-import-preview-endpoint')) === '/api/import/preview', 'Expected local import upload panel to target import preview API');
   assert((await attribute(page, '[data-import-upload-panel="local-file"]', 'data-import-apply-endpoint')) === '/api/import/apply', 'Expected local import upload panel to target import apply API');
-  assert((await attribute(page, '[data-memory-timeline-panel="pmi025"]', 'data-timeline-entry-count')) === '8', 'Expected timeline panel to render eight private memories');
+  assert(Number(await attribute(page, '[data-memory-timeline-panel="pmi025"]', 'data-timeline-entry-count')) >= 8, 'Expected timeline panel to render private memories');
   assert(
     (await page.locator('[data-timeline-memory-id^="mem_api_artifact_"]').count()) === 3,
     'Expected saved artifacts to render as timeline memories',
@@ -99,9 +109,9 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
     const graph = (window as any).__personalMemoryGraph;
     return graph?.stats;
   });
-  assert(graphStats?.memoryNodeCount === 8, 'Expected browser graph stats to include eight real memory nodes');
-  assert(graphStats?.graphNodeCount === 44, 'Expected browser graph stats to include data-derived graph nodes');
-  assert(graphStats?.edgeCount === 56, 'Expected browser graph stats to include data-derived graph edges');
+  assert(graphStats?.memoryNodeCount === initialMemoryNodeCount, 'Expected browser graph stats to match memory node count marker');
+  assert(graphStats?.graphNodeCount === initialGraphNodeCount, 'Expected browser graph stats to match graph node count marker');
+  assert(graphStats?.edgeCount === initialGraphEdgeCount, 'Expected browser graph stats to match graph edge count marker');
   await page.waitForFunction(() => {
     const graph = document.querySelector('#memory-graph-cytoscape');
     const fallback = document.querySelector('.graph-workspace');

@@ -1644,11 +1644,11 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
       </section>
 
       <div class="graph-meta-line" aria-label="Memory graph scale">
-        <span><strong>${memoryNodeCount}</strong> memories</span>
+        <span><strong data-live-count="memory-nodes">${memoryNodeCount}</strong> memories</span>
         <span class="graph-meta-dot">·</span>
-        <span><strong>${graphNodeCount}</strong> graph nodes</span>
+        <span><strong data-live-count="graph-nodes">${graphNodeCount}</strong> graph nodes</span>
         <span class="graph-meta-dot">·</span>
-        <span><strong>${graphEdgeCount}</strong> edges</span>
+        <span><strong data-live-count="graph-edges">${graphEdgeCount}</strong> edges</span>
         <span class="graph-meta-dot">·</span>
         <span>last woven from diary + imports</span>
       </div>
@@ -1746,9 +1746,9 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
           ${renderSavedArtifactPayload(layout)}
           ${variant === 'no-svg' ? '' : renderMemoryGraph(layout)}
           <aside class="wiki-compiler-strip" aria-label="LLM Wiki compiler preview" data-wiki-compiler="pmi017">
-            <span><strong>${layout.compiledWiki.atomCount}</strong> canonical memory atoms</span>
-            <span><strong>${layout.compiledWiki.nodeCount}</strong> compiled wiki nodes</span>
-            <span><strong>${layout.compiledWiki.citationCount}</strong> citations</span>
+            <span><strong data-live-count="wiki-atoms">${layout.compiledWiki.atomCount}</strong> canonical memory atoms</span>
+            <span><strong data-live-count="wiki-nodes">${layout.compiledWiki.nodeCount}</strong> compiled wiki nodes</span>
+            <span><strong data-live-count="wiki-citations">${layout.compiledWiki.citationCount}</strong> citations</span>
             <span data-memory-ops="retain-recall-reflect">retain ${layout.compiledWiki.operationCounts.retain} · recall ${layout.compiledWiki.operationCounts.recall} · reflect ${layout.compiledWiki.operationCounts.reflect}</span>
             <span data-memory-freshness="strengthening-stable-stale">freshness ${layout.compiledWiki.freshnessCounts.strengthening}/${layout.compiledWiki.freshnessCounts.stable}/${layout.compiledWiki.freshnessCounts.stale}</span>
             ${layout.compiledWiki.nodes
@@ -1834,6 +1834,15 @@ const GRAPH_CONTROL_SCRIPT = `
   const notionSourceList = document.querySelector('[data-notion-source-list]');
   const importAppliedFeedback = document.querySelector('[data-import-applied-feedback="local-upload"]');
   const importAppliedMemoryList = document.querySelector('[data-import-applied-memory-list]');
+  const searchCount = document.querySelector('[data-search-count]');
+  const liveCountTargets = {
+    memoryNodes: document.querySelector('[data-live-count="memory-nodes"]'),
+    graphNodes: document.querySelector('[data-live-count="graph-nodes"]'),
+    graphEdges: document.querySelector('[data-live-count="graph-edges"]'),
+    wikiAtoms: document.querySelector('[data-live-count="wiki-atoms"]'),
+    wikiNodes: document.querySelector('[data-live-count="wiki-nodes"]'),
+    wikiCitations: document.querySelector('[data-live-count="wiki-citations"]'),
+  };
   const memoryReviewPanel = document.querySelector('[data-memory-review-panel="source-edit"]');
   const memoryEditSummary = document.querySelector('[data-control="memory-edit-summary"]');
   const memoryEditRawText = document.querySelector('[data-control="memory-edit-raw-text"]');
@@ -2662,6 +2671,14 @@ const GRAPH_CONTROL_SCRIPT = `
       shell.setAttribute('data-rehydrated-memory-node-count', String(appShell.primaryNodes?.length || 0));
       shell.setAttribute('data-rehydrated-graph-node-count', String(appShell.compiledWiki?.nodeCount || 0));
       shell.setAttribute('data-rehydrated-timeline-entry-count', String(appShell.memoryTimeline?.entries?.length || 0));
+      if (liveCountTargets.memoryNodes) liveCountTargets.memoryNodes.textContent = String(memoryGraph?.stats?.memoryNodeCount || 0);
+      if (liveCountTargets.graphNodes) liveCountTargets.graphNodes.textContent = String(memoryGraph?.stats?.graphNodeCount || 0);
+      if (liveCountTargets.graphEdges) liveCountTargets.graphEdges.textContent = String(memoryGraph?.stats?.edgeCount || 0);
+      if (liveCountTargets.wikiAtoms) liveCountTargets.wikiAtoms.textContent = String(appShell.compiledWiki?.atomCount || 0);
+      if (liveCountTargets.wikiNodes) liveCountTargets.wikiNodes.textContent = String(appShell.compiledWiki?.nodeCount || 0);
+      if (liveCountTargets.wikiCitations) liveCountTargets.wikiCitations.textContent = String(appShell.compiledWiki?.citationCount || 0);
+      if (searchCount) searchCount.textContent = String(appShell.primaryNodes?.length || 0) + ' / ' + String(appShell.primaryNodes?.length || 0);
+      if (timelinePanel) timelinePanel.setAttribute('data-timeline-entry-count', String(appShell.memoryTimeline?.entries?.length || 0));
       rebuildCytoscapeGraphFromModel(memoryGraph);
     } catch (error) {
       shell.setAttribute('data-graph-rehydrate-state', 'error');
@@ -2971,6 +2988,7 @@ const GRAPH_CONTROL_SCRIPT = `
   if (memoryNodes[2]) selectMemory(memoryNodes[2]);
   wireReviewComparisonButtons();
   initializeCytoscapeGraph();
+  void rehydrateAppShellAfterImport();
 
   if (toggleLabels) {
     toggleLabels.addEventListener('click', () => {

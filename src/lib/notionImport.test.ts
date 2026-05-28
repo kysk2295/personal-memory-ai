@@ -426,6 +426,7 @@ describe('notion import connector', () => {
           authorization: 'Bearer secret_live_token',
           'notion-version': '2025-09-03',
         }),
+        body: JSON.stringify({ page_size: 50, filter: { property: 'object', value: 'data_source' } }),
       }),
     });
     expect(sources).toEqual([
