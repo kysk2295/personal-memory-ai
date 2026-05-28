@@ -1721,11 +1721,11 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
     </aside>
 
     <section class="brain-canvas" aria-label="Personal Memory AI Second Brain canvas">
-      <form class="ask-memory-bar" aria-label="Ask Second Brain">
+      <form class="ask-memory-bar" aria-label="Ask Second Brain" data-ask-endpoint="/api/ask">
         <span class="ask-lock" aria-hidden="true">⌘</span>
         <span class="benchmark-signin-cta" data-auth-cta="private-second-brain">Sign in to ask the Second Brain</span>
         <input id="ask-memory-bar-question" name="question" value="${escapeHtml(layout.askQuestion)}" aria-label="Ask My Past Self question" />
-        <button class="ask-submit" type="button" aria-label="Ask">→</button>
+        <button class="ask-submit" type="submit" aria-label="Ask" data-control="ask-second-brain">→</button>
       </form>
 
       <section class="product-value-strip" aria-label="Private memory product value">
@@ -1809,6 +1809,10 @@ const GRAPH_CONTROL_SCRIPT = `
   const inspectorSource = inspector?.querySelector('[data-inspector-source]');
   const inspectorBody = inspector?.querySelector('[data-inspector-body]');
   const inspectorCitations = inspector?.querySelector('[data-inspector-citations]');
+  const askForm = document.querySelector('[data-ask-endpoint]');
+  const askEndpoint = askForm?.getAttribute('data-ask-endpoint') || '';
+  const askQuestionInput = askForm?.querySelector('input[name="question"]');
+  const askSubmit = document.querySelector('[data-control="ask-second-brain"]');
   const citationRefs = Array.from(document.querySelectorAll('[data-citation-ref]'));
   const memoryEdges = Array.from(document.querySelectorAll('.obsidian-spoke-edge[data-edge-from][data-edge-to]'));
   const filterTargets = Array.from(document.querySelectorAll('[data-filter-kind]'));
@@ -2439,6 +2443,58 @@ const GRAPH_CONTROL_SCRIPT = `
     }
   };
 
+  const renderLiveAskResult = (result) => {
+    const brief = result?.coachingBrief || {};
+    const ask = result?.ask || {};
+    if (inspectorHeadline) inspectorHeadline.textContent = brief.recommendation || ask.recommendation || '';
+    if (inspectorSource) {
+      inspectorSource.textContent =
+        (brief.evidenceLabel || ask.evidenceLabel || 'unknown') + ' · ' + String(brief.citationCount || ask.citationMemoryIds?.length || 0) + ' citations';
+    }
+    if (inspectorBody) {
+      const nextActions = Array.isArray(brief.nextActions) ? brief.nextActions.join(' ') : '';
+      inspectorBody.textContent = [ask.answer, nextActions, brief.boundary].filter(Boolean).join(' ');
+    }
+    if (inspectorCitations) {
+      inspectorCitations.replaceChildren();
+      (ask.citationMemoryIds || []).slice(0, 5).forEach((citation) => {
+        const link = document.createElement('a');
+        link.href = '#evidence-' + citation;
+        link.className = 'citation-ref';
+        link.setAttribute('data-citation-ref', citation);
+        link.textContent = '[' + citation + ']';
+        inspectorCitations.append(link);
+      });
+      inspectorCitations.setAttribute('data-ask-citation-count', String(ask.citationMemoryIds?.length || 0));
+    }
+    shell.setAttribute('data-ask-state', 'answered');
+    shell.setAttribute('data-ask-evidence-label', brief.evidenceLabel || ask.evidenceLabel || 'unknown');
+    shell.setAttribute('data-ask-citation-count', String(brief.citationCount || ask.citationMemoryIds?.length || 0));
+    setInteractionState('ask-answered');
+  };
+
+  const askSecondBrain = async () => {
+    const question = askQuestionInput?.value?.trim() || '';
+    if (!question || !askEndpoint || window.location.protocol === 'file:') return;
+    shell.setAttribute('data-ask-state', 'loading');
+    askSubmit?.setAttribute('aria-busy', 'true');
+    try {
+      const response = await fetch(askEndpoint, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ question, queryId: 'web-ask-' + Date.now(), createdAt: new Date().toISOString() }),
+      });
+      if (!response.ok) throw new Error('ask failed with ' + response.status);
+      renderLiveAskResult(await response.json());
+    } catch (error) {
+      shell.setAttribute('data-ask-state', 'error');
+      shell.setAttribute('data-ask-error', String(error?.message || error));
+      setInteractionState('ask-error');
+    } finally {
+      askSubmit?.setAttribute('aria-busy', 'false');
+    }
+  };
+
   spacingButtons.forEach((button) => {
     button.addEventListener('click', () => setSpacing(button.getAttribute('data-spacing') || 'normal'));
   });
@@ -2453,6 +2509,11 @@ const GRAPH_CONTROL_SCRIPT = `
       void fetchRemoteMemorySearch(memorySearchInput.value);
     });
   }
+
+  askForm?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    void askSecondBrain();
+  });
 
   memorySearchResults.forEach(wireMemorySearchResult);
 

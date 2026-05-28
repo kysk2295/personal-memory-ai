@@ -443,6 +443,8 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     const html = renderAppShellHtml();
 
     expect(html).toContain('aria-label="Ask My Past Self cited question flow"');
+    expect(html).toContain('data-ask-endpoint="/api/ask"');
+    expect(html).toContain('data-control="ask-second-brain"');
     expect(html).toContain('id="ask-my-past-self-question"');
     expect(html).toContain('이번에도 기능을 더 넣어야 할까?');
     expect(html).toContain('[mem_launch_may_anxiety_scope_delay]');
@@ -649,6 +651,10 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(documentHtml).toContain('fetch(memorySearchEndpoint');
     expect(documentHtml).toContain('renderLiveMemorySearchResults');
     expect(documentHtml).toContain("shell.setAttribute('data-search-mode', 'remote')");
+    expect(documentHtml).toContain('fetch(askEndpoint');
+    expect(documentHtml).toContain('renderLiveAskResult');
+    expect(documentHtml).toContain("shell.setAttribute('data-ask-state', 'answered')");
+    expect(documentHtml).toContain("shell.setAttribute('data-ask-citation-count'");
     expect(documentHtml).toContain('const rebuildCytoscapeGraphFromModel =');
     expect(documentHtml).toContain('cytoscapeGraph.elements().remove()');
     expect(documentHtml).toContain('void rehydrateAppShellAfterImport()');

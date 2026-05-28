@@ -156,6 +156,18 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   assert(graphStats?.renderedMemoryNodeCount === initialRenderedMemoryNodeCount, 'Expected browser graph stats to match rendered memory node count marker');
   assert(graphStats?.graphNodeCount === initialGraphNodeCount, 'Expected browser graph stats to match graph node count marker');
   assert(graphStats?.edgeCount === initialGraphEdgeCount, 'Expected browser graph stats to match graph edge count marker');
+
+  if (localUrl.startsWith('http')) {
+    await page.locator('[data-control="ask-second-brain"]').click();
+    await page.waitForFunction(
+      () => document.querySelector('.second-brain-shell')?.getAttribute('data-ask-state') === 'answered',
+      null,
+      { timeout: 10_000 },
+    );
+    const askCitationCount = Number(await attribute(page, '.second-brain-shell', 'data-ask-citation-count'));
+    assert(Number.isFinite(askCitationCount), 'Expected live Ask response to expose a citation count marker');
+    assert((await attribute(page, '.second-brain-shell', 'data-ask-evidence-label')).length > 0, 'Expected live Ask response to expose an evidence label');
+  }
   await page.waitForFunction(() => {
     const graph = document.querySelector('#memory-graph-cytoscape');
     const fallback = document.querySelector('.graph-workspace');
@@ -435,6 +447,7 @@ try {
           'cytoscape data graph ready',
           'data-derived graph stats',
           'remote memory search api',
+          'live ask api response',
           'saved artifact action',
           'saved artifact persistence manifest',
           'feedback correction action',

@@ -1434,6 +1434,23 @@ Implemented:
 - `src/components/WeeklyReportPanel.tsx`
 - `src/lib/appShellEvidenceLayout.test.ts`
 
+### L75 — Live Ask API From Web Shell
+
+Goal: make the first-screen question bar call the private memory agent instead of remaining a static demo prompt.
+
+Acceptance:
+
+- top Ask form declares `/api/ask`
+- Ask submit calls the private memory API with the current question
+- live result updates inspector recommendation, answer body, citations, evidence label, and citation count markers
+- Playwright verifies the live browser Ask flow against the local durable vault
+
+Implemented:
+
+- `src/App.tsx`
+- `src/lib/appShellEvidenceLayout.test.ts`
+- `scripts/verify-playwright-evidence.ts`
+
 ## 8. MVP Time Estimate
 
 Assuming focused local development without major dependency or deployment blockers:
