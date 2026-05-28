@@ -76,7 +76,7 @@ npm run build
   - `src/lib/notionImport.ts`
   - `TASKS/PMI-054-notion-block-pagination-import.md`
   - `docs/superpowers/plans/2026-05-28-notion-block-pagination-import.md`
-- local commit hash for the bounded slice: `d0a7965`.
+- local commit hash for the bounded slice: `0fead18`.
 
 ## Output requirements
 
