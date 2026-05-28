@@ -52,6 +52,18 @@ export function renderAskMyPastSelfPanel(layout: InitialAppShellEvidenceLayout):
       }</p>
       ${renderSavedArtifactActionButton(saveAction)}
     </article>
+    <section class="coaching-brief" aria-label="Citation-bounded coaching brief" data-coaching-brief="citation-bounded" data-coaching-boundary="cited-personal-memories">
+      <div class="panel-topline">
+        <span>coaching brief</span>
+        <span><strong>${layout.ask.citationMemoryIds.length}</strong> citations</span>
+      </div>
+      <p>Recommendation is bounded to cited personal memories and should not be treated as generic advice.</p>
+      <ul class="decision-tag-list" aria-label="Citation-bounded next actions">
+        <li data-coaching-next-action="freeze-scope">Freeze the current feature scope before adding more work.</li>
+        <li data-coaching-next-action="user-feedback">Show the current build to a user feedback source.</li>
+        <li data-coaching-next-action="review-citations">Review the citation-backed memory path before overriding the recommendation.</li>
+      </ul>
+    </section>
     <article class="insufficient-evidence-state" data-insufficient-evidence-state="available">
       <strong>Insufficient evidence state</strong>
       <p>관련 기억이 부족하면 일반 조언을 생성하지 않고, 어떤 기록이 더 필요한지 먼저 요청한다.</p>

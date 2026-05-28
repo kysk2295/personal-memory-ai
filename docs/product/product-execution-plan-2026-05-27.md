@@ -1410,11 +1410,14 @@ Acceptance:
 - sufficient-evidence answers expose recommendation, citation count, evidence source types, memory types, observed date range, and three next actions
 - insufficient-evidence answers avoid generic advice and suggest importing/writing relevant memories first
 - coaching boundary explicitly limits the answer to cited personal memories
+- web Ask panel exposes the coaching brief as next actions under the cited recommendation
 
 Implemented:
 
 - `src/lib/personalMemoryAgent.ts`
 - `src/lib/personalMemoryAgent.test.ts`
+- `src/components/AskMyPastSelfPanel.tsx`
+- `src/lib/appShellEvidenceLayout.test.ts`
 
 ## 8. MVP Time Estimate
 

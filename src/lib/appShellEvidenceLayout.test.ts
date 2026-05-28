@@ -450,6 +450,11 @@ describe('buildInitialAppShellEvidenceLayout', () => {
       '<a href="#evidence-mem_launch_may_anxiety_scope_delay" class="citation-ref" data-citation-ref="mem_launch_may_anxiety_scope_delay">[mem_launch_may_anxiety_scope_delay]</a>',
     );
     expect(html).toContain('aria-label="Ask My Past Self citations"');
+    expect(html).toContain('data-coaching-brief="citation-bounded"');
+    expect(html).toContain('aria-label="Citation-bounded coaching brief"');
+    expect(html).toContain('data-coaching-next-action="freeze-scope"');
+    expect(html).toContain('data-coaching-next-action="user-feedback"');
+    expect(html).toContain('data-coaching-boundary="cited-personal-memories"');
     expect(html).toContain('data-citation-id="mem_launch_june_anxiety_scope_delay"');
     expect(html).toContain('data-highlight-id="question:이번에도-기능을-더-넣어야-할까"');
     expect(html).toContain('data-highlight-id="memory:mem_launch_may_anxiety_scope_delay"');
