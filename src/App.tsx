@@ -1616,6 +1616,70 @@ const APP_SHELL_STYLES = `
     border-color: rgba(20, 184, 166, 0.32);
     color: #0f766e;
   }
+  .selected-ai-action-center {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: minmax(150px, 0.48fr) minmax(0, 1fr) minmax(140px, 0.42fr);
+    gap: 8px;
+    align-items: stretch;
+    min-width: 0;
+    border: 1px solid rgba(97, 102, 125, 0.15);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.84);
+    padding: 9px 10px;
+  }
+  .action-center-copy,
+  .action-center-save {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+    align-content: center;
+  }
+  .action-center-copy strong,
+  .action-center-copy span,
+  .action-center-save span,
+  .action-center-state-grid span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .action-center-copy strong {
+    color: #555b6e;
+    font-size: 12px;
+  }
+  .action-center-copy span,
+  .action-center-save span {
+    color: #777e91;
+    font-size: 10px;
+  }
+  .action-center-state-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+    min-width: 0;
+  }
+  .action-center-state-grid span {
+    border: 1px solid rgba(97, 102, 125, 0.13);
+    border-radius: 8px;
+    background: rgba(246, 247, 251, 0.86);
+    color: #5f6678;
+    padding: 7px 8px;
+    font-size: 10px;
+    font-weight: 760;
+    text-align: center;
+  }
+  .action-center-state-grid span[data-action-center-state-value="ready"],
+  .action-center-state-grid span[data-action-center-state-value="running"] {
+    border-color: rgba(225, 29, 63, 0.24);
+    background: rgba(255, 241, 243, 0.9);
+    color: #9f1239;
+  }
+  .action-center-state-grid span[data-action-center-state-value="answered"],
+  .action-center-state-grid span[data-action-center-state-value="saved"] {
+    border-color: rgba(20, 184, 166, 0.24);
+    background: rgba(240, 253, 250, 0.9);
+    color: #0f766e;
+  }
   .citation-row { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 14px; }
   .citation-row a {
     color: #5f56d8;
@@ -2629,6 +2693,34 @@ const APP_SHELL_STYLES = `
   .grounded-action-saveback[data-grounded-action-save-state="saved"] {
     color: #9bf2e8;
   }
+  .selected-ai-action-center {
+    border-color: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.065);
+  }
+  .action-center-copy strong {
+    color: #f0f0f2;
+  }
+  .action-center-copy span,
+  .action-center-save span {
+    color: #b8bdc9;
+  }
+  .action-center-state-grid span {
+    border-color: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.06);
+    color: #d4d7df;
+  }
+  .action-center-state-grid span[data-action-center-state-value="ready"],
+  .action-center-state-grid span[data-action-center-state-value="running"] {
+    border-color: rgba(225, 29, 63, 0.3);
+    background: rgba(225, 29, 63, 0.14);
+    color: #ffb4c0;
+  }
+  .action-center-state-grid span[data-action-center-state-value="answered"],
+  .action-center-state-grid span[data-action-center-state-value="saved"] {
+    border-color: rgba(20, 184, 166, 0.28);
+    background: rgba(20, 184, 166, 0.13);
+    color: #9bf2e8;
+  }
   .selected-path-action {
     border-color: rgba(255, 255, 255, 0.1);
     background: rgba(255, 255, 255, 0.065);
@@ -3072,6 +3164,9 @@ const APP_SHELL_STYLES = `
     .related-memory-workbench {
       grid-template-columns: 1fr;
     }
+    .selected-ai-action-center {
+      grid-template-columns: 1fr;
+    }
     .related-workbench-list {
       grid-template-columns: 1fr;
       max-height: 128px;
@@ -3120,6 +3215,7 @@ const APP_SHELL_STYLES = `
       grid-template-columns: 1fr;
     }
     .selected-path-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .action-center-state-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .memory-path-hops { grid-template-columns: 1fr; }
     .decision-columns { grid-template-columns: 1fr; }
   }
@@ -3565,6 +3661,23 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
             <span data-grounded-action-save-next>결과가 나오면 세션 저장으로 미래 기억에 남길 수 있다.</span>
             <button type="button" class="grounded-action-saveback" data-control="grounded-action-saveback" data-grounded-action-save-state="idle">결과를 미래 기억으로 저장</button>
           </section>
+          <section class="selected-ai-action-center" data-selected-ai-action-center="grounded-memory-actions" data-action-center-source="${escapeHtml(currentFlowMemoryId)}" data-action-center-related-count="${currentFlowRelatedCount}" data-action-center-last-action="none" data-action-center-citation-count="0" data-action-center-save-state="idle" aria-label="선택 기억 AI 실행 상태">
+            <div class="action-center-copy">
+              <strong>선택 기억 AI 실행</strong>
+              <span data-action-center-source-label>선택 기억 · ${escapeHtml(currentFlowEntry?.title ?? currentFlowMemoryId)}</span>
+              <span data-action-center-related-label>연관 기억 · ${currentFlowRelatedCount}개</span>
+            </div>
+            <div class="action-center-state-grid" aria-label="AI 액션 상태">
+              <span data-action-center-state="ask" data-action-center-state-value="idle">질문 · 대기</span>
+              <span data-action-center-state="replay" data-action-center-state-value="idle">결정 · 대기</span>
+              <span data-action-center-state="weekly" data-action-center-state-value="idle">주간 · 대기</span>
+              <span data-action-center-state="session" data-action-center-state-value="idle">세션 · 대기</span>
+            </div>
+            <div class="action-center-save">
+              <span data-action-center-citation-label>인용 근거 · 0개</span>
+              <span data-action-center-save-label>미래 기억 저장 · 대기</span>
+            </div>
+          </section>
           <div class="selected-path-actions" aria-label="AI 세션 준비">
             <button type="button" class="selected-path-action" data-selected-path-action="ask">질문</button>
             <button type="button" class="selected-path-action" data-selected-path-action="replay">결정</button>
@@ -3703,6 +3816,11 @@ const GRAPH_CONTROL_SCRIPT = `
   const groundedActionSummary = groundedActionResult?.querySelector('[data-grounded-action-summary]');
   const groundedActionSaveNext = groundedActionResult?.querySelector('[data-grounded-action-save-next]');
   const groundedActionSaveback = document.querySelector('[data-control="grounded-action-saveback"]');
+  const selectedAiActionCenter = document.querySelector('[data-selected-ai-action-center="grounded-memory-actions"]');
+  const actionCenterSourceLabel = selectedAiActionCenter?.querySelector('[data-action-center-source-label]');
+  const actionCenterRelatedLabel = selectedAiActionCenter?.querySelector('[data-action-center-related-label]');
+  const actionCenterCitationLabel = selectedAiActionCenter?.querySelector('[data-action-center-citation-label]');
+  const actionCenterSaveLabel = selectedAiActionCenter?.querySelector('[data-action-center-save-label]');
   const askWithRelatedMemoryButton = inspector?.querySelector('[data-control="ask-with-related-memory-context"]');
   const replayWithRelatedMemoryButton = inspector?.querySelector('[data-control="replay-with-related-memory-context"]');
   const reportWithRelatedMemoryButton = inspector?.querySelector('[data-control="report-with-related-memory-context"]');
@@ -4100,6 +4218,84 @@ const GRAPH_CONTROL_SCRIPT = `
     });
   };
 
+  const actionCenterLabels = {
+    ask: '질문',
+    replay: '결정',
+    weekly: '주간',
+    session: '세션',
+  };
+
+  const actionCenterStateLabels = {
+    idle: '대기',
+    ready: '준비',
+    running: '실행 중',
+    answered: '완료',
+    saved: '저장됨',
+  };
+
+  const setActionCenterStepState = (action, state = 'ready') => {
+    Array.from(selectedAiActionCenter?.querySelectorAll('[data-action-center-state]') || []).forEach((item) => {
+      const itemAction = item.getAttribute('data-action-center-state') || '';
+      if (itemAction !== action) return;
+      const normalizedState = actionCenterStateLabels[state] ? state : 'ready';
+      item.setAttribute('data-action-center-state-value', normalizedState);
+      item.textContent = (actionCenterLabels[itemAction] || itemAction) + ' · ' + actionCenterStateLabels[normalizedState];
+    });
+  };
+
+  const updateSelectedAiActionCenter = (detail = {}) => {
+    if (!selectedAiActionCenter) return;
+    const source =
+      detail.sourceMemoryId ||
+      shell.getAttribute('data-active-memory') ||
+      selectedAiActionCenter.getAttribute('data-action-center-source') ||
+      '';
+    const relatedCount = String(
+      detail.relatedCount ??
+        shell.getAttribute('data-related-memory-count') ??
+        selectedAiActionCenter.getAttribute('data-action-center-related-count') ??
+        '0',
+    );
+    const lastAction = detail.lastAction || selectedAiActionCenter.getAttribute('data-action-center-last-action') || 'none';
+    const citationCount = String(detail.citationCount ?? selectedAiActionCenter.getAttribute('data-action-center-citation-count') ?? '0');
+    const saveState = detail.saveState || selectedAiActionCenter.getAttribute('data-action-center-save-state') || 'idle';
+    selectedAiActionCenter?.setAttribute('data-action-center-source', source);
+    selectedAiActionCenter?.setAttribute('data-action-center-related-count', relatedCount);
+    selectedAiActionCenter?.setAttribute('data-action-center-last-action', lastAction);
+    selectedAiActionCenter?.setAttribute('data-action-center-citation-count', citationCount);
+    selectedAiActionCenter?.setAttribute('data-action-center-save-state', saveState);
+    shell.setAttribute('data-action-center-source', source);
+    shell.setAttribute('data-action-center-related-count', relatedCount);
+    shell.setAttribute('data-action-center-last-action', lastAction);
+    shell.setAttribute('data-action-center-save-state', saveState);
+    if (actionCenterSourceLabel) {
+      const selectedNode = source ? cytoscapeGraph?.getElementById('memory:' + source) : null;
+      actionCenterSourceLabel.textContent =
+        '선택 기억 · ' + (selectedNode?.data('graphLabel') || selectedNode?.data('label') || source || '대기');
+    }
+    if (actionCenterRelatedLabel) actionCenterRelatedLabel.textContent = '연관 기억 · ' + relatedCount + '개';
+    if (actionCenterCitationLabel) actionCenterCitationLabel.textContent = '인용 근거 · ' + citationCount + '개';
+    if (actionCenterSaveLabel) {
+      actionCenterSaveLabel.textContent =
+        saveState === 'saved'
+          ? '미래 기억 저장 · 완료'
+          : saveState === 'saving'
+            ? '미래 기억 저장 · 저장 중'
+            : saveState === 'ready'
+              ? '미래 기억 저장 · 가능'
+              : '미래 기억 저장 · 대기';
+    }
+    if (lastAction === 'none') {
+      Array.from(selectedAiActionCenter.querySelectorAll('[data-action-center-state]')).forEach((item) => {
+        const itemAction = item.getAttribute('data-action-center-state') || '';
+        item.setAttribute('data-action-center-state-value', 'idle');
+        item.textContent = (actionCenterLabels[itemAction] || itemAction) + ' · 대기';
+      });
+      return;
+    }
+    setActionCenterStepState(detail.lastAction || 'none', detail.actionState || (lastAction === 'none' ? 'idle' : 'ready'));
+  };
+
   const renderRelatedMemoryWorkbench = (citation, related) => {
     if (!relatedMemoryWorkbench || !relatedWorkbenchList) return;
     relatedMemoryWorkbench.setAttribute('data-related-workbench-source', citation);
@@ -4194,6 +4390,7 @@ const GRAPH_CONTROL_SCRIPT = `
       }
     }
     renderRelatedMemoryWorkbench(citation, related);
+    updateSelectedAiActionCenter({ sourceMemoryId: citation, relatedCount: related.length, lastAction: 'none', citationCount: 0, saveState: 'idle' });
     commandRail?.setAttribute('data-command-rail-state', related.length ? 'ready' : 'empty');
     commandRail?.setAttribute('data-command-rail-source', citation);
     commandRail?.setAttribute('data-command-rail-related-count', String(related.length));
@@ -4255,6 +4452,7 @@ const GRAPH_CONTROL_SCRIPT = `
     shell.setAttribute('data-ask-context-source-memory', sourceMemoryId);
     shell.setAttribute('data-ask-context-related-memory-count', String(relatedMemoryIds.length));
     shell.setAttribute('data-ask-context-related-memories', relatedMemoryIds.join(','));
+    updateSelectedAiActionCenter({ sourceMemoryId, relatedCount: relatedMemoryIds.length, lastAction: 'ask', actionState: 'ready', citationCount: 0, saveState: 'idle' });
     updateGuidedServiceFlow('ai', { sourceMemoryId, relatedCount: relatedMemoryIds.length });
     setInteractionState('ask-context-seeded-from-related-memories');
   };
@@ -4276,6 +4474,7 @@ const GRAPH_CONTROL_SCRIPT = `
     shell.setAttribute('data-replay-context-source-memory', sourceMemoryId);
     shell.setAttribute('data-replay-context-related-memory-count', String(relatedMemoryIds.length));
     shell.setAttribute('data-replay-context-related-memories', relatedMemoryIds.join(','));
+    updateSelectedAiActionCenter({ sourceMemoryId, relatedCount: relatedMemoryIds.length, lastAction: 'replay', actionState: 'ready', citationCount: 0, saveState: 'idle' });
     updateGuidedServiceFlow('ai', { sourceMemoryId, relatedCount: relatedMemoryIds.length });
     setInteractionState('replay-context-seeded-from-related-memories');
   };
@@ -4296,6 +4495,7 @@ const GRAPH_CONTROL_SCRIPT = `
     shell.setAttribute('data-weekly-context-source-memory', sourceMemoryId);
     shell.setAttribute('data-weekly-context-related-memory-count', String(relatedMemoryIds.length));
     shell.setAttribute('data-weekly-context-related-memories', relatedMemoryIds.join(','));
+    updateSelectedAiActionCenter({ sourceMemoryId, relatedCount: relatedMemoryIds.length, lastAction: 'weekly', actionState: 'ready', citationCount: 0, saveState: 'idle' });
     updateGuidedServiceFlow('ai', { sourceMemoryId, relatedCount: relatedMemoryIds.length });
     setInteractionState('weekly-context-seeded-from-related-memories');
   };
@@ -4340,6 +4540,16 @@ const GRAPH_CONTROL_SCRIPT = `
       memorySessionPanel?.setAttribute('data-session-related-memories', context.relatedMemoryIds.join(','));
       shell.setAttribute('data-memory-session-source-memory', context.sourceMemoryId);
       shell.setAttribute('data-memory-session-related-memory-count', String(context.relatedMemoryIds.length));
+      updateSelectedAiActionCenter({
+        sourceMemoryId: context.sourceMemoryId,
+        relatedCount: context.relatedMemoryIds.length,
+        lastAction: 'session',
+        actionState: state === 'completed' ? 'answered' : state === 'running' ? 'running' : state === 'error' ? 'ready' : 'ready',
+        citationCount: currentCitationList('data-live-ask-highlighted-memories').length +
+          currentCitationList('data-live-replay-highlighted-memories').length +
+          currentCitationList('data-live-weekly-highlighted-memories').length,
+        saveState: state === 'completed' ? 'ready' : 'idle',
+      });
     }
     if (memorySessionSaveButton && state === 'completed') {
       memorySessionSaveButton.setAttribute('data-artifact-save-state', 'ready');
@@ -5412,6 +5622,14 @@ const GRAPH_CONTROL_SCRIPT = `
     shell.setAttribute('data-grounded-action-kind', kind);
     shell.setAttribute('data-grounded-action-source', context.sourceMemoryId);
     shell.setAttribute('data-grounded-action-related-count', String(relatedMemoryIds.length));
+    updateSelectedAiActionCenter({
+      sourceMemoryId: context.sourceMemoryId,
+      relatedCount: relatedMemoryIds.length,
+      lastAction: kind,
+      actionState: 'answered',
+      citationCount: citationCount || '0',
+      saveState: 'ready',
+    });
   };
 
   const askSecondBrain = async () => {
@@ -5579,6 +5797,14 @@ const GRAPH_CONTROL_SCRIPT = `
       groundedActionResult?.setAttribute('data-grounded-action-save-state', 'saved');
       groundedActionResult?.setAttribute('data-grounded-action-saved-memory', savedMemoryId);
       groundedActionSaveback?.setAttribute('data-grounded-action-save-state', 'saved');
+      updateSelectedAiActionCenter({
+        sourceMemoryId: artifact.metadata.sourceMemoryId,
+        relatedCount: artifact.metadata.relatedMemoryCount,
+        lastAction: 'session',
+        actionState: 'saved',
+        citationCount: artifact.citationMemoryIds.length,
+        saveState: 'saved',
+      });
       if (groundedActionSaveback) groundedActionSaveback.textContent = '미래 기억으로 저장됨';
       intakeSessionResult?.setAttribute('data-intake-saved-session-memory', savedMemoryId);
       intakeSessionResult?.setAttribute('data-intake-next-step', 'session-saved');
@@ -5632,6 +5858,14 @@ const GRAPH_CONTROL_SCRIPT = `
       groundedActionResult?.setAttribute('data-grounded-action-save-state', 'saved');
       groundedActionResult?.setAttribute('data-grounded-action-saved-memory', savedMemoryId);
       groundedActionSaveback?.setAttribute('data-grounded-action-save-state', 'saved');
+      updateSelectedAiActionCenter({
+        sourceMemoryId: artifact.metadata.sourceMemoryId,
+        relatedCount: artifact.metadata.relatedMemoryCount,
+        lastAction: 'session',
+        actionState: 'saved',
+        citationCount: artifact.citationMemoryIds.length,
+        saveState: 'saved',
+      });
       if (groundedActionSaveback) groundedActionSaveback.textContent = '미래 기억으로 저장됨';
       intakeSessionResult?.setAttribute('data-intake-saved-session-memory', savedMemoryId);
       intakeSessionResult?.setAttribute('data-intake-next-step', 'session-saved');
@@ -5821,6 +6055,7 @@ const GRAPH_CONTROL_SCRIPT = `
   groundedActionSaveback?.addEventListener('click', async () => {
     groundedActionResult?.setAttribute('data-grounded-action-save-state', 'saving');
     groundedActionSaveback?.setAttribute('data-grounded-action-save-state', 'saving');
+    updateSelectedAiActionCenter({ lastAction: 'session', actionState: 'running', saveState: 'saving' });
     if (shell.getAttribute('data-memory-session-state') !== 'completed') {
       await runMemorySession();
       await waitForShellState('data-memory-session-state', 'completed');

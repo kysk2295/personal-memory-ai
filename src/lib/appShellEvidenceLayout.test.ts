@@ -718,6 +718,20 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('data-control="grounded-action-saveback"');
     expect(html).toContain('data-grounded-action-save-state="idle"');
     expect(html).toContain('결과를 미래 기억으로 저장');
+    expect(html).toContain('data-selected-ai-action-center="grounded-memory-actions"');
+    expect(html).toContain('data-action-center-source="mem_freeze_vs_feature_addition"');
+    expect(html).toContain('data-action-center-related-count=');
+    expect(html).toContain('data-action-center-last-action="none"');
+    expect(html).toContain('data-action-center-save-state="idle"');
+    expect(html).toContain('선택 기억 AI 실행');
+    expect(html).toContain('data-action-center-source-label');
+    expect(html).toContain('data-action-center-related-label');
+    expect(html).toContain('data-action-center-citation-label');
+    expect(html).toContain('data-action-center-save-label');
+    expect(html).toContain('data-action-center-state="ask"');
+    expect(html).toContain('data-action-center-state="replay"');
+    expect(html).toContain('data-action-center-state="weekly"');
+    expect(html).toContain('data-action-center-state="session"');
 
     expect(html).toContain('class="product-rail"');
     expect(html).toContain('빠른 일기 기록');
@@ -971,6 +985,12 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(documentHtml).toContain('relatedInsightReasonList.replaceChildren()');
     expect(documentHtml).toContain("reasonCard.setAttribute('data-related-insight-memory-id', item.id)");
     expect(documentHtml).toContain("setInteractionState('related-insight-ask-ready')");
+    expect(documentHtml).toContain("const selectedAiActionCenter = document.querySelector('[data-selected-ai-action-center=\"grounded-memory-actions\"]')");
+    expect(documentHtml).toContain('const updateSelectedAiActionCenter = (detail = {}) =>');
+    expect(documentHtml).toContain("selectedAiActionCenter?.setAttribute('data-action-center-source'");
+    expect(documentHtml).toContain("selectedAiActionCenter?.setAttribute('data-action-center-last-action'");
+    expect(documentHtml).toContain("selectedAiActionCenter?.setAttribute('data-action-center-save-state'");
+    expect(documentHtml).toContain("setActionCenterStepState(detail.lastAction || 'none'");
     expect(documentHtml).toContain("const groundedActionResult = document.querySelector('[data-grounded-action-result=\"related-memory-ai\"]')");
     expect(documentHtml).toContain('const renderGroundedActionResult = (kind, context, citationCount) =>');
     expect(documentHtml).toContain("groundedActionResult?.setAttribute('data-grounded-action-state', 'ready')");

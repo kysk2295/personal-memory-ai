@@ -723,9 +723,21 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
     (await attribute(page, '.second-brain-shell', 'data-active-memory')) === firstCitation,
     'Related memory comparison should not replace the selected diary source memory',
   );
+  assert(
+    (await attribute(page, '[data-selected-ai-action-center="grounded-memory-actions"]', 'data-action-center-source')) === firstCitation,
+    'Selected AI action center should preserve the selected diary source',
+  );
+  assert(
+    Number(await attribute(page, '[data-selected-ai-action-center="grounded-memory-actions"]', 'data-action-center-related-count')) > 0,
+    'Selected AI action center should expose related-memory count',
+  );
   await page.locator('[data-related-workbench-action="ask"]').click();
   assert((await attribute(page, '.second-brain-shell', 'data-interaction-state')) === 'related-workbench-ask-ready', 'Related memory comparison Ask action should seed related context');
   assert((await attribute(page, '.second-brain-shell', 'data-ask-context-source-memory')) === firstCitation, 'Related memory comparison Ask should keep the diary source as context');
+  assert(
+    (await attribute(page, '[data-selected-ai-action-center="grounded-memory-actions"]', 'data-action-center-last-action')) === 'ask',
+    'Selected AI action center should track related-workbench Ask as the latest action',
+  );
   await page.locator('[data-related-insight-action="ask"]').click();
   assert((await attribute(page, '.second-brain-shell', 'data-interaction-state')) === 'related-insight-ask-ready', 'Related insight Ask action should seed related-memory context');
   await page.locator('[data-command-rail-action="ask"]').click();
@@ -772,6 +784,18 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
     assert(
       (await attribute(page, '[data-grounded-action-result="related-memory-ai"]', 'data-grounded-action-source')) === firstCitation,
       'Grounded action result strip should preserve selected source memory',
+    );
+    assert(
+      (await attribute(page, '[data-selected-ai-action-center="grounded-memory-actions"]', 'data-action-center-last-action')) === 'ask',
+      'Selected AI action center should keep Ask as the answered action',
+    );
+    assert(
+      Number(await attribute(page, '[data-selected-ai-action-center="grounded-memory-actions"]', 'data-action-center-citation-count')) > 0,
+      'Selected AI action center should expose answer citation count',
+    );
+    assert(
+      (await attribute(page, '[data-selected-ai-action-center="grounded-memory-actions"]', 'data-action-center-save-state')) === 'ready',
+      'Selected AI action center should mark generated answers as save-ready',
     );
   }
   await page.locator('[data-control="replay-with-related-memory-context"]').click();
@@ -864,6 +888,10 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
     assert(
       (await attribute(page, '[data-guided-service-flow="diary-memory-ai"]', 'data-guided-flow-current-step')) === 'save',
       'Guided service flow should move to save after grounded saveback',
+    );
+    assert(
+      (await attribute(page, '[data-selected-ai-action-center="grounded-memory-actions"]', 'data-action-center-save-state')) === 'saved',
+      'Selected AI action center should mark the memory session saveback as saved',
     );
   }
 
