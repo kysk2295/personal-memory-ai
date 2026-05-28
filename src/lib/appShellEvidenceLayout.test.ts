@@ -537,6 +537,7 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('data-control="intake-run-session"');
     expect(html).toContain('data-intake-related-bundle="past-memory-nodes"');
     expect(html).toContain('data-intake-related-bundle-count="0"');
+    expect(html).toContain('data-intake-ai-action-result="idle"');
     expect(html).toContain('data-intake-related-bundle-list');
     expect(html).toContain('data-control="intake-run-ask"');
     expect(html).toContain('data-control="intake-run-decision-replay"');
@@ -747,6 +748,13 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(documentHtml).toContain("intakeRunAskButton?.addEventListener('click'");
     expect(documentHtml).toContain("intakeRunReplayButton?.addEventListener('click'");
     expect(documentHtml).toContain("intakeRunWeeklyButton?.addEventListener('click'");
+    expect(documentHtml).toContain('const setIntakeAiActionState = (kind, state, message) =>');
+    expect(documentHtml).toContain("setIntakeAiActionState('ask', 'loading'");
+    expect(documentHtml).toContain('await askSecondBrain()');
+    expect(documentHtml).toContain("setIntakeAiActionState('replay', 'answered'");
+    expect(documentHtml).toContain('await replayCurrentDecision()');
+    expect(documentHtml).toContain("setIntakeAiActionState('weekly', 'answered'");
+    expect(documentHtml).toContain('await refreshWeeklyReport()');
     expect(documentHtml).toContain("intakeRunSessionButton?.removeAttribute('disabled')");
     expect(documentHtml).toContain("intakeRunSessionButton?.addEventListener('click'");
     expect(documentHtml).toContain("intakeSessionResult?.setAttribute('data-intake-saved-session-memory', savedMemoryId)");

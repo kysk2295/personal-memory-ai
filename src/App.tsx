@@ -2471,7 +2471,7 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
               <strong data-intake-result-title>적용하면 여기서 바로 다음 행동을 보여준다</strong>
               <span data-intake-result-summary>일기를 그래프에 넣으면 생성된 기억과 연관 과거 기억 수를 확인하고 AI 세션을 실행할 수 있다.</span>
             </div>
-            <section class="memory-intake-related-bundle" data-intake-related-bundle="past-memory-nodes" data-intake-related-bundle-count="0" aria-label="인입된 일기와 연결된 과거 기억">
+            <section class="memory-intake-related-bundle" data-intake-related-bundle="past-memory-nodes" data-intake-related-bundle-count="0" data-intake-ai-action-result="idle" aria-label="인입된 일기와 연결된 과거 기억">
               <div class="memory-intake-related-heading">
                 <strong>관련 과거 기억</strong>
                 <span data-intake-related-bundle-summary>일기 적용 후 실제 그래프 연결을 보여준다</span>
@@ -3170,6 +3170,37 @@ const GRAPH_CONTROL_SCRIPT = `
       if (related.length) button?.removeAttribute('disabled');
     });
     return related;
+  };
+
+  const setIntakeAiActionState = (kind, state, message) => {
+    const labels = {
+      ask: '기억에게 묻기',
+      replay: '결정 되짚기',
+      weekly: '주간 패턴',
+    };
+    const actionLabel = labels[kind] || 'AI 액션';
+    memoryIntakeHub?.setAttribute('data-intake-last-ai-action', kind);
+    memoryIntakeHub?.setAttribute('data-intake-ai-action-result', kind + '-' + state);
+    intakeRelatedBundle?.setAttribute('data-intake-last-ai-action', kind);
+    intakeRelatedBundle?.setAttribute('data-intake-ai-action-result', kind + '-' + state);
+    intakeSessionResult?.setAttribute('data-intake-ai-action-result', kind + '-' + state);
+    if (intakeResultTitle) {
+      intakeResultTitle.textContent =
+        state === 'loading'
+          ? actionLabel + ' 실행 중'
+          : state === 'answered'
+            ? actionLabel + ' 완료'
+            : actionLabel + ' 실패';
+    }
+    if (intakeResultSummary) {
+      intakeResultSummary.textContent =
+        message ||
+        (state === 'loading'
+          ? '관련 과거 기억을 근거로 결과를 생성하고 있다.'
+          : state === 'answered'
+            ? '결과 패널과 그래프 하이라이트에 인용 근거가 반영됐다.'
+            : '액션 실행 중 오류가 발생했다. 같은 기억 묶음으로 다시 시도할 수 있다.');
+    }
   };
 
   const updateIntakeSessionResult = (appliedMemoryId) => {
@@ -4898,17 +4929,41 @@ const GRAPH_CONTROL_SCRIPT = `
   replayWithRelatedMemoryButton?.addEventListener('click', replayWithRelatedMemoryContext);
   reportWithRelatedMemoryButton?.addEventListener('click', reportWithRelatedMemoryContext);
   runMemorySessionButton?.addEventListener('click', () => void runMemorySession());
-  intakeRunAskButton?.addEventListener('click', () => {
-    memoryIntakeHub?.setAttribute('data-intake-last-ai-action', 'ask');
-    askWithRelatedMemoryContext();
+  intakeRunAskButton?.addEventListener('click', async () => {
+    setIntakeAiActionState('ask', 'loading', '관련 과거 기억을 근거로 현재 반복 패턴을 묻고 있다.');
+    try {
+      askWithRelatedMemoryContext();
+      await askSecondBrain();
+      setIntakeAiActionState('ask', 'answered',
+        '기억에게 묻기 결과가 준비됐다. 인용 기억 ' + (shell.getAttribute('data-ask-citation-count') || '0') + '개가 그래프에 하이라이트됐다.',
+      );
+    } catch (error) {
+      setIntakeAiActionState('ask', 'error', String(error?.message || error));
+    }
   });
-  intakeRunReplayButton?.addEventListener('click', () => {
-    memoryIntakeHub?.setAttribute('data-intake-last-ai-action', 'decision-replay');
-    replayWithRelatedMemoryContext();
+  intakeRunReplayButton?.addEventListener('click', async () => {
+    setIntakeAiActionState('replay', 'loading', '관련 과거 선택과 결과를 기준으로 현재 결정을 비교하고 있다.');
+    try {
+      replayWithRelatedMemoryContext();
+      await replayCurrentDecision();
+      setIntakeAiActionState('replay', 'answered',
+        '결정 되짚기 결과가 준비됐다. 인용 기억 ' + (shell.getAttribute('data-replay-citation-count') || '0') + '개가 그래프에 하이라이트됐다.',
+      );
+    } catch (error) {
+      setIntakeAiActionState('replay', 'error', String(error?.message || error));
+    }
   });
-  intakeRunWeeklyButton?.addEventListener('click', () => {
-    memoryIntakeHub?.setAttribute('data-intake-last-ai-action', 'weekly-report');
-    reportWithRelatedMemoryContext();
+  intakeRunWeeklyButton?.addEventListener('click', async () => {
+    setIntakeAiActionState('weekly', 'loading', '관련 기억 묶음이 포함된 주간 패턴을 생성하고 있다.');
+    try {
+      reportWithRelatedMemoryContext();
+      await refreshWeeklyReport();
+      setIntakeAiActionState('weekly', 'answered',
+        '주간 패턴 결과가 준비됐다. 포함 기억 ' + (shell.getAttribute('data-weekly-report-citation-count') || '0') + '개가 그래프에 하이라이트됐다.',
+      );
+    } catch (error) {
+      setIntakeAiActionState('weekly', 'error', String(error?.message || error));
+    }
   });
   intakeRunSessionButton?.addEventListener('click', () => {
     intakeSessionResult?.setAttribute('data-intake-next-step', 'memory-session-running');

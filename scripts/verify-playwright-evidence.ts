@@ -374,6 +374,15 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
     });
     assert(highlightedWeeklyCitationCount === weeklyCitationCount, 'Cytoscape graph should mark Weekly Report citation memory nodes');
   }
+  await page.locator('[data-control="intake-run-ask"]').click();
+  await page.waitForFunction(() => document.querySelector('[data-intake-related-bundle="past-memory-nodes"]')?.getAttribute('data-intake-ai-action-result') === 'ask-answered');
+  assert((await attribute(page, '.second-brain-shell', 'data-ask-state')) === 'answered', 'Intake Ask action should run the grounded Ask flow');
+  await page.locator('[data-control="intake-run-decision-replay"]').click();
+  await page.waitForFunction(() => document.querySelector('[data-intake-related-bundle="past-memory-nodes"]')?.getAttribute('data-intake-ai-action-result') === 'replay-answered');
+  assert((await attribute(page, '.second-brain-shell', 'data-replay-state')) === 'answered', 'Intake Decision Replay action should run the grounded replay flow');
+  await page.locator('[data-control="intake-run-weekly-report"]').click();
+  await page.waitForFunction(() => document.querySelector('[data-intake-related-bundle="past-memory-nodes"]')?.getAttribute('data-intake-ai-action-result') === 'weekly-answered');
+  assert((await attribute(page, '.second-brain-shell', 'data-weekly-report-state')) === 'ready', 'Intake Weekly action should run the grounded weekly report flow');
   await page.locator('[data-control="intake-run-session"]').click();
   await page.waitForFunction(
     () => document.querySelector('.second-brain-shell')?.getAttribute('data-memory-session-state') === 'completed',
