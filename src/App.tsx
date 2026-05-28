@@ -1481,6 +1481,79 @@ const APP_SHELL_STYLES = `
     background: #e11d3f;
     color: #ffffff;
   }
+  .memory-action-rail {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: minmax(150px, 0.34fr) minmax(0, 1fr) minmax(140px, 0.3fr);
+    gap: 8px;
+    align-items: stretch;
+    border: 1px solid rgba(225, 29, 63, 0.16);
+    border-radius: 8px;
+    background: rgba(255, 247, 249, 0.86);
+    padding: 9px 10px;
+  }
+  .memory-action-rail-copy,
+  .memory-action-rail-next {
+    min-width: 0;
+    display: grid;
+    gap: 3px;
+    align-content: center;
+  }
+  .memory-action-rail-copy strong,
+  .memory-action-rail-copy span,
+  .memory-action-rail-next strong,
+  .memory-action-rail-next span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .memory-action-rail-copy strong,
+  .memory-action-rail-next strong {
+    color: #555b6e;
+    font-size: 12px;
+  }
+  .memory-action-rail-copy span,
+  .memory-action-rail-next span {
+    color: #747b8d;
+    font-size: 10px;
+  }
+  .memory-action-rail-steps {
+    min-width: 0;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+  }
+  .memory-action-rail-step {
+    min-width: 0;
+    border: 1px solid rgba(120, 126, 149, 0.12);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.76);
+    padding: 6px 7px;
+  }
+  .memory-action-rail-step span,
+  .memory-action-rail-step strong {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .memory-action-rail-step span {
+    color: #8a8f9e;
+    font-size: 9px;
+  }
+  .memory-action-rail-step strong {
+    color: #555b6e;
+    font-size: 10px;
+  }
+  .memory-action-rail-step[data-action-rail-step-state="active"],
+  .memory-action-rail-step[data-action-rail-step-state="running"] {
+    border-color: rgba(225, 29, 63, 0.28);
+    background: rgba(225, 29, 63, 0.1);
+  }
+  .memory-action-rail-step[data-action-rail-step-state="done"] {
+    border-color: rgba(20, 184, 166, 0.28);
+    background: rgba(20, 184, 166, 0.1);
+  }
   .selected-command-rail {
     position: absolute;
     left: 18px;
@@ -4054,6 +4127,22 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
               <div class="memory-path-hop" data-memory-path-hop="ai-action"><span>다음 행동</span><strong data-memory-path-action>AI 세션</strong></div>
             </div>
           </div>
+          <section class="memory-action-rail" data-memory-action-rail="selected-graph-to-ai" data-action-rail-source="${escapeHtml(currentFlowMemoryId)}" data-action-rail-related-count="${currentFlowRelatedCount}" data-action-rail-stage="ready" data-action-rail-active-action="none" data-action-rail-save-state="idle" aria-label="그래프 선택에서 AI 저장까지 실행 흐름">
+            <div class="memory-action-rail-copy">
+              <strong>그래프에서 고른 기억</strong>
+              <span data-action-rail-source-label>${escapeHtml(currentFlowEntry?.title ?? currentFlowMemoryId)}</span>
+            </div>
+            <div class="memory-action-rail-steps" aria-label="선택 기억 실행 단계">
+              <div class="memory-action-rail-step" data-action-rail-step="graph" data-action-rail-step-state="active"><span>1</span><strong>그래프 선택</strong></div>
+              <div class="memory-action-rail-step" data-action-rail-step="related" data-action-rail-step-state="ready"><span>2</span><strong>과거 기억 묶기</strong></div>
+              <div class="memory-action-rail-step" data-action-rail-step="ai" data-action-rail-step-state="idle"><span>3</span><strong>AI로 해석</strong></div>
+              <div class="memory-action-rail-step" data-action-rail-step="save" data-action-rail-step-state="idle"><span>4</span><strong>미래 기억 저장</strong></div>
+            </div>
+            <div class="memory-action-rail-next">
+              <strong>다음 행동</strong>
+              <span data-action-rail-next>연관 기억을 확인하고 AI 액션을 고른다.</span>
+            </div>
+          </section>
           <section class="related-memory-workbench" data-related-memory-workbench="selected-diary-comparison" data-related-workbench-source="${escapeHtml(currentFlowMemoryId)}" data-related-workbench-active-memory="${escapeHtml(firstFlowRelatedEntry?.memoryId ?? '')}" data-related-workbench-count="${currentFlowRelatedCount}" aria-label="선택 일기와 과거 기억 비교">
             <div class="related-workbench-summary">
               <strong>과거 기억 비교</strong>
@@ -4301,6 +4390,9 @@ const GRAPH_CONTROL_SCRIPT = `
   const memoryPathReason = memoryPathExplainer?.querySelector('[data-memory-path-reason]');
   const memoryPathPast = memoryPathExplainer?.querySelector('[data-memory-path-past]');
   const memoryPathAction = memoryPathExplainer?.querySelector('[data-memory-path-action]');
+  const memoryActionRail = document.querySelector('[data-memory-action-rail="selected-graph-to-ai"]');
+  const memoryActionRailSourceLabel = memoryActionRail?.querySelector('[data-action-rail-source-label]');
+  const memoryActionRailNext = memoryActionRail?.querySelector('[data-action-rail-next]');
   const relatedInsightBridge = document.querySelector('[data-related-insight-bridge="diary-to-past-memory-actions"]');
   const relatedInsightReasonList = relatedInsightBridge?.querySelector('[data-related-insight-reason-list]');
   const relatedInsightActions = Array.from(document.querySelectorAll('[data-related-insight-action]'));
@@ -4818,6 +4910,57 @@ const GRAPH_CONTROL_SCRIPT = `
     });
   };
 
+  const actionRailNextCopy = {
+    ready: '연관 기억을 확인하고 AI 액션을 고른다.',
+    'related-ready': '과거 기억 묶음이 준비됐다. 질문, 결정, 주간 패턴 또는 세션을 실행한다.',
+    'ai-running': '선택 기억과 과거 기억을 근거로 AI 결과를 만드는 중이다.',
+    'ai-ready': '근거 있는 결과가 준비됐다. 미래 기억으로 저장할 수 있다.',
+    saved: '결과가 미래 기억으로 저장됐다. 다음 고민의 과거 근거가 된다.',
+  };
+
+  const setActionRailStepState = (step, state = 'ready') => {
+    const item = memoryActionRail?.querySelector('[data-action-rail-step="' + step + '"]');
+    if (!item) return;
+    item.setAttribute('data-action-rail-step-state', state);
+  };
+
+  const updateMemoryActionRail = (detail = {}) => {
+    if (!memoryActionRail) return;
+    const source =
+      detail.sourceMemoryId ||
+      shell.getAttribute('data-active-memory') ||
+      memoryActionRail.getAttribute('data-action-rail-source') ||
+      '';
+    const relatedCount = String(
+      detail.relatedCount ??
+        shell.getAttribute('data-related-memory-count') ??
+        memoryActionRail.getAttribute('data-action-rail-related-count') ??
+        '0',
+    );
+    const stage = detail.stage || memoryActionRail.getAttribute('data-action-rail-stage') || 'ready';
+    const activeAction = detail.activeAction || memoryActionRail.getAttribute('data-action-rail-active-action') || 'none';
+    const saveState = detail.saveState || memoryActionRail.getAttribute('data-action-rail-save-state') || 'idle';
+    memoryActionRail?.setAttribute('data-action-rail-source', source);
+    memoryActionRail?.setAttribute('data-action-rail-related-count', relatedCount);
+    memoryActionRail?.setAttribute('data-action-rail-stage', stage);
+    memoryActionRail?.setAttribute('data-action-rail-active-action', activeAction);
+    memoryActionRail?.setAttribute('data-action-rail-save-state', saveState);
+    shell.setAttribute('data-action-rail-source', source);
+    shell.setAttribute('data-action-rail-stage', stage);
+    shell.setAttribute('data-action-rail-active-action', activeAction);
+    shell.setAttribute('data-action-rail-save-state', saveState);
+    if (memoryActionRailSourceLabel) {
+      const selectedNode = source ? cytoscapeGraph?.getElementById('memory:' + source) : null;
+      memoryActionRailSourceLabel.textContent =
+        (selectedNode?.data('graphLabel') || selectedNode?.data('label') || source || '선택 전') + ' · 연관 ' + relatedCount + '개';
+    }
+    if (memoryActionRailNext) memoryActionRailNext.textContent = actionRailNextCopy[stage] || actionRailNextCopy.ready;
+    setActionRailStepState('graph', source ? 'done' : 'active');
+    setActionRailStepState('related', Number(relatedCount) > 0 ? 'done' : 'ready');
+    setActionRailStepState('ai', stage === 'ai-running' ? 'running' : stage === 'ai-ready' || stage === 'saved' ? 'done' : activeAction !== 'none' ? 'running' : 'idle');
+    setActionRailStepState('save', saveState === 'saved' ? 'done' : saveState === 'ready' ? 'active' : 'idle');
+  };
+
   const updateSelectedAiActionCenter = (detail = {}) => {
     if (!selectedAiActionCenter) return;
     const source =
@@ -5078,6 +5221,7 @@ const GRAPH_CONTROL_SCRIPT = `
     }
     renderRelatedMemoryWorkbench(citation, related);
     updateSelectedAiActionCenter({ sourceMemoryId: citation, relatedCount: related.length, lastAction: 'none', citationCount: 0, saveState: 'idle' });
+    updateMemoryActionRail({ sourceMemoryId: citation, relatedCount: related.length, stage: related.length ? 'related-ready' : 'ready', activeAction: 'none', saveState: 'idle' });
     commandRail?.setAttribute('data-command-rail-state', related.length ? 'ready' : 'empty');
     commandRail?.setAttribute('data-command-rail-source', citation);
     commandRail?.setAttribute('data-command-rail-related-count', String(related.length));
@@ -5153,6 +5297,7 @@ const GRAPH_CONTROL_SCRIPT = `
     shell.setAttribute('data-ask-context-related-memory-count', String(relatedMemoryIds.length));
     shell.setAttribute('data-ask-context-related-memories', relatedMemoryIds.join(','));
     updateSelectedAiActionCenter({ sourceMemoryId, relatedCount: relatedMemoryIds.length, lastAction: 'ask', actionState: 'ready', citationCount: 0, saveState: 'idle' });
+    updateMemoryActionRail({ sourceMemoryId, relatedCount: relatedMemoryIds.length, stage: 'ai-running', activeAction: 'ask', saveState: 'idle' });
     updateGraphEvidenceLens({ sourceMemoryId, relatedCount: relatedMemoryIds.length, lastAction: 'ask', citationCount: 0, saveState: 'idle' });
     updateSelectedMemoryReader({ sourceMemoryId, relatedCount: relatedMemoryIds.length, lastAction: 'ask' });
     updateGuidedServiceFlow('ai', { sourceMemoryId, relatedCount: relatedMemoryIds.length });
@@ -5177,6 +5322,7 @@ const GRAPH_CONTROL_SCRIPT = `
     shell.setAttribute('data-replay-context-related-memory-count', String(relatedMemoryIds.length));
     shell.setAttribute('data-replay-context-related-memories', relatedMemoryIds.join(','));
     updateSelectedAiActionCenter({ sourceMemoryId, relatedCount: relatedMemoryIds.length, lastAction: 'replay', actionState: 'ready', citationCount: 0, saveState: 'idle' });
+    updateMemoryActionRail({ sourceMemoryId, relatedCount: relatedMemoryIds.length, stage: 'ai-running', activeAction: 'replay', saveState: 'idle' });
     updateGraphEvidenceLens({ sourceMemoryId, relatedCount: relatedMemoryIds.length, lastAction: 'replay', citationCount: 0, saveState: 'idle' });
     updateGuidedServiceFlow('ai', { sourceMemoryId, relatedCount: relatedMemoryIds.length });
     setInteractionState('replay-context-seeded-from-related-memories');
@@ -5199,6 +5345,7 @@ const GRAPH_CONTROL_SCRIPT = `
     shell.setAttribute('data-weekly-context-related-memory-count', String(relatedMemoryIds.length));
     shell.setAttribute('data-weekly-context-related-memories', relatedMemoryIds.join(','));
     updateSelectedAiActionCenter({ sourceMemoryId, relatedCount: relatedMemoryIds.length, lastAction: 'weekly', actionState: 'ready', citationCount: 0, saveState: 'idle' });
+    updateMemoryActionRail({ sourceMemoryId, relatedCount: relatedMemoryIds.length, stage: 'ai-running', activeAction: 'weekly', saveState: 'idle' });
     updateGraphEvidenceLens({ sourceMemoryId, relatedCount: relatedMemoryIds.length, lastAction: 'weekly', citationCount: 0, saveState: 'idle' });
     updateGuidedServiceFlow('ai', { sourceMemoryId, relatedCount: relatedMemoryIds.length });
     setInteractionState('weekly-context-seeded-from-related-memories');
@@ -5334,6 +5481,13 @@ const GRAPH_CONTROL_SCRIPT = `
         citationCount: currentCitationList('data-live-ask-highlighted-memories').length +
           currentCitationList('data-live-replay-highlighted-memories').length +
           currentCitationList('data-live-weekly-highlighted-memories').length,
+        saveState: state === 'completed' ? 'ready' : 'idle',
+      });
+      updateMemoryActionRail({
+        sourceMemoryId: context.sourceMemoryId,
+        relatedCount: context.relatedMemoryIds.length,
+        stage: state === 'completed' ? 'ai-ready' : state === 'running' ? 'ai-running' : 'related-ready',
+        activeAction: 'session',
         saveState: state === 'completed' ? 'ready' : 'idle',
       });
       updateGraphEvidenceLens({
@@ -6539,6 +6693,13 @@ const GRAPH_CONTROL_SCRIPT = `
       citationCount: citationCount || '0',
       saveState: 'ready',
     });
+    updateMemoryActionRail({
+      sourceMemoryId: context.sourceMemoryId,
+      relatedCount: relatedMemoryIds.length,
+      stage: 'ai-ready',
+      activeAction: kind,
+      saveState: 'ready',
+    });
     updateGraphEvidenceLens({
       sourceMemoryId: context.sourceMemoryId,
       relatedCount: relatedMemoryIds.length,
@@ -6729,6 +6890,13 @@ const GRAPH_CONTROL_SCRIPT = `
         citationCount: artifact.citationMemoryIds.length,
         saveState: 'saved',
       });
+      updateMemoryActionRail({
+        sourceMemoryId: artifact.metadata.sourceMemoryId,
+        relatedCount: artifact.metadata.relatedMemoryCount,
+        stage: 'saved',
+        activeAction: 'session',
+        saveState: 'saved',
+      });
       updateGraphEvidenceLens({
         sourceMemoryId: artifact.metadata.sourceMemoryId,
         relatedCount: artifact.metadata.relatedMemoryCount,
@@ -6804,6 +6972,13 @@ const GRAPH_CONTROL_SCRIPT = `
         lastAction: 'session',
         actionState: 'saved',
         citationCount: artifact.citationMemoryIds.length,
+        saveState: 'saved',
+      });
+      updateMemoryActionRail({
+        sourceMemoryId: artifact.metadata.sourceMemoryId,
+        relatedCount: artifact.metadata.relatedMemoryCount,
+        stage: 'saved',
+        activeAction: 'session',
         saveState: 'saved',
       });
       updateGraphEvidenceLens({
@@ -7012,6 +7187,7 @@ const GRAPH_CONTROL_SCRIPT = `
     groundedActionResult?.setAttribute('data-grounded-action-save-state', 'saving');
     groundedActionSaveback?.setAttribute('data-grounded-action-save-state', 'saving');
     updateSelectedAiActionCenter({ lastAction: 'session', actionState: 'running', saveState: 'saving' });
+    updateMemoryActionRail({ stage: 'ai-ready', activeAction: 'session', saveState: 'ready' });
     if (shell.getAttribute('data-memory-session-state') !== 'completed') {
       await runMemorySession();
       await waitForShellState('data-memory-session-state', 'completed');

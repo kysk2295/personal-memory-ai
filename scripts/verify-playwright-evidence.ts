@@ -860,6 +860,14 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
     'Selected AI action center should preserve the selected diary source',
   );
   assert(
+    (await attribute(page, '[data-memory-action-rail="selected-graph-to-ai"]', 'data-action-rail-source')) === firstCitation,
+    'Selected memory action rail should preserve the selected graph source',
+  );
+  assert(
+    (await attribute(page, '[data-memory-action-rail="selected-graph-to-ai"]', 'data-action-rail-stage')) === 'ai-running',
+    'Selected memory action rail should move to AI-running after selected-reader Ask',
+  );
+  assert(
     Number(await attribute(page, '[data-selected-ai-action-center="grounded-memory-actions"]', 'data-action-center-related-count')) > 0,
     'Selected AI action center should expose related-memory count',
   );
@@ -869,6 +877,14 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   assert(
     (await attribute(page, '[data-selected-ai-action-center="grounded-memory-actions"]', 'data-action-center-last-action')) === 'ask',
     'Selected AI action center should track related-workbench Ask as the latest action',
+  );
+  assert(
+    (await attribute(page, '[data-memory-action-rail="selected-graph-to-ai"]', 'data-action-rail-active-action')) === 'ask',
+    'Selected memory action rail should track Ask as the active action',
+  );
+  assert(
+    (await attribute(page, '[data-memory-action-rail="selected-graph-to-ai"] [data-action-rail-step="ai"]', 'data-action-rail-step-state')) === 'running',
+    'Selected memory action rail should mark AI step running when Ask is prepared',
   );
   await page.locator('[data-related-insight-action="ask"]').click();
   assert((await attribute(page, '.second-brain-shell', 'data-interaction-state')) === 'related-insight-ask-ready', 'Related insight Ask action should seed related-memory context');
