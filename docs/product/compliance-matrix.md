@@ -29,16 +29,21 @@ Ko Yunseo corrected the product split: `app` and `web` are separate surfaces wit
 
 ### 0. Persistent memory backend: PostgreSQL + pgvector
 
-- Status: `planned for Railway staging`, `not required for local fixture-only prototype`
+- Status: `implemented locally`, `staging smoke remains gated on deployment secrets`
 - Requirement: Previously planned Railway PostgreSQL/pgvector remains in scope for durable memory storage and vector retrieval.
-- Must include at staging/backend phase:
+- Implemented locally:
   - durable `MemoryRecord` persistence
-  - embeddings stored in pgvector with declared dimensions
+  - runtime backend selection for fixture, local-file, and PostgreSQL
+  - pgvector migration/search contracts with safe health metadata
   - semantic search over memories
   - graph evidence lookup from persisted citations
   - per-user isolation
   - export and hard-delete checks
-  - migration status and pgvector extension smoke
+  - migration status and pgvector extension smoke plan
+- Still gated for live staging:
+  - embeddings stored in live pgvector with declared dimensions
+  - semantic search over memories
+  - staging-only insert/search/delete smoke against real credentials
 - Must not include:
   - printing `DATABASE_URL`, DB password, Railway variables, or API keys
   - claiming production persistence while still using only local fixtures
@@ -49,7 +54,7 @@ Ko Yunseo corrected the product split: `app` and `web` are separate surfaces wit
 
 ### 1. Product surfaces: app capture + web second-brain
 
-- Status: `planned`
+- Status: `implemented local prototype`
 - Requirement: Two-surface product split, not one generic web app.
 - App/mobile capture surface must include:
   - fast diary/memory entry
@@ -72,14 +77,14 @@ Ko Yunseo corrected the product split: `app` and `web` are separate surfaces wit
 
 ### 2. Existing-data import onboarding
 
-- Status: `partial`
+- Status: `implemented local prototype`
 - Requirement: User can import existing memories from export files.
 - Current implemented foundation:
   - `MemoryRecord`
   - Markdown/Obsidian importer
   - Notion Markdown/CSV importer
   - import batch/dedupe foundation
-- App work still required:
+- Implemented app work:
   - import preview UI
   - source/date/duplicate/extraction status display
   - apply/undo flow
@@ -90,7 +95,7 @@ Ko Yunseo corrected the product split: `app` and `web` are separate surfaces wit
 
 ### 3. Web first screen: daily diary second-brain graph / CareerHackerAlex-inspired frontend detail
 
-- Status: `planned`
+- Status: `implemented local prototype`
 - Requirement: The web second-brain first screen should feel like the user's memory brain. Daily diary entries from the app/imports are the primary nodes, connected by recurring emotions, decisions, projects, outcomes, and sources.
 - First-screen default state:
   - central memory-brain graph, not an empty dashboard
@@ -119,7 +124,7 @@ Ko Yunseo corrected the product split: `app` and `web` are separate surfaces wit
 
 ### 4. Pattern detector and pattern panel
 
-- Status: `partial`
+- Status: `implemented local prototype`
 - Requirement: Detect repeated user patterns from `MemoryRecord[]` and show them in the app.
 - Current implemented foundation:
   - deterministic `MemoryRecord[]` pattern detector for anxiety -> scope expansion -> launch delay
@@ -135,9 +140,9 @@ Ko Yunseo corrected the product split: `app` and `web` are separate surfaces wit
 
 ### 5. Ask My Past Self
 
-- Status: `partial`
+- Status: `implemented local prototype`
 - Contract status: `implemented` in `src/lib/askMyPastSelf.ts`
-- App surface status: `planned`
+- App surface status: `implemented`
 - Requirement: User asks current questions and receives memory-cited answers.
 - Contract question:
   - `이번에도 기능을 더 넣어야 할까?`
@@ -148,17 +153,20 @@ Ko Yunseo corrected the product split: `app` and `web` are separate surfaces wit
   - confidence
   - graphHighlightIds
   - insufficient-evidence fallback
-- App work:
+- Implemented app work:
   - visible ask bar/input
   - answer card
   - citation list
   - click citation → evidence drawer/node
+  - live `/api/ask` calls
+  - follow-up context anchored to previous citations
+  - saveable `ask_answer` artifacts through `/api/capture`
 - Completion evidence:
   - screenshot of answer with citations and graph highlight
 
 ### 6. Decision Replay
 
-- Status: `planned`
+- Status: `implemented local prototype`
 - Requirement: Compare a current decision with similar past decisions.
 - Contract input:
   - `MVP에 기능을 더 넣을지, 지금 배포할지`
@@ -172,15 +180,16 @@ Ko Yunseo corrected the product split: `app` and `web` are separate surfaces wit
   - repeated pattern
   - recommendation/uncertainty
   - graph highlights
-- App work:
+- Implemented app work:
   - Decision Replay UI section/modal/panel
   - evidence drawer integration
+  - saveable replay artifacts
 - Completion evidence:
   - screenshot of Decision Replay result and graph highlights
 
 ### 7. Weekly Pattern Report / retention loop
 
-- Status: `planned`
+- Status: `implemented local prototype`
 - Requirement: App should surface periodic/reviewable pattern insights, not only on-demand ask.
 - Must include:
   - weekly pattern summary over records
@@ -193,7 +202,7 @@ Ko Yunseo corrected the product split: `app` and `web` are separate surfaces wit
 
 ### 8. Capture / new memory entry
 
-- Status: `planned`
+- Status: `implemented local prototype`
 - Requirement: App is not only import; user can add/capture new memories.
 - Must include:
   - quick memory entry
@@ -205,30 +214,30 @@ Ko Yunseo corrected the product split: `app` and `web` are separate surfaces wit
 
 ### 9. Privacy/export/delete guardrails
 
-- Status: `planned`
+- Status: `implemented local prototype`
 - Requirement: Personal memory app must visibly respect user data boundaries.
 - Must include at local foundation level:
   - private-by-default memory scope
   - import batch remove/undo
   - no secrets in logs
   - status labels for local-only/skeleton/blocked production parts
-- Later production work:
+- Production integration still gated:
   - auth
   - DB/user storage
-  - delete/export UX
+  - hosted identity configuration
 - Completion evidence:
   - tests for batch remove/undo
   - UI labels for local/skeleton states
 
 ### 10. Verification and visual evidence
 
-- Status: `planned`
+- Status: `implemented local prototype`
 - Requirement: No “frontend done” report without visual proof.
 - Must include:
   - typecheck/tests/build
   - local browser run
   - screenshots for import preview, ask answer, graph highlight, Decision Replay
-  - Paperclip checkpoint with paths/results
+  - release checklist with paths/results
 
 ## RPI execution rule
 
