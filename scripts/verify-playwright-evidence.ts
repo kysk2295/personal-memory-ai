@@ -428,6 +428,11 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   assert((await attribute(page, '[data-control="intake-save-ai-result"]', 'data-intake-ai-save-state')) === 'saved', 'Intake AI saveback should mark the latest result saved');
   assert((await attribute(page, '[data-save-artifact-action="weekly_report"]', 'data-artifact-save-state')) === 'saved', 'Intake AI saveback should reuse the weekly saved artifact action');
   assert((await attribute(page, '[data-intake-flow-step="save"]', 'data-intake-flow-state')) === 'done', 'Intake flow tracker should mark saveback done after saving the AI result');
+  assert((await attribute(page, '[data-flow-coach="diary-to-memory-ai"]', 'data-flow-coach-stage')) === 'saved', 'Flow coach should make the saved future-memory step visible');
+  assert(
+    (await attribute(page, '[data-flow-coach="diary-to-memory-ai"]', 'data-flow-coach-next-action')) === 'reopen-saved-memory',
+    'Flow coach should expose the next reentry action after saveback',
+  );
   await page.locator('[data-control="intake-run-session"]').click();
   await page.waitForFunction(
     () => document.querySelector('.second-brain-shell')?.getAttribute('data-memory-session-state') === 'completed',
@@ -542,6 +547,7 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   );
   assert((await attribute(page, '[data-memory-intake-hub="app-web-diary"]', 'data-intake-result')) === 'session-saved', 'Intake hub should mark the flow saved back as memory');
   assert((await attribute(page, '[data-intake-session-result="applied-memory"]', 'data-intake-next-step')) === 'session-saved', 'Intake result should mark session saveback complete');
+  assert((await attribute(page, '[data-flow-coach="diary-to-memory-ai"]', 'data-flow-coach-stage')) === 'saved', 'Flow coach should stay saved after guided session saveback');
   assert((await attribute(page, '.second-brain-shell', 'data-graph-rehydrate-state')) === 'ready', 'Saving memory session should rehydrate graph state');
   await page.locator('[data-control="undo-local-import"]').click();
   await page.waitForFunction(() => document.querySelector('[data-import-upload-panel="local-file"]')?.getAttribute('data-import-upload-state') === 'undone');

@@ -557,6 +557,11 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('data-intake-flow-step="related"');
     expect(html).toContain('data-intake-flow-step="ai"');
     expect(html).toContain('data-intake-flow-step="save"');
+    expect(html).toContain('data-flow-coach="diary-to-memory-ai"');
+    expect(html).toContain('data-flow-coach-stage="start"');
+    expect(html).toContain('data-flow-coach-next-action="write-or-import"');
+    expect(html).toContain('지금 해야 할 일');
+    expect(html).toContain('앱 빠른 기록 또는 일기 DB 가져오기부터 시작');
     expect(html).toContain('data-capture-handoff-banner="selected-memory-session"');
     expect(html).toContain('data-capture-handoff-banner-state="idle"');
     expect(html).toContain('data-capture-handoff-related-count="0"');
@@ -778,6 +783,12 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(documentHtml).toContain("memoryIntakeHub?.setAttribute('data-intake-applied-memory', appliedMemoryId)");
     expect(documentHtml).toContain("memoryIntakeHub?.setAttribute('data-intake-next-step', 'memory-session-ready')");
     expect(documentHtml).toContain('const setIntakeFlowStepState =');
+    expect(documentHtml).toContain('const updateFlowCoach =');
+    expect(documentHtml).toContain("flowCoach?.setAttribute('data-flow-coach-stage', stage)");
+    expect(documentHtml).toContain("flowCoach?.setAttribute('data-flow-coach-next-action', nextAction)");
+    expect(documentHtml).toContain("'graph-ready'");
+    expect(documentHtml).toContain("'ai-ready'");
+    expect(documentHtml).toContain("'saved'");
     expect(documentHtml).toContain('const updateCaptureHandoffBanner =');
     expect(documentHtml).toContain('const updateCaptureHandoffReentry =');
     expect(documentHtml).toContain("captureHandoffBanner?.setAttribute('data-capture-handoff-banner-state', state)");

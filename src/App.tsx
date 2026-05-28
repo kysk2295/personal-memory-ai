@@ -583,6 +583,52 @@ const APP_SHELL_STYLES = `
     border-color: rgba(190, 18, 60, 0.34);
     background: rgba(190, 18, 60, 0.1);
   }
+  .flow-coach {
+    grid-column: 1 / -1;
+    display: grid;
+    gap: 6px;
+    border: 1px solid rgba(20, 184, 166, 0.22);
+    border-radius: 8px;
+    background: rgba(20, 184, 166, 0.08);
+    padding: 10px;
+  }
+  .flow-coach strong,
+  .flow-coach span {
+    display: block;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .flow-coach strong {
+    color: #0f766e;
+    font-size: 12px;
+    line-height: 1.25;
+  }
+  .flow-coach span {
+    color: #315f5a;
+    font-size: 11px;
+    line-height: 1.35;
+  }
+  .flow-coach-steps {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin: 2px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .flow-coach-steps li {
+    border: 1px solid rgba(20, 184, 166, 0.2);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.62);
+    color: #134e4a;
+    padding: 4px 7px;
+    font-size: 10px;
+    font-weight: 780;
+  }
+  .flow-coach[data-flow-coach-stage="saved"] {
+    border-color: rgba(225, 29, 63, 0.22);
+    background: rgba(225, 29, 63, 0.08);
+  }
   .capture-handoff-banner {
     grid-column: 1 / -1;
     display: grid;
@@ -2681,6 +2727,17 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
             <button type="button" data-control="intake-run-session" disabled>AI 세션 실행</button>
           </div>
         </section>
+        <section class="flow-coach" data-flow-coach="diary-to-memory-ai" data-flow-coach-stage="start" data-flow-coach-next-action="write-or-import" aria-label="일기에서 기억 AI까지 다음 행동">
+          <strong data-flow-coach-title>지금 해야 할 일</strong>
+          <span data-flow-coach-summary>앱 빠른 기록 또는 일기 DB 가져오기부터 시작하면, 관련 과거 기억과 AI 세션이 이어진다.</span>
+          <ol class="flow-coach-steps" aria-label="진행 흐름">
+            <li>1 기록/가져오기</li>
+            <li>2 그래프 연결</li>
+            <li>3 연관 기억</li>
+            <li>4 AI 실행</li>
+            <li>5 미래 기억 저장</li>
+          </ol>
+        </section>
         <section class="capture-handoff-banner" data-capture-handoff-banner="selected-memory-session" data-capture-handoff-banner-state="idle" data-capture-handoff-memory="" data-capture-handoff-related-count="0" data-capture-handoff-saved-memory="" data-capture-handoff-reentry-state="idle" aria-label="앱 기록에서 넘어온 기억">
           <div>
             <strong data-capture-handoff-title>방금 저장한 일기</strong>
@@ -2890,6 +2947,9 @@ const GRAPH_CONTROL_SCRIPT = `
   const intakeRunWeeklyButton = document.querySelector('[data-control="intake-run-weekly-report"]');
   const intakeSaveAiResultButton = document.querySelector('[data-control="intake-save-ai-result"]');
   const intakeRunSessionButton = document.querySelector('[data-control="intake-run-session"]');
+  const flowCoach = document.querySelector('[data-flow-coach="diary-to-memory-ai"]');
+  const flowCoachTitle = flowCoach?.querySelector('[data-flow-coach-title]');
+  const flowCoachSummary = flowCoach?.querySelector('[data-flow-coach-summary]');
   const captureHandoffBanner = document.querySelector('[data-capture-handoff-banner="selected-memory-session"]');
   const captureHandoffTitle = captureHandoffBanner?.querySelector('[data-capture-handoff-title]');
   const captureHandoffSummary = captureHandoffBanner?.querySelector('[data-capture-handoff-summary]');
@@ -3384,6 +3444,11 @@ const GRAPH_CONTROL_SCRIPT = `
       memorySessionSummary.textContent =
         context.sourceMemoryId + ' 기억과 관련 과거 기억 ' + String(context.relatedMemoryIds.length) + '개로 질문, 결정 되짚기, 주간 패턴을 실행한다.';
     }
+    if (state === 'running') {
+      updateFlowCoach('ai-running', 'wait-for-session', 'AI 고민 세션 실행 중', '질문, 결정 되짚기, 주간 패턴을 같은 기억 묶음으로 처리하고 있다.');
+    } else if (state === 'completed') {
+      updateFlowCoach('ai-ready', 'save-session', 'AI 세션이 끝났다', '결과가 준비됐다. 세션 저장을 누르면 이 판단도 미래의 과거 기억으로 남는다.');
+    }
   };
 
   const setIntakeFlowStepState = (step, state) => {
@@ -3393,6 +3458,15 @@ const GRAPH_CONTROL_SCRIPT = `
     memoryIntakeHub?.setAttribute('data-intake-flow-current-state', state);
     intakeSessionResult?.setAttribute('data-intake-flow-current-step', step);
     intakeSessionResult?.setAttribute('data-intake-flow-current-state', state);
+  };
+
+  const updateFlowCoach = (stage, nextAction, title, summary) => {
+    flowCoach?.setAttribute('data-flow-coach-stage', stage);
+    flowCoach?.setAttribute('data-flow-coach-next-action', nextAction);
+    shell.setAttribute('data-flow-coach-stage', stage);
+    shell.setAttribute('data-flow-coach-next-action', nextAction);
+    if (flowCoachTitle) flowCoachTitle.textContent = title;
+    if (flowCoachSummary) flowCoachSummary.textContent = summary;
   };
 
   const renderIntakeRelatedBundle = () => {
@@ -3442,6 +3516,14 @@ const GRAPH_CONTROL_SCRIPT = `
     [intakeRunAskButton, intakeRunReplayButton, intakeRunWeeklyButton, intakeRunSessionButton].forEach((button) => {
       if (related.length) button?.removeAttribute('disabled');
     });
+    if (related.length) {
+      updateFlowCoach(
+        'ai-ready',
+        'run-ai-session',
+        '연관 기억을 찾았다',
+        '이제 이 기억 묶음으로 기억에게 묻기, 결정 되짚기, 주간 패턴 또는 AI 세션을 실행하면 된다.',
+      );
+    }
     return related;
   };
 
@@ -3458,6 +3540,16 @@ const GRAPH_CONTROL_SCRIPT = `
     intakeRelatedBundle?.setAttribute('data-intake-ai-action-result', kind + '-' + state);
     intakeSessionResult?.setAttribute('data-intake-ai-action-result', kind + '-' + state);
     setIntakeFlowStepState('ai', state === 'answered' ? 'done' : state === 'loading' ? 'loading' : 'error');
+    updateFlowCoach(
+      state === 'answered' ? 'ai-answered' : state === 'loading' ? 'ai-running' : 'ai-error',
+      state === 'answered' ? 'save-result' : state === 'loading' ? 'wait-for-answer' : 'retry-ai',
+      state === 'answered' ? actionLabel + ' 결과가 나왔다' : state === 'loading' ? actionLabel + ' 실행 중' : actionLabel + ' 다시 시도 필요',
+      state === 'answered'
+        ? '인용 근거가 있는 결과가 준비됐다. 이 결과를 기억으로 저장하면 다음 고민의 과거 근거가 된다.'
+        : state === 'loading'
+          ? '관련 과거 기억을 근거로 답을 만들고 있다.'
+          : '오류가 났다. 같은 기억 묶음으로 다시 실행할 수 있다.',
+    );
     if (intakeResultTitle) {
       intakeResultTitle.textContent =
         state === 'loading'
@@ -3517,6 +3609,12 @@ const GRAPH_CONTROL_SCRIPT = `
             (savedMemoryId || '새 기억') + '으로 저장됐다. 다음 고민에서 이 결과도 과거 근거로 다시 불러올 수 있다.';
         }
         setIntakeFlowStepState('save', 'done');
+        updateFlowCoach(
+          'saved',
+          'reopen-saved-memory',
+          '미래 기억으로 저장됐다',
+          (savedMemoryId || '새 기억') + '이 세컨브레인에 들어갔다. 다음 질문에서는 이 AI 결과도 과거 기억으로 다시 연결된다.',
+        );
         setInteractionState('intake-ai-result-saved');
         return;
       }
@@ -3550,6 +3648,12 @@ const GRAPH_CONTROL_SCRIPT = `
     setIntakeFlowStepState('graph', 'done');
     setIntakeFlowStepState('related', related.length ? 'ready' : 'loading');
     setIntakeFlowStepState('ai', 'ready');
+    updateFlowCoach(
+      'graph-ready',
+      'inspect-related-memories',
+      '새 일기가 세컨브레인에 들어왔다',
+      appliedMemoryId + ' 기억이 그래프에 연결됐다. 관련 과거 기억을 확인한 뒤 AI 세션을 실행하면 된다.',
+    );
     if (intakeResultTitle) intakeResultTitle.textContent = '새 일기가 그래프에 연결됐다';
     if (intakeResultSummary) {
       intakeResultSummary.textContent =
@@ -4464,6 +4568,12 @@ const GRAPH_CONTROL_SCRIPT = `
         updateCaptureHandoffBanner('session-saved', shell.getAttribute('data-memory-session-source-memory') || memorySessionPanel?.getAttribute('data-session-source-memory') || '', shell.getAttribute('data-memory-session-related-memory-count') || memorySessionPanel?.getAttribute('data-session-related-memory-count') || '0');
         updateCaptureHandoffReentry(savedMemoryId);
       }
+      updateFlowCoach(
+        'saved',
+        'reopen-saved-memory',
+        'AI 세션이 미래 기억으로 저장됐다',
+        savedMemoryId + '으로 저장됐다. 그래프에서 다시 열면 이 판단도 다음 고민의 과거 근거가 된다.',
+      );
       setInteractionState('memory-session-saved');
       return;
     }
@@ -4498,6 +4608,12 @@ const GRAPH_CONTROL_SCRIPT = `
         updateCaptureHandoffBanner('session-saved', shell.getAttribute('data-memory-session-source-memory') || memorySessionPanel?.getAttribute('data-session-source-memory') || '', shell.getAttribute('data-memory-session-related-memory-count') || memorySessionPanel?.getAttribute('data-session-related-memory-count') || '0');
         updateCaptureHandoffReentry(savedMemoryId);
       }
+      updateFlowCoach(
+        'saved',
+        'reopen-saved-memory',
+        'AI 세션이 미래 기억으로 저장됐다',
+        savedMemoryId + '으로 저장됐다. 그래프에서 다시 열면 이 판단도 다음 고민의 과거 근거가 된다.',
+      );
       setInteractionState('memory-session-saved');
     } catch (error) {
       shell.setAttribute('data-memory-session-save-state', 'error');
@@ -5580,6 +5696,7 @@ const GRAPH_CONTROL_SCRIPT = `
     memoryIntakeHub?.setAttribute('data-intake-source-scope', 'diary-only');
     shell.setAttribute('data-intake-last-action', action);
     notionImportPanel?.setAttribute('data-notion-source-scope', 'diary-only');
+    updateFlowCoach('importing', 'preview-diary-db', '일기 DB를 불러오는 중', '습관리스트/일기 데이터베이스만 가져와서 개인 기억 그래프에 연결할 준비를 한다.');
     setIntakeFlowStepState('capture', 'loading');
     setIntakeFlowStepState('graph', 'idle');
     setIntakeFlowStepState('related', 'idle');
@@ -5618,6 +5735,7 @@ const GRAPH_CONTROL_SCRIPT = `
         importPasteText?.scrollIntoView({ block: 'center', behavior: 'smooth' });
         importPasteText?.focus();
         memoryIntakeHub?.setAttribute('data-intake-stage', 'paste-diary-focused');
+        updateFlowCoach('importing', 'paste-and-preview', '웹에서 일기를 붙여넣는 단계', '긴 일기나 Markdown을 붙여넣고 미리보기를 만들면 그래프에 넣을 기억 후보가 나온다.');
         setIntakeFlowStepState('capture', 'loading');
         setIntakeFlowStepState('graph', 'idle');
         setIntakeFlowStepState('related', 'idle');
@@ -5632,6 +5750,7 @@ const GRAPH_CONTROL_SCRIPT = `
         notionDatabaseId?.focus();
         memoryIntakeHub?.setAttribute('data-intake-stage', 'notion-diary-ready');
         notionImportPanel?.setAttribute('data-notion-source-scope', 'diary-only');
+        updateFlowCoach('importing', 'select-notion-diary-db', '습관리스트 일기 DB 선택', 'Notion에서 일기 데이터베이스만 선택해 미리보기와 그래프 적용으로 이어간다.');
         setIntakeFlowStepState('capture', 'loading');
         setIntakeFlowStepState('graph', 'idle');
         setIntakeFlowStepState('related', 'idle');
