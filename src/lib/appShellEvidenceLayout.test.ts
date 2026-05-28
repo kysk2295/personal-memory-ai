@@ -542,6 +542,7 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('data-privacy-scope="private"');
     expect(html).toContain('data-vault-access="owner-only"');
     expect(html).toContain('data-storage-mode="local-prototype"');
+    expect(html).toContain('data-local-durable-store="unknown"');
     expect(html).toContain('data-auth-status="not-connected-local-prototype"');
     expect(html).toContain('data-transport-status="local-only-static-prototype"');
     expect(html).toContain('data-export-endpoint="/api/export"');
@@ -623,6 +624,8 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(documentHtml).toContain("shell.setAttribute('data-import-applied-memory-ids'");
     expect(documentHtml).toContain("shell.setAttribute('data-import-undone-count'");
     expect(documentHtml).toContain("importUploadPanel.setAttribute('data-import-upload-state', 'undone')");
+    expect(documentHtml).toContain("fetch('/health/live'");
+    expect(documentHtml).toContain("privacyControlPanel.setAttribute('data-local-durable-store'");
     expect(documentHtml).toContain("fetch('/api/app-shell'");
     expect(documentHtml).toContain("shell.setAttribute('data-graph-rehydrate-state', 'ready')");
     expect(documentHtml).toContain("shell.setAttribute('data-rehydrated-memory-node-count'");

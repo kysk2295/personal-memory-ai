@@ -1832,6 +1832,7 @@ const GRAPH_CONTROL_SCRIPT = `
   const notionImportPreviewButton = document.querySelector('[data-control="preview-notion-import"]');
   const notionImportSummary = document.querySelector('[data-notion-import-summary]');
   const notionSourceList = document.querySelector('[data-notion-source-list]');
+  const privacyControlPanel = document.querySelector('[data-privacy-scope="private"]');
   const importAppliedFeedback = document.querySelector('[data-import-applied-feedback="local-upload"]');
   const importAppliedMemoryList = document.querySelector('[data-import-applied-memory-list]');
   const searchCount = document.querySelector('[data-search-count]');
@@ -2686,6 +2687,24 @@ const GRAPH_CONTROL_SCRIPT = `
     }
   };
 
+  const rehydrateHealthState = async () => {
+    if (window.location.protocol === 'file:' || !privacyControlPanel) return;
+    privacyControlPanel.setAttribute('data-local-durable-store', 'checking');
+    try {
+      const response = await fetch('/health/live', {
+        method: 'GET',
+        headers: { accept: 'application/json' },
+      });
+      if (!response.ok) throw new Error('health check failed with ' + response.status);
+      const body = await response.json();
+      privacyControlPanel.setAttribute('data-local-durable-store', body.localDurableStore || 'unknown');
+      privacyControlPanel.setAttribute('data-memory-backend', body.memoryBackend || 'unknown');
+    } catch (error) {
+      privacyControlPanel.setAttribute('data-local-durable-store', 'unknown');
+      shell.setAttribute('data-health-rehydrate-error', String(error?.message || error));
+    }
+  };
+
   const rebuildCytoscapeGraphFromModel = (memoryGraph) => {
     if (!cytoscapeGraph || !memoryGraph?.elements) return;
     cytoscapeGraph.elements().remove();
@@ -3000,6 +3019,7 @@ const GRAPH_CONTROL_SCRIPT = `
   if (memoryNodes[2]) selectMemory(memoryNodes[2]);
   wireReviewComparisonButtons();
   initializeCytoscapeGraph();
+  void rehydrateHealthState();
   void rehydrateAppShellAfterImport();
 
   if (toggleLabels) {

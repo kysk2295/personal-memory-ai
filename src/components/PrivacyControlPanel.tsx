@@ -17,7 +17,9 @@ export function renderPrivacyControlPanel(layout: InitialAppShellEvidenceLayout)
     controls.privacyScope,
   )}" data-vault-access="${escapeHtml(controls.vaultAccess)}" data-storage-mode="${escapeHtml(
     controls.storageMode,
-  )}" data-auth-status="${escapeHtml(controls.authStatus)}" data-transport-status="${escapeHtml(controls.transportStatus)}">
+  )}" data-local-durable-store="unknown" data-auth-status="${escapeHtml(controls.authStatus)}" data-transport-status="${escapeHtml(
+    controls.transportStatus,
+  )}">
     <div class="section-header">
       <div>
         <p class="eyebrow">Privacy Controls</p>

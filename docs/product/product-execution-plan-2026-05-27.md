@@ -1217,6 +1217,24 @@ Implemented:
 - `src/lib/localServerHealth.ts`
 - `src/lib/localServerHealth.test.ts`
 
+### L63 — Durable Vault UI Health Marker
+
+Goal: show the local durable vault state in the web product surface after the page loads from the local HTTP server.
+
+Acceptance:
+
+- privacy controls render `data-local-durable-store="unknown"` before live health rehydration
+- HTTP page load calls `/health/live`
+- privacy controls update `data-local-durable-store` and `data-memory-backend`
+- Playwright verifies `enabled` and `local-file` against the running local server
+
+Implemented:
+
+- `src/App.tsx`
+- `src/components/PrivacyControlPanel.tsx`
+- `src/lib/appShellEvidenceLayout.test.ts`
+- `scripts/verify-playwright-evidence.ts`
+
 ## 8. MVP Time Estimate
 
 Assuming focused local development without major dependency or deployment blockers:

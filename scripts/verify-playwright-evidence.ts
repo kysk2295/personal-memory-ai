@@ -72,6 +72,11 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
       null,
       { timeout: 10_000 },
     );
+    await page.waitForFunction(
+      () => document.querySelector('[data-privacy-scope="private"]')?.getAttribute('data-local-durable-store') === 'enabled',
+      null,
+      { timeout: 10_000 },
+    );
   }
 
   assert((await attribute(page, '.second-brain-shell', 'data-graph-renderer')) === 'cytoscape', 'Expected Cytoscape renderer to become active');
@@ -85,6 +90,16 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   assert(Number(await attribute(page, '#memory-graph-cytoscape', 'data-cytoscape-edge-count')) === initialGraphEdgeCount, 'Expected Cytoscape edge count to match graph payload');
   assert((await page.locator('#memory-graph-cytoscape canvas').count()) > 0, 'Expected Cytoscape to render a canvas');
   assert((await page.locator('#saved-artifact-actions').count()) === 1, 'Expected saved artifact payload manifest');
+  if (localUrl.startsWith('http')) {
+    assert(
+      (await attribute(page, '[data-privacy-scope="private"]', 'data-local-durable-store')) === 'enabled',
+      'Expected live health to mark local durable store enabled',
+    );
+    assert(
+      (await attribute(page, '[data-privacy-scope="private"]', 'data-memory-backend')) === 'local-file',
+      'Expected live health to expose local-file backend without a path',
+    );
+  }
   const savedArtifactManifest = await page.locator('#saved-artifact-actions').textContent();
   assert(savedArtifactManifest?.includes('"endpoint":"/api/capture"'), 'Expected saved artifact manifest to target capture API');
   assert(savedArtifactManifest?.includes('"artifact":{"id":"artifact_'), 'Expected saved artifact manifest to include full artifact payloads');
