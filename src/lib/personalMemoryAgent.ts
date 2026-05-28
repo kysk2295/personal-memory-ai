@@ -6,6 +6,7 @@ import { retrieveMultiAxisMemoriesFromRecords, type MultiAxisMemoryRetrievalResu
 import type { MemoryRecord } from './memoryRecord';
 import type { MemoryStore } from './memoryStore';
 import { detectRepeatedPatterns, type PatternDetectionResult } from './patternDetector';
+import { createSavedAskArtifact, type SavedMemoryArtifact } from './savedMemoryArtifact';
 
 export interface AnswerPersonalMemoryQuestionInput {
   store: MemoryStore;
@@ -27,6 +28,7 @@ export interface PersonalMemoryAgentResult {
   ask: AskMyPastSelfAnswer;
   replay?: DecisionReplayResult;
   coachingBrief: PersonalMemoryCoachingBrief;
+  savedArtifact: SavedMemoryArtifact;
   graphEvidence: GraphEvidencePayload;
 }
 
@@ -135,6 +137,12 @@ export async function answerPersonalMemoryQuestion(
     replay,
   });
   const coachingBrief = buildCoachingBrief({ ask, memories });
+  const savedArtifact = createSavedAskArtifact({
+    question: input.question,
+    answer: ask,
+    queryId: input.queryId,
+    createdAt: input.createdAt,
+  });
 
   return {
     privacyScope: 'private',
@@ -146,6 +154,7 @@ export async function answerPersonalMemoryQuestion(
     ask,
     replay,
     coachingBrief,
+    savedArtifact,
     graphEvidence,
   };
 }

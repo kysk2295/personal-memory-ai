@@ -120,6 +120,17 @@ describe('answerPersonalMemoryQuestion', () => {
       start: '2026-05-01',
       end: '2026-06-02',
     });
+    expect(result.savedArtifact).toEqual(
+      expect.objectContaining({
+        kind: 'ask_answer',
+        title: 'Ask My Past Self: 이번에도 기능을 더 넣어야 할까?',
+        citationMemoryIds: expect.arrayContaining(result.loadedMemoryIds),
+        metadata: expect.objectContaining({
+          citationCount: 2,
+          recommendation: result.ask.recommendation,
+        }),
+      }),
+    );
     expect(result.replay?.evidenceLabel).toBe('sufficient_evidence');
     expect(result.replay?.citationMemoryIds.sort()).toEqual(result.loadedMemoryIds.slice().sort());
     expect(result.graphEvidence.highlightIds).toEqual(expect.arrayContaining(['query:agent-query-001']));

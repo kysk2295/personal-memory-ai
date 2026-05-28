@@ -1813,6 +1813,7 @@ const GRAPH_CONTROL_SCRIPT = `
   const askEndpoint = askForm?.getAttribute('data-ask-endpoint') || '';
   const askQuestionInput = askForm?.querySelector('input[name="question"]');
   const askSubmit = document.querySelector('[data-control="ask-second-brain"]');
+  const askSaveButton = document.querySelector('[data-save-artifact-action="ask_answer"]');
   const citationRefs = Array.from(document.querySelectorAll('[data-citation-ref]'));
   const memoryEdges = Array.from(document.querySelectorAll('.obsidian-spoke-edge[data-edge-from][data-edge-to]'));
   const filterTargets = Array.from(document.querySelectorAll('[data-filter-kind]'));
@@ -2470,6 +2471,25 @@ const GRAPH_CONTROL_SCRIPT = `
     shell.setAttribute('data-ask-state', 'answered');
     shell.setAttribute('data-ask-evidence-label', brief.evidenceLabel || ask.evidenceLabel || 'unknown');
     shell.setAttribute('data-ask-citation-count', String(brief.citationCount || ask.citationMemoryIds?.length || 0));
+    if (result.savedArtifact) {
+      const futureMemoryId = 'mem_api_' + result.savedArtifact.id;
+      savedArtifactsById.set(result.savedArtifact.id, {
+        artifact: result.savedArtifact,
+        futureMemoryId,
+      });
+      if (askSaveButton) {
+        askSaveButton.setAttribute('data-artifact-id', result.savedArtifact.id);
+        askSaveButton.setAttribute('data-future-memory-id', futureMemoryId);
+        askSaveButton.setAttribute('data-artifact-source-ref', 'personal-memory-ai://saved-artifacts/' + result.savedArtifact.id);
+        askSaveButton.setAttribute(
+          'data-artifact-citation-count',
+          String(result.savedArtifact.citationMemoryIds?.length || 0),
+        );
+        askSaveButton.setAttribute('data-artifact-save-state', 'ready');
+        askSaveButton.textContent = 'Save answer';
+      }
+      shell.setAttribute('data-live-ask-artifact-id', result.savedArtifact.id);
+    }
     setInteractionState('ask-answered');
   };
 
