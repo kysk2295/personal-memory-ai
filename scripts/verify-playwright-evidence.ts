@@ -123,6 +123,13 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   assert((await page.locator('[data-primary-entry-action="quick-diary"]').count()) === 1, 'Expected first-screen quick diary action');
   assert((await attribute(page, '[data-primary-entry-action="quick-diary"]', 'href'))?.endsWith('/capture/'), 'Quick diary action should open the capture app');
   assert((await page.locator('[data-control="focus-local-import"]').count()) === 1, 'Expected first-screen diary import focus action');
+  assert((await page.locator('[data-first-run-guide="diary-memory-ai"]').count()) === 1, 'Expected first-run diary memory AI guide');
+  assert((await attribute(page, '[data-first-run-guide="diary-memory-ai"]', 'data-first-run-stage')) === 'entry-to-session', 'Expected first-run guide to start at entry-to-session');
+  for (const action of ['write-diary', 'import-diary', 'select-memory', 'run-ai-session', 'save-session']) {
+    assert((await page.locator(`[data-guide-action="${action}"]`).count()) === 1, `Expected first-run guide action ${action}`);
+  }
+  assert((await page.locator('text=지금 일기 쓰기').count()) > 0, 'Expected first-run write diary action copy');
+  assert(Number(await attribute(page, '[data-first-run-guide="diary-memory-ai"]', 'data-flow-related-memory-count')) > 0, 'Expected first-run guide to expose related memory count');
   const inspectorRailOverlap = await page.evaluate(() => {
     const inspector = document.querySelector('.memory-inspector')?.getBoundingClientRect();
     const rail = document.querySelector('.product-rail')?.getBoundingClientRect();
@@ -130,6 +137,9 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
     return !(inspector.right <= rail.left || rail.right <= inspector.left || inspector.bottom <= rail.top || rail.bottom <= inspector.top);
   });
   assert(!inspectorRailOverlap, 'Selected memory inspector should not overlap the AI session/evidence rail');
+  await page.locator('[data-guide-action="import-diary"]').click();
+  assert((await attribute(page, '.second-brain-shell', 'data-first-run-last-action')) === 'import-diary', 'First-run import action should update shell state');
+  assert((await attribute(page, '.second-brain-shell', 'data-interaction-state')) === 'diary-import-focused', 'First-run import action should focus diary import');
   await page.locator('[data-control="focus-local-import"]').click();
   assert((await attribute(page, '.second-brain-shell', 'data-interaction-state')) === 'diary-import-focused', 'First-screen import action should focus diary import');
   const initialMemoryNodeCount = Number(await attribute(page, '.second-brain-shell', 'data-memory-node-count'));

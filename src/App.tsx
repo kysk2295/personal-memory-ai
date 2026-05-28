@@ -403,6 +403,70 @@ const APP_SHELL_STYLES = `
     color: #be123c;
   }
   .entry-dock-action.primary strong { color: #be123c; }
+  .first-run-guide {
+    grid-column: 1 / -1;
+    border: 1px solid rgba(84, 91, 113, 0.14);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.82);
+    padding: 10px;
+    display: grid;
+    grid-template-columns: minmax(150px, 0.5fr) minmax(0, 1.5fr);
+    gap: 10px;
+    align-items: stretch;
+  }
+  .first-run-guide-status {
+    min-width: 0;
+    border-right: 1px solid rgba(84, 91, 113, 0.12);
+    padding-right: 10px;
+    display: grid;
+    gap: 5px;
+    align-content: center;
+  }
+  .first-run-guide-status strong {
+    color: #4f5363;
+    font-size: 12px;
+    line-height: 1.25;
+  }
+  .first-run-guide-status span {
+    color: #73798a;
+    font-size: 11px;
+    line-height: 1.3;
+  }
+  .first-run-actions {
+    min-width: 0;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(92px, 1fr));
+    gap: 6px;
+  }
+  .first-run-action {
+    min-width: 0;
+    min-height: 54px;
+    border: 1px solid rgba(117, 122, 143, 0.14);
+    border-radius: 8px;
+    background: rgba(246, 247, 252, 0.8);
+    color: #555b6d;
+    font: inherit;
+    font-size: 11px;
+    line-height: 1.25;
+    font-weight: 780;
+    text-align: left;
+    padding: 8px;
+    cursor: pointer;
+  }
+  .first-run-action.primary {
+    border-color: rgba(225, 29, 63, 0.3);
+    background: rgba(225, 29, 63, 0.09);
+    color: #be123c;
+  }
+  .first-run-action[data-guide-state="ready"]::after {
+    content: "ready";
+    display: block;
+    margin-top: 4px;
+    color: #6f788b;
+    font-size: 9px;
+    font-weight: 760;
+    text-transform: uppercase;
+  }
   .service-flow-steps {
     min-width: 0;
     margin: 0;
@@ -1833,6 +1897,9 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
   const graphEdgeCount = memoryGraph.stats.edgeCount;
   const memoryNodeCount = memoryGraph.stats.memoryNodeCount;
   const renderedMemoryNodeCount = memoryGraph.stats.renderedMemoryNodeCount;
+  const currentFlowMemoryId = layout.memoryTimeline.summary.selectedMemoryId ?? layout.memoryTimeline.entries[0]?.memoryId ?? '';
+  const currentFlowEntry = layout.memoryTimeline.entries.find((entry) => entry.memoryId === currentFlowMemoryId);
+  const currentFlowRelatedCount = currentFlowEntry?.relatedMemoryIds.length ?? 0;
   const citationLinks = layout.ask.citationMemoryIds
     .slice(0, 3)
     .map((citationId) => `<a href="#evidence-${escapeHtml(citationId)}" class="citation-ref" data-citation-ref="${escapeHtml(citationId)}">[${escapeHtml(citationId)}]</a>`)
@@ -1976,6 +2043,20 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
             그래프 노드를 고르면 연관 과거 기억과 함께 질문·결정·주간 패턴으로 이어진다.
           </div>
         </div>
+        <section class="first-run-guide" data-first-run-guide="diary-memory-ai" data-first-run-stage="entry-to-session" data-flow-current-memory="${escapeHtml(currentFlowMemoryId)}" data-flow-related-memory-count="${currentFlowRelatedCount}" aria-label="처음 쓰는 흐름">
+          <div class="first-run-guide-status">
+            <strong>오늘의 흐름</strong>
+            <span>선택 기억 ${escapeHtml(currentFlowMemoryId)}</span>
+            <span>연관 기억 ${currentFlowRelatedCount}개</span>
+          </div>
+          <div class="first-run-actions" aria-label="처음 실행 액션">
+            <button type="button" class="first-run-action primary" data-guide-action="write-diary" data-guide-state="ready">지금 일기 쓰기</button>
+            <button type="button" class="first-run-action" data-guide-action="import-diary" data-guide-state="ready">일기 DB 불러오기</button>
+            <button type="button" class="first-run-action" data-guide-action="select-memory" data-guide-state="ready">그래프에서 기억 고르기</button>
+            <button type="button" class="first-run-action" data-guide-action="run-ai-session" data-guide-state="ready">AI 세션 실행</button>
+            <button type="button" class="first-run-action" data-guide-action="save-session" data-guide-state="ready">결과를 기억으로 저장</button>
+          </div>
+        </section>
       </section>
 
       <div class="product-main-grid">
@@ -2098,6 +2179,7 @@ const GRAPH_CONTROL_SCRIPT = `
   const importFileInput = document.querySelector('[data-control="local-import-file-input"]');
   const importPasteText = document.querySelector('[data-control="local-import-paste-text"]');
   const focusLocalImportButton = document.querySelector('[data-control="focus-local-import"]');
+  const firstRunGuideActions = Array.from(document.querySelectorAll('[data-guide-action]'));
   const importPreviewButton = document.querySelector('[data-control="preview-local-import"]');
   const importApplyButton = document.querySelector('[data-control="apply-local-import"]');
   const importUndoButton = document.querySelector('[data-control="undo-local-import"]');
@@ -4123,6 +4205,36 @@ const GRAPH_CONTROL_SCRIPT = `
     importPasteText?.scrollIntoView({ block: 'center', behavior: 'smooth' });
     importPasteText?.focus();
     setInteractionState('diary-import-focused');
+  });
+  firstRunGuideActions.forEach((button) => {
+    button.addEventListener('click', () => {
+      const action = button.getAttribute('data-guide-action');
+      shell.setAttribute('data-first-run-last-action', action || '');
+      if (action === 'write-diary') {
+        window.location.href = '/capture/';
+        return;
+      }
+      if (action === 'import-diary') {
+        importPasteText?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        importPasteText?.focus();
+        setInteractionState('diary-import-focused');
+        return;
+      }
+      if (action === 'select-memory') {
+        const selected = document.querySelector('[data-control="select-memory"][data-selected="true"]') || memoryNodes[2];
+        if (selected) selectMemory(selected);
+        document.querySelector('.selected-node-affordance')?.scrollIntoView({ block: 'center', inline: 'center', behavior: 'smooth' });
+        setInteractionState('first-run-memory-selected');
+        return;
+      }
+      if (action === 'run-ai-session') {
+        void runMemorySession();
+        return;
+      }
+      if (action === 'save-session') {
+        void saveMemorySession();
+      }
+    });
   });
   if (memoryNodes[2]) selectMemory(memoryNodes[2]);
   wireReviewComparisonButtons();

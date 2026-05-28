@@ -538,6 +538,21 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('삭제');
     expect(html).not.toContain('public shared memory');
 
+    expect(html).toContain('data-first-run-guide="diary-memory-ai"');
+    expect(html).toContain('data-first-run-stage="entry-to-session"');
+    expect(html).toContain('data-guide-action="write-diary"');
+    expect(html).toContain('data-guide-action="import-diary"');
+    expect(html).toContain('data-guide-action="select-memory"');
+    expect(html).toContain('data-guide-action="run-ai-session"');
+    expect(html).toContain('data-guide-action="save-session"');
+    expect(html).toContain('지금 일기 쓰기');
+    expect(html).toContain('일기 DB 불러오기');
+    expect(html).toContain('그래프에서 기억 고르기');
+    expect(html).toContain('AI 세션 실행');
+    expect(html).toContain('결과를 기억으로 저장');
+    expect(html).toContain('data-flow-current-memory="mem_freeze_vs_feature_addition"');
+    expect(html).toContain('data-flow-related-memory-count=');
+
     expect(html).toContain('class="product-rail"');
     expect(html).toContain('빠른 일기 기록');
     expect(html).toContain('기존 기억 가져오기');
