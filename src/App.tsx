@@ -451,6 +451,81 @@ const APP_SHELL_STYLES = `
     background: #e11d3f;
     color: #ffffff;
   }
+  .prototype-journey-cockpit {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: minmax(130px, 0.44fr) minmax(0, 1fr) minmax(130px, 0.46fr);
+    gap: 8px;
+    align-items: stretch;
+    border: 1px solid rgba(97, 102, 125, 0.15);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.88);
+    padding: 9px;
+  }
+  .journey-cockpit-head,
+  .journey-cockpit-next {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+    align-content: center;
+  }
+  .journey-cockpit-head strong,
+  .journey-cockpit-head span,
+  .journey-cockpit-next strong,
+  .journey-cockpit-next span,
+  .journey-cockpit-signals span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .journey-cockpit-head strong,
+  .journey-cockpit-next strong {
+    color: #4f5363;
+    font-size: 12px;
+  }
+  .journey-cockpit-head span,
+  .journey-cockpit-next span {
+    color: #757b8d;
+    font-size: 10px;
+  }
+  .journey-cockpit-signals {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+    min-width: 0;
+  }
+  .journey-cockpit-signals span {
+    border: 1px solid rgba(97, 102, 125, 0.12);
+    border-radius: 8px;
+    background: rgba(246, 247, 252, 0.82);
+    color: #62697a;
+    padding: 7px;
+    font-size: 10px;
+    font-weight: 760;
+  }
+  .journey-cockpit-actions {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+  .journey-cockpit-actions a,
+  .journey-cockpit-actions button {
+    min-height: 32px;
+    border: 1px solid rgba(225, 29, 63, 0.2);
+    border-radius: 8px;
+    background: rgba(225, 29, 63, 0.08);
+    color: #9f1239;
+    padding: 6px 8px;
+    font-size: 11px;
+    font-weight: 800;
+    text-align: center;
+    text-decoration: none;
+  }
+  .journey-cockpit-actions [data-journey-primary-action="capture"] {
+    background: #e11d3f;
+    color: #ffffff;
+  }
   .prototype-entry-dock {
     grid-column: 1 / -1;
     display: grid;
@@ -2492,6 +2567,15 @@ const APP_SHELL_STYLES = `
   .product-value-strip[data-command-shelf="graph-led"] .guided-flow-actions {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+  .product-value-strip[data-command-shelf="graph-led"] .prototype-journey-cockpit {
+    grid-template-columns: 1fr;
+  }
+  .product-value-strip[data-command-shelf="graph-led"] .journey-cockpit-signals {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .product-value-strip[data-command-shelf="graph-led"] .journey-cockpit-actions {
+    grid-template-columns: 1fr;
+  }
   .product-value-strip[data-command-shelf="graph-led"][data-flow-collapsed="true"] {
     max-height: min(620px, calc(100vh - 96px));
   }
@@ -3445,6 +3529,27 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
           <h2>오늘 쓴 고민을 과거 기억과 연결해서 답하게 한다</h2>
           <p>앱에서는 빠르게 쓰고, 웹에서는 일기 DB만 가져온다. 기억은 공개 공유가 아니라 내 안에서만 현재 일기와 과거 기억이 함께 떠오르는 구조다.</p>
         </div>
+        <section class="prototype-journey-cockpit" data-prototype-journey-cockpit="diary-memory-ai" data-journey-current-step="capture" data-journey-selected-memory="${escapeHtml(currentFlowMemoryId)}" data-journey-related-count="${currentFlowRelatedCount}" data-journey-ai-state="idle" data-journey-save-state="idle" data-journey-next-action="write-or-import" aria-label="일기에서 AI 고민 해결까지 현재 흐름">
+          <div class="journey-cockpit-head">
+            <strong>지금 흐름</strong>
+            <span data-journey-step-label>기록 단계 · 앱 빠른 기록 또는 웹 일기 가져오기</span>
+          </div>
+          <div class="journey-cockpit-signals" aria-label="현재 기억 흐름 상태">
+            <span data-journey-memory-label>선택 기억 · ${escapeHtml(currentFlowEntry?.title ?? currentFlowMemoryId)}</span>
+            <span data-journey-related-label>연관 기억 · ${currentFlowRelatedCount}개</span>
+            <span data-journey-ai-label>AI 실행 · 대기</span>
+            <span data-journey-save-label>미래 기억 저장 · 대기</span>
+          </div>
+          <div class="journey-cockpit-next">
+            <strong>다음 행동</strong>
+            <span data-journey-next-action-label>일기를 쓰거나 가져오면 그래프와 연관 기억이 열린다.</span>
+          </div>
+          <div class="journey-cockpit-actions" aria-label="주요 다음 행동">
+            <a href="/capture/" data-journey-primary-action="capture">일기 쓰기</a>
+            <button type="button" data-journey-primary-action="graph">그래프에서 기억 보기</button>
+            <button type="button" data-journey-primary-action="session">AI 세션 실행</button>
+          </div>
+        </section>
         <section class="guided-service-flow" data-guided-service-flow="diary-memory-ai" data-guided-flow-current-step="capture" data-guided-flow-source="${escapeHtml(currentFlowMemoryId)}" data-guided-flow-related-count="${currentFlowRelatedCount}" data-guided-flow-saved-memory="" aria-label="일기에서 개인 기억 AI까지 한 화면 흐름">
           <ol class="guided-flow-steps" aria-label="핵심 사용 흐름">
             <li data-guided-flow-step="capture" data-guided-flow-state="active"><strong>기록</strong><span>앱/웹 일기 입력</span></li>
@@ -3886,6 +3991,14 @@ const GRAPH_CONTROL_SCRIPT = `
   const guidedServiceFlow = document.querySelector('[data-guided-service-flow="diary-memory-ai"]');
   const guidedFlowSteps = Array.from(document.querySelectorAll('[data-guided-flow-step]'));
   const guidedFlowActions = Array.from(document.querySelectorAll('[data-guided-flow-action]'));
+  const prototypeJourneyCockpit = document.querySelector('[data-prototype-journey-cockpit="diary-memory-ai"]');
+  const journeyStepLabel = prototypeJourneyCockpit?.querySelector('[data-journey-step-label]');
+  const journeyMemoryLabel = prototypeJourneyCockpit?.querySelector('[data-journey-memory-label]');
+  const journeyRelatedLabel = prototypeJourneyCockpit?.querySelector('[data-journey-related-label]');
+  const journeyAiLabel = prototypeJourneyCockpit?.querySelector('[data-journey-ai-label]');
+  const journeySaveLabel = prototypeJourneyCockpit?.querySelector('[data-journey-save-label]');
+  const journeyNextActionLabel = prototypeJourneyCockpit?.querySelector('[data-journey-next-action-label]');
+  const journeyPrimaryActions = Array.from(document.querySelectorAll('[data-journey-primary-action]'));
   const captureHandoffBanner = document.querySelector('[data-capture-handoff-banner="selected-memory-session"]');
   const captureHandoffTitle = captureHandoffBanner?.querySelector('[data-capture-handoff-title]');
   const captureHandoffSummary = captureHandoffBanner?.querySelector('[data-capture-handoff-summary]');
@@ -4584,6 +4697,72 @@ const GRAPH_CONTROL_SCRIPT = `
   };
 
   const guidedStepOrder = ['capture', 'graph', 'related', 'ai', 'save'];
+  const journeyStepLabels = {
+    capture: '기록 단계',
+    graph: '세컨브레인 연결',
+    related: '연관 기억 확인',
+    ai: 'AI 실행',
+    save: '미래 기억 저장',
+  };
+  const journeyNextActionLabels = {
+    'write-or-import': '일기를 쓰거나 가져오면 그래프와 연관 기억이 열린다.',
+    'inspect-graph': '그래프에서 기억을 선택하면 관련 과거 기억이 떠오른다.',
+    'inspect-related': '연관 과거 기억을 확인한 뒤 질문, 결정, 주간 패턴을 실행한다.',
+    'run-ai-session': '이 기억 묶음으로 AI 세션을 실행한다.',
+    'save-result': '결과를 기억으로 저장하면 다음 고민의 과거 근거가 된다.',
+    'reopen-saved-memory': '저장된 세션 기억을 그래프에서 다시 열 수 있다.',
+  };
+  const updatePrototypeJourneyCockpit = (detail = {}) => {
+    if (!prototypeJourneyCockpit) return;
+    const step = detail.step || guidedServiceFlow?.getAttribute('data-guided-flow-current-step') || 'capture';
+    const selectedMemory =
+      detail.sourceMemoryId ||
+      shell.getAttribute('data-active-memory') ||
+      shell.getAttribute('data-capture-handoff-selected-memory') ||
+      prototypeJourneyCockpit.getAttribute('data-journey-selected-memory') ||
+      '';
+    const relatedCount = String(
+      detail.relatedCount ??
+        shell.getAttribute('data-related-memory-count') ??
+        shell.getAttribute('data-memory-session-related-memory-count') ??
+        prototypeJourneyCockpit.getAttribute('data-journey-related-count') ??
+        '0',
+    );
+    const aiState = detail.aiState || prototypeJourneyCockpit.getAttribute('data-journey-ai-state') || 'idle';
+    const saveState = detail.saveState || prototypeJourneyCockpit.getAttribute('data-journey-save-state') || 'idle';
+    const nextAction =
+      detail.nextAction ||
+      (step === 'capture'
+        ? 'write-or-import'
+        : step === 'graph'
+          ? 'inspect-graph'
+          : step === 'related'
+            ? 'inspect-related'
+            : step === 'ai'
+              ? aiState === 'answered' || aiState === 'session-completed'
+                ? 'save-result'
+                : 'run-ai-session'
+              : saveState === 'saved'
+                ? 'reopen-saved-memory'
+                : 'save-result');
+    prototypeJourneyCockpit?.setAttribute('data-journey-current-step', step);
+    prototypeJourneyCockpit?.setAttribute('data-journey-selected-memory', selectedMemory);
+    prototypeJourneyCockpit?.setAttribute('data-journey-related-count', relatedCount);
+    prototypeJourneyCockpit?.setAttribute('data-journey-ai-state', aiState);
+    prototypeJourneyCockpit?.setAttribute('data-journey-save-state', saveState);
+    prototypeJourneyCockpit?.setAttribute('data-journey-next-action', nextAction);
+    if (journeyStepLabel) journeyStepLabel.textContent = (journeyStepLabels[step] || '현재 단계') + ' · ' + (journeyNextActionLabels[nextAction] || '');
+    if (journeyMemoryLabel) journeyMemoryLabel.textContent = '선택 기억 · ' + (selectedMemory || '대기');
+    if (journeyRelatedLabel) journeyRelatedLabel.textContent = '연관 기억 · ' + relatedCount + '개';
+    if (journeyAiLabel) journeyAiLabel.textContent = 'AI 실행 · ' + (aiState === 'answered' ? '완료' : aiState === 'running' ? '실행 중' : aiState === 'session-completed' ? '세션 완료' : aiState === 'ready' ? '준비' : '대기');
+    if (journeySaveLabel) journeySaveLabel.textContent = '미래 기억 저장 · ' + (saveState === 'saved' ? '완료' : saveState === 'saving' ? '저장 중' : saveState === 'ready' ? '가능' : '대기');
+    if (journeyNextActionLabel) journeyNextActionLabel.textContent = journeyNextActionLabels[nextAction] || nextAction;
+    journeyPrimaryActions.forEach((item) => {
+      const action = item.getAttribute('data-journey-primary-action') || '';
+      item.setAttribute('data-journey-primary-state', action === 'session' && step === 'ai' ? 'primary' : action === 'graph' && (step === 'graph' || step === 'related') ? 'primary' : action === 'capture' && step === 'capture' ? 'primary' : 'idle');
+    });
+  };
+
   const updateGuidedServiceFlow = (step, detail = {}) => {
     step = guidedStepOrder.includes(step) ? step : 'capture';
     const activeIndex = guidedStepOrder.indexOf(step);
@@ -4593,6 +4772,14 @@ const GRAPH_CONTROL_SCRIPT = `
     guidedServiceFlow?.setAttribute('data-guided-flow-related-count', String(detail.relatedCount ?? shell.getAttribute('data-related-memory-count') ?? guidedServiceFlow?.getAttribute('data-guided-flow-related-count') ?? '0'));
     if (detail.savedMemoryId) guidedServiceFlow?.setAttribute('data-guided-flow-saved-memory', detail.savedMemoryId);
     shell.setAttribute('data-guided-flow-current-step', step);
+    updatePrototypeJourneyCockpit({
+      step,
+      sourceMemoryId: detail.sourceMemoryId,
+      relatedCount: detail.relatedCount,
+      aiState: step === 'ai' ? detail.aiState || 'ready' : detail.aiState,
+      saveState: step === 'save' ? detail.saveState || 'saved' : detail.saveState,
+      nextAction: detail.nextAction,
+    });
     guidedFlowSteps.forEach((item) => {
       const itemStep = item.getAttribute('data-guided-flow-step') || '';
       const itemIndex = guidedStepOrder.indexOf(itemStep);
@@ -4607,6 +4794,11 @@ const GRAPH_CONTROL_SCRIPT = `
     shell.setAttribute('data-flow-coach-next-action', nextAction);
     if (flowCoachTitle) flowCoachTitle.textContent = title;
     if (flowCoachSummary) flowCoachSummary.textContent = summary;
+    updatePrototypeJourneyCockpit({
+      aiState: stage === 'ai-running' ? 'running' : stage === 'ai-answered' ? 'answered' : stage === 'ai-ready' ? 'ready' : stage === 'saved' ? 'session-completed' : undefined,
+      saveState: stage === 'saved' ? 'saved' : undefined,
+      nextAction,
+    });
   };
 
   const setHandoffRouteState = (route, state) => {
@@ -4650,6 +4842,13 @@ const GRAPH_CONTROL_SCRIPT = `
     if (handoffRelatedLabel) handoffRelatedLabel.textContent = '연관 기억 · ' + relatedCount + '개';
     if (handoffAiLabel) handoffAiLabel.textContent = 'AI 실행 · ' + aiState;
     if (handoffSavebackLabel) handoffSavebackLabel.textContent = '미래 기억 저장 · ' + savebackState;
+    updatePrototypeJourneyCockpit({
+      step: stage === 'applied' || stage === 'session-ready' ? 'related' : stage === 'session-saved' ? 'save' : route === 'none' ? 'capture' : 'graph',
+      sourceMemoryId: memoryId,
+      relatedCount,
+      aiState,
+      saveState: savebackState,
+    });
   };
 
   const renderIntakeRelatedBundle = () => {
@@ -4723,6 +4922,12 @@ const GRAPH_CONTROL_SCRIPT = `
     intakeRelatedBundle?.setAttribute('data-intake-ai-action-result', kind + '-' + state);
     intakeSessionResult?.setAttribute('data-intake-ai-action-result', kind + '-' + state);
     updateDiaryGraphHandoffMap({ aiState: kind + '-' + state });
+    updatePrototypeJourneyCockpit({
+      step: 'ai',
+      aiState: state === 'answered' ? 'answered' : state === 'loading' ? 'running' : 'error',
+      saveState: state === 'answered' ? 'ready' : 'idle',
+      nextAction: state === 'answered' ? 'save-result' : 'run-ai-session',
+    });
     setIntakeFlowStepState('ai', state === 'answered' ? 'done' : state === 'loading' ? 'loading' : 'error');
     updateFlowCoach(
       state === 'answered' ? 'ai-answered' : state === 'loading' ? 'ai-running' : 'ai-error',
@@ -4833,6 +5038,7 @@ const GRAPH_CONTROL_SCRIPT = `
     setIntakeFlowStepState('related', related.length ? 'ready' : 'loading');
     setIntakeFlowStepState('ai', 'ready');
     updateDiaryGraphHandoffMap({ route: 'web-paste-diary', stage: 'applied', memoryId: appliedMemoryId, relatedCount, aiState: 'ready' });
+    updateGuidedServiceFlow('related', { sourceMemoryId: appliedMemoryId, relatedCount, aiState: 'ready', saveState: 'idle', nextAction: 'inspect-related' });
     updateFlowCoach(
       'graph-ready',
       'inspect-related-memories',
@@ -6966,6 +7172,25 @@ const GRAPH_CONTROL_SCRIPT = `
       }
       if (action === 'save-result') {
         void saveMemorySession();
+      }
+    });
+  });
+  journeyPrimaryActions.forEach((button) => {
+    button.addEventListener('click', (event) => {
+      const action = button.getAttribute('data-journey-primary-action') || '';
+      prototypeJourneyCockpit?.setAttribute('data-journey-last-click', action);
+      shell.setAttribute('data-journey-last-click', action);
+      if (action === 'capture') return;
+      event.preventDefault();
+      if (action === 'graph') {
+        document.querySelector('.graph-stage')?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        updateGuidedServiceFlow('graph', { nextAction: 'inspect-graph' });
+        setInteractionState('journey-cockpit-graph-focused');
+        return;
+      }
+      if (action === 'session') {
+        updateGuidedServiceFlow('ai', { nextAction: 'run-ai-session' });
+        void runMemorySession();
       }
     });
   });

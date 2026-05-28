@@ -95,6 +95,15 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
     'Expected Korean usable MVP prototype marker',
   );
   assert((await page.locator('[data-prototype-flow="tonight-usable"]').count()) === 1, 'Expected visible tonight-usable product flow');
+  assert((await page.locator('[data-prototype-journey-cockpit="diary-memory-ai"]').count()) === 1, 'Expected prototype journey cockpit');
+  assert(
+    (await attribute(page, '[data-prototype-journey-cockpit="diary-memory-ai"]', 'data-journey-current-step')) === 'capture',
+    'Prototype journey cockpit should start at capture',
+  );
+  assert(
+    (await attribute(page, '[data-prototype-journey-cockpit="diary-memory-ai"]', 'data-journey-next-action')) === 'write-or-import',
+    'Prototype journey cockpit should expose the first next action',
+  );
   assert((await page.locator('[data-guided-service-flow="diary-memory-ai"]').count()) === 1, 'Expected guided Korean service flow rail');
   assert(
     (await attribute(page, '[data-guided-service-flow="diary-memory-ai"]', 'data-guided-flow-current-step')) === 'capture',
@@ -279,6 +288,18 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   assert(
     (await attribute(page, '[data-intake-session-result="applied-memory"]', 'data-intake-next-step')) === 'memory-session-ready',
     'Intake result panel should offer the guided AI session as the next step',
+  );
+  assert(
+    (await attribute(page, '[data-prototype-journey-cockpit="diary-memory-ai"]', 'data-journey-current-step')) === 'related',
+    'Prototype journey cockpit should move to related after diary graph apply',
+  );
+  assert(
+    (await attribute(page, '[data-prototype-journey-cockpit="diary-memory-ai"]', 'data-journey-selected-memory')) === intakeAppliedMemoryId,
+    'Prototype journey cockpit should show the applied diary memory',
+  );
+  assert(
+    Number(await attribute(page, '[data-prototype-journey-cockpit="diary-memory-ai"]', 'data-journey-related-count')) > 0,
+    'Prototype journey cockpit should show related past-memory count',
   );
   assert(
     (await attribute(page, '[data-intake-flow-step="capture"]', 'data-intake-flow-state')) === 'done',
@@ -476,6 +497,18 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   await page.waitForFunction(() => document.querySelector('[data-intake-related-bundle="past-memory-nodes"]')?.getAttribute('data-intake-ai-action-result') === 'weekly-answered');
   assert((await attribute(page, '.second-brain-shell', 'data-weekly-report-state')) === 'ready', 'Intake Weekly action should run the grounded weekly report flow');
   assert((await attribute(page, '[data-intake-flow-step="ai"]', 'data-intake-flow-state')) === 'done', 'Intake flow tracker should mark AI action done after a grounded answer');
+  assert(
+    (await attribute(page, '[data-prototype-journey-cockpit="diary-memory-ai"]', 'data-journey-current-step')) === 'ai',
+    'Prototype journey cockpit should move to AI after grounded actions',
+  );
+  assert(
+    (await attribute(page, '[data-prototype-journey-cockpit="diary-memory-ai"]', 'data-journey-ai-state')) === 'answered',
+    'Prototype journey cockpit should show grounded AI answered state',
+  );
+  assert(
+    (await attribute(page, '[data-prototype-journey-cockpit="diary-memory-ai"]', 'data-journey-save-state')) === 'ready',
+    'Prototype journey cockpit should show save-ready state after AI answer',
+  );
   await page.locator('[data-control="intake-save-ai-result"]').click();
   await page.waitForFunction(() => document.querySelector('[data-intake-related-bundle="past-memory-nodes"]')?.getAttribute('data-intake-ai-save-state') === 'saved');
   assert((await attribute(page, '[data-control="intake-save-ai-result"]', 'data-intake-ai-save-state')) === 'saved', 'Intake AI saveback should mark the latest result saved');
@@ -485,6 +518,14 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   assert(
     (await attribute(page, '[data-flow-coach="diary-to-memory-ai"]', 'data-flow-coach-next-action')) === 'reopen-saved-memory',
     'Flow coach should expose the next reentry action after saveback',
+  );
+  assert(
+    (await attribute(page, '[data-prototype-journey-cockpit="diary-memory-ai"]', 'data-journey-save-state')) === 'saved',
+    'Prototype journey cockpit should show saved state after AI result saveback',
+  );
+  assert(
+    (await attribute(page, '[data-prototype-journey-cockpit="diary-memory-ai"]', 'data-journey-next-action')) === 'reopen-saved-memory',
+    'Prototype journey cockpit should point to saved-memory reentry after saveback',
   );
   await page.locator('[data-control="intake-run-session"]').click();
   await page.waitForFunction(
