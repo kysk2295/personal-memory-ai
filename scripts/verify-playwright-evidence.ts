@@ -206,6 +206,24 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
       return graph?.cy?.nodes('.replay-citation-memory').length ?? 0;
     });
     assert(highlightedReplayCitationCount === replayCitationCount, 'Cytoscape graph should mark Decision Replay citation memory nodes');
+
+    await page.locator('[data-control="refresh-weekly-report"]').click();
+    await page.waitForFunction(
+      () => document.querySelector('.second-brain-shell')?.getAttribute('data-weekly-report-state') === 'ready',
+      null,
+      { timeout: 10_000 },
+    );
+    const weeklyCitationCount = Number(await attribute(page, '.second-brain-shell', 'data-weekly-report-citation-count'));
+    assert(Number.isFinite(weeklyCitationCount), 'Expected live Weekly Report to expose a citation count marker');
+    assert(
+      Number(await attribute(page, '.second-brain-shell', 'data-live-weekly-highlighted-memory-count')) === weeklyCitationCount,
+      'Live Weekly Report should highlight the same number of cited graph memories',
+    );
+    const highlightedWeeklyCitationCount = await page.evaluate(() => {
+      const graph = (window as any).__personalMemoryGraph;
+      return graph?.cy?.nodes('.weekly-citation-memory').length ?? 0;
+    });
+    assert(highlightedWeeklyCitationCount === weeklyCitationCount, 'Cytoscape graph should mark Weekly Report citation memory nodes');
   }
   await page.waitForFunction(() => {
     const graph = document.querySelector('#memory-graph-cytoscape');
@@ -522,6 +540,8 @@ try {
           'live ask follow-up context',
           'live decision replay api response',
           'live decision replay graph highlight',
+          'live weekly report api response',
+          'live weekly report graph highlight',
           'saved artifact action',
           'saved artifact persistence manifest',
           'feedback correction action',

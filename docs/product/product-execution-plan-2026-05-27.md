@@ -225,6 +225,7 @@ No remote push, main merge, production deploy, or secret access is allowed witho
 - L56: live Notion graph rehydration.
 - L76: live Ask citation path graph highlight.
 - L77: live Decision Replay citation path graph highlight.
+- L78: live Weekly Report citation path graph highlight.
 
 ## 6. Active Next Loops
 
@@ -1487,6 +1488,25 @@ Acceptance:
 Implemented:
 
 - `src/components/DecisionReplayPanel.tsx`
+- `src/App.tsx`
+- `src/lib/appShellEvidenceLayout.test.ts`
+- `scripts/verify-playwright-evidence.ts`
+
+### L78 — Live Weekly Report Citation Path Graph Highlight
+
+Goal: make the Weekly Report panel refresh from the private report API and visibly connect the included weekly memories back to the graph.
+
+Acceptance:
+
+- Weekly Report panel exposes a refresh control
+- refresh posts the displayed date window to `/api/report/weekly`
+- live result updates report state, generated timestamp, evidence label, and citation count markers
+- included weekly memories and connected edges receive graph highlight classes
+- Playwright verifies highlighted graph memories match the live weekly report citation count
+
+Implemented:
+
+- `src/components/WeeklyReportPanel.tsx`
 - `src/App.tsx`
 - `src/lib/appShellEvidenceLayout.test.ts`
 - `scripts/verify-playwright-evidence.ts`

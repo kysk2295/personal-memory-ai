@@ -1932,6 +1932,9 @@ const GRAPH_CONTROL_SCRIPT = `
   const decisionReplayInput = document.querySelector('[data-control="decision-replay-current"]');
   const decisionReplayButton = document.querySelector('[data-control="run-decision-replay"]');
   const decisionReplayResult = document.querySelector('[data-live-replay-result="recommendation"]');
+  const weeklyReportPanel = document.querySelector('[data-weekly-report-endpoint]');
+  const weeklyReportRefreshButton = document.querySelector('[data-control="refresh-weekly-report"]');
+  const weeklyReportSummary = document.querySelector('[data-live-weekly-result="summary"]');
   let cytoscapeGraph = null;
   let layoutVersion = Number(shell.getAttribute('data-layout-version') || '0');
   let lastLocalImportPreview = null;
@@ -2241,6 +2244,26 @@ const GRAPH_CONTROL_SCRIPT = `
     if (citationList.length) setInteractionState('replay-citation-path-highlighted');
   };
 
+  const highlightLiveWeeklyReportCitations = (citations) => {
+    const citationList = Array.from(new Set((citations || []).filter(Boolean)));
+    if (cytoscapeGraph) {
+      cytoscapeGraph.elements().removeClass('weekly-citation-memory weekly-citation-edge');
+      citationList.forEach((citation) => {
+        const memoryNode = cytoscapeGraph.getElementById('memory:' + citation);
+        if (memoryNode && memoryNode.length) {
+          memoryNode.addClass('weekly-citation-memory');
+          memoryNode.connectedEdges().addClass('weekly-citation-edge');
+        }
+      });
+    }
+    memoryNodes.forEach((node) => {
+      node.setAttribute('data-weekly-citation-highlight', String(citationList.includes(node.getAttribute('data-inspector-citation') || '')));
+    });
+    shell.setAttribute('data-live-weekly-highlighted-memory-count', String(citationList.length));
+    shell.setAttribute('data-live-weekly-highlighted-memories', citationList.join(','));
+    if (citationList.length) setInteractionState('weekly-citation-path-highlighted');
+  };
+
   const setCytoscapeLabelVisibility = (hidden) => {
     if (!cytoscapeGraph) return;
     cytoscapeGraph.nodes().toggleClass('labels-hidden', hidden);
@@ -2397,6 +2420,30 @@ const GRAPH_CONTROL_SCRIPT = `
             'line-color': '#16a34a',
             width: 1.45,
             opacity: 0.9,
+            'z-index': 17,
+          },
+        },
+        {
+          selector: '.weekly-citation-memory',
+          style: {
+            label: 'data(graphLabel)',
+            'background-color': '#f59e0b',
+            width: 32,
+            height: 32,
+            'border-color': '#b45309',
+            'border-width': 2,
+            color: '#92400e',
+            'font-size': 12,
+            'text-max-width': 220,
+            'z-index': 19,
+          },
+        },
+        {
+          selector: '.weekly-citation-edge',
+          style: {
+            'line-color': '#f59e0b',
+            width: 1.35,
+            opacity: 0.88,
             'z-index': 17,
           },
         },
@@ -2737,6 +2784,51 @@ const GRAPH_CONTROL_SCRIPT = `
     }
   };
 
+  const renderLiveWeeklyReport = (result) => {
+    const report = result?.weeklyReport || {};
+    const citations = report.includedMemoryIds || [];
+    if (weeklyReportSummary) {
+      const evidence = weeklyReportSummary.querySelector('span');
+      const count = weeklyReportSummary.querySelector('strong');
+      if (evidence) evidence.textContent = report.evidenceLabel || 'unknown';
+      if (count) count.textContent = String(citations.length);
+    }
+    weeklyReportPanel?.setAttribute('data-weekly-report-state', 'ready');
+    weeklyReportPanel?.setAttribute('data-weekly-report-generated-at', report.generatedAt || new Date().toISOString());
+    weeklyReportPanel?.setAttribute('data-weekly-included-memory-count', String(citations.length));
+    shell.setAttribute('data-weekly-report-state', 'ready');
+    shell.setAttribute('data-weekly-report-citation-count', String(citations.length));
+    highlightLiveWeeklyReportCitations(citations);
+  };
+
+  const refreshWeeklyReport = async () => {
+    const weeklyReportEndpoint = weeklyReportPanel?.getAttribute('data-weekly-report-endpoint') || '';
+    if (!weeklyReportEndpoint || window.location.protocol === 'file:') return;
+    weeklyReportPanel?.setAttribute('data-weekly-report-state', 'loading');
+    shell.setAttribute('data-weekly-report-state', 'loading');
+    weeklyReportRefreshButton?.setAttribute('aria-busy', 'true');
+    try {
+      const response = await fetch(weeklyReportEndpoint, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          startDate: weeklyReportPanel?.getAttribute('data-weekly-report-window-start') || '2026-05-01',
+          endDate: weeklyReportPanel?.getAttribute('data-weekly-report-window-end') || new Date().toISOString().slice(0, 10),
+          generatedAt: new Date().toISOString(),
+        }),
+      });
+      if (!response.ok) throw new Error('weekly report failed with ' + response.status);
+      renderLiveWeeklyReport(await response.json());
+    } catch (error) {
+      weeklyReportPanel?.setAttribute('data-weekly-report-state', 'error');
+      shell.setAttribute('data-weekly-report-state', 'error');
+      shell.setAttribute('data-weekly-report-error', String(error?.message || error));
+      setInteractionState('weekly-report-error');
+    } finally {
+      weeklyReportRefreshButton?.setAttribute('aria-busy', 'false');
+    }
+  };
+
   spacingButtons.forEach((button) => {
     button.addEventListener('click', () => setSpacing(button.getAttribute('data-spacing') || 'normal'));
   });
@@ -2759,6 +2851,10 @@ const GRAPH_CONTROL_SCRIPT = `
 
   decisionReplayButton?.addEventListener('click', () => {
     void replayCurrentDecision();
+  });
+
+  weeklyReportRefreshButton?.addEventListener('click', () => {
+    void refreshWeeklyReport();
   });
 
   memorySearchResults.forEach(wireMemorySearchResult);

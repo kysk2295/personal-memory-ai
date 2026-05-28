@@ -685,6 +685,15 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(documentHtml).toContain("shell.setAttribute('data-live-replay-highlighted-memory-count'");
     expect(documentHtml).toContain("memoryNode.addClass('replay-citation-memory')");
     expect(documentHtml).toContain("setInteractionState('replay-citation-path-highlighted')");
+    expect(documentHtml).toContain('data-control="refresh-weekly-report"');
+    expect(documentHtml).toContain('const refreshWeeklyReport = async () =>');
+    expect(documentHtml).toContain('fetch(weeklyReportEndpoint');
+    expect(documentHtml).toContain('const renderLiveWeeklyReport =');
+    expect(documentHtml).toContain('const highlightLiveWeeklyReportCitations =');
+    expect(documentHtml).toContain("shell.setAttribute('data-weekly-report-state', 'ready')");
+    expect(documentHtml).toContain("shell.setAttribute('data-live-weekly-highlighted-memory-count'");
+    expect(documentHtml).toContain("memoryNode.addClass('weekly-citation-memory')");
+    expect(documentHtml).toContain("setInteractionState('weekly-citation-path-highlighted')");
     expect(documentHtml).toContain('result.savedArtifact');
     expect(documentHtml).toContain("savedArtifactsById.set(result.savedArtifact.id");
     expect(documentHtml).toContain("askSaveButton.setAttribute('data-artifact-id'");

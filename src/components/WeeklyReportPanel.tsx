@@ -41,7 +41,7 @@ export function renderWeeklyReportPanel(layout: InitialAppShellEvidenceLayout): 
     report.id,
   )}" data-weekly-report-generated-at="${escapeHtml(report.generatedAt)}" data-weekly-report-endpoint="/api/report/weekly" data-weekly-report-window-start="${escapeHtml(
     report.window.startDate,
-  )}" data-weekly-report-window-end="${escapeHtml(report.window.endDate)}" data-weekly-included-memory-count="${report.includedMemoryIds.length}">
+  )}" data-weekly-report-window-end="${escapeHtml(report.window.endDate)}" data-weekly-included-memory-count="${report.includedMemoryIds.length}" data-weekly-report-state="ready">
     <div class="section-header">
       <div>
         <p class="eyebrow">Weekly Report</p>
@@ -50,7 +50,7 @@ export function renderWeeklyReportPanel(layout: InitialAppShellEvidenceLayout): 
       ${renderStatus(report.status)}
     </div>
     <p class="section-intro">${escapeHtml(report.totalMemoryRecords.toString())} memories in this private weekly window. Every aggregate below is backed by cited MemoryRecord ids.</p>
-    <div class="panel-topline">
+    <div class="panel-topline" data-live-weekly-result="summary">
       <span>${escapeHtml(report.evidenceLabel)}</span>
       <span>citations <strong>${report.includedMemoryIds.length}</strong></span>
     </div>
@@ -61,6 +61,7 @@ export function renderWeeklyReportPanel(layout: InitialAppShellEvidenceLayout): 
         .join('')}
     </ol>
     ${renderSavedArtifactActionButton(saveAction)}
+    <button type="button" class="save-artifact-action" data-control="refresh-weekly-report">Refresh report</button>
     <ul class="weekly-report-aggregate-list" aria-label="Weekly report cited aggregates">
       ${topEmotions.map((aggregate) => renderAggregate('emotions', aggregate)).join('')}
       ${topDecisions.map((aggregate) => renderAggregate('decisions', aggregate)).join('')}
