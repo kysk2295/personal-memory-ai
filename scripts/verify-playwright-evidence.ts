@@ -109,6 +109,20 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
     (await attribute(page, '[data-guided-service-flow="diary-memory-ai"]', 'data-guided-flow-current-step')) === 'capture',
     'Guided service flow should start at capture',
   );
+  assert((await attribute(page, '.second-brain-shell', 'data-workflow-focus')) === 'capture', 'Workflow focus should start at capture');
+  assert((await attribute(page, '[data-flow-focus-switcher="core-workflow"]', 'data-flow-focus-current')) === 'capture', 'Flow focus switcher should start at capture');
+  assert((await attribute(page, '[data-workflow-section="capture"]', 'data-workflow-section-state')) === 'focused', 'Capture section should start focused');
+  await page.locator('[data-flow-focus-action="graph"]').click();
+  assert((await attribute(page, '.second-brain-shell', 'data-workflow-focus')) === 'graph', 'Graph focus action should switch workflow focus');
+  assert((await attribute(page, '[data-flow-focus-switcher="core-workflow"]', 'data-flow-focus-current')) === 'graph', 'Flow focus switcher should track graph mode');
+  assert((await attribute(page, '[data-workflow-section="graph"]', 'data-workflow-section-state')) === 'focused', 'Graph section should become focused');
+  assert(((await page.locator('[data-flow-focus-label]').textContent()) || '').includes('세컨브레인'), 'Graph focus should use Korean second-brain label');
+  await page.locator('[data-flow-focus-action="ai"]').click();
+  assert((await attribute(page, '.second-brain-shell', 'data-workflow-focus')) === 'ai', 'AI focus action should switch workflow focus');
+  assert((await attribute(page, '[data-workflow-section="ai"]', 'data-workflow-section-state')) === 'focused', 'AI section should become focused');
+  assert(((await page.locator('[data-flow-focus-label]').textContent()) || '').includes('AI 결과'), 'AI focus should use Korean result label');
+  await page.locator('[data-flow-focus-action="capture"]').click();
+  assert((await attribute(page, '.second-brain-shell', 'data-workflow-focus')) === 'capture', 'Capture focus action should return to capture mode');
   for (const step of ['capture', 'graph', 'related', 'ai', 'save']) {
     assert((await page.locator(`[data-guided-flow-step="${step}"]`).count()) === 1, `Missing guided service flow step ${step}`);
   }
@@ -270,14 +284,15 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   await page.waitForFunction(
     () =>
       document.querySelector('[data-import-upload-panel="local-file"]')?.getAttribute('data-import-upload-state') === 'applied' &&
-      document.querySelector('[data-memory-intake-hub="app-web-diary"]')?.getAttribute('data-intake-draft-state') === 'applied',
+      document.querySelector('[data-memory-intake-hub="app-web-diary"]')?.getAttribute('data-intake-draft-state') === 'applied' &&
+      (document.querySelector('[data-intake-session-result="applied-memory"]')?.getAttribute('data-intake-applied-memory') || '') !== 'none',
   );
   assert((await attribute(page, '[data-memory-intake-hub="app-web-diary"]', 'data-intake-last-action')) === 'apply-diary', 'Intake draft apply should update hub action state');
   assert((await attribute(page, '[data-memory-intake-hub="app-web-diary"]', 'data-intake-result')) === 'graph-applied', 'Intake draft apply should mark the first-screen handoff as graph-applied');
   assert((await page.locator('[data-control="local-import-paste-text"]').inputValue()) === intakeDraft, 'Intake draft should sync into the private import paste field');
   assert((await attribute(page, '[data-import-upload-panel="local-file"]', 'data-import-upload-candidate-count')) === '1', 'Intake draft apply should create one import candidate');
   assert((await page.locator('[data-import-applied-memory-id]').count()) >= 1, 'Intake draft apply should surface at least one applied memory id');
-  const intakeAppliedMemoryId = await page.locator('[data-import-applied-memory-id]').first().getAttribute('data-import-applied-memory-id');
+  const intakeAppliedMemoryId = await attribute(page, '[data-intake-session-result="applied-memory"]', 'data-intake-applied-memory');
   assert(Boolean(intakeAppliedMemoryId), 'Intake draft apply should expose the applied memory id');
   assert(
     (await attribute(page, '[data-intake-session-result="applied-memory"]', 'data-intake-applied-memory')) === intakeAppliedMemoryId,

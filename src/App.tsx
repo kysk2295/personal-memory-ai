@@ -345,6 +345,67 @@ const APP_SHELL_STYLES = `
   .product-value-strip textarea {
     pointer-events: auto;
   }
+  .flow-focus-switcher {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: minmax(180px, 0.44fr) minmax(0, 1fr);
+    gap: 8px;
+    align-items: stretch;
+    border: 1px solid rgba(97, 102, 125, 0.14);
+    border-radius: 8px;
+    background: rgba(246, 247, 252, 0.78);
+    padding: 8px;
+  }
+  .flow-focus-copy {
+    min-width: 0;
+    display: grid;
+    gap: 3px;
+    align-content: center;
+  }
+  .flow-focus-copy strong,
+  .flow-focus-copy span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .flow-focus-copy strong {
+    color: #4f5363;
+    font-size: 12px;
+  }
+  .flow-focus-copy span {
+    color: #747b8d;
+    font-size: 10px;
+  }
+  .flow-focus-actions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+  .flow-focus-actions button {
+    min-height: 32px;
+    border: 1px solid rgba(117, 122, 143, 0.14);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.76);
+    color: #62697a;
+    padding: 6px 8px;
+    font-size: 11px;
+    font-weight: 800;
+  }
+  .flow-focus-actions button[data-flow-focus-active="true"] {
+    border-color: rgba(225, 29, 63, 0.3);
+    background: #e11d3f;
+    color: #ffffff;
+  }
+  [data-workflow-section] {
+    transition: border-color 160ms ease, background 160ms ease, opacity 160ms ease;
+  }
+  [data-workflow-section-state="focused"] {
+    border-color: rgba(225, 29, 63, 0.34) !important;
+    background: rgba(255, 247, 249, 0.88) !important;
+  }
+  [data-workflow-section-state="muted"] {
+    opacity: 0.72;
+  }
   .prototype-goal-copy {
     min-width: 0;
   }
@@ -3648,7 +3709,7 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
     return `<main class="second-brain-shell"><aside class="brain-sidebar"><section class="brain-title"><p class="eyebrow">지식 그래프</p><h1>내 세컨브레인</h1><p>${escapeHtml(layout.northStar)}</p></section></aside></main>`;
   }
 
-  return `<main class="second-brain-shell" data-prototype-ux="korean-usable-mvp" data-product-goal="quick-diary-to-private-second-brain-ai" data-labels="visible" data-spacing="normal" data-layout-mode="free" data-layout-explainer="Free mode keeps the graph organic for open-ended memory exploration." data-layout-version="0" data-filter-semantic="on" data-filter-reflective="on" data-filter-procedural="on" data-filter-episodic="on" data-filter-thesis="on" data-filter-source="on" data-graph-renderer="cytoscape-pending" data-benchmark-reference="https://www.careerhackeralex.com/memory" data-memory-node-count="${memoryNodeCount}" data-rendered-memory-node-count="${renderedMemoryNodeCount}" data-graph-node-count="${graphNodeCount}" data-graph-edge-count="${graphEdgeCount}" data-surface-mode="graph-first" data-rail-mode="collapsed-evidence-drawer" data-first-screen-contract="korean-diary-flow-graph-dominant" data-panel-visibility="secondary-drawer" data-interaction-contract="capture-import-select-related-session-save">
+  return `<main class="second-brain-shell" data-prototype-ux="korean-usable-mvp" data-product-goal="quick-diary-to-private-second-brain-ai" data-labels="visible" data-spacing="normal" data-layout-mode="free" data-layout-explainer="Free mode keeps the graph organic for open-ended memory exploration." data-layout-version="0" data-filter-semantic="on" data-filter-reflective="on" data-filter-procedural="on" data-filter-episodic="on" data-filter-thesis="on" data-filter-source="on" data-graph-renderer="cytoscape-pending" data-benchmark-reference="https://www.careerhackeralex.com/memory" data-memory-node-count="${memoryNodeCount}" data-rendered-memory-node-count="${renderedMemoryNodeCount}" data-graph-node-count="${graphNodeCount}" data-graph-edge-count="${graphEdgeCount}" data-surface-mode="graph-first" data-rail-mode="collapsed-evidence-drawer" data-first-screen-contract="korean-diary-flow-graph-dominant" data-panel-visibility="secondary-drawer" data-interaction-contract="capture-import-select-related-session-save" data-workflow-focus="capture">
     <aside class="brain-sidebar" aria-label="세컨브레인 그래프 조절">
       <div class="sidebar-topline">
         <a class="home-button" href="/" aria-label="home">←</a>
@@ -3754,6 +3815,17 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
           <h2>오늘 쓴 고민을 과거 기억과 연결해서 답하게 한다</h2>
           <p>앱에서는 빠르게 쓰고, 웹에서는 일기 DB만 가져온다. 기억은 공개 공유가 아니라 내 안에서만 현재 일기와 과거 기억이 함께 떠오르는 구조다.</p>
         </div>
+        <section class="flow-focus-switcher" data-flow-focus-switcher="core-workflow" data-flow-focus-current="capture" aria-label="핵심 흐름 보기 전환">
+          <div class="flow-focus-copy">
+            <strong data-flow-focus-label>기록부터</strong>
+            <span data-flow-focus-summary>앱처럼 빠르게 쓰거나 일기 DB를 가져와 첫 기억을 만든다.</span>
+          </div>
+          <div class="flow-focus-actions" aria-label="흐름 단계 선택">
+            <button type="button" data-flow-focus-action="capture" data-flow-focus-active="true">기록부터</button>
+            <button type="button" data-flow-focus-action="graph" data-flow-focus-active="false">세컨브레인 보기</button>
+            <button type="button" data-flow-focus-action="ai" data-flow-focus-active="false">AI 결과</button>
+          </div>
+        </section>
         <section class="prototype-journey-cockpit" data-prototype-journey-cockpit="diary-memory-ai" data-journey-current-step="capture" data-journey-selected-memory="${escapeHtml(currentFlowMemoryId)}" data-journey-related-count="${currentFlowRelatedCount}" data-journey-ai-state="idle" data-journey-save-state="idle" data-journey-next-action="write-or-import" aria-label="일기에서 AI 고민 해결까지 현재 흐름">
           <div class="journey-cockpit-head">
             <strong>지금 흐름</strong>
@@ -3813,7 +3885,7 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
             ${diaryInboxHtml}
           </div>
         </section>
-        <section class="memory-intake-hub" data-memory-intake-hub="app-web-diary" data-intake-stage="capture-or-import" data-intake-source-scope="diary-only" data-intake-result="graph-handoff" data-intake-last-action="none" data-intake-draft-state="idle" aria-label="기록 인입 허브">
+        <section class="memory-intake-hub" data-memory-intake-hub="app-web-diary" data-workflow-section="capture" data-workflow-section-state="focused" data-intake-stage="capture-or-import" data-intake-source-scope="diary-only" data-intake-result="graph-handoff" data-intake-last-action="none" data-intake-draft-state="idle" aria-label="기록 인입 허브">
           <div class="memory-intake-copy">
             <strong>기록 인입 허브</strong>
             <span>앱에서 짧게 쓰거나, 웹에서 일기만 붙여넣거나, 습관리스트 Notion DB를 불러오면 곧바로 개인 세컨브레인 그래프와 AI 세션으로 이어진다.</span>
@@ -3931,7 +4003,7 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
             <button type="button" class="first-run-action" data-guide-action="save-session" data-guide-state="ready">결과를 기억으로 저장</button>
           </div>
         </section>
-        <section class="selected-memory-path-panel" data-selected-memory-path="graph-related-session" data-selected-memory-source="${escapeHtml(currentFlowMemoryId)}" data-selected-memory-related-count="${currentFlowRelatedCount}" aria-label="선택한 기억에서 AI 세션으로 이어지는 경로">
+        <section class="selected-memory-path-panel" data-selected-memory-path="graph-related-session" data-workflow-section="graph" data-workflow-section-state="muted" data-selected-memory-source="${escapeHtml(currentFlowMemoryId)}" data-selected-memory-related-count="${currentFlowRelatedCount}" aria-label="선택한 기억에서 AI 세션으로 이어지는 경로">
           <div class="selected-path-current">
             <p class="eyebrow">선택한 기억</p>
             <h3 data-selected-path-title>${escapeHtml(currentFlowEntry?.title ?? '그래프에서 기억을 선택하세요')}</h3>
@@ -4112,7 +4184,7 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
               <button type="button" data-reader-action="session">AI 세션</button>
             </div>
           </section>
-          <section class="memory-session-panel" aria-label="기억 AI 세션" data-memory-session-panel data-session-state="idle" data-session-source-memory="" data-session-related-memory-count="0">
+          <section class="memory-session-panel" aria-label="기억 AI 세션" data-memory-session-panel data-workflow-section="ai" data-workflow-section-state="muted" data-session-state="idle" data-session-source-memory="" data-session-related-memory-count="0">
             <div>
               <p class="eyebrow">기억 AI 세션</p>
               <h3>선택한 기억 하나로 질문 · 결정 · 주간 패턴을 이어서 실행</h3>
@@ -4202,6 +4274,11 @@ const GRAPH_CONTROL_SCRIPT = `
   const relatedInsightBridge = document.querySelector('[data-related-insight-bridge="diary-to-past-memory-actions"]');
   const relatedInsightReasonList = relatedInsightBridge?.querySelector('[data-related-insight-reason-list]');
   const relatedInsightActions = Array.from(document.querySelectorAll('[data-related-insight-action]'));
+  const flowFocusSwitcher = document.querySelector('[data-flow-focus-switcher="core-workflow"]');
+  const flowFocusLabel = flowFocusSwitcher?.querySelector('[data-flow-focus-label]');
+  const flowFocusSummary = flowFocusSwitcher?.querySelector('[data-flow-focus-summary]');
+  const flowFocusActions = Array.from(document.querySelectorAll('[data-flow-focus-action]'));
+  const workflowSections = Array.from(document.querySelectorAll('[data-workflow-section]'));
   const relatedMemoryWorkbench = document.querySelector('[data-related-memory-workbench="selected-diary-comparison"]');
   const relatedWorkbenchSourceLabel = relatedMemoryWorkbench?.querySelector('[data-related-workbench-source-label]');
   const relatedWorkbenchActiveLabel = relatedMemoryWorkbench?.querySelector('[data-related-workbench-active-label]');
@@ -4367,6 +4444,35 @@ const GRAPH_CONTROL_SCRIPT = `
 
   const setInteractionState = (value) => {
     shell.setAttribute('data-interaction-state', value);
+  };
+
+  const workflowFocusCopy = {
+    capture: {
+      label: '기록부터',
+      summary: '앱처럼 빠르게 쓰거나 일기 DB를 가져와 첫 기억을 만든다.',
+    },
+    graph: {
+      label: '세컨브레인 보기',
+      summary: '그래프에서 현재 기억과 연관 과거 기억 경로를 확인한다.',
+    },
+    ai: {
+      label: 'AI 결과',
+      summary: '질문, 결정 되짚기, 주간 패턴 결과와 저장 상태를 확인한다.',
+    },
+  };
+
+  const setWorkflowFocus = (focus) => {
+    focus = workflowFocusCopy[focus] ? focus : 'capture';
+    shell.setAttribute('data-workflow-focus', focus);
+    flowFocusSwitcher?.setAttribute('data-flow-focus-current', focus);
+    if (flowFocusLabel) flowFocusLabel.textContent = workflowFocusCopy[focus].label;
+    if (flowFocusSummary) flowFocusSummary.textContent = workflowFocusCopy[focus].summary;
+    workflowSections.forEach((section) => {
+      section.setAttribute('data-workflow-section-state', section.getAttribute('data-workflow-section') === focus ? 'focused' : 'muted');
+    });
+    flowFocusActions.forEach((button) => {
+      button.setAttribute('data-flow-focus-active', String(button.getAttribute('data-flow-focus-action') === focus));
+    });
   };
 
   const setMemoryReviewMode = (mode, shouldUpdateInteraction = true) => {
@@ -6800,6 +6906,14 @@ const GRAPH_CONTROL_SCRIPT = `
 
   spacingButtons.forEach((button) => {
     button.addEventListener('click', () => setSpacing(button.getAttribute('data-spacing') || 'normal'));
+  });
+
+  flowFocusActions.forEach((button) => {
+    button.addEventListener('click', () => {
+      const focus = button.getAttribute('data-flow-focus-action') || 'capture';
+      setWorkflowFocus(focus);
+      setInteractionState('workflow-focus-' + focus);
+    });
   });
 
   layoutButtons.forEach((button) => {
