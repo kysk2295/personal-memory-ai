@@ -771,6 +771,21 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
     Number(await attribute(page, '[data-graph-evidence-lens="selected-memory-path"]', 'data-graph-lens-highlighted-edge-count')) > 0,
     'Graph evidence lens should expose highlighted edge count',
   );
+  assert(
+    (await attribute(page, '[data-selected-memory-reader="graph-node-body"]', 'data-reader-selected-memory')) === firstCitation,
+    'Selected memory reader should open the clicked graph memory',
+  );
+  assert(
+    Number(await attribute(page, '[data-selected-memory-reader="graph-node-body"]', 'data-reader-related-count')) > 0,
+    'Selected memory reader should expose related past memory count',
+  );
+  assert(((await page.locator('[data-reader-title]').textContent()) || '').trim().length > 0, 'Selected memory reader should show a memory title');
+  assert(((await page.locator('[data-reader-body]').textContent()) || '').trim().length > 20, 'Selected memory reader should show memory body text');
+  await page.locator('[data-reader-action="focus-related"]').click();
+  assert((await attribute(page, '.second-brain-shell', 'data-interaction-state')) === 'reader-related-focused', 'Selected memory reader should focus related memories');
+  await page.locator('[data-reader-action="ask"]').click();
+  assert((await attribute(page, '.second-brain-shell', 'data-reader-last-action')) === 'ask', 'Selected memory reader should track Ask as its latest action');
+  assert((await attribute(page, '.second-brain-shell', 'data-ask-context-source-memory')) === firstCitation, 'Selected memory reader Ask should seed the selected memory as context');
   const relatedWorkbenchItems = page.locator('[data-related-workbench-memory-id]');
   const relatedWorkbenchItemCount = await relatedWorkbenchItems.count();
   assert(relatedWorkbenchItemCount > 0, 'Related memory comparison workbench should render selectable past memories');

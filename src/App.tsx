@@ -2007,6 +2007,72 @@ const APP_SHELL_STYLES = `
   .memory-session-steps strong[data-session-status-label] {
     color: #0f766e;
   }
+  .selected-memory-reader {
+    display: grid;
+    gap: 10px;
+    border: 1px solid rgba(143, 128, 255, 0.22);
+    border-radius: 8px;
+    background: rgba(248, 247, 255, 0.92);
+    box-shadow: 0 14px 32px rgba(130, 119, 214, 0.14);
+    padding: 12px;
+  }
+  .selected-memory-reader h3 {
+    margin: 2px 0 0;
+    color: #6255d7;
+    font-size: 15px;
+    line-height: 1.2;
+    letter-spacing: 0;
+  }
+  .selected-memory-reader p {
+    margin: 0;
+    color: #626a7c;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .selected-memory-reader .reader-source-row,
+  .selected-memory-reader .reader-state-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .selected-memory-reader .reader-source-row span,
+  .selected-memory-reader .reader-state-row span {
+    border: 1px solid rgba(143, 128, 255, 0.14);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.68);
+    color: #6f67c8;
+    padding: 5px 7px;
+    font-size: 10px;
+    font-weight: 760;
+  }
+  .selected-memory-reader .reader-body {
+    max-height: 128px;
+    overflow: auto;
+    border: 1px solid rgba(143, 128, 255, 0.12);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.72);
+    padding: 9px;
+  }
+  .reader-actions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+  .reader-actions button {
+    min-height: 31px;
+    border: 1px solid rgba(143, 128, 255, 0.18);
+    border-radius: 8px;
+    background: rgba(143, 128, 255, 0.09);
+    color: #6255d7;
+    padding: 6px 7px;
+    font-size: 10px;
+    font-weight: 780;
+  }
+  .reader-actions button[data-reader-action="session"] {
+    border-color: rgba(225, 29, 63, 0.28);
+    background: #e11d3f;
+    color: #ffffff;
+  }
   .ask-question-row,
   .decision-current-card {
     display: grid;
@@ -3070,6 +3136,29 @@ const APP_SHELL_STYLES = `
     background: rgba(255, 255, 255, 0.065);
     color: #f0f0f2;
   }
+  .selected-memory-reader {
+    border-color: rgba(255, 255, 255, 0.12);
+    background: rgba(14, 14, 14, 0.82);
+    box-shadow: 0 20px 48px rgba(0, 0, 0, 0.28);
+  }
+  .selected-memory-reader h3 {
+    color: #f1f1f1;
+  }
+  .selected-memory-reader p {
+    color: #adadb3;
+  }
+  .selected-memory-reader .reader-source-row span,
+  .selected-memory-reader .reader-state-row span,
+  .selected-memory-reader .reader-body {
+    border-color: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.055);
+    color: #d8d8db;
+  }
+  .reader-actions button {
+    border-color: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.065);
+    color: #f0f0f2;
+  }
   .citation-row a,
   .citation-ref[data-active="true"] {
     border-color: rgba(214, 31, 60, 0.36);
@@ -3967,6 +4056,28 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
         </div>
 
         <aside class="product-rail" aria-label="인용 기억 제품 레일" data-rail-mode="persistent-evidence-rail" data-benchmark-drawer-tab="AI 세션과 근거">
+          <section class="selected-memory-reader" data-selected-memory-reader="graph-node-body" data-reader-selected-memory="${escapeHtml(currentFlowMemoryId)}" data-reader-related-count="${currentFlowRelatedCount}" data-reader-last-action="none" aria-label="선택한 기억 원문과 근거">
+            <div class="panel-topline">
+              <span>선택 기억 원문</span>
+              <span class="status-badge">private</span>
+            </div>
+            <h3 data-reader-title>${escapeHtml(currentFlowEntry?.title ?? '그래프에서 기억을 선택하세요')}</h3>
+            <div class="reader-source-row" data-reader-source>
+              <span>${escapeHtml(currentFlowEntry?.observedAt ?? '선택 전')}</span>
+              <span>${escapeHtml(currentFlowEntry?.sourceLabel ?? 'source')}</span>
+              <span>${escapeHtml(currentFlowEntry?.memoryType ?? 'memory')}</span>
+            </div>
+            <p class="reader-body" data-reader-body>${escapeHtml(currentFlowEntry?.rawExcerpt ?? '노드를 누르면 일기 원문과 요약이 이 근거 레일에 열린다.')}</p>
+            <div class="reader-state-row" aria-label="선택 기억 상태">
+              <span data-reader-related-label>연관 과거 기억 · ${currentFlowRelatedCount}개</span>
+              <span data-reader-action-label>AI 실행 · 대기</span>
+            </div>
+            <div class="reader-actions" aria-label="선택 기억 바로 실행">
+              <button type="button" data-reader-action="focus-related">과거 비교</button>
+              <button type="button" data-reader-action="ask">이 기억으로 질문</button>
+              <button type="button" data-reader-action="session">AI 세션</button>
+            </div>
+          </section>
           <section class="memory-session-panel" aria-label="기억 AI 세션" data-memory-session-panel data-session-state="idle" data-session-source-memory="" data-session-related-memory-count="0">
             <div>
               <p class="eyebrow">기억 AI 세션</p>
@@ -4044,6 +4155,13 @@ const GRAPH_CONTROL_SCRIPT = `
   const relatedWorkbenchActiveLabel = relatedMemoryWorkbench?.querySelector('[data-related-workbench-active-label]');
   const relatedWorkbenchList = relatedMemoryWorkbench?.querySelector('[data-related-workbench-list]');
   const relatedWorkbenchActions = Array.from(document.querySelectorAll('[data-related-workbench-action]'));
+  const selectedMemoryReader = document.querySelector('[data-selected-memory-reader="graph-node-body"]');
+  const selectedMemoryReaderTitle = selectedMemoryReader?.querySelector('[data-reader-title]');
+  const selectedMemoryReaderSource = selectedMemoryReader?.querySelector('[data-reader-source]');
+  const selectedMemoryReaderBody = selectedMemoryReader?.querySelector('[data-reader-body]');
+  const selectedMemoryReaderRelatedLabel = selectedMemoryReader?.querySelector('[data-reader-related-label]');
+  const selectedMemoryReaderActionLabel = selectedMemoryReader?.querySelector('[data-reader-action-label]');
+  const selectedMemoryReaderActions = Array.from(document.querySelectorAll('[data-reader-action]'));
   const groundedActionResult = document.querySelector('[data-grounded-action-result="related-memory-ai"]');
   const groundedActionSummary = groundedActionResult?.querySelector('[data-grounded-action-summary]');
   const groundedActionSaveNext = groundedActionResult?.querySelector('[data-grounded-action-save-next]');
@@ -4597,6 +4715,57 @@ const GRAPH_CONTROL_SCRIPT = `
     }
   };
 
+  const updateSelectedMemoryReader = (detail = {}) => {
+    if (!selectedMemoryReader) return;
+    const selectedMemory =
+      detail.selectedMemory ||
+      detail.sourceMemoryId ||
+      shell.getAttribute('data-active-memory') ||
+      selectedMemoryReader.getAttribute('data-reader-selected-memory') ||
+      '';
+    const selectedNode = selectedMemory ? cytoscapeGraph?.getElementById('memory:' + selectedMemory) : null;
+    const title = detail.title || selectedNode?.data('graphLabel') || selectedNode?.data('label') || selectedMemory || '그래프에서 기억을 선택하세요';
+    const source = detail.source || [selectedNode?.data('sourceType'), selectedNode?.data('recordType'), selectedNode?.data('observedAt')].filter(Boolean).join(' · ');
+    const body = detail.body || selectedNode?.data('searchText') || selectedNode?.data('label') || '노드를 누르면 일기 원문과 요약이 이 근거 레일에 열린다.';
+    const relatedCount = String(
+      detail.relatedCount ??
+        shell.getAttribute('data-related-memory-count') ??
+        selectedMemoryReader.getAttribute('data-reader-related-count') ??
+        '0',
+    );
+    const lastAction = detail.lastAction || selectedMemoryReader.getAttribute('data-reader-last-action') || 'none';
+    selectedMemoryReader?.setAttribute('data-reader-selected-memory', selectedMemory);
+    selectedMemoryReader?.setAttribute('data-reader-related-count', relatedCount);
+    selectedMemoryReader?.setAttribute('data-reader-last-action', lastAction);
+    shell.setAttribute('data-reader-selected-memory', selectedMemory);
+    shell.setAttribute('data-reader-related-count', relatedCount);
+    shell.setAttribute('data-reader-last-action', lastAction);
+    if (selectedMemoryReaderTitle) selectedMemoryReaderTitle.textContent = title;
+    if (selectedMemoryReaderSource) {
+      selectedMemoryReaderSource.replaceChildren();
+      String(source || 'source')
+        .split(' · ')
+        .filter(Boolean)
+        .forEach((item) => {
+          const chip = document.createElement('span');
+          chip.textContent = item;
+          selectedMemoryReaderSource.append(chip);
+        });
+    }
+    if (selectedMemoryReaderBody) selectedMemoryReaderBody.textContent = body;
+    if (selectedMemoryReaderRelatedLabel) selectedMemoryReaderRelatedLabel.textContent = '연관 과거 기억 · ' + relatedCount + '개';
+    if (selectedMemoryReaderActionLabel) {
+      selectedMemoryReaderActionLabel.textContent =
+        lastAction === 'none'
+          ? 'AI 실행 · 대기'
+          : lastAction === 'ask'
+            ? 'AI 실행 · 질문'
+            : lastAction === 'session'
+              ? 'AI 실행 · 세션'
+              : 'AI 실행 · ' + lastAction;
+    }
+  };
+
   const renderRelatedMemoryWorkbench = (citation, related) => {
     if (!relatedMemoryWorkbench || !relatedWorkbenchList) return;
     relatedMemoryWorkbench.setAttribute('data-related-workbench-source', citation);
@@ -4741,6 +4910,11 @@ const GRAPH_CONTROL_SCRIPT = `
       citationCount: 0,
       saveState: 'idle',
     });
+    updateSelectedMemoryReader({
+      selectedMemory: citation,
+      relatedCount: related.length,
+      lastAction: 'none',
+    });
     updateGuidedServiceFlow('related', { sourceMemoryId: citation, relatedCount: related.length });
   };
 
@@ -4763,6 +4937,7 @@ const GRAPH_CONTROL_SCRIPT = `
     shell.setAttribute('data-ask-context-related-memories', relatedMemoryIds.join(','));
     updateSelectedAiActionCenter({ sourceMemoryId, relatedCount: relatedMemoryIds.length, lastAction: 'ask', actionState: 'ready', citationCount: 0, saveState: 'idle' });
     updateGraphEvidenceLens({ sourceMemoryId, relatedCount: relatedMemoryIds.length, lastAction: 'ask', citationCount: 0, saveState: 'idle' });
+    updateSelectedMemoryReader({ sourceMemoryId, relatedCount: relatedMemoryIds.length, lastAction: 'ask' });
     updateGuidedServiceFlow('ai', { sourceMemoryId, relatedCount: relatedMemoryIds.length });
     setInteractionState('ask-context-seeded-from-related-memories');
   };
@@ -4870,6 +5045,11 @@ const GRAPH_CONTROL_SCRIPT = `
           currentCitationList('data-live-replay-highlighted-memories').length +
           currentCitationList('data-live-weekly-highlighted-memories').length,
         saveState: state === 'completed' ? 'ready' : 'idle',
+      });
+      updateSelectedMemoryReader({
+        sourceMemoryId: context.sourceMemoryId,
+        relatedCount: context.relatedMemoryIds.length,
+        lastAction: 'session',
       });
     }
     if (memorySessionSaveButton && state === 'completed') {
@@ -5314,6 +5494,7 @@ const GRAPH_CONTROL_SCRIPT = `
     inspectorSource.textContent = source;
     inspectorBody.textContent = body;
     updateMemoryReviewSelection(citation, title, body, source);
+    updateSelectedMemoryReader({ selectedMemory: citation, title, source, body, lastAction: 'none' });
     if (inspectorCitations && citation) {
       inspectorCitations.innerHTML =
         '<a href="#evidence-' +
@@ -5413,6 +5594,13 @@ const GRAPH_CONTROL_SCRIPT = `
         inspectorSource.textContent = [data.sourceType, data.recordType, data.observedAt].filter(Boolean).join(' · ');
       }
       if (inspectorBody) inspectorBody.textContent = data.searchText || data.label || normalizedCitation;
+      updateSelectedMemoryReader({
+        selectedMemory: normalizedCitation,
+        title: data.graphLabel || data.label || normalizedCitation,
+        source: [data.sourceType, data.recordType, data.observedAt].filter(Boolean).join(' · '),
+        body: data.searchText || data.label || normalizedCitation,
+        lastAction: 'none',
+      });
       if (inspectorCitations) {
         inspectorCitations.innerHTML =
           '<a href="#evidence-' +
@@ -7443,6 +7631,29 @@ const GRAPH_CONTROL_SCRIPT = `
       if (action === 'run-session') {
         updateGraphEvidenceLens({ lastAction: 'session', saveState: 'idle' });
         setInteractionState('graph-lens-session-requested');
+        void runMemorySession();
+      }
+    });
+  });
+  selectedMemoryReaderActions.forEach((button) => {
+    button.addEventListener('click', () => {
+      const action = button.getAttribute('data-reader-action') || '';
+      selectedMemoryReader?.setAttribute('data-reader-last-action', action);
+      shell.setAttribute('data-reader-last-action', action);
+      if (action === 'focus-related') {
+        relatedMemoryWorkbench?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        setInteractionState('reader-related-focused');
+        return;
+      }
+      if (action === 'ask') {
+        updateSelectedMemoryReader({ lastAction: 'ask' });
+        askWithRelatedMemoryContext();
+        setInteractionState('reader-ask-ready');
+        return;
+      }
+      if (action === 'session') {
+        updateSelectedMemoryReader({ lastAction: 'session' });
+        setInteractionState('reader-session-requested');
         void runMemorySession();
       }
     });

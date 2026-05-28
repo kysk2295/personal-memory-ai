@@ -768,6 +768,18 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('data-action-center-state="replay"');
     expect(html).toContain('data-action-center-state="weekly"');
     expect(html).toContain('data-action-center-state="session"');
+    expect(html).toContain('data-selected-memory-reader="graph-node-body"');
+    expect(html).toContain('data-reader-selected-memory="mem_freeze_vs_feature_addition"');
+    expect(html).toContain('data-reader-related-count=');
+    expect(html).toContain('data-reader-last-action="none"');
+    expect(html).toContain('선택 기억 원문');
+    expect(html).toContain('data-reader-title');
+    expect(html).toContain('data-reader-source');
+    expect(html).toContain('data-reader-body');
+    expect(html).toContain('data-reader-related-label');
+    expect(html).toContain('data-reader-action="focus-related"');
+    expect(html).toContain('data-reader-action="ask"');
+    expect(html).toContain('data-reader-action="session"');
 
     expect(html).toContain('class="product-rail"');
     expect(html).toContain('빠른 일기 기록');
@@ -1014,6 +1026,11 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(documentHtml).toContain("memoryPathPast.textContent = related.length ? related[0].label : '연관 과거 기억 없음'");
     expect(documentHtml).toContain("pathChip.setAttribute('data-selected-path-related-memory-id', item.id)");
     expect(documentHtml).toContain("const relatedMemoryWorkbench = document.querySelector('[data-related-memory-workbench=\"selected-diary-comparison\"]')");
+    expect(documentHtml).toContain("const selectedMemoryReader = document.querySelector('[data-selected-memory-reader=\"graph-node-body\"]')");
+    expect(documentHtml).toContain('const updateSelectedMemoryReader = (detail = {}) =>');
+    expect(documentHtml).toContain("selectedMemoryReader?.setAttribute('data-reader-selected-memory'");
+    expect(documentHtml).toContain("selectedMemoryReader?.setAttribute('data-reader-related-count'");
+    expect(documentHtml).toContain("selectedMemoryReaderActions.forEach((button) =>");
     expect(documentHtml).toContain("const graphEvidenceLens = document.querySelector('[data-graph-evidence-lens=\"selected-memory-path\"]')");
     expect(documentHtml).toContain('const updateGraphEvidenceLens = (detail = {}) =>');
     expect(documentHtml).toContain("graphEvidenceLens?.setAttribute('data-graph-lens-selected-memory'");
