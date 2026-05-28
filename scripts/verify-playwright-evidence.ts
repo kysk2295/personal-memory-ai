@@ -163,12 +163,17 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   assert((await attribute(page, '.second-brain-shell', 'data-interaction-state')) === 'intake-notion-diary-ready', 'Intake Notion action should prepare diary database import');
   const intakeDraft = `오늘 회의에서 또 혼자 해결하려는 마음이 올라왔다 ${Date.now()}`;
   await page.locator('[data-control="intake-diary-draft"]').fill(intakeDraft);
-  await page.locator('[data-control="intake-preview-diary"]').click();
-  await page.waitForFunction(() => document.querySelector('[data-import-upload-panel="local-file"]')?.getAttribute('data-import-upload-state') === 'preview-ready');
-  assert((await attribute(page, '[data-memory-intake-hub="app-web-diary"]', 'data-intake-draft-state')) === 'preview-requested', 'Intake draft preview should update hub draft state');
-  assert((await attribute(page, '.second-brain-shell', 'data-interaction-state')) === 'import-preview-ready', 'Intake draft preview should reuse the import preview pipeline');
+  await page.locator('[data-control="intake-apply-diary"]').click();
+  await page.waitForFunction(() => document.querySelector('[data-import-upload-panel="local-file"]')?.getAttribute('data-import-upload-state') === 'applied');
+  assert((await attribute(page, '[data-memory-intake-hub="app-web-diary"]', 'data-intake-last-action')) === 'apply-diary', 'Intake draft apply should update hub action state');
+  assert((await attribute(page, '[data-memory-intake-hub="app-web-diary"]', 'data-intake-draft-state')) === 'applied', 'Intake draft apply should create and apply a graph-ready import');
+  assert((await attribute(page, '[data-memory-intake-hub="app-web-diary"]', 'data-intake-result')) === 'graph-applied', 'Intake draft apply should mark the first-screen handoff as graph-applied');
+  assert((await attribute(page, '.second-brain-shell', 'data-interaction-state')) === 'import-applied', 'Intake draft apply should reuse the import apply pipeline');
   assert((await page.locator('[data-control="local-import-paste-text"]').inputValue()) === intakeDraft, 'Intake draft should sync into the private import paste field');
-  assert((await attribute(page, '[data-import-upload-panel="local-file"]', 'data-import-upload-candidate-count')) === '1', 'Intake draft preview should create one import candidate');
+  assert((await attribute(page, '[data-import-upload-panel="local-file"]', 'data-import-upload-candidate-count')) === '1', 'Intake draft apply should create one import candidate');
+  assert((await page.locator('[data-import-applied-memory-id]').count()) >= 1, 'Intake draft apply should surface at least one applied memory id');
+  const intakeAppliedMemoryId = await page.locator('[data-import-applied-memory-id]').first().getAttribute('data-import-applied-memory-id');
+  assert(Boolean(intakeAppliedMemoryId), 'Intake draft apply should expose the applied memory id');
   const initialMemoryNodeCount = Number(await attribute(page, '.second-brain-shell', 'data-memory-node-count'));
   const initialRenderedMemoryNodeCount = Number(await attribute(page, '.second-brain-shell', 'data-rendered-memory-node-count'));
   const initialGraphNodeCount = Number(await attribute(page, '.second-brain-shell', 'data-graph-node-count'));
@@ -221,7 +226,7 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   assert((await attribute(page, '[data-save-artifact-action="weekly_report"]', 'data-artifact-save-endpoint')) === '/api/capture', 'Expected saved artifact action to expose capture endpoint');
   assert((await attribute(page, '[data-feedback-panel="user-correction"]', 'data-feedback-state')) === 'ready', 'Expected feedback panel to start ready');
   assert((await attribute(page, '[data-feedback-panel="user-correction"]', 'data-feedback-endpoint')) === '/api/feedback', 'Expected feedback panel to target feedback API');
-  assert((await attribute(page, '[data-import-upload-panel="local-file"]', 'data-import-upload-state')) === 'preview-ready', 'Expected intake draft preview to prepare the local import upload panel');
+  assert((await attribute(page, '[data-import-upload-panel="local-file"]', 'data-import-upload-state')) === 'applied', 'Expected intake draft apply to finish the local import upload pipeline');
   assert((await attribute(page, '[data-import-upload-panel="local-file"]', 'data-import-preview-endpoint')) === '/api/import/preview', 'Expected local import upload panel to target import preview API');
   assert((await attribute(page, '[data-import-upload-panel="local-file"]', 'data-import-apply-endpoint')) === '/api/import/apply', 'Expected local import upload panel to target import apply API');
   assert(Number(await attribute(page, '[data-memory-timeline-panel="pmi025"]', 'data-timeline-entry-count')) >= 8, 'Expected timeline panel to render private memories');
@@ -230,8 +235,8 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
     'Expected saved artifacts to render as timeline memories',
   );
   assert(
-    (await attribute(page, '[data-timeline-memory-id="mem_freeze_vs_feature_addition"]', 'data-timeline-active')) === 'true',
-    'Expected default selected memory to be active in the timeline',
+    (await attribute(page, `[data-timeline-memory-id="${intakeAppliedMemoryId}"]`, 'data-timeline-active')) === 'true',
+    'Expected applied intake memory to be active in the timeline',
   );
 
   const graphStats = await page.evaluate(() => {
@@ -349,6 +354,7 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   assert((await attribute(page, '.second-brain-shell', 'data-interaction-state')) === 'feedback-submitted', 'Shell should expose feedback submitted state');
 
   const importNonce = `playwright-${Date.now()}`;
+  const importedTimelineRowsBeforeLocalImport = await page.locator('[data-imported-memory="true"]').count();
   await page
     .locator('[data-control="local-import-paste-text"]')
     .fill(`Imported local memory ${importNonce} says I should cut scope before adding another visual feature.`);
@@ -361,7 +367,10 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   assert((await attribute(page, '.second-brain-shell', 'data-interaction-state')) === 'import-applied', 'Shell should expose local import apply state');
   assert((await attribute(page, '[data-import-applied-feedback="local-upload"]', 'data-import-applied-count')) === '1', 'Applied import feedback should expose created memory count');
   assert((await page.locator('[data-import-applied-memory-id]').count()) === 1, 'Applied import feedback should render created memory rows');
-  assert((await page.locator('[data-imported-memory="true"]').count()) === 1, 'Applied import should append an imported timeline row');
+  assert(
+    (await page.locator('[data-imported-memory="true"]').count()) === importedTimelineRowsBeforeLocalImport + 1,
+    'Applied import should append one imported timeline row',
+  );
   assert((await attribute(page, '.second-brain-shell', 'data-graph-import-pending')) === 'true', 'Shell should mark graph import refresh pending after apply');
   assert((await attribute(page, '.second-brain-shell', 'data-graph-rehydrate-state')) === 'ready', 'Shell should rehydrate app shell data after import apply');
   assert((await attribute(page, '.second-brain-shell', 'data-graph-rebuild-state')) === 'rebuilt', 'Shell should rebuild Cytoscape after import rehydration');

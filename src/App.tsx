@@ -2566,6 +2566,7 @@ const GRAPH_CONTROL_SCRIPT = `
   let lastAskFollowUpContext = null;
   let lastReplayRelatedContext = null;
   let lastWeeklyRelatedContext = null;
+  let pendingIntakeApplyAfterPreview = false;
 
   const setInteractionState = (value) => {
     shell.setAttribute('data-interaction-state', value);
@@ -2608,7 +2609,8 @@ const GRAPH_CONTROL_SCRIPT = `
     if (!citation) return;
     shell.setAttribute('data-timeline-active-memory', citation);
     if (timelinePanel) timelinePanel.setAttribute('data-timeline-active-memory', citation);
-    timelineItems.forEach((item) => {
+    const currentTimelineItems = Array.from(timelinePanel?.querySelectorAll('[data-control="timeline-select-memory"]') || timelineItems);
+    currentTimelineItems.forEach((item) => {
       item.setAttribute('data-timeline-active', String(item.getAttribute('data-timeline-memory-id') === citation));
     });
   };
@@ -4420,6 +4422,11 @@ const GRAPH_CONTROL_SCRIPT = `
       importUploadPanel.setAttribute('data-import-upload-state', 'preview-ready');
       importApplyButton?.removeAttribute('disabled');
       setInteractionState('import-preview-ready');
+      if (pendingIntakeApplyAfterPreview) {
+        pendingIntakeApplyAfterPreview = false;
+        memoryIntakeHub?.setAttribute('data-intake-draft-state', 'preview-ready');
+        importApplyButton?.click();
+      }
     } catch (error) {
       importUploadPanel.setAttribute('data-import-upload-state', 'error');
       shell.setAttribute('data-import-upload-error', String(error?.message || error));
@@ -4447,6 +4454,10 @@ const GRAPH_CONTROL_SCRIPT = `
         await rehydrateAppShellAfterImport(body.createdMemoryIds?.[0] || '');
       }
       importUploadPanel.setAttribute('data-import-upload-state', 'applied');
+      if (memoryIntakeHub?.getAttribute('data-intake-last-action') === 'apply-diary') {
+        memoryIntakeHub?.setAttribute('data-intake-draft-state', 'applied');
+        memoryIntakeHub?.setAttribute('data-intake-result', 'graph-applied');
+      }
       setInteractionState('import-applied');
     } catch (error) {
       importUploadPanel.setAttribute('data-import-upload-state', 'error');
@@ -4620,6 +4631,7 @@ const GRAPH_CONTROL_SCRIPT = `
     memoryIntakeHub?.setAttribute('data-intake-draft-state', 'apply-requested');
     shell.setAttribute('data-intake-last-action', 'apply-diary');
     if (importApplyButton?.hasAttribute('disabled')) {
+      pendingIntakeApplyAfterPreview = true;
       importPreviewButton?.click();
     } else {
       importApplyButton?.click();

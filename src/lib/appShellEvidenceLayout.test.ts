@@ -720,6 +720,11 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(documentHtml).toContain("importPasteText.value = intakeDiaryDraft.value");
     expect(documentHtml).toContain("memoryIntakeHub?.setAttribute('data-intake-draft-state', 'preview-requested')");
     expect(documentHtml).toContain("memoryIntakeHub?.setAttribute('data-intake-draft-state', 'apply-requested')");
+    expect(documentHtml).toContain('let pendingIntakeApplyAfterPreview = false');
+    expect(documentHtml).toContain('pendingIntakeApplyAfterPreview = true');
+    expect(documentHtml).toContain("memoryIntakeHub?.setAttribute('data-intake-draft-state', 'applied')");
+    expect(documentHtml).toContain('importApplyButton?.click()');
+    expect(documentHtml).toContain("timelinePanel?.querySelectorAll('[data-control=\"timeline-select-memory\"]')");
     expect(documentHtml).toContain("setInteractionState('intake-paste-diary-focused')");
     expect(documentHtml).toContain("setInteractionState('intake-notion-diary-ready')");
     expect(documentHtml).toContain('const applyMemorySearch = (query) =>');
