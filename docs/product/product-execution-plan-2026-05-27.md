@@ -234,6 +234,7 @@ No remote push, main merge, production deploy, or secret access is allowed witho
 - L84: related-memory Weekly Report context handoff.
 - L85: related context API grounding.
 - L86: related context result evidence.
+- L87: guided memory session.
 
 ## 6. Active Next Loops
 
@@ -1656,6 +1657,22 @@ Acceptance:
 - Decision Replay results expose the selected source memory and related-memory count as result evidence
 - Weekly Report results expose the selected source memory and related-memory count as result evidence
 - Playwright verifies the graph selection, context action, live API call, and result evidence marker
+
+Implemented:
+
+- `src/App.tsx`
+- `scripts/verify-playwright-evidence.ts`
+
+### L87 — Guided Memory Session
+
+Goal: let a user select one diary memory, see related past memories, and run Ask, Decision Replay, and Weekly Report as one guided memory session.
+
+Acceptance:
+
+- selected-memory inspector exposes a single Run Memory Session action
+- session action carries the selected source memory and related memory ids through Ask, Decision Replay, and Weekly Report
+- session panel shows source memory, related memory count, and step states for Ask/Replay/Weekly
+- Playwright verifies the full graph selection to guided session completion path
 
 Implemented:
 

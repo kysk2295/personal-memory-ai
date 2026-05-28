@@ -394,6 +394,32 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
       Number(await attribute(page, '[data-context-result="weekly-related"]', 'data-context-related-memory-count')) > 0,
       'Weekly Report result should render a related-context evidence badge',
     );
+    await page.locator('[data-control="run-memory-session"]').click();
+    await page.waitForFunction(
+      () => document.querySelector('.second-brain-shell')?.getAttribute('data-memory-session-state') === 'completed',
+      null,
+      { timeout: 20_000 },
+    );
+    assert(
+      (await attribute(page, '[data-memory-session-panel]', 'data-session-source-memory')) === firstCitation,
+      'Guided memory session should keep selected source memory',
+    );
+    assert(
+      Number(await attribute(page, '[data-memory-session-panel]', 'data-session-related-memory-count')) > 0,
+      'Guided memory session should keep related memories',
+    );
+    assert(
+      (await attribute(page, '[data-memory-session-step="ask"]', 'data-session-step-state')) === 'completed',
+      'Guided memory session should complete Ask',
+    );
+    assert(
+      (await attribute(page, '[data-memory-session-step="replay"]', 'data-session-step-state')) === 'completed',
+      'Guided memory session should complete Decision Replay',
+    );
+    assert(
+      (await attribute(page, '[data-memory-session-step="weekly"]', 'data-session-step-state')) === 'completed',
+      'Guided memory session should complete Weekly Report',
+    );
   }
 
   await page.locator('[data-filter-chip="semantic"]').click();
@@ -629,6 +655,7 @@ try {
           'live weekly report api response',
           'live weekly report graph highlight',
           'live weekly report related-context result evidence',
+          'guided memory session',
           'saved artifact action',
           'saved artifact persistence manifest',
           'feedback correction action',

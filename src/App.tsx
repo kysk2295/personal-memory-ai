@@ -579,6 +579,11 @@ const APP_SHELL_STYLES = `
     font-size: 10px;
     font-weight: 760;
   }
+  .related-memory-action.primary {
+    border-color: rgba(225, 29, 63, 0.28);
+    background: #e11d3f;
+    color: #ffffff;
+  }
   .related-memory-chip {
     border: 1px solid rgba(97, 102, 125, 0.14);
     border-radius: 999px;
@@ -718,6 +723,43 @@ const APP_SHELL_STYLES = `
   }
   .result-context-evidence span {
     overflow-wrap: anywhere;
+  }
+  .memory-session-panel {
+    display: grid;
+    gap: 10px;
+    border: 1px solid rgba(20, 184, 166, 0.2);
+    border-radius: 8px;
+    background: rgba(240, 253, 250, 0.84);
+    padding: 12px;
+  }
+  .memory-session-panel h3 {
+    margin: 0;
+    color: #0f766e;
+    font-size: 15px;
+    line-height: 1.2;
+  }
+  .memory-session-panel p {
+    margin: 0;
+    color: #4b635f;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .memory-session-steps {
+    display: grid;
+    gap: 7px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .memory-session-steps li {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    border-top: 1px solid rgba(20, 184, 166, 0.16);
+    padding-top: 7px;
+    color: #0f766e;
+    font-size: 11px;
+    font-weight: 760;
   }
   .ask-question-row,
   .decision-current-card {
@@ -1899,12 +1941,25 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
               <button type="button" class="related-memory-action" data-control="ask-with-related-memory-context">이 맥락으로 Ask</button>
               <button type="button" class="related-memory-action" data-control="replay-with-related-memory-context">이 맥락으로 Decision</button>
               <button type="button" class="related-memory-action" data-control="report-with-related-memory-context">이 맥락으로 Weekly</button>
+              <button type="button" class="related-memory-action primary" data-control="run-memory-session">Run Memory Session</button>
             </div>
             <div class="citation-row" aria-label="Ask My Past Self citations" data-inspector-citations>${citationLinks}</div>
           </article>
         </div>
 
         <aside class="product-rail" aria-label="Cited memory product rail" data-rail-mode="collapsed-evidence-drawer" data-benchmark-drawer-tab="evidence-reports">
+          <section class="memory-session-panel" aria-label="Guided Memory Session" data-memory-session-panel data-session-state="idle" data-session-source-memory="" data-session-related-memory-count="0">
+            <div>
+              <p class="eyebrow">Guided Memory Session</p>
+              <h3>선택한 기억 하나로 Ask · Decision · Weekly를 이어서 실행</h3>
+            </div>
+            <p data-memory-session-summary>그래프에서 기억을 선택하면 관련 과거 기억을 같은 맥락으로 묶어 세 가지 AI 작업을 한 번에 실행한다.</p>
+            <ol class="memory-session-steps" aria-label="Guided memory session steps">
+              <li data-memory-session-step="ask" data-session-step-state="idle"><span>Ask</span><strong>idle</strong></li>
+              <li data-memory-session-step="replay" data-session-step-state="idle"><span>Decision Replay</span><strong>idle</strong></li>
+              <li data-memory-session-step="weekly" data-session-step-state="idle"><span>Weekly Report</span><strong>idle</strong></li>
+            </ol>
+          </section>
           ${renderAskMyPastSelfPanel(layout)}
           ${renderPrivacyControlPanel(layout)}
           ${renderUserFeedbackPanel(layout)}
@@ -1942,6 +1997,7 @@ const GRAPH_CONTROL_SCRIPT = `
   const askWithRelatedMemoryButton = inspector?.querySelector('[data-control="ask-with-related-memory-context"]');
   const replayWithRelatedMemoryButton = inspector?.querySelector('[data-control="replay-with-related-memory-context"]');
   const reportWithRelatedMemoryButton = inspector?.querySelector('[data-control="report-with-related-memory-context"]');
+  const runMemorySessionButton = inspector?.querySelector('[data-control="run-memory-session"]');
   const askForm = document.querySelector('[data-ask-endpoint]');
   const askEndpoint = askForm?.getAttribute('data-ask-endpoint') || '';
   const askQuestionInput = askForm?.querySelector('input[name="question"]');
@@ -2007,6 +2063,8 @@ const GRAPH_CONTROL_SCRIPT = `
   const weeklyReportPanel = document.querySelector('[data-weekly-report-endpoint]');
   const weeklyReportRefreshButton = document.querySelector('[data-control="refresh-weekly-report"]');
   const weeklyReportSummary = document.querySelector('[data-live-weekly-result="summary"]');
+  const memorySessionPanel = document.querySelector('[data-memory-session-panel]');
+  const memorySessionSummary = document.querySelector('[data-memory-session-summary]');
   let cytoscapeGraph = null;
   let layoutVersion = Number(shell.getAttribute('data-layout-version') || '0');
   let lastLocalImportPreview = null;
@@ -2339,6 +2397,39 @@ const GRAPH_CONTROL_SCRIPT = `
     shell.setAttribute('data-weekly-context-related-memory-count', String(relatedMemoryIds.length));
     shell.setAttribute('data-weekly-context-related-memories', relatedMemoryIds.join(','));
     setInteractionState('weekly-context-seeded-from-related-memories');
+  };
+
+  const getSelectedRelatedMemoryContext = () => {
+    const sourceMemoryId = shell.getAttribute('data-active-memory') || '';
+    const relatedMemoryIds = Array.from(relatedMemoryList?.querySelectorAll('[data-related-memory-id]') || [])
+      .map((item) => item.getAttribute('data-related-memory-id') || '')
+      .filter(Boolean);
+    if (!sourceMemoryId || !relatedMemoryIds.length) return null;
+    return { sourceMemoryId, relatedMemoryIds };
+  };
+
+  const setMemorySessionStep = (step, state) => {
+    const item = memorySessionPanel?.querySelector('[data-memory-session-step="' + step + '"]');
+    if (!item) return;
+    item.setAttribute('data-session-step-state', state);
+    const status = item.querySelector('strong');
+    if (status) status.textContent = state;
+  };
+
+  const setMemorySessionState = (state, context) => {
+    memorySessionPanel?.setAttribute('data-session-state', state);
+    shell.setAttribute('data-memory-session-state', state);
+    if (context?.sourceMemoryId) {
+      memorySessionPanel?.setAttribute('data-session-source-memory', context.sourceMemoryId);
+      memorySessionPanel?.setAttribute('data-session-related-memory-count', String(context.relatedMemoryIds.length));
+      memorySessionPanel?.setAttribute('data-session-related-memories', context.relatedMemoryIds.join(','));
+      shell.setAttribute('data-memory-session-source-memory', context.sourceMemoryId);
+      shell.setAttribute('data-memory-session-related-memory-count', String(context.relatedMemoryIds.length));
+    }
+    if (memorySessionSummary && context?.sourceMemoryId) {
+      memorySessionSummary.textContent =
+        context.sourceMemoryId + ' 기억과 관련 과거 기억 ' + String(context.relatedMemoryIds.length) + '개로 Ask, Decision Replay, Weekly Report를 실행한다.';
+    }
   };
 
   const selectMemory = (node) => {
@@ -3017,6 +3108,59 @@ const GRAPH_CONTROL_SCRIPT = `
       setInteractionState('ask-error');
     } finally {
       askSubmit?.setAttribute('aria-busy', 'false');
+    }
+  };
+
+  const waitForShellState = (name, value) =>
+    new Promise((resolve, reject) => {
+      const startedAt = Date.now();
+      const tick = () => {
+        if (shell.getAttribute(name) === value) {
+          resolve(true);
+          return;
+        }
+        if (Date.now() - startedAt > 12000) {
+          reject(new Error('timed out waiting for ' + name + '=' + value));
+          return;
+        }
+        window.setTimeout(tick, 80);
+      };
+      tick();
+    });
+
+  const runMemorySession = async () => {
+    const context = getSelectedRelatedMemoryContext();
+    if (!context || window.location.protocol === 'file:') return;
+    setMemorySessionState('running', context);
+    setMemorySessionStep('ask', 'running');
+    setMemorySessionStep('replay', 'idle');
+    setMemorySessionStep('weekly', 'idle');
+    runMemorySessionButton?.setAttribute('aria-busy', 'true');
+    try {
+      askWithRelatedMemoryContext();
+      await askSecondBrain();
+      await waitForShellState('data-ask-state', 'answered');
+      setMemorySessionStep('ask', 'completed');
+
+      setMemorySessionStep('replay', 'running');
+      replayWithRelatedMemoryContext();
+      await replayCurrentDecision();
+      await waitForShellState('data-replay-state', 'answered');
+      setMemorySessionStep('replay', 'completed');
+
+      setMemorySessionStep('weekly', 'running');
+      reportWithRelatedMemoryContext();
+      await refreshWeeklyReport();
+      await waitForShellState('data-weekly-report-state', 'ready');
+      setMemorySessionStep('weekly', 'completed');
+      setMemorySessionState('completed', context);
+      setInteractionState('memory-session-completed');
+    } catch (error) {
+      setMemorySessionState('error', context);
+      shell.setAttribute('data-memory-session-error', String(error?.message || error));
+      setInteractionState('memory-session-error');
+    } finally {
+      runMemorySessionButton?.setAttribute('aria-busy', 'false');
     }
   };
 
@@ -3781,6 +3925,7 @@ const GRAPH_CONTROL_SCRIPT = `
   askWithRelatedMemoryButton?.addEventListener('click', askWithRelatedMemoryContext);
   replayWithRelatedMemoryButton?.addEventListener('click', replayWithRelatedMemoryContext);
   reportWithRelatedMemoryButton?.addEventListener('click', reportWithRelatedMemoryContext);
+  runMemorySessionButton?.addEventListener('click', () => void runMemorySession());
   if (memoryNodes[2]) selectMemory(memoryNodes[2]);
   wireReviewComparisonButtons();
   initializeCytoscapeGraph();
