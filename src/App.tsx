@@ -4267,6 +4267,7 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
             </div>
           </div>
           <div class="memory-intake-notion-actions" aria-label="습관리스트 Notion DB 인입">
+            <button type="button" data-control="intake-import-notion-diary-db" data-intake-diary-db-name="습관리스트">습관리스트 바로 가져오기</button>
             <button type="button" data-control="intake-find-notion-source">습관리스트 소스 찾기</button>
             <button type="button" data-control="intake-preview-notion-diary">습관리스트 미리보기</button>
             <button type="button" data-control="intake-apply-notion-diary">Notion 그래프 적용</button>
@@ -4760,6 +4761,7 @@ const GRAPH_CONTROL_SCRIPT = `
   const intakeFindNotionSourceButton = document.querySelector('[data-control="intake-find-notion-source"]');
   const intakePreviewNotionButton = document.querySelector('[data-control="intake-preview-notion-diary"]');
   const intakeApplyNotionButton = document.querySelector('[data-control="intake-apply-notion-diary"]');
+  const intakeImportNotionDiaryButton = document.querySelector('[data-control="intake-import-notion-diary-db"]');
   const intakeSessionResult = document.querySelector('[data-intake-session-result="applied-memory"]');
   const intakeResultTitle = intakeSessionResult?.querySelector('[data-intake-result-title]');
   const intakeResultSummary = intakeSessionResult?.querySelector('[data-intake-result-summary]');
@@ -6474,7 +6476,11 @@ const GRAPH_CONTROL_SCRIPT = `
     memoryIntakeHub?.setAttribute('data-intake-result', 'notion-' + state);
     memoryIntakeHub?.setAttribute('data-intake-next-step', state === 'preview-ready' ? 'notion-apply-ready' : state);
     intakeSessionResult?.setAttribute('data-intake-next-step', state === 'preview-ready' ? 'notion-apply-ready' : state);
-    updateDiaryGraphHandoffMap({ route: 'notion-diary-db', stage: 'notion-ready', aiState: 'idle' });
+    updateDiaryGraphHandoffMap({
+      route: 'notion-diary-db',
+      stage: state === 'imported' ? 'applied' : 'notion-ready',
+      aiState: state === 'imported' || state === 'preview-ready' ? 'ready' : 'idle',
+    });
     if (intakeResultTitle) {
       intakeResultTitle.textContent =
         state === 'token-required'
@@ -6489,6 +6495,8 @@ const GRAPH_CONTROL_SCRIPT = `
               ? '습관리스트 소스를 선택했다'
             : state === 'preview-ready'
               ? '습관리스트 미리보기가 준비됐다'
+            : state === 'imported'
+              ? '습관리스트 일기 DB를 그래프에 적용했다'
               : '습관리스트를 불러오는 중이다';
     }
     if (intakeResultSummary) {
@@ -6506,6 +6514,8 @@ const GRAPH_CONTROL_SCRIPT = `
               ? '선택한 습관리스트 소스로 미리보기를 만들거나 바로 그래프 적용을 실행할 수 있다.'
             : state === 'preview-ready'
               ? '미리보기 후보를 확인했다. Notion 그래프 적용을 누르면 비공개 기억 그래프에 반영된다.'
+            : state === 'imported'
+              ? 'Notion 일기 DB에서 가져온 기억을 선택하고 연관 과거 기억과 AI 작업대를 준비했다.'
               : '습관리스트 일기 DB 미리보기를 준비한다.');
     }
   };
@@ -9094,6 +9104,118 @@ const GRAPH_CONTROL_SCRIPT = `
     setIntakeFlowStepState('save', 'idle');
     setIntakeNotionState('loading');
   };
+  const waitForAttributeState = (element, attributeName, acceptedStates, timeoutMs = 12000) =>
+    new Promise((resolve) => {
+      const startedAt = Date.now();
+      const waitForState = () => {
+        const state = element?.getAttribute(attributeName) || '';
+        if (acceptedStates.includes(state) || Date.now() - startedAt > timeoutMs) {
+          resolve(state || 'timeout');
+          return;
+        }
+        window.setTimeout(waitForState, 80);
+      };
+      waitForState();
+    });
+  const waitForNotionApply = (timeoutMs = 16000) =>
+    new Promise((resolve) => {
+      const startedAt = Date.now();
+      const waitForApplied = () => {
+        const uploadState = importUploadPanel?.getAttribute('data-import-upload-state') || '';
+        const intakeResult = memoryIntakeHub?.getAttribute('data-intake-result') || '';
+        if ((uploadState === 'applied' && intakeResult === 'notion-graph-applied') || uploadState === 'error' || Date.now() - startedAt > timeoutMs) {
+          resolve(uploadState === 'applied' && intakeResult === 'notion-graph-applied' ? 'applied' : uploadState || 'timeout');
+          return;
+        }
+        window.setTimeout(waitForApplied, 100);
+      };
+      waitForApplied();
+    });
+  const waitForImportApplyReady = (timeoutMs = 4000) =>
+    new Promise((resolve) => {
+      const startedAt = Date.now();
+      const waitForReady = () => {
+        if (importApplyButton && !importApplyButton.hasAttribute('disabled')) {
+          resolve('ready');
+          return;
+        }
+        if (Date.now() - startedAt > timeoutMs) {
+          resolve('timeout');
+          return;
+        }
+        window.setTimeout(waitForReady, 40);
+      };
+      waitForReady();
+    });
+  const setOneClickNotionState = (state) => {
+    memoryIntakeHub?.setAttribute('data-intake-one-click-notion-state', state);
+    shell.setAttribute('data-intake-one-click-notion-state', state);
+  };
+  const importNotionDiaryDatabase = async () => {
+    if (!memoryIntakeHub || !notionImportPanel) return;
+    prepareNotionDiaryIntake('import-notion-diary-db');
+    setOneClickNotionState('searching');
+    setInteractionState('intake-notion-diary-import-started');
+    notionSourcesButton?.click();
+    const sourceState = await waitForAttributeState(notionImportPanel, 'data-notion-sources-state', [
+      'ready',
+      'token-required',
+      'source-required',
+      'rate-limited',
+      'error',
+    ]);
+    if (sourceState === 'token-required' || sourceState === 'source-required' || sourceState === 'rate-limited' || sourceState === 'error') {
+      setOneClickNotionState(sourceState === 'error' ? 'error' : sourceState);
+      setIntakeNotionState(sourceState === 'error' ? 'source-required' : sourceState);
+      return;
+    }
+    if (!memoryIntakeHub.getAttribute('data-intake-selected-notion-source')) {
+      setOneClickNotionState('source-required');
+      setIntakeNotionState('source-required');
+      return;
+    }
+    setOneClickNotionState('previewing');
+    notionImportPreviewButton?.click();
+    const previewState = await waitForAttributeState(notionImportPanel, 'data-notion-import-state', [
+      'preview-ready',
+      'token-required',
+      'source-required',
+      'rate-limited',
+      'error',
+    ]);
+    if (previewState === 'token-required' || previewState === 'source-required' || previewState === 'rate-limited' || previewState === 'error') {
+      setOneClickNotionState(previewState === 'error' ? 'error' : previewState);
+      setIntakeNotionState(previewState === 'error' ? 'source-required' : previewState);
+      return;
+    }
+    setOneClickNotionState('preview-ready');
+    memoryIntakeHub.setAttribute('data-intake-last-action', 'apply-notion-diary');
+    shell.setAttribute('data-intake-last-action', 'apply-notion-diary');
+    setOneClickNotionState('applying');
+    await waitForImportApplyReady();
+    importApplyButton?.click();
+    const applyState = await waitForNotionApply();
+    if (applyState !== 'applied') {
+      setOneClickNotionState('error');
+      setIntakeNotionState('source-required');
+      return;
+    }
+    const importedMemoryId = intakeSessionResult?.getAttribute('data-intake-applied-memory') || shell.getAttribute('data-import-session-source-memory') || '';
+    const relatedCount = intakeSessionResult?.getAttribute('data-intake-related-memory-count') || shell.getAttribute('data-related-memory-count') || '0';
+    setOneClickNotionState('imported');
+    setIntakeNotionState('imported');
+    updateUseNowRouteBoard({
+      state: 'related',
+      sourceMemoryId: importedMemoryId,
+      relatedCount,
+      aiState: 'ready',
+      saveState: 'idle',
+    });
+    setInteractionState('intake-notion-diary-imported');
+  };
+  intakeImportNotionDiaryButton?.addEventListener('click', () => {
+    void importNotionDiaryDatabase();
+  });
   intakeFindNotionSourceButton?.addEventListener('click', () => {
     prepareNotionDiaryIntake('find-notion-source');
     notionSourcesButton?.click();

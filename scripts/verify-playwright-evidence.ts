@@ -267,58 +267,92 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   assert((await attribute(page, '[data-notion-import-panel="database"]', 'data-notion-source-scope')) === 'diary-only', 'Notion intake should remain diary scoped');
   assert((await page.locator('[data-control="notion-database-id"]').inputValue()) === '습관리스트', 'Notion diary intake should prefill the 습관리스트 database cue');
   assert((await attribute(page, '.second-brain-shell', 'data-interaction-state')) === 'intake-notion-diary-ready', 'Intake Notion action should prepare diary database import');
-  await page.locator('[data-control="intake-find-notion-source"]').click();
-  assert((await attribute(page, '[data-memory-intake-hub="app-web-diary"]', 'data-intake-last-action')) === 'find-notion-source', 'First-screen Notion source search should mark the intake action');
+  assert((await page.locator('[data-control="intake-import-notion-diary-db"]').count()) === 1, 'Expected one-click Notion diary DB import action');
+  assert(
+    (await attribute(page, '[data-control="intake-import-notion-diary-db"]', 'data-intake-diary-db-name')) === '습관리스트',
+    'One-click Notion diary import should be scoped to 습관리스트',
+  );
+  await page.locator('[data-control="intake-import-notion-diary-db"]').click();
   await page.waitForFunction(() => {
-    const state = document.querySelector('[data-notion-import-panel="database"]')?.getAttribute('data-notion-sources-state');
-    return state === 'token-required' || state === 'source-required' || state === 'rate-limited' || state === 'ready' || state === 'error';
+    const state = document.querySelector('[data-memory-intake-hub="app-web-diary"]')?.getAttribute('data-intake-one-click-notion-state');
+    return ['token-required', 'source-required', 'rate-limited', 'preview-ready', 'imported', 'error'].includes(state || '');
   });
-  const notionSourcesState = await attribute(page, '[data-notion-import-panel="database"]', 'data-notion-sources-state');
-  const notionSourceIntakeResult = await attribute(page, '[data-memory-intake-hub="app-web-diary"]', 'data-intake-result');
-  if (notionSourcesState === 'ready') {
-    const selectedNotionSource = await attribute(page, '[data-memory-intake-hub="app-web-diary"]', 'data-intake-selected-notion-source');
-    const selectedNotionSourceMode = await attribute(page, '[data-memory-intake-hub="app-web-diary"]', 'data-intake-selected-notion-source-mode');
-    assert(notionSourceIntakeResult === 'notion-source-selected', 'Ready Notion sources should auto-select the diary/habit source');
-    assert(Boolean(selectedNotionSource), 'Ready Notion sources should set a selected Notion source id');
-    assert(selectedNotionSourceMode === 'auto', 'First-screen Notion source discovery should auto-select diary/habit candidates');
+  const oneClickNotionState = await attribute(page, '[data-memory-intake-hub="app-web-diary"]', 'data-intake-one-click-notion-state');
+  assert(
+    ['token-required', 'source-required', 'rate-limited', 'preview-ready', 'imported', 'error'].includes(oneClickNotionState || ''),
+    'One-click Notion diary import should expose a concrete state',
+  );
+  assert(
+    (await page.locator('text=Notion 연결이 필요하다').count()) +
+      (await page.locator('text=습관리스트 소스를 먼저 선택해야 한다').count()) +
+      (await page.locator('text=Notion이 잠시 제한 중이다').count()) +
+      (await page.locator('text=습관리스트 미리보기가 준비됐다').count()) +
+      (await page.locator('text=습관리스트 일기 DB를 그래프에 적용했다').count()) >=
+      1,
+    'One-click Notion diary import should explain the result in Korean',
+  );
+  if (oneClickNotionState === 'imported') {
+    const oneClickAppliedMemory = await attribute(page, '[data-intake-session-result="applied-memory"]', 'data-intake-applied-memory');
+    assert(Boolean(oneClickAppliedMemory) && oneClickAppliedMemory !== 'none', 'One-click Notion import should expose the applied memory id');
     assert(
-      (await page.locator('[data-control="notion-database-id"]').inputValue()) === selectedNotionSource,
-      'The selected Notion diary source should be copied into the import database field',
+      (await attribute(page, '[data-korean-ai-workbench="selected-or-imported-memory"]', 'data-workbench-selected-memory')) === oneClickAppliedMemory,
+      'One-click Notion import should hand off the imported memory to the Korean workbench',
     );
   } else {
+    await page.locator('[data-control="intake-find-notion-source"]').click();
+    assert((await attribute(page, '[data-memory-intake-hub="app-web-diary"]', 'data-intake-last-action')) === 'find-notion-source', 'First-screen Notion source search should mark the intake action');
+    await page.waitForFunction(() => {
+      const state = document.querySelector('[data-notion-import-panel="database"]')?.getAttribute('data-notion-sources-state');
+      return state === 'token-required' || state === 'source-required' || state === 'rate-limited' || state === 'ready' || state === 'error';
+    });
+    const notionSourcesState = await attribute(page, '[data-notion-import-panel="database"]', 'data-notion-sources-state');
+    const notionSourceIntakeResult = await attribute(page, '[data-memory-intake-hub="app-web-diary"]', 'data-intake-result');
+    if (notionSourcesState === 'ready') {
+      const selectedNotionSource = await attribute(page, '[data-memory-intake-hub="app-web-diary"]', 'data-intake-selected-notion-source');
+      const selectedNotionSourceMode = await attribute(page, '[data-memory-intake-hub="app-web-diary"]', 'data-intake-selected-notion-source-mode');
+      assert(notionSourceIntakeResult === 'notion-source-selected', 'Ready Notion sources should auto-select the diary/habit source');
+      assert(Boolean(selectedNotionSource), 'Ready Notion sources should set a selected Notion source id');
+      assert(selectedNotionSourceMode === 'auto', 'First-screen Notion source discovery should auto-select diary/habit candidates');
+      assert(
+        (await page.locator('[data-control="notion-database-id"]').inputValue()) === selectedNotionSource,
+        'The selected Notion diary source should be copied into the import database field',
+      );
+    } else {
+      assert(
+        ['notion-token-required', 'notion-source-required', 'notion-rate-limited', 'notion-sources-ready'].includes(notionSourceIntakeResult),
+        'First-screen Notion source search should expose a concrete Notion source gate state',
+      );
+    }
     assert(
-      ['notion-token-required', 'notion-source-required', 'notion-rate-limited', 'notion-sources-ready'].includes(notionSourceIntakeResult),
-      'First-screen Notion source search should expose a concrete Notion source gate state',
+      (await page.locator('text=Notion 연결이 필요하다').count()) +
+        (await page.locator('text=습관리스트 소스를 먼저 선택해야 한다').count()) +
+        (await page.locator('text=Notion이 잠시 제한 중이다').count()) +
+        (await page.locator('text=소스를 자동으로 선택했다').count()) +
+        (await page.locator('text=습관리스트 소스 후보를 찾았다').count()) >=
+        1,
+      'Intake result should explain the Notion source search gate in Korean',
+    );
+    await page.locator('[data-control="intake-apply-notion-diary"]').click();
+    assert((await attribute(page, '[data-memory-intake-hub="app-web-diary"]', 'data-intake-last-action')) === 'apply-notion-diary', 'First-screen Notion apply should mark the intake action');
+    await page.waitForFunction(() => {
+      const result = document.querySelector('[data-memory-intake-hub="app-web-diary"]')?.getAttribute('data-intake-result');
+      return ['notion-token-required', 'notion-source-required', 'notion-rate-limited', 'notion-preview-ready', 'notion-graph-applied'].includes(result || '');
+    });
+    const notionIntakeResult = await attribute(page, '[data-memory-intake-hub="app-web-diary"]', 'data-intake-result');
+    assert(
+      ['notion-token-required', 'notion-source-required', 'notion-rate-limited', 'notion-preview-ready', 'notion-graph-applied'].includes(notionIntakeResult),
+      'First-screen Notion apply should expose a concrete Notion intake state',
+    );
+    assert(
+      (await page.locator('text=Notion 연결이 필요하다').count()) +
+        (await page.locator('text=습관리스트 소스를 먼저 선택해야 한다').count()) +
+        (await page.locator('text=Notion이 잠시 제한 중이다').count()) +
+        (await page.locator('text=습관리스트 미리보기가 준비됐다').count()) +
+        (await page.locator('text=새 일기가 그래프에 연결됐다').count()) >=
+        1,
+      'Intake result should explain the Notion gate or preview state in Korean',
     );
   }
-  assert(
-    (await page.locator('text=Notion 연결이 필요하다').count()) +
-      (await page.locator('text=습관리스트 소스를 먼저 선택해야 한다').count()) +
-      (await page.locator('text=Notion이 잠시 제한 중이다').count()) +
-      (await page.locator('text=소스를 자동으로 선택했다').count()) +
-      (await page.locator('text=습관리스트 소스 후보를 찾았다').count()) >=
-      1,
-    'Intake result should explain the Notion source search gate in Korean',
-  );
-  await page.locator('[data-control="intake-apply-notion-diary"]').click();
-  assert((await attribute(page, '[data-memory-intake-hub="app-web-diary"]', 'data-intake-last-action')) === 'apply-notion-diary', 'First-screen Notion apply should mark the intake action');
-  await page.waitForFunction(() => {
-    const state = document.querySelector('[data-notion-import-panel="database"]')?.getAttribute('data-notion-import-state');
-    return state === 'token-required' || state === 'source-required' || state === 'rate-limited' || state === 'preview-ready';
-  });
-  const notionIntakeResult = await attribute(page, '[data-memory-intake-hub="app-web-diary"]', 'data-intake-result');
-  assert(
-    ['notion-token-required', 'notion-source-required', 'notion-rate-limited', 'notion-preview-ready'].includes(notionIntakeResult),
-    'First-screen Notion apply should expose a concrete Notion intake state',
-  );
-  assert(
-    (await page.locator('text=Notion 연결이 필요하다').count()) +
-      (await page.locator('text=습관리스트 소스를 먼저 선택해야 한다').count()) +
-      (await page.locator('text=Notion이 잠시 제한 중이다').count()) +
-      (await page.locator('text=습관리스트 미리보기가 준비됐다').count()) >=
-      1,
-    'Intake result should explain the Notion gate or preview state in Korean',
-  );
   const intakeDraft = `오늘 회의에서 또 혼자 해결하려는 마음이 올라왔다 ${Date.now()}`;
   const quickSaveDraft = `오늘 바로 저장 테스트 ${Date.now()} 때문에 세컨브레인 연결을 먼저 확인했다`;
   await page.locator('[data-control="intake-diary-draft"]').fill(quickSaveDraft);
