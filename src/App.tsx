@@ -1456,6 +1456,76 @@ const APP_SHELL_STYLES = `
     background: #e11d3f;
     color: #ffffff;
   }
+  .graph-evidence-lens {
+    position: absolute;
+    top: 92px;
+    right: 22px;
+    z-index: 6;
+    width: min(320px, calc(100% - 44px));
+    display: grid;
+    gap: 8px;
+    border: 1px solid rgba(97, 102, 125, 0.15);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.91);
+    box-shadow: 0 16px 38px rgba(132, 138, 164, 0.16);
+    backdrop-filter: blur(14px);
+    padding: 10px;
+  }
+  .graph-lens-head,
+  .graph-lens-next {
+    min-width: 0;
+    display: grid;
+    gap: 3px;
+  }
+  .graph-lens-head strong {
+    color: #4f5363;
+    font-size: 12px;
+    line-height: 1.25;
+  }
+  .graph-lens-head span,
+  .graph-lens-next {
+    color: #747b8d;
+    font-size: 10px;
+    line-height: 1.35;
+  }
+  .graph-lens-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+  .graph-lens-grid span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    border: 1px solid rgba(120, 126, 149, 0.13);
+    border-radius: 8px;
+    background: rgba(250, 251, 255, 0.72);
+    color: #686f82;
+    padding: 6px 7px;
+    font-size: 10px;
+    font-weight: 720;
+  }
+  .graph-lens-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+  .graph-lens-actions button {
+    min-height: 30px;
+    border: 1px solid rgba(20, 184, 166, 0.2);
+    border-radius: 8px;
+    background: rgba(20, 184, 166, 0.08);
+    color: #0f766e;
+    padding: 6px 7px;
+    font-size: 10px;
+    font-weight: 780;
+  }
+  .graph-lens-actions button[data-graph-lens-action="run-session"] {
+    border-color: rgba(225, 29, 63, 0.28);
+    background: #e11d3f;
+    color: #ffffff;
+  }
   .memory-path-explainer {
     grid-column: 1 / -1;
     display: grid;
@@ -2579,7 +2649,6 @@ const APP_SHELL_STYLES = `
   .product-value-strip[data-command-shelf="graph-led"][data-flow-collapsed="true"] {
     max-height: min(620px, calc(100vh - 96px));
   }
-  .product-value-strip[data-command-shelf="graph-led"][data-flow-collapsed="true"] .service-flow-steps,
   .product-value-strip[data-command-shelf="graph-led"][data-flow-collapsed="true"] .privacy-actions,
   .product-value-strip[data-command-shelf="graph-led"][data-flow-collapsed="true"] .prototype-entry-dock,
   .product-value-strip[data-command-shelf="graph-led"][data-flow-collapsed="true"] .first-run-guide,
@@ -2977,6 +3046,30 @@ const APP_SHELL_STYLES = `
   .memory-inspector-source {
     color: #adadb3;
   }
+  .graph-evidence-lens {
+    top: 92px;
+    right: 22px;
+    border-color: rgba(255, 255, 255, 0.12);
+    background: rgba(14, 14, 14, 0.82);
+    box-shadow: 0 20px 48px rgba(0, 0, 0, 0.32);
+  }
+  .graph-lens-head strong {
+    color: #f1f1f1;
+  }
+  .graph-lens-head span,
+  .graph-lens-next {
+    color: #adadb3;
+  }
+  .graph-lens-grid span {
+    border-color: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.055);
+    color: #d8d8db;
+  }
+  .graph-lens-actions button {
+    border-color: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.065);
+    color: #f0f0f2;
+  }
   .citation-row a,
   .citation-ref[data-active="true"] {
     border-color: rgba(214, 31, 60, 0.36);
@@ -3280,6 +3373,15 @@ const APP_SHELL_STYLES = `
       bottom: 70px;
       width: calc(100% - 24px);
       max-height: 210px;
+    }
+    .graph-evidence-lens {
+      top: 82px;
+      right: 12px;
+      width: calc(100% - 24px);
+    }
+    .graph-lens-grid,
+    .graph-lens-actions {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
     .wiki-compiler-strip { display: none; }
   }
@@ -3810,6 +3912,23 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
               <button type="button" class="selected-command-action primary" data-command-rail-action="session">세션</button>
             </div>
           </section>
+          <section class="graph-evidence-lens" data-graph-evidence-lens="selected-memory-path" data-graph-lens-selected-memory="${escapeHtml(currentFlowMemoryId)}" data-graph-lens-related-count="${currentFlowRelatedCount}" data-graph-lens-highlighted-edge-count="0" data-graph-lens-last-action="none" data-graph-lens-citation-count="0" data-graph-lens-save-state="idle" aria-label="그래프에서 선택한 기억 근거 렌즈">
+            <div class="graph-lens-head">
+              <strong>그래프 근거 렌즈</strong>
+              <span data-graph-lens-memory-label>선택 기억 · ${escapeHtml(currentFlowEntry?.title ?? currentFlowMemoryId)}</span>
+            </div>
+            <div class="graph-lens-grid" aria-label="그래프 선택 상태">
+              <span data-graph-lens-related-label>연관 기억 · ${currentFlowRelatedCount}개</span>
+              <span data-graph-lens-edge-label>강조 경로 · 엣지 0개</span>
+              <span data-graph-lens-action-label>AI 실행 · 대기</span>
+              <span data-graph-lens-citation-label>인용 · 0개</span>
+            </div>
+            <p class="graph-lens-next" data-graph-lens-next-label>노드를 클릭하면 관련 과거 기억 경로가 보인다.</p>
+            <div class="graph-lens-actions" aria-label="그래프 근거 렌즈 액션">
+              <button type="button" data-graph-lens-action="focus-inspector">상세 보기</button>
+              <button type="button" data-graph-lens-action="run-session">AI 세션</button>
+            </div>
+          </section>
           <aside class="wiki-compiler-strip" aria-label="LLM Wiki memory structure preview" data-wiki-compiler="pmi017" data-llm-wiki-visible="true">
             <span><strong data-live-count="wiki-atoms">${layout.compiledWiki.atomCount}</strong> 원자 기억</span>
             <span><strong data-live-count="wiki-nodes">${layout.compiledWiki.nodeCount}</strong> 위키 노드</span>
@@ -3904,6 +4023,14 @@ const GRAPH_CONTROL_SCRIPT = `
   const commandRailTitle = commandRail?.querySelector('[data-command-rail-title]');
   const commandRailSummary = commandRail?.querySelector('[data-command-rail-summary]');
   const commandRailActions = Array.from(document.querySelectorAll('[data-command-rail-action]'));
+  const graphEvidenceLens = document.querySelector('[data-graph-evidence-lens="selected-memory-path"]');
+  const graphLensMemoryLabel = graphEvidenceLens?.querySelector('[data-graph-lens-memory-label]');
+  const graphLensRelatedLabel = graphEvidenceLens?.querySelector('[data-graph-lens-related-label]');
+  const graphLensEdgeLabel = graphEvidenceLens?.querySelector('[data-graph-lens-edge-label]');
+  const graphLensActionLabel = graphEvidenceLens?.querySelector('[data-graph-lens-action-label]');
+  const graphLensCitationLabel = graphEvidenceLens?.querySelector('[data-graph-lens-citation-label]');
+  const graphLensNextLabel = graphEvidenceLens?.querySelector('[data-graph-lens-next-label]');
+  const graphLensActions = Array.from(document.querySelectorAll('[data-graph-lens-action]'));
   const memoryPathExplainer = document.querySelector('[data-memory-path-explainer="selected-memory-related-reasons"]');
   const memoryPathCurrent = memoryPathExplainer?.querySelector('[data-memory-path-current]');
   const memoryPathReason = memoryPathExplainer?.querySelector('[data-memory-path-reason]');
@@ -4409,6 +4536,67 @@ const GRAPH_CONTROL_SCRIPT = `
     setActionCenterStepState(detail.lastAction || 'none', detail.actionState || (lastAction === 'none' ? 'idle' : 'ready'));
   };
 
+  const updateGraphEvidenceLens = (detail = {}) => {
+    if (!graphEvidenceLens) return;
+    const selectedMemory =
+      detail.selectedMemory ||
+      detail.sourceMemoryId ||
+      shell.getAttribute('data-active-memory') ||
+      graphEvidenceLens.getAttribute('data-graph-lens-selected-memory') ||
+      '';
+    const relatedCount = String(
+      detail.relatedCount ??
+        shell.getAttribute('data-related-memory-count') ??
+        graphEvidenceLens.getAttribute('data-graph-lens-related-count') ??
+        '0',
+    );
+    const highlightedEdgeCount = String(
+      detail.highlightedEdgeCount ??
+        shell.getAttribute('data-related-memory-highlighted-edge-count') ??
+        graphEvidenceLens.getAttribute('data-graph-lens-highlighted-edge-count') ??
+        '0',
+    );
+    const lastAction = detail.lastAction || graphEvidenceLens.getAttribute('data-graph-lens-last-action') || 'none';
+    const citationCount = String(detail.citationCount ?? graphEvidenceLens.getAttribute('data-graph-lens-citation-count') ?? '0');
+    const saveState = detail.saveState || graphEvidenceLens.getAttribute('data-graph-lens-save-state') || 'idle';
+    graphEvidenceLens?.setAttribute('data-graph-lens-selected-memory', selectedMemory);
+    graphEvidenceLens?.setAttribute('data-graph-lens-related-count', relatedCount);
+    graphEvidenceLens?.setAttribute('data-graph-lens-highlighted-edge-count', highlightedEdgeCount);
+    graphEvidenceLens?.setAttribute('data-graph-lens-last-action', lastAction);
+    graphEvidenceLens?.setAttribute('data-graph-lens-citation-count', citationCount);
+    graphEvidenceLens?.setAttribute('data-graph-lens-save-state', saveState);
+    shell.setAttribute('data-graph-lens-selected-memory', selectedMemory);
+    shell.setAttribute('data-graph-lens-related-count', relatedCount);
+    shell.setAttribute('data-graph-lens-highlighted-edge-count', highlightedEdgeCount);
+    shell.setAttribute('data-graph-lens-last-action', lastAction);
+    shell.setAttribute('data-graph-lens-save-state', saveState);
+    const selectedNode = selectedMemory ? cytoscapeGraph?.getElementById('memory:' + selectedMemory) : null;
+    const selectedLabel = selectedNode?.data('graphLabel') || selectedNode?.data('label') || selectedMemory || '대기';
+    const actionLabel =
+      lastAction === 'none'
+        ? '대기'
+        : lastAction === 'ask'
+          ? '질문'
+          : lastAction === 'replay'
+            ? '결정'
+            : lastAction === 'weekly'
+              ? '주간'
+              : '세션';
+    if (graphLensMemoryLabel) graphLensMemoryLabel.textContent = '선택 기억 · ' + selectedLabel;
+    if (graphLensRelatedLabel) graphLensRelatedLabel.textContent = '연관 기억 · ' + relatedCount + '개';
+    if (graphLensEdgeLabel) graphLensEdgeLabel.textContent = '강조 경로 · 엣지 ' + highlightedEdgeCount + '개';
+    if (graphLensActionLabel) graphLensActionLabel.textContent = 'AI 실행 · ' + actionLabel;
+    if (graphLensCitationLabel) graphLensCitationLabel.textContent = '인용 · ' + citationCount + '개';
+    if (graphLensNextLabel) {
+      graphLensNextLabel.textContent =
+        saveState === 'saved'
+          ? '세션 결과가 미래 기억으로 저장됨'
+          : lastAction === 'none'
+            ? '노드를 클릭하면 관련 과거 기억 경로가 보인다.'
+            : '결과를 저장하면 다음 고민의 근거가 된다.';
+    }
+  };
+
   const renderRelatedMemoryWorkbench = (citation, related) => {
     if (!relatedMemoryWorkbench || !relatedWorkbenchList) return;
     relatedMemoryWorkbench.setAttribute('data-related-workbench-source', citation);
@@ -4545,6 +4733,14 @@ const GRAPH_CONTROL_SCRIPT = `
     shell.setAttribute('data-related-memory-source', citation);
     shell.setAttribute('data-related-memory-count', String(related.length));
     shell.setAttribute('data-related-memory-highlighted-edge-count', String(highlightedEdgeCount));
+    updateGraphEvidenceLens({
+      selectedMemory: citation,
+      relatedCount: related.length,
+      highlightedEdgeCount,
+      lastAction: 'none',
+      citationCount: 0,
+      saveState: 'idle',
+    });
     updateGuidedServiceFlow('related', { sourceMemoryId: citation, relatedCount: related.length });
   };
 
@@ -4566,6 +4762,7 @@ const GRAPH_CONTROL_SCRIPT = `
     shell.setAttribute('data-ask-context-related-memory-count', String(relatedMemoryIds.length));
     shell.setAttribute('data-ask-context-related-memories', relatedMemoryIds.join(','));
     updateSelectedAiActionCenter({ sourceMemoryId, relatedCount: relatedMemoryIds.length, lastAction: 'ask', actionState: 'ready', citationCount: 0, saveState: 'idle' });
+    updateGraphEvidenceLens({ sourceMemoryId, relatedCount: relatedMemoryIds.length, lastAction: 'ask', citationCount: 0, saveState: 'idle' });
     updateGuidedServiceFlow('ai', { sourceMemoryId, relatedCount: relatedMemoryIds.length });
     setInteractionState('ask-context-seeded-from-related-memories');
   };
@@ -4588,6 +4785,7 @@ const GRAPH_CONTROL_SCRIPT = `
     shell.setAttribute('data-replay-context-related-memory-count', String(relatedMemoryIds.length));
     shell.setAttribute('data-replay-context-related-memories', relatedMemoryIds.join(','));
     updateSelectedAiActionCenter({ sourceMemoryId, relatedCount: relatedMemoryIds.length, lastAction: 'replay', actionState: 'ready', citationCount: 0, saveState: 'idle' });
+    updateGraphEvidenceLens({ sourceMemoryId, relatedCount: relatedMemoryIds.length, lastAction: 'replay', citationCount: 0, saveState: 'idle' });
     updateGuidedServiceFlow('ai', { sourceMemoryId, relatedCount: relatedMemoryIds.length });
     setInteractionState('replay-context-seeded-from-related-memories');
   };
@@ -4609,6 +4807,7 @@ const GRAPH_CONTROL_SCRIPT = `
     shell.setAttribute('data-weekly-context-related-memory-count', String(relatedMemoryIds.length));
     shell.setAttribute('data-weekly-context-related-memories', relatedMemoryIds.join(','));
     updateSelectedAiActionCenter({ sourceMemoryId, relatedCount: relatedMemoryIds.length, lastAction: 'weekly', actionState: 'ready', citationCount: 0, saveState: 'idle' });
+    updateGraphEvidenceLens({ sourceMemoryId, relatedCount: relatedMemoryIds.length, lastAction: 'weekly', citationCount: 0, saveState: 'idle' });
     updateGuidedServiceFlow('ai', { sourceMemoryId, relatedCount: relatedMemoryIds.length });
     setInteractionState('weekly-context-seeded-from-related-memories');
   };
@@ -4658,6 +4857,15 @@ const GRAPH_CONTROL_SCRIPT = `
         relatedCount: context.relatedMemoryIds.length,
         lastAction: 'session',
         actionState: state === 'completed' ? 'answered' : state === 'running' ? 'running' : state === 'error' ? 'ready' : 'ready',
+        citationCount: currentCitationList('data-live-ask-highlighted-memories').length +
+          currentCitationList('data-live-replay-highlighted-memories').length +
+          currentCitationList('data-live-weekly-highlighted-memories').length,
+        saveState: state === 'completed' ? 'ready' : 'idle',
+      });
+      updateGraphEvidenceLens({
+        sourceMemoryId: context.sourceMemoryId,
+        relatedCount: context.relatedMemoryIds.length,
+        lastAction: 'session',
         citationCount: currentCitationList('data-live-ask-highlighted-memories').length +
           currentCitationList('data-live-replay-highlighted-memories').length +
           currentCitationList('data-live-weekly-highlighted-memories').length,
@@ -5054,6 +5262,8 @@ const GRAPH_CONTROL_SCRIPT = `
   };
 
   const setIntakeNotionState = (state, message) => {
+    const currentIntakeAction = memoryIntakeHub?.getAttribute('data-intake-last-action') || '';
+    if (!currentIntakeAction.includes('notion')) return;
     memoryIntakeHub?.setAttribute('data-intake-result', 'notion-' + state);
     memoryIntakeHub?.setAttribute('data-intake-next-step', state === 'preview-ready' ? 'notion-apply-ready' : state);
     intakeSessionResult?.setAttribute('data-intake-next-step', state === 'preview-ready' ? 'notion-apply-ready' : state);
@@ -5836,6 +6046,13 @@ const GRAPH_CONTROL_SCRIPT = `
       citationCount: citationCount || '0',
       saveState: 'ready',
     });
+    updateGraphEvidenceLens({
+      sourceMemoryId: context.sourceMemoryId,
+      relatedCount: relatedMemoryIds.length,
+      lastAction: kind,
+      citationCount: citationCount || '0',
+      saveState: 'ready',
+    });
   };
 
   const askSecondBrain = async () => {
@@ -6011,6 +6228,13 @@ const GRAPH_CONTROL_SCRIPT = `
         citationCount: artifact.citationMemoryIds.length,
         saveState: 'saved',
       });
+      updateGraphEvidenceLens({
+        sourceMemoryId: artifact.metadata.sourceMemoryId,
+        relatedCount: artifact.metadata.relatedMemoryCount,
+        lastAction: 'session',
+        citationCount: artifact.citationMemoryIds.length,
+        saveState: 'saved',
+      });
       if (groundedActionSaveback) groundedActionSaveback.textContent = '미래 기억으로 저장됨';
       intakeSessionResult?.setAttribute('data-intake-saved-session-memory', savedMemoryId);
       intakeSessionResult?.setAttribute('data-intake-next-step', 'session-saved');
@@ -6069,6 +6293,13 @@ const GRAPH_CONTROL_SCRIPT = `
         relatedCount: artifact.metadata.relatedMemoryCount,
         lastAction: 'session',
         actionState: 'saved',
+        citationCount: artifact.citationMemoryIds.length,
+        saveState: 'saved',
+      });
+      updateGraphEvidenceLens({
+        sourceMemoryId: artifact.metadata.sourceMemoryId,
+        relatedCount: artifact.metadata.relatedMemoryCount,
+        lastAction: 'session',
         citationCount: artifact.citationMemoryIds.length,
         saveState: 'saved',
       });
@@ -6771,7 +7002,12 @@ const GRAPH_CONTROL_SCRIPT = `
           setIntakeNotionState('sources-ready', String(sources.length) + '개의 Notion 소스 후보를 찾았다. 습관리스트를 선택하면 미리보기와 그래프 적용이 이어진다.');
         }
       }
-      if (shell.getAttribute('data-interaction-state') !== 'notion-source-auto-selected') setInteractionState('notion-sources-ready');
+      if (
+        memoryIntakeHub?.getAttribute('data-intake-last-action')?.includes('notion') &&
+        shell.getAttribute('data-interaction-state') !== 'notion-source-auto-selected'
+      ) {
+        setInteractionState('notion-sources-ready');
+      }
     } catch (error) {
       notionImportPanel.setAttribute('data-notion-sources-state', 'error');
       shell.setAttribute('data-notion-sources-error', String(error?.message || error));
@@ -7190,6 +7426,23 @@ const GRAPH_CONTROL_SCRIPT = `
       }
       if (action === 'session') {
         updateGuidedServiceFlow('ai', { nextAction: 'run-ai-session' });
+        void runMemorySession();
+      }
+    });
+  });
+  graphLensActions.forEach((button) => {
+    button.addEventListener('click', () => {
+      const action = button.getAttribute('data-graph-lens-action') || '';
+      graphEvidenceLens?.setAttribute('data-graph-lens-last-click', action);
+      shell.setAttribute('data-graph-lens-last-click', action);
+      if (action === 'focus-inspector') {
+        inspector?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        setInteractionState('graph-lens-inspector-focused');
+        return;
+      }
+      if (action === 'run-session') {
+        updateGraphEvidenceLens({ lastAction: 'session', saveState: 'idle' });
+        setInteractionState('graph-lens-session-requested');
         void runMemorySession();
       }
     });
