@@ -1878,6 +1878,7 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
               <strong>연관된 과거 기억</strong>
               <div class="related-memory-list" data-related-memory-list></div>
               <button type="button" class="related-memory-action" data-control="ask-with-related-memory-context">이 맥락으로 Ask</button>
+              <button type="button" class="related-memory-action" data-control="replay-with-related-memory-context">이 맥락으로 Decision</button>
             </div>
             <div class="citation-row" aria-label="Ask My Past Self citations" data-inspector-citations>${citationLinks}</div>
           </article>
@@ -1919,6 +1920,7 @@ const GRAPH_CONTROL_SCRIPT = `
   const relatedMemoryStrip = inspector?.querySelector('[data-related-memory-strip]');
   const relatedMemoryList = inspector?.querySelector('[data-related-memory-list]');
   const askWithRelatedMemoryButton = inspector?.querySelector('[data-control="ask-with-related-memory-context"]');
+  const replayWithRelatedMemoryButton = inspector?.querySelector('[data-control="replay-with-related-memory-context"]');
   const askForm = document.querySelector('[data-ask-endpoint]');
   const askEndpoint = askForm?.getAttribute('data-ask-endpoint') || '';
   const askQuestionInput = askForm?.querySelector('input[name="question"]');
@@ -1988,6 +1990,7 @@ const GRAPH_CONTROL_SCRIPT = `
   let lastLocalImportPreview = null;
   let lastLocalImportUndoAction = null;
   let lastAskFollowUpContext = null;
+  let lastReplayRelatedContext = null;
 
   const setInteractionState = (value) => {
     shell.setAttribute('data-interaction-state', value);
@@ -2274,6 +2277,26 @@ const GRAPH_CONTROL_SCRIPT = `
     shell.setAttribute('data-ask-context-related-memory-count', String(relatedMemoryIds.length));
     shell.setAttribute('data-ask-context-related-memories', relatedMemoryIds.join(','));
     setInteractionState('ask-context-seeded-from-related-memories');
+  };
+
+  const replayWithRelatedMemoryContext = () => {
+    const sourceMemoryId = shell.getAttribute('data-active-memory') || '';
+    const relatedMemoryIds = Array.from(relatedMemoryList?.querySelectorAll('[data-related-memory-id]') || [])
+      .map((item) => item.getAttribute('data-related-memory-id') || '')
+      .filter(Boolean);
+    if (!sourceMemoryId || !relatedMemoryIds.length) return;
+    if (decisionReplayInput) {
+      decisionReplayInput.value = '이 기억과 관련된 과거 선택들을 기준으로 지금 결정을 반복해도 되는지 비교해줘';
+      decisionReplayInput.focus();
+    }
+    lastReplayRelatedContext = {
+      sourceMemoryId,
+      relatedMemoryIds,
+    };
+    shell.setAttribute('data-replay-context-source-memory', sourceMemoryId);
+    shell.setAttribute('data-replay-context-related-memory-count', String(relatedMemoryIds.length));
+    shell.setAttribute('data-replay-context-related-memories', relatedMemoryIds.join(','));
+    setInteractionState('replay-context-seeded-from-related-memories');
   };
 
   const selectMemory = (node) => {
@@ -2957,6 +2980,7 @@ const GRAPH_CONTROL_SCRIPT = `
             emotions: ['anxiety'],
             choices: ['ship now', 'add more'],
             topicTags: ['personal-memory-ai', 'decision-replay'],
+            relatedMemoryContext: lastReplayRelatedContext,
           },
         }),
       });
@@ -3674,6 +3698,7 @@ const GRAPH_CONTROL_SCRIPT = `
     });
   });
   askWithRelatedMemoryButton?.addEventListener('click', askWithRelatedMemoryContext);
+  replayWithRelatedMemoryButton?.addEventListener('click', replayWithRelatedMemoryContext);
   if (memoryNodes[2]) selectMemory(memoryNodes[2]);
   wireReviewComparisonButtons();
   initializeCytoscapeGraph();

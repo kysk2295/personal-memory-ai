@@ -230,6 +230,7 @@ No remote push, main merge, production deploy, or secret access is allowed witho
 - L80: selected memory related-node evidence drawer.
 - L81: selected memory related-path graph highlight.
 - L82: related-memory Ask context handoff.
+- L83: related-memory Decision Replay context handoff.
 
 ## 6. Active Next Loops
 
@@ -1582,6 +1583,24 @@ Acceptance:
 - action stores selected memory plus related memory ids as follow-up context
 - shell exposes selected source memory and related count markers
 - Playwright verifies the handoff from graph selection to Ask context
+
+Implemented:
+
+- `src/App.tsx`
+- `src/lib/appShellEvidenceLayout.test.ts`
+- `scripts/verify-playwright-evidence.ts`
+
+### L83 — Related-Memory Decision Replay Context Handoff
+
+Goal: let the user move from selected diary memory + related past memories directly into Decision Replay with the related context preserved.
+
+Acceptance:
+
+- related-memory strip exposes a Decision Replay context action
+- action seeds the Decision Replay input with a context-aware prompt
+- action stores selected memory plus related memory ids as replay context
+- shell exposes selected source memory and related count markers for replay
+- Playwright verifies the graph selection to Decision Replay context handoff
 
 Implemented:
 

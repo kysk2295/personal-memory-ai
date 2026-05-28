@@ -650,10 +650,14 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(documentHtml).toContain("facetNode.addClass('related-facet')");
     expect(documentHtml).toContain("shell.setAttribute('data-related-memory-highlighted-edge-count'");
     expect(documentHtml).toContain('data-control="ask-with-related-memory-context"');
+    expect(documentHtml).toContain('data-control="replay-with-related-memory-context"');
     expect(documentHtml).toContain('const askWithRelatedMemoryContext = () =>');
+    expect(documentHtml).toContain('const replayWithRelatedMemoryContext = () =>');
     expect(documentHtml).toContain("lastAskFollowUpContext = {");
     expect(documentHtml).toContain("shell.setAttribute('data-ask-context-source-memory'");
+    expect(documentHtml).toContain("shell.setAttribute('data-replay-context-source-memory'");
     expect(documentHtml).toContain("setInteractionState('ask-context-seeded-from-related-memories')");
+    expect(documentHtml).toContain("setInteractionState('replay-context-seeded-from-related-memories')");
     expect(documentHtml).toContain('renderRelatedMemoryEvidence(citation)');
     expect(documentHtml).toContain("shell.setAttribute('data-labels', hidden ? 'visible' : 'hidden')");
     expect(documentHtml).toContain("setSpacing('normal')");

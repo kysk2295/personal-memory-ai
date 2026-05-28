@@ -339,6 +339,10 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   assert((await attribute(page, '.second-brain-shell', 'data-ask-context-source-memory')) === firstCitation, 'Related-memory ask action should seed the selected memory as context');
   assert(Number(await attribute(page, '.second-brain-shell', 'data-ask-context-related-memory-count')) > 0, 'Related-memory ask action should seed related memory context');
   assert((await attribute(page, '.second-brain-shell', 'data-interaction-state')) === 'ask-context-seeded-from-related-memories', 'Related-memory ask action should expose seeded interaction state');
+  await page.locator('[data-control="replay-with-related-memory-context"]').click();
+  assert((await attribute(page, '.second-brain-shell', 'data-replay-context-source-memory')) === firstCitation, 'Related-memory replay action should seed the selected memory as context');
+  assert(Number(await attribute(page, '.second-brain-shell', 'data-replay-context-related-memory-count')) > 0, 'Related-memory replay action should seed related memory context');
+  assert((await attribute(page, '.second-brain-shell', 'data-interaction-state')) === 'replay-context-seeded-from-related-memories', 'Related-memory replay action should expose seeded interaction state');
 
   await page.locator('[data-filter-chip="semantic"]').click();
   assert((await attribute(page, '[data-filter-chip="semantic"]', 'aria-pressed')) === 'false', 'Semantic filter chip should toggle off');
