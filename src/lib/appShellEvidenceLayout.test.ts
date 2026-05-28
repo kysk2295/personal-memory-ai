@@ -537,6 +537,7 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('data-control="intake-run-session"');
     expect(html).toContain('data-control="intake-preview-notion-diary"');
     expect(html).toContain('data-control="intake-apply-notion-diary"');
+    expect(html).toContain('data-control="intake-find-notion-source"');
     expect(html).toContain('data-intake-applied-memory="none"');
     expect(html).toContain('data-intake-next-step="waiting-for-diary"');
     expect(html).toContain('data-control="intake-preview-diary"');
@@ -743,6 +744,9 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(documentHtml).toContain('pendingIntakeNotionApplyAfterPreview = true');
     expect(documentHtml).toContain("setIntakeNotionState('token-required')");
     expect(documentHtml).toContain("setIntakeNotionState('source-required')");
+    expect(documentHtml).toContain("setIntakeNotionState('sources-ready'");
+    expect(documentHtml).toContain("memoryIntakeHub?.setAttribute('data-intake-selected-notion-source'");
+    expect(documentHtml).toContain("intakeFindNotionSourceButton?.addEventListener('click'");
     expect(documentHtml).toContain("setInteractionState('intake-notion-diary-apply-requested')");
     expect(documentHtml).toContain("setInteractionState('intake-paste-diary-focused')");
     expect(documentHtml).toContain("setInteractionState('intake-notion-diary-ready')");

@@ -470,7 +470,7 @@ const APP_SHELL_STYLES = `
   .memory-intake-notion-actions {
     grid-column: 1 / -1;
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 7px;
   }
   .memory-intake-draft-actions button {
@@ -2392,6 +2392,7 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
             </div>
           </div>
           <div class="memory-intake-notion-actions" aria-label="습관리스트 Notion DB 인입">
+            <button type="button" data-control="intake-find-notion-source">습관리스트 소스 찾기</button>
             <button type="button" data-control="intake-preview-notion-diary">습관리스트 미리보기</button>
             <button type="button" data-control="intake-apply-notion-diary">Notion 그래프 적용</button>
           </div>
@@ -2581,6 +2582,7 @@ const GRAPH_CONTROL_SCRIPT = `
   const intakeDiaryDraft = document.querySelector('[data-control="intake-diary-draft"]');
   const intakePreviewDiaryButton = document.querySelector('[data-control="intake-preview-diary"]');
   const intakeApplyDiaryButton = document.querySelector('[data-control="intake-apply-diary"]');
+  const intakeFindNotionSourceButton = document.querySelector('[data-control="intake-find-notion-source"]');
   const intakePreviewNotionButton = document.querySelector('[data-control="intake-preview-notion-diary"]');
   const intakeApplyNotionButton = document.querySelector('[data-control="intake-apply-notion-diary"]');
   const intakeSessionResult = document.querySelector('[data-intake-session-result="applied-memory"]');
@@ -3072,6 +3074,10 @@ const GRAPH_CONTROL_SCRIPT = `
             ? 'Notion이 잠시 제한 중이다'
             : state === 'source-required'
               ? '습관리스트 소스를 먼저 선택해야 한다'
+            : state === 'sources-ready'
+              ? '습관리스트 소스 후보를 찾았다'
+            : state === 'source-selected'
+              ? '습관리스트 소스를 선택했다'
             : state === 'preview-ready'
               ? '습관리스트 미리보기가 준비됐다'
               : '습관리스트를 불러오는 중이다';
@@ -3085,6 +3091,10 @@ const GRAPH_CONTROL_SCRIPT = `
             ? 'Notion API 제한이 풀리면 같은 버튼으로 다시 시도할 수 있다.'
             : state === 'source-required'
               ? '이름만으로는 DB를 확정할 수 없다. 소스 찾기에서 습관리스트를 선택하거나 정확한 database/data source id를 넣으면 그래프 적용이 이어진다.'
+            : state === 'sources-ready'
+              ? '후보 목록에서 습관리스트를 고르면 같은 첫 화면에서 미리보기와 그래프 적용을 이어갈 수 있다.'
+            : state === 'source-selected'
+              ? '선택한 습관리스트 소스로 미리보기를 만들거나 바로 그래프 적용을 실행할 수 있다.'
             : state === 'preview-ready'
               ? '미리보기 후보를 확인했다. Notion 그래프 적용을 누르면 비공개 기억 그래프에 반영된다.'
               : '습관리스트 일기 DB 미리보기를 준비한다.');
@@ -4249,7 +4259,15 @@ const GRAPH_CONTROL_SCRIPT = `
       .join('');
     Array.from(notionSourceList.querySelectorAll('[data-control="select-notion-source"]')).forEach((button) => {
       button.addEventListener('click', () => {
-        if (notionDatabaseId) notionDatabaseId.value = button.getAttribute('data-notion-source-id') || '';
+        const sourceId = button.getAttribute('data-notion-source-id') || '';
+        const sourceTitle = button.querySelector('strong')?.textContent || sourceId || '선택한 소스';
+        if (notionDatabaseId) notionDatabaseId.value = sourceId;
+        memoryIntakeHub?.setAttribute('data-intake-selected-notion-source', sourceId);
+        memoryIntakeHub?.setAttribute('data-intake-result', 'notion-source-selected');
+        memoryIntakeHub?.setAttribute('data-intake-next-step', 'notion-preview-ready');
+        intakeSessionResult?.setAttribute('data-intake-selected-notion-source', sourceId);
+        intakeSessionResult?.setAttribute('data-intake-next-step', 'notion-preview-ready');
+        setIntakeNotionState('source-selected', sourceTitle + ' 소스를 선택했다. 이제 습관리스트 미리보기 또는 Notion 그래프 적용을 실행할 수 있다.');
         setInteractionState('notion-source-selected');
       });
     });
@@ -4432,13 +4450,22 @@ const GRAPH_CONTROL_SCRIPT = `
         if (response.status === 424) {
           notionImportPanel.setAttribute('data-notion-sources-state', 'token-required');
           if (notionImportSummary) notionImportSummary.textContent = 'Notion token required';
+          if (memoryIntakeHub?.getAttribute('data-intake-last-action')?.includes('notion')) setIntakeNotionState('token-required');
           setInteractionState('notion-import-token-required');
           return;
         }
         if (response.status === 429) {
           notionImportPanel.setAttribute('data-notion-sources-state', 'rate-limited');
           if (notionImportSummary) notionImportSummary.textContent = 'Notion rate limited. Retry shortly.';
+          if (memoryIntakeHub?.getAttribute('data-intake-last-action')?.includes('notion')) setIntakeNotionState('rate-limited');
           setInteractionState('notion-sources-rate-limited');
+          return;
+        }
+        if (response.status === 502) {
+          notionImportPanel.setAttribute('data-notion-sources-state', 'source-required');
+          if (notionImportSummary) notionImportSummary.textContent = 'Notion source selection required';
+          if (memoryIntakeHub?.getAttribute('data-intake-last-action')?.includes('notion')) setIntakeNotionState('source-required');
+          setInteractionState('notion-sources-source-required');
           return;
         }
         if (!response.ok) throw new Error('notion source search failed with ' + response.status);
@@ -4448,11 +4475,15 @@ const GRAPH_CONTROL_SCRIPT = `
         notionImportPanel.setAttribute('data-notion-sources-state', 'ready');
         notionImportPanel.setAttribute('data-notion-source-count', String(sources.length));
         if (notionImportSummary) notionImportSummary.textContent = sources.length + ' Notion sources';
+        if (memoryIntakeHub?.getAttribute('data-intake-last-action')?.includes('notion')) {
+          setIntakeNotionState('sources-ready', String(sources.length) + '개의 Notion 소스 후보를 찾았다. 습관리스트를 선택하면 미리보기와 그래프 적용이 이어진다.');
+        }
       }
       setInteractionState('notion-sources-ready');
     } catch (error) {
       notionImportPanel.setAttribute('data-notion-sources-state', 'error');
       shell.setAttribute('data-notion-sources-error', String(error?.message || error));
+      if (memoryIntakeHub?.getAttribute('data-intake-last-action')?.includes('notion')) setIntakeNotionState('source-required');
       setInteractionState('notion-sources-error');
     }
   });
@@ -4811,6 +4842,11 @@ const GRAPH_CONTROL_SCRIPT = `
     notionImportPanel?.setAttribute('data-notion-source-scope', 'diary-only');
     setIntakeNotionState('loading');
   };
+  intakeFindNotionSourceButton?.addEventListener('click', () => {
+    prepareNotionDiaryIntake('find-notion-source');
+    notionSourcesButton?.click();
+    setInteractionState('intake-notion-source-search-requested');
+  });
   intakePreviewNotionButton?.addEventListener('click', () => {
     prepareNotionDiaryIntake('preview-notion-diary');
     notionImportPreviewButton?.click();
