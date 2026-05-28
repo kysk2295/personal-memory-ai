@@ -190,6 +190,14 @@ function sanitizeOptionalStringList(value: unknown): string[] | undefined {
     .filter(Boolean);
 }
 
+function notionConnectorErrorResponse(error: unknown, fallbackError: string): PersonalMemoryApiResponse<{ error: string }> {
+  const message = String(error);
+  if (message.includes(':429')) {
+    return { statusCode: 429, body: { error: 'notion_rate_limited' } };
+  }
+  return { statusCode: 502, body: { error: fallbackError } };
+}
+
 function methodNotAllowed(): PersonalMemoryApiResponse<{ error: string }> {
   return {
     statusCode: 405,
@@ -354,7 +362,7 @@ export async function handlePersonalMemoryApiRequest(
       });
       return { statusCode: 200, body: { preview } };
     } catch (error) {
-      return { statusCode: 502, body: { error: 'notion_query_failed', message: String(error) } };
+      return notionConnectorErrorResponse(error, 'notion_query_failed');
     }
   }
 
@@ -368,7 +376,7 @@ export async function handlePersonalMemoryApiRequest(
       });
       return { statusCode: 200, body: { sources } };
     } catch (error) {
-      return { statusCode: 502, body: { error: 'notion_search_failed', message: String(error) } };
+      return notionConnectorErrorResponse(error, 'notion_search_failed');
     }
   }
 

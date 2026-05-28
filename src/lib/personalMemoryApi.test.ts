@@ -209,6 +209,30 @@ describe('personal memory API boundary', () => {
     expect(JSON.stringify(response.body)).not.toContain('secret_live_token');
   });
 
+  test('reports Notion source discovery rate limits as retryable API state', async () => {
+    const response = await handlePersonalMemoryApiRequest({
+      store: createMemoryStore({ env: {} }),
+      userId: 'user-a',
+      notionToken: 'secret_live_token',
+      notionFetch: async () => ({
+        ok: false,
+        status: 429,
+        headers: { get: () => '0' },
+        json: async () => ({}),
+      }),
+      request: {
+        method: 'GET',
+        path: '/api/import/notion/sources',
+      },
+    });
+
+    expect(response).toEqual({
+      statusCode: 429,
+      body: { error: 'notion_rate_limited' },
+    });
+    expect(JSON.stringify(response.body)).not.toContain('secret_live_token');
+  });
+
   test('returns an explicit configuration error when Notion import is requested without a token', async () => {
     const response = await handlePersonalMemoryApiRequest({
       store: createMemoryStore({ env: {} }),

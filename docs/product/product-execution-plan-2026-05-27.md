@@ -1151,6 +1151,22 @@ Implemented:
 - `src/lib/notionImport.ts`
 - `src/lib/notionImport.test.ts`
 
+### L59 — Notion Rate Limit API State
+
+Goal: make the web import UI distinguish a temporary Notion rate limit from a generic connector failure.
+
+Acceptance:
+
+- Notion connector errors ending in `:429` return HTTP `429`
+- response body uses token-safe `{ error: 'notion_rate_limited' }`
+- non-rate-limit Notion query/search failures still return `502` with their safe fallback error code
+- regression covers source discovery rate limit handling without exposing the token
+
+Implemented:
+
+- `src/lib/personalMemoryApi.ts`
+- `src/lib/personalMemoryApi.test.ts`
+
 ## 8. MVP Time Estimate
 
 Assuming focused local development without major dependency or deployment blockers:
