@@ -781,6 +781,50 @@ const APP_SHELL_STYLES = `
     font-size: 9px;
     font-weight: 760;
   }
+  .intake-graph-status-board {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: minmax(140px, 0.38fr) minmax(0, 1fr);
+    gap: 8px;
+    min-width: 0;
+    border: 1px solid rgba(20, 184, 166, 0.18);
+    border-radius: 8px;
+    background: rgba(240, 253, 250, 0.76);
+    padding: 8px 9px;
+  }
+  .intake-board-title,
+  .intake-board-grid span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .intake-board-title {
+    display: grid;
+    gap: 3px;
+    align-content: center;
+  }
+  .intake-board-title strong {
+    color: #0f766e;
+    font-size: 12px;
+  }
+  .intake-board-title span,
+  .intake-board-grid span {
+    color: #57716d;
+    font-size: 10px;
+    font-weight: 760;
+  }
+  .intake-board-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+  .intake-board-grid span {
+    border: 1px solid rgba(20, 184, 166, 0.12);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.68);
+    padding: 6px 7px;
+  }
   .memory-intake-draft-actions button,
   .memory-intake-notion-actions button {
     border: 1px solid rgba(20, 184, 166, 0.2);
@@ -4025,6 +4069,18 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
               <span data-handoff-saveback-label>미래 기억 저장 · 대기</span>
             </div>
           </section>
+          <section class="intake-graph-status-board" data-intake-graph-status-board="diary-to-graph" data-intake-board-route="waiting" data-intake-board-memory="none" data-intake-board-related-count="0" data-intake-board-next-action="write-or-import" data-intake-board-ai-state="idle" data-intake-board-save-state="idle" aria-label="일기 인입에서 그래프 반영까지 현재 상태">
+            <div class="intake-board-title">
+              <strong>일기 인입 상태</strong>
+              <span data-intake-board-next-label>다음 · 일기를 쓰거나 가져오기</span>
+            </div>
+            <div class="intake-board-grid" aria-label="일기 인입 상태 값">
+              <span data-intake-board-route-label>입력 경로 · 대기</span>
+              <span data-intake-board-memory-label>그래프 기억 · 대기</span>
+              <span data-intake-board-related-label>연관 기억 · 0개</span>
+              <span data-intake-board-ai-label>AI 실행 · 대기</span>
+            </div>
+          </section>
           <div class="memory-intake-result" data-intake-session-result="applied-memory" data-intake-applied-memory="none" data-intake-related-memory-count="0" data-intake-next-step="waiting-for-diary">
             <div>
               <strong data-intake-result-title>적용하면 여기서 바로 다음 행동을 보여준다</strong>
@@ -4473,6 +4529,12 @@ const GRAPH_CONTROL_SCRIPT = `
   const intakeSessionResult = document.querySelector('[data-intake-session-result="applied-memory"]');
   const intakeResultTitle = intakeSessionResult?.querySelector('[data-intake-result-title]');
   const intakeResultSummary = intakeSessionResult?.querySelector('[data-intake-result-summary]');
+  const intakeGraphStatusBoard = document.querySelector('[data-intake-graph-status-board="diary-to-graph"]');
+  const intakeBoardRouteLabel = intakeGraphStatusBoard?.querySelector('[data-intake-board-route-label]');
+  const intakeBoardMemoryLabel = intakeGraphStatusBoard?.querySelector('[data-intake-board-memory-label]');
+  const intakeBoardRelatedLabel = intakeGraphStatusBoard?.querySelector('[data-intake-board-related-label]');
+  const intakeBoardAiLabel = intakeGraphStatusBoard?.querySelector('[data-intake-board-ai-label]');
+  const intakeBoardNextLabel = intakeGraphStatusBoard?.querySelector('[data-intake-board-next-label]');
   const intakeRelatedBundle = document.querySelector('[data-intake-related-bundle="past-memory-nodes"]');
   const intakeRelatedBundleSummary = intakeRelatedBundle?.querySelector('[data-intake-related-bundle-summary]');
   const intakeRelatedBundleList = intakeRelatedBundle?.querySelector('[data-intake-related-bundle-list]');
@@ -5543,6 +5605,52 @@ const GRAPH_CONTROL_SCRIPT = `
     intakeSessionResult?.setAttribute('data-intake-flow-current-state', state);
   };
 
+  const intakeRouteLabels = {
+    waiting: '대기',
+    'app-quick-diary': '앱 빠른 일기',
+    'web-paste-diary': '웹 일기 붙여넣기',
+    'notion-diary-db': 'Notion 일기 DB',
+  };
+  const intakeNextLabels = {
+    'write-or-import': '일기를 쓰거나 가져오기',
+    'preview-diary': '미리보기 확인하기',
+    'apply-to-graph': '그래프에 적용하기',
+    'inspect-related': '연관 기억 확인하기',
+    'run-ai-session': 'AI 세션 실행하기',
+    'save-result': '결과를 기억으로 저장하기',
+    'reopen-saved-memory': '저장 기억 다시 열기',
+  };
+  const intakeAiLabels = {
+    idle: '대기',
+    ready: '준비',
+    running: '실행 중',
+    answered: '완료',
+    saved: '저장됨',
+  };
+  const updateIntakeGraphStatusBoard = (detail = {}) => {
+    if (!intakeGraphStatusBoard) return;
+    const route = detail.route || intakeGraphStatusBoard.getAttribute('data-intake-board-route') || 'waiting';
+    const memoryId = detail.memoryId || intakeGraphStatusBoard.getAttribute('data-intake-board-memory') || 'none';
+    const relatedCount = String(detail.relatedCount ?? intakeGraphStatusBoard.getAttribute('data-intake-board-related-count') ?? '0');
+    const nextAction = detail.nextAction || intakeGraphStatusBoard.getAttribute('data-intake-board-next-action') || 'write-or-import';
+    const aiState = detail.aiState || intakeGraphStatusBoard.getAttribute('data-intake-board-ai-state') || 'idle';
+    const saveState = detail.saveState || intakeGraphStatusBoard.getAttribute('data-intake-board-save-state') || 'idle';
+    intakeGraphStatusBoard?.setAttribute('data-intake-board-route', route);
+    intakeGraphStatusBoard?.setAttribute('data-intake-board-memory', memoryId);
+    intakeGraphStatusBoard?.setAttribute('data-intake-board-related-count', relatedCount);
+    intakeGraphStatusBoard?.setAttribute('data-intake-board-next-action', nextAction);
+    intakeGraphStatusBoard?.setAttribute('data-intake-board-ai-state', aiState);
+    intakeGraphStatusBoard?.setAttribute('data-intake-board-save-state', saveState);
+    shell.setAttribute('data-intake-board-route', route);
+    shell.setAttribute('data-intake-board-memory', memoryId);
+    shell.setAttribute('data-intake-board-next-action', nextAction);
+    if (intakeBoardRouteLabel) intakeBoardRouteLabel.textContent = '입력 경로 · ' + (intakeRouteLabels[route] || route);
+    if (intakeBoardMemoryLabel) intakeBoardMemoryLabel.textContent = '그래프 기억 · ' + (memoryId && memoryId !== 'none' ? memoryId : '대기');
+    if (intakeBoardRelatedLabel) intakeBoardRelatedLabel.textContent = '연관 기억 · ' + relatedCount + '개';
+    if (intakeBoardAiLabel) intakeBoardAiLabel.textContent = 'AI 실행 · ' + (intakeAiLabels[aiState] || aiState);
+    if (intakeBoardNextLabel) intakeBoardNextLabel.textContent = '다음 · ' + (intakeNextLabels[nextAction] || nextAction);
+  };
+
   const guidedStepOrder = ['capture', 'graph', 'related', 'ai', 'save'];
   const journeyStepLabels = {
     capture: '기록 단계',
@@ -5769,6 +5877,11 @@ const GRAPH_CONTROL_SCRIPT = `
     intakeRelatedBundle?.setAttribute('data-intake-ai-action-result', kind + '-' + state);
     intakeSessionResult?.setAttribute('data-intake-ai-action-result', kind + '-' + state);
     updateDiaryGraphHandoffMap({ aiState: kind + '-' + state });
+    updateIntakeGraphStatusBoard({
+      aiState: state === 'answered' ? 'answered' : state === 'loading' ? 'running' : 'idle',
+      nextAction: state === 'answered' ? 'save-result' : 'run-ai-session',
+      saveState: state === 'answered' ? 'ready' : 'idle',
+    });
     updatePrototypeJourneyCockpit({
       step: 'ai',
       aiState: state === 'answered' ? 'answered' : state === 'loading' ? 'running' : 'error',
@@ -5845,6 +5958,7 @@ const GRAPH_CONTROL_SCRIPT = `
             (savedMemoryId || '새 기억') + '으로 저장됐다. 다음 고민에서 이 결과도 과거 근거로 다시 불러올 수 있다.';
         }
         setIntakeFlowStepState('save', 'done');
+        updateIntakeGraphStatusBoard({ memoryId: savedMemoryId || 'saved-memory', nextAction: 'reopen-saved-memory', aiState: 'saved', saveState: 'saved' });
         updateFlowCoach(
           'saved',
           'reopen-saved-memory',
@@ -5884,6 +5998,14 @@ const GRAPH_CONTROL_SCRIPT = `
     setIntakeFlowStepState('graph', 'done');
     setIntakeFlowStepState('related', related.length ? 'ready' : 'loading');
     setIntakeFlowStepState('ai', 'ready');
+    updateIntakeGraphStatusBoard({
+      route: memoryIntakeHub?.getAttribute('data-intake-last-action') === 'apply-notion-diary' ? 'notion-diary-db' : 'web-paste-diary',
+      memoryId: appliedMemoryId,
+      relatedCount,
+      nextAction: 'run-ai-session',
+      aiState: 'ready',
+      saveState: 'idle',
+    });
     updateDiaryGraphHandoffMap({ route: 'web-paste-diary', stage: 'applied', memoryId: appliedMemoryId, relatedCount, aiState: 'ready' });
     updateGuidedServiceFlow('related', { sourceMemoryId: appliedMemoryId, relatedCount, aiState: 'ready', saveState: 'idle', nextAction: 'inspect-related' });
     updateFlowCoach(
@@ -8303,6 +8425,7 @@ const GRAPH_CONTROL_SCRIPT = `
     memoryIntakeHub?.setAttribute('data-intake-draft-state', 'apply-requested');
     shell.setAttribute('data-intake-last-action', 'apply-diary');
     updateDiaryGraphHandoffMap({ route: 'web-paste-diary', stage: 'applying', aiState: 'idle', savebackState: 'idle' });
+    updateIntakeGraphStatusBoard({ route: 'web-paste-diary', nextAction: 'apply-to-graph', aiState: 'idle', saveState: 'idle' });
     pendingIntakeApplyAfterPreview = true;
     importPreviewButton?.click();
     setInteractionState('intake-diary-apply-requested');
@@ -8350,6 +8473,7 @@ const GRAPH_CONTROL_SCRIPT = `
       shell.setAttribute('data-intake-last-action', action);
       if (action === 'quick-capture') {
         updateDiaryGraphHandoffMap({ route: 'app-quick-diary', stage: 'capture-opened', aiState: 'idle', savebackState: 'idle' });
+        updateIntakeGraphStatusBoard({ route: 'app-quick-diary', nextAction: 'apply-to-graph', aiState: 'idle', saveState: 'idle' });
         return;
       }
       event.preventDefault();
@@ -8358,6 +8482,7 @@ const GRAPH_CONTROL_SCRIPT = `
         importPasteText?.focus();
         memoryIntakeHub?.setAttribute('data-intake-stage', 'paste-diary-focused');
         updateDiaryGraphHandoffMap({ route: 'web-paste-diary', stage: 'drafting', aiState: 'idle', savebackState: 'idle' });
+        updateIntakeGraphStatusBoard({ route: 'web-paste-diary', nextAction: 'preview-diary', aiState: 'idle', saveState: 'idle' });
         updateFlowCoach('importing', 'paste-and-preview', '웹에서 일기를 붙여넣는 단계', '긴 일기나 Markdown을 붙여넣고 미리보기를 만들면 그래프에 넣을 기억 후보가 나온다.');
         setIntakeFlowStepState('capture', 'loading');
         setIntakeFlowStepState('graph', 'idle');
@@ -8374,6 +8499,7 @@ const GRAPH_CONTROL_SCRIPT = `
         memoryIntakeHub?.setAttribute('data-intake-stage', 'notion-diary-ready');
         notionImportPanel?.setAttribute('data-notion-source-scope', 'diary-only');
         updateDiaryGraphHandoffMap({ route: 'notion-diary-db', stage: 'notion-ready', aiState: 'idle', savebackState: 'idle' });
+        updateIntakeGraphStatusBoard({ route: 'notion-diary-db', nextAction: 'preview-diary', aiState: 'idle', saveState: 'idle' });
         updateFlowCoach('importing', 'select-notion-diary-db', '습관리스트 일기 DB 선택', 'Notion에서 일기 데이터베이스만 선택해 미리보기와 그래프 적용으로 이어간다.');
         setIntakeFlowStepState('capture', 'loading');
         setIntakeFlowStepState('graph', 'idle');

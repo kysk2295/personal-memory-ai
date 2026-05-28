@@ -320,6 +320,22 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
     'Intake result panel should offer the guided AI session as the next step',
   );
   assert(
+    (await attribute(page, '[data-intake-graph-status-board="diary-to-graph"]', 'data-intake-board-route')) === 'web-paste-diary',
+    'Intake graph status board should track web diary paste as the route',
+  );
+  assert(
+    (await attribute(page, '[data-intake-graph-status-board="diary-to-graph"]', 'data-intake-board-memory')) === intakeAppliedMemoryId,
+    'Intake graph status board should expose the applied diary memory',
+  );
+  assert(
+    Number(await attribute(page, '[data-intake-graph-status-board="diary-to-graph"]', 'data-intake-board-related-count')) > 0,
+    'Intake graph status board should expose related-memory count',
+  );
+  assert(
+    (await attribute(page, '[data-intake-graph-status-board="diary-to-graph"]', 'data-intake-board-next-action')) === 'run-ai-session',
+    'Intake graph status board should point to the guided AI session after graph apply',
+  );
+  assert(
     (await attribute(page, '[data-prototype-journey-cockpit="diary-memory-ai"]', 'data-journey-current-step')) === 'related',
     'Prototype journey cockpit should move to related after diary graph apply',
   );
