@@ -319,6 +319,10 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
     'Cytoscape memory node click should update inspector selection',
   );
   assert((await attribute(page, '.second-brain-shell', 'data-active-memory')) === firstCitation, 'Shell should expose active memory after Cytoscape node selection');
+  const relatedMemoryCount = Number(await attribute(page, '[data-related-memory-strip="selected-node"]', 'data-related-memory-count'));
+  assert(relatedMemoryCount > 0, 'Selected memory should expose related past memory nodes');
+  assert((await attribute(page, '.second-brain-shell', 'data-related-memory-source')) === firstCitation, 'Shell should expose selected related-memory source');
+  assert((await page.locator('[data-related-memory-id]').count()) > 0, 'Related memory strip should render clickable related memory chips');
 
   await page.locator('[data-filter-chip="semantic"]').click();
   assert((await attribute(page, '[data-filter-chip="semantic"]', 'aria-pressed')) === 'false', 'Semantic filter chip should toggle off');

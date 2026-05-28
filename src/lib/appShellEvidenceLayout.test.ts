@@ -640,6 +640,12 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(documentHtml).toContain("shell.setAttribute('data-layout-version', String(layoutVersion))");
     expect(documentHtml).toContain("inspector.setAttribute('data-selected-memory', citation)");
     expect(documentHtml).toContain("edge.setAttribute('data-edge-active', String(active))");
+    expect(documentHtml).toContain('data-related-memory-strip="selected-node"');
+    expect(documentHtml).toContain('const renderRelatedMemoryEvidence = (citation) =>');
+    expect(documentHtml).toContain("chip.setAttribute('data-related-memory-id', item.id)");
+    expect(documentHtml).toContain("shell.setAttribute('data-related-memory-source', citation)");
+    expect(documentHtml).toContain("shell.setAttribute('data-related-memory-count', String(related.length))");
+    expect(documentHtml).toContain('renderRelatedMemoryEvidence(citation)');
     expect(documentHtml).toContain("shell.setAttribute('data-labels', hidden ? 'visible' : 'hidden')");
     expect(documentHtml).toContain("setSpacing('normal')");
     expect(documentHtml).toContain('const buildLocalImportCandidates =');

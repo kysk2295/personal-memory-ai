@@ -227,6 +227,7 @@ No remote push, main merge, production deploy, or secret access is allowed witho
 - L77: live Decision Replay citation path graph highlight.
 - L78: live Weekly Report citation path graph highlight.
 - L79: quick diary capture graph handoff selection.
+- L80: selected memory related-node evidence drawer.
 
 ## 6. Active Next Loops
 
@@ -1530,6 +1531,24 @@ Implemented:
 - `src/lib/appCaptureSurface.test.ts`
 - `src/lib/appShellEvidenceLayout.test.ts`
 - `scripts/verify-service-flow.ts`
+- `scripts/verify-playwright-evidence.ts`
+
+### L80 — Selected Memory Related-Node Evidence Drawer
+
+Goal: make a selected diary/memory show the related past-memory nodes that share graph facets, so the graph visibly answers "what past memories are connected to this?"
+
+Acceptance:
+
+- selected memory inspector includes a related-memory strip
+- related memories are derived from the live Cytoscape graph, not static placeholder copy
+- selecting a graph memory updates related-memory count/source markers
+- related chips can jump to another cited memory
+- Playwright verifies that a selected memory exposes related past-memory nodes
+
+Implemented:
+
+- `src/App.tsx`
+- `src/lib/appShellEvidenceLayout.test.ts`
 - `scripts/verify-playwright-evidence.ts`
 
 ## 8. MVP Time Estimate

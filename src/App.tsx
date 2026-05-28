@@ -552,6 +552,35 @@ const APP_SHELL_STYLES = `
     color: #5e6374;
   }
   .memory-inspector p { margin: 0; color: #7c8295; font-size: 12px; line-height: 1.55; }
+  .related-memory-strip {
+    display: grid;
+    gap: 7px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(120, 126, 149, 0.13);
+  }
+  .related-memory-strip strong {
+    color: #626779;
+    font-size: 11px;
+    letter-spacing: 0.02em;
+  }
+  .related-memory-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .related-memory-chip {
+    border: 1px solid rgba(97, 102, 125, 0.14);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.76);
+    color: #686e81;
+    padding: 5px 7px;
+    font-size: 10px;
+    max-width: 170px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
   .citation-row { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 14px; }
   .citation-row a {
     color: #5f56d8;
@@ -1835,6 +1864,10 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
             <h2 data-inspector-headline>${escapeHtml(layout.ask.recommendation)}</h2>
             <p class="memory-inspector-source" data-inspector-source>selected path · 3 cited memories</p>
             <p data-inspector-body>반복된 <span class="pill-red">anxiety → feature addition → launch delay</span> 경로만 근거로 답한다. Decision Replay는 현재 결정을 과거 결과와 비교하고, Evidence drawer는 출처·날짜·기억 원문으로 되돌아간다.</p>
+            <div class="related-memory-strip" data-related-memory-strip="selected-node" data-related-memory-count="0">
+              <strong>연관된 과거 기억</strong>
+              <div class="related-memory-list" data-related-memory-list></div>
+            </div>
             <div class="citation-row" aria-label="Ask My Past Self citations" data-inspector-citations>${citationLinks}</div>
           </article>
         </div>
@@ -1872,6 +1905,8 @@ const GRAPH_CONTROL_SCRIPT = `
   const inspectorSource = inspector?.querySelector('[data-inspector-source]');
   const inspectorBody = inspector?.querySelector('[data-inspector-body]');
   const inspectorCitations = inspector?.querySelector('[data-inspector-citations]');
+  const relatedMemoryStrip = inspector?.querySelector('[data-related-memory-strip]');
+  const relatedMemoryList = inspector?.querySelector('[data-related-memory-list]');
   const askForm = document.querySelector('[data-ask-endpoint]');
   const askEndpoint = askForm?.getAttribute('data-ask-endpoint') || '';
   const askQuestionInput = askForm?.querySelector('input[name="question"]');
@@ -2164,6 +2199,43 @@ const GRAPH_CONTROL_SCRIPT = `
     }
   };
 
+  const renderRelatedMemoryEvidence = (citation) => {
+    if (!relatedMemoryStrip || !relatedMemoryList || !cytoscapeGraph || !citation) return;
+    const selectedNode = cytoscapeGraph.getElementById('memory:' + citation);
+    if (!selectedNode || !selectedNode.length) return;
+    const related = [];
+    const seen = new Set();
+    selectedNode.connectedEdges().forEach((edge) => {
+      const facetNode = edge.connectedNodes().not(selectedNode).first();
+      if (!facetNode || !facetNode.length) return;
+      facetNode.connectedEdges().forEach((facetEdge) => {
+        const candidate = facetEdge.connectedNodes('[kind = "memory"]').first();
+        const candidateId = candidate?.data('recordId');
+        if (!candidateId || candidateId === citation || seen.has(candidateId)) return;
+        seen.add(candidateId);
+        related.push({
+          id: candidateId,
+          label: candidate.data('graphLabel') || candidate.data('label') || candidateId,
+          reason: facetNode.data('label') || facetNode.data('graphLabel') || facetNode.data('kind') || 'shared edge',
+        });
+      });
+    });
+    relatedMemoryList.replaceChildren();
+    related.slice(0, 6).forEach((item) => {
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'related-memory-chip';
+      chip.setAttribute('data-related-memory-id', item.id);
+      chip.setAttribute('data-related-memory-reason', item.reason);
+      chip.textContent = item.label;
+      chip.addEventListener('click', () => selectMemoryByCitation(item.id));
+      relatedMemoryList.append(chip);
+    });
+    relatedMemoryStrip.setAttribute('data-related-memory-count', String(related.length));
+    shell.setAttribute('data-related-memory-source', citation);
+    shell.setAttribute('data-related-memory-count', String(related.length));
+  };
+
   const selectMemory = (node) => {
     if (!node || !inspectorHeadline || !inspectorBody || !inspectorSource) return;
     memoryNodes.forEach((item) => item.setAttribute('data-selected', String(item === node)));
@@ -2197,6 +2269,7 @@ const GRAPH_CONTROL_SCRIPT = `
     shell.setAttribute('data-active-memory', citation);
     updateTimelineSelection(citation);
     markCytoscapeSelection(citation);
+    renderRelatedMemoryEvidence(citation);
     setInteractionState('memory-selected');
   };
 
@@ -2238,6 +2311,7 @@ const GRAPH_CONTROL_SCRIPT = `
     } else {
       return false;
     }
+    renderRelatedMemoryEvidence(normalizedCitation);
     shell.setAttribute('data-capture-handoff-selected-memory', normalizedCitation);
     shell.setAttribute('data-capture-handoff-state', 'selected');
     setInteractionState('capture-handoff-selected');
