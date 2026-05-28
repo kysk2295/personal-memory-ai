@@ -649,6 +649,11 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(documentHtml).toContain("candidate.addClass('related-memory')");
     expect(documentHtml).toContain("facetNode.addClass('related-facet')");
     expect(documentHtml).toContain("shell.setAttribute('data-related-memory-highlighted-edge-count'");
+    expect(documentHtml).toContain('data-control="ask-with-related-memory-context"');
+    expect(documentHtml).toContain('const askWithRelatedMemoryContext = () =>');
+    expect(documentHtml).toContain("lastAskFollowUpContext = {");
+    expect(documentHtml).toContain("shell.setAttribute('data-ask-context-source-memory'");
+    expect(documentHtml).toContain("setInteractionState('ask-context-seeded-from-related-memories')");
     expect(documentHtml).toContain('renderRelatedMemoryEvidence(citation)');
     expect(documentHtml).toContain("shell.setAttribute('data-labels', hidden ? 'visible' : 'hidden')");
     expect(documentHtml).toContain("setSpacing('normal')");

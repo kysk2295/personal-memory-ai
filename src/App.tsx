@@ -569,6 +569,16 @@ const APP_SHELL_STYLES = `
     flex-wrap: wrap;
     gap: 6px;
   }
+  .related-memory-action {
+    justify-self: start;
+    border: 1px solid rgba(20, 184, 166, 0.2);
+    border-radius: 999px;
+    background: rgba(20, 184, 166, 0.08);
+    color: #0f766e;
+    padding: 6px 9px;
+    font-size: 10px;
+    font-weight: 760;
+  }
   .related-memory-chip {
     border: 1px solid rgba(97, 102, 125, 0.14);
     border-radius: 999px;
@@ -1867,6 +1877,7 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
             <div class="related-memory-strip" data-related-memory-strip="selected-node" data-related-memory-count="0">
               <strong>연관된 과거 기억</strong>
               <div class="related-memory-list" data-related-memory-list></div>
+              <button type="button" class="related-memory-action" data-control="ask-with-related-memory-context">이 맥락으로 Ask</button>
             </div>
             <div class="citation-row" aria-label="Ask My Past Self citations" data-inspector-citations>${citationLinks}</div>
           </article>
@@ -1907,6 +1918,7 @@ const GRAPH_CONTROL_SCRIPT = `
   const inspectorCitations = inspector?.querySelector('[data-inspector-citations]');
   const relatedMemoryStrip = inspector?.querySelector('[data-related-memory-strip]');
   const relatedMemoryList = inspector?.querySelector('[data-related-memory-list]');
+  const askWithRelatedMemoryButton = inspector?.querySelector('[data-control="ask-with-related-memory-context"]');
   const askForm = document.querySelector('[data-ask-endpoint]');
   const askEndpoint = askForm?.getAttribute('data-ask-endpoint') || '';
   const askQuestionInput = askForm?.querySelector('input[name="question"]');
@@ -2242,6 +2254,26 @@ const GRAPH_CONTROL_SCRIPT = `
     shell.setAttribute('data-related-memory-source', citation);
     shell.setAttribute('data-related-memory-count', String(related.length));
     shell.setAttribute('data-related-memory-highlighted-edge-count', String(highlightedEdgeCount));
+  };
+
+  const askWithRelatedMemoryContext = () => {
+    const sourceMemoryId = shell.getAttribute('data-active-memory') || '';
+    const relatedMemoryIds = Array.from(relatedMemoryList?.querySelectorAll('[data-related-memory-id]') || [])
+      .map((item) => item.getAttribute('data-related-memory-id') || '')
+      .filter(Boolean);
+    if (!sourceMemoryId || !relatedMemoryIds.length) return;
+    if (askQuestionInput) {
+      askQuestionInput.value = '이 기억과 연관된 과거 기억들을 근거로 지금 내가 무엇을 반복하고 있는지 알려줘';
+      askQuestionInput.focus();
+    }
+    lastAskFollowUpContext = {
+      previousQuestion: 'selected-memory-related-context',
+      previousCitationMemoryIds: [sourceMemoryId, ...relatedMemoryIds],
+    };
+    shell.setAttribute('data-ask-context-source-memory', sourceMemoryId);
+    shell.setAttribute('data-ask-context-related-memory-count', String(relatedMemoryIds.length));
+    shell.setAttribute('data-ask-context-related-memories', relatedMemoryIds.join(','));
+    setInteractionState('ask-context-seeded-from-related-memories');
   };
 
   const selectMemory = (node) => {
@@ -3641,6 +3673,7 @@ const GRAPH_CONTROL_SCRIPT = `
       }
     });
   });
+  askWithRelatedMemoryButton?.addEventListener('click', askWithRelatedMemoryContext);
   if (memoryNodes[2]) selectMemory(memoryNodes[2]);
   wireReviewComparisonButtons();
   initializeCytoscapeGraph();

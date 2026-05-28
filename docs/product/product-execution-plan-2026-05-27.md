@@ -229,6 +229,7 @@ No remote push, main merge, production deploy, or secret access is allowed witho
 - L79: quick diary capture graph handoff selection.
 - L80: selected memory related-node evidence drawer.
 - L81: selected memory related-path graph highlight.
+- L82: related-memory Ask context handoff.
 
 ## 6. Active Next Loops
 
@@ -1563,6 +1564,24 @@ Acceptance:
 - shared facet nodes receive a dedicated Cytoscape class
 - edges from selected memory to shared facets and from facets to related memories are highlighted
 - Playwright verifies related memories, facets, and edges are highlighted in Cytoscape
+
+Implemented:
+
+- `src/App.tsx`
+- `src/lib/appShellEvidenceLayout.test.ts`
+- `scripts/verify-playwright-evidence.ts`
+
+### L82 — Related-Memory Ask Context Handoff
+
+Goal: let the user move from selected diary memory + related past memories directly into an Ask My Past Self question with the related context preserved.
+
+Acceptance:
+
+- related-memory strip exposes an Ask context action
+- action seeds the Ask input with a question about repeated patterns
+- action stores selected memory plus related memory ids as follow-up context
+- shell exposes selected source memory and related count markers
+- Playwright verifies the handoff from graph selection to Ask context
 
 Implemented:
 

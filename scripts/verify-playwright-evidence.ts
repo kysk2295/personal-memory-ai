@@ -335,6 +335,10 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   assert(highlightedRelatedPath.facets > 0, 'Selected memory should highlight shared facet nodes in Cytoscape');
   assert(highlightedRelatedPath.edges > 0, 'Selected memory should highlight related graph edges in Cytoscape');
   assert(Number(await attribute(page, '.second-brain-shell', 'data-related-memory-highlighted-edge-count')) > 0, 'Shell should expose highlighted related edge count');
+  await page.locator('[data-control="ask-with-related-memory-context"]').click();
+  assert((await attribute(page, '.second-brain-shell', 'data-ask-context-source-memory')) === firstCitation, 'Related-memory ask action should seed the selected memory as context');
+  assert(Number(await attribute(page, '.second-brain-shell', 'data-ask-context-related-memory-count')) > 0, 'Related-memory ask action should seed related memory context');
+  assert((await attribute(page, '.second-brain-shell', 'data-interaction-state')) === 'ask-context-seeded-from-related-memories', 'Related-memory ask action should expose seeded interaction state');
 
   await page.locator('[data-filter-chip="semantic"]').click();
   assert((await attribute(page, '[data-filter-chip="semantic"]', 'aria-pressed')) === 'false', 'Semantic filter chip should toggle off');
