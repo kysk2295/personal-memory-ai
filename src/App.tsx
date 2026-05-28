@@ -609,6 +609,80 @@ const APP_SHELL_STYLES = `
     background: #e11d3f;
     color: #ffffff;
   }
+  .korean-ai-workbench {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: minmax(160px, 0.42fr) minmax(0, 1fr) minmax(150px, 0.4fr);
+    gap: 8px;
+    min-width: 0;
+    border: 1px solid rgba(225, 29, 63, 0.18);
+    border-radius: 8px;
+    background: rgba(255, 247, 248, 0.86);
+    padding: 9px;
+  }
+  .korean-ai-workbench-copy,
+  .korean-ai-workbench-status,
+  .korean-ai-workbench-next {
+    display: grid;
+    gap: 5px;
+    min-width: 0;
+    align-content: center;
+  }
+  .korean-ai-workbench-copy strong,
+  .korean-ai-workbench-copy span,
+  .korean-ai-workbench-status span,
+  .korean-ai-workbench-next strong,
+  .korean-ai-workbench-next span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .korean-ai-workbench-copy strong,
+  .korean-ai-workbench-next strong {
+    color: #9f1239;
+    font-size: 12px;
+  }
+  .korean-ai-workbench-copy span,
+  .korean-ai-workbench-next span {
+    color: #7b5861;
+    font-size: 10px;
+    font-weight: 760;
+  }
+  .korean-ai-workbench-status {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+  }
+  .korean-ai-workbench-status span {
+    border: 1px solid rgba(225, 29, 63, 0.11);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.74);
+    color: #704a54;
+    padding: 7px;
+    font-size: 10px;
+    font-weight: 780;
+  }
+  .korean-ai-workbench-actions {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 6px;
+  }
+  .korean-ai-workbench-actions button {
+    min-height: 32px;
+    border: 1px solid rgba(225, 29, 63, 0.22);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.78);
+    color: #9f1239;
+    padding: 6px 8px;
+    font-size: 11px;
+    font-weight: 820;
+    cursor: pointer;
+  }
+  .korean-ai-workbench-actions [data-workbench-action="ask"],
+  .korean-ai-workbench-actions [data-workbench-action="save"][data-workbench-action-enabled="true"] {
+    background: #e11d3f;
+    color: #ffffff;
+  }
   .prototype-entry-dock {
     grid-column: 1 / -1;
     display: grid;
@@ -3994,6 +4068,29 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
             <button type="button" data-journey-primary-action="session">AI 세션 실행</button>
           </div>
         </section>
+        <section class="korean-ai-workbench" data-korean-ai-workbench="selected-or-imported-memory" data-workbench-selected-memory="${escapeHtml(currentFlowMemoryId)}" data-workbench-related-count="${currentFlowRelatedCount}" data-workbench-last-action="none" data-workbench-action-state="idle" data-workbench-next-action="choose-ai-action" data-workbench-save-state="idle" aria-label="오늘 기억 작업대">
+          <div class="korean-ai-workbench-copy">
+            <strong>오늘 기억 작업대</strong>
+            <span>선택한 기억이나 방금 가져온 일기를 바로 AI 행동으로 이어간다.</span>
+          </div>
+          <div class="korean-ai-workbench-status" aria-label="오늘 기억 작업대 상태">
+            <span data-workbench-memory-label>선택/가져온 기억 · ${escapeHtml(currentFlowEntry?.title ?? currentFlowMemoryId)}</span>
+            <span data-workbench-related-label>연관 과거 기억 · ${currentFlowRelatedCount}개</span>
+            <span data-workbench-action-label>AI 행동 · 대기</span>
+            <span data-workbench-save-label>저장 · 대기</span>
+          </div>
+          <div class="korean-ai-workbench-next">
+            <strong>바로 할 일</strong>
+            <span data-workbench-next-label>질문, 결정 되짚기, 주간 패턴 중 하나를 고른다.</span>
+          </div>
+          <div class="korean-ai-workbench-actions" aria-label="오늘 기억 AI 행동">
+            <button type="button" data-workbench-action="ask">기억에게 묻기</button>
+            <button type="button" data-workbench-action="replay">결정 되짚기</button>
+            <button type="button" data-workbench-action="weekly">주간 패턴</button>
+            <button type="button" data-workbench-action="session">AI 세션</button>
+            <button type="button" data-workbench-action="save" data-workbench-action-enabled="false">결과 저장</button>
+          </div>
+        </section>
         <section class="guided-service-flow" data-guided-service-flow="diary-memory-ai" data-guided-flow-current-step="capture" data-guided-flow-source="${escapeHtml(currentFlowMemoryId)}" data-guided-flow-related-count="${currentFlowRelatedCount}" data-guided-flow-saved-memory="" aria-label="일기에서 개인 기억 AI까지 한 화면 흐름">
           <ol class="guided-flow-steps" aria-label="핵심 사용 흐름">
             <li data-guided-flow-step="capture" data-guided-flow-state="active"><strong>기록</strong><span>앱/웹 일기 입력</span></li>
@@ -4480,6 +4577,13 @@ const GRAPH_CONTROL_SCRIPT = `
   const actionCenterRelatedLabel = selectedAiActionCenter?.querySelector('[data-action-center-related-label]');
   const actionCenterCitationLabel = selectedAiActionCenter?.querySelector('[data-action-center-citation-label]');
   const actionCenterSaveLabel = selectedAiActionCenter?.querySelector('[data-action-center-save-label]');
+  const koreanAiWorkbench = document.querySelector('[data-korean-ai-workbench="selected-or-imported-memory"]');
+  const workbenchMemoryLabel = koreanAiWorkbench?.querySelector('[data-workbench-memory-label]');
+  const workbenchRelatedLabel = koreanAiWorkbench?.querySelector('[data-workbench-related-label]');
+  const workbenchActionLabel = koreanAiWorkbench?.querySelector('[data-workbench-action-label]');
+  const workbenchSaveLabel = koreanAiWorkbench?.querySelector('[data-workbench-save-label]');
+  const workbenchNextLabel = koreanAiWorkbench?.querySelector('[data-workbench-next-label]');
+  const workbenchActions = Array.from(document.querySelectorAll('[data-workbench-action]'));
   const askWithRelatedMemoryButton = inspector?.querySelector('[data-control="ask-with-related-memory-context"]');
   const replayWithRelatedMemoryButton = inspector?.querySelector('[data-control="replay-with-related-memory-context"]');
   const reportWithRelatedMemoryButton = inspector?.querySelector('[data-control="report-with-related-memory-context"]');
@@ -4962,6 +5066,83 @@ const GRAPH_CONTROL_SCRIPT = `
     saved: '저장됨',
   };
 
+  const workbenchActionLabels = {
+    none: '대기',
+    ask: '기억에게 묻기',
+    replay: '결정 되짚기',
+    weekly: '주간 패턴',
+    session: 'AI 세션',
+  };
+
+  const workbenchStateLabels = {
+    idle: '대기',
+    ready: '준비',
+    running: '실행 중',
+    answered: '완료',
+    saved: '저장됨',
+  };
+
+  const workbenchNextLabels = {
+    'choose-ai-action': '질문, 결정 되짚기, 주간 패턴 중 하나를 고른다.',
+    'run-ai-action': '선택한 행동을 실행해 인용 근거를 확인한다.',
+    'save-result': '결과를 미래 기억으로 저장한다.',
+    'open-saved-memory': '저장된 기억을 다시 그래프에서 연다.',
+  };
+
+  const updateKoreanAiWorkbench = (detail = {}) => {
+    if (!koreanAiWorkbench) return;
+    const selectedMemory =
+      detail.sourceMemoryId ||
+      detail.selectedMemory ||
+      shell.getAttribute('data-active-memory') ||
+      koreanAiWorkbench.getAttribute('data-workbench-selected-memory') ||
+      '';
+    const relatedCount = String(
+      detail.relatedCount ??
+        shell.getAttribute('data-related-memory-count') ??
+        koreanAiWorkbench.getAttribute('data-workbench-related-count') ??
+        '0',
+    );
+    const lastAction = detail.lastAction || koreanAiWorkbench.getAttribute('data-workbench-last-action') || 'none';
+    const actionState = detail.actionState || koreanAiWorkbench.getAttribute('data-workbench-action-state') || 'idle';
+    const nextAction = detail.nextAction || koreanAiWorkbench.getAttribute('data-workbench-next-action') || 'choose-ai-action';
+    const saveState = detail.saveState || koreanAiWorkbench.getAttribute('data-workbench-save-state') || 'idle';
+    koreanAiWorkbench?.setAttribute('data-workbench-selected-memory', selectedMemory);
+    koreanAiWorkbench?.setAttribute('data-workbench-related-count', relatedCount);
+    koreanAiWorkbench?.setAttribute('data-workbench-last-action', lastAction);
+    koreanAiWorkbench?.setAttribute('data-workbench-action-state', actionState);
+    koreanAiWorkbench?.setAttribute('data-workbench-next-action', nextAction);
+    koreanAiWorkbench?.setAttribute('data-workbench-save-state', saveState);
+    shell.setAttribute('data-workbench-selected-memory', selectedMemory);
+    shell.setAttribute('data-workbench-last-action', lastAction);
+    shell.setAttribute('data-workbench-next-action', nextAction);
+    const selectedNode = selectedMemory ? cytoscapeGraph?.getElementById('memory:' + selectedMemory) : null;
+    const memoryLabel = selectedNode?.data('graphLabel') || selectedNode?.data('label') || selectedMemory || '대기';
+    if (workbenchMemoryLabel) workbenchMemoryLabel.textContent = '선택/가져온 기억 · ' + memoryLabel;
+    if (workbenchRelatedLabel) workbenchRelatedLabel.textContent = '연관 과거 기억 · ' + relatedCount + '개';
+    if (workbenchActionLabel) {
+      workbenchActionLabel.textContent =
+        'AI 행동 · ' + (workbenchActionLabels[lastAction] || lastAction) + ' · ' + (workbenchStateLabels[actionState] || actionState);
+    }
+    if (workbenchSaveLabel) {
+      workbenchSaveLabel.textContent =
+        saveState === 'saved'
+          ? '저장 · 완료'
+          : saveState === 'ready'
+            ? '저장 · 가능'
+            : saveState === 'saving'
+              ? '저장 · 저장 중'
+              : '저장 · 대기';
+    }
+    if (workbenchNextLabel) workbenchNextLabel.textContent = workbenchNextLabels[nextAction] || nextAction;
+    workbenchActions.forEach((button) => {
+      const action = button.getAttribute('data-workbench-action') || '';
+      const isActive = action === lastAction || (action === 'save' && saveState === 'ready');
+      button.setAttribute('data-workbench-action-active', String(isActive));
+      if (action === 'save') button.setAttribute('data-workbench-action-enabled', String(saveState === 'ready' || saveState === 'saved'));
+    });
+  };
+
   const setActionCenterStepState = (action, state = 'ready') => {
     Array.from(selectedAiActionCenter?.querySelectorAll('[data-action-center-state]') || []).forEach((item) => {
       const itemAction = item.getAttribute('data-action-center-state') || '';
@@ -5071,9 +5252,25 @@ const GRAPH_CONTROL_SCRIPT = `
         item.setAttribute('data-action-center-state-value', 'idle');
         item.textContent = (actionCenterLabels[itemAction] || itemAction) + ' · 대기';
       });
+      updateKoreanAiWorkbench({
+        sourceMemoryId: source,
+        relatedCount,
+        lastAction: 'none',
+        actionState: 'idle',
+        nextAction: 'choose-ai-action',
+        saveState,
+      });
       return;
     }
     setActionCenterStepState(detail.lastAction || 'none', detail.actionState || (lastAction === 'none' ? 'idle' : 'ready'));
+    updateKoreanAiWorkbench({
+      sourceMemoryId: source,
+      relatedCount,
+      lastAction,
+      actionState: detail.actionState || (lastAction === 'none' ? 'idle' : 'ready'),
+      nextAction: lastAction === 'none' ? 'choose-ai-action' : saveState === 'ready' ? 'save-result' : 'run-ai-action',
+      saveState,
+    });
   };
 
   const updateGraphEvidenceLens = (detail = {}) => {
@@ -5888,6 +6085,14 @@ const GRAPH_CONTROL_SCRIPT = `
       saveState: state === 'answered' ? 'ready' : 'idle',
       nextAction: state === 'answered' ? 'save-result' : 'run-ai-session',
     });
+    updateKoreanAiWorkbench({
+      sourceMemoryId: intakeSessionResult?.getAttribute('data-intake-applied-memory') || shell.getAttribute('data-active-memory') || '',
+      relatedCount: intakeRelatedBundle?.getAttribute('data-intake-related-bundle-count') || shell.getAttribute('data-related-memory-count') || '0',
+      lastAction: kind,
+      actionState: state === 'answered' ? 'answered' : state === 'loading' ? 'running' : 'ready',
+      nextAction: state === 'answered' ? 'save-result' : 'run-ai-action',
+      saveState: state === 'answered' ? 'ready' : 'idle',
+    });
     setIntakeFlowStepState('ai', state === 'answered' ? 'done' : state === 'loading' ? 'loading' : 'error');
     updateFlowCoach(
       state === 'answered' ? 'ai-answered' : state === 'loading' ? 'ai-running' : 'ai-error',
@@ -5959,6 +6164,13 @@ const GRAPH_CONTROL_SCRIPT = `
         }
         setIntakeFlowStepState('save', 'done');
         updateIntakeGraphStatusBoard({ memoryId: savedMemoryId || 'saved-memory', nextAction: 'reopen-saved-memory', aiState: 'saved', saveState: 'saved' });
+        updateKoreanAiWorkbench({
+          sourceMemoryId: savedMemoryId || 'saved-memory',
+          lastAction,
+          actionState: 'saved',
+          nextAction: 'open-saved-memory',
+          saveState: 'saved',
+        });
         updateFlowCoach(
           'saved',
           'reopen-saved-memory',
@@ -6004,6 +6216,14 @@ const GRAPH_CONTROL_SCRIPT = `
       relatedCount,
       nextAction: 'run-ai-session',
       aiState: 'ready',
+      saveState: 'idle',
+    });
+    updateKoreanAiWorkbench({
+      sourceMemoryId: appliedMemoryId,
+      relatedCount,
+      lastAction: 'none',
+      actionState: 'ready',
+      nextAction: 'choose-ai-action',
       saveState: 'idle',
     });
     updateDiaryGraphHandoffMap({ route: 'web-paste-diary', stage: 'applied', memoryId: appliedMemoryId, relatedCount, aiState: 'ready' });
@@ -8256,6 +8476,98 @@ const GRAPH_CONTROL_SCRIPT = `
       if (action === 'session') {
         updateGuidedServiceFlow('ai', { nextAction: 'run-ai-session' });
         void runMemorySession();
+      }
+    });
+  });
+  const getWorkbenchMemoryContext = () => {
+    const sourceMemoryId =
+      koreanAiWorkbench?.getAttribute('data-workbench-selected-memory') ||
+      intakeSessionResult?.getAttribute('data-intake-applied-memory') ||
+      shell.getAttribute('data-active-memory') ||
+      '';
+    const intakeRelatedIds = String(intakeRelatedBundle?.getAttribute('data-intake-related-memory-ids') || '')
+      .split(',')
+      .map((item) => item.trim())
+      .filter(Boolean);
+    const bundleRelatedIds = Array.from(intakeRelatedBundle?.querySelectorAll('[data-intake-related-memory-id]') || [])
+      .map((item) => item.getAttribute('data-intake-related-memory-id') || '')
+      .filter(Boolean);
+    const graphRelatedIds = Array.from(relatedMemoryList?.querySelectorAll('[data-related-memory-id]') || [])
+      .map((item) => item.getAttribute('data-related-memory-id') || '')
+      .filter(Boolean);
+    const relatedMemoryIds = intakeRelatedIds.length
+      ? intakeRelatedIds
+      : bundleRelatedIds.length
+        ? bundleRelatedIds
+        : graphRelatedIds;
+    if (!sourceMemoryId || !relatedMemoryIds.length) return null;
+    return { sourceMemoryId, relatedMemoryIds };
+  };
+  workbenchActions.forEach((button) => {
+    button.addEventListener('click', async () => {
+      const action = button.getAttribute('data-workbench-action') || '';
+      const context = getWorkbenchMemoryContext();
+      if (action === 'save') {
+        updateKoreanAiWorkbench({ saveState: 'saving', nextAction: 'save-result' });
+        if (intakeSaveAiResultButton?.getAttribute('data-intake-ai-save-state') === 'ready') {
+          saveLatestIntakeAiResult();
+        } else {
+          void saveMemorySession();
+        }
+        return;
+      }
+      if (!context) {
+        updateKoreanAiWorkbench({ lastAction: action, actionState: 'ready', nextAction: 'choose-ai-action', saveState: 'idle' });
+        setInteractionState('workbench-context-missing');
+        return;
+      }
+      shell.setAttribute('data-active-memory', context.sourceMemoryId);
+      updateKoreanAiWorkbench({
+        sourceMemoryId: context.sourceMemoryId,
+        relatedCount: context.relatedMemoryIds.length,
+        lastAction: action,
+        actionState: 'running',
+        nextAction: 'run-ai-action',
+        saveState: 'idle',
+      });
+      try {
+        if (action === 'ask') {
+          setIntakeAiActionState('ask', 'loading', '오늘 기억 작업대에서 관련 과거 기억을 근거로 질문하고 있다.');
+          lastAskFollowUpContext = {
+            previousQuestion: 'korean-ai-workbench',
+            previousCitationMemoryIds: [context.sourceMemoryId, ...context.relatedMemoryIds],
+          };
+          if (askQuestionInput) askQuestionInput.value = '이 일기와 과거 기억을 근거로 지금 내가 반복하는 고민을 알려줘';
+          await askSecondBrain();
+          setIntakeAiActionState('ask', 'answered', '오늘 기억 작업대의 질문 결과가 준비됐다.');
+        } else if (action === 'replay') {
+          setIntakeAiActionState('replay', 'loading', '오늘 기억 작업대에서 과거 선택과 결과를 비교하고 있다.');
+          lastReplayRelatedContext = context;
+          if (decisionReplayInput) decisionReplayInput.value = '이 일기와 관련된 과거 결정을 기준으로 지금 결정을 되짚어줘';
+          await replayCurrentDecision();
+          setIntakeAiActionState('replay', 'answered', '오늘 기억 작업대의 결정 되짚기 결과가 준비됐다.');
+        } else if (action === 'weekly') {
+          setIntakeAiActionState('weekly', 'loading', '오늘 기억 작업대에서 관련 기억의 주간 패턴을 만들고 있다.');
+          lastWeeklyRelatedContext = context;
+          await refreshWeeklyReport();
+          setIntakeAiActionState('weekly', 'answered', '오늘 기억 작업대의 주간 패턴 결과가 준비됐다.');
+        } else if (action === 'session') {
+          setIntakeAiActionState('session', 'loading', '오늘 기억 작업대에서 AI 세션을 실행하고 있다.');
+          await runMemorySession(context);
+          updateKoreanAiWorkbench({
+            sourceMemoryId: context.sourceMemoryId,
+            relatedCount: context.relatedMemoryIds.length,
+            lastAction: 'session',
+            actionState: 'answered',
+            nextAction: 'save-result',
+            saveState: 'ready',
+          });
+        }
+        setInteractionState('korean-ai-workbench-' + action + '-answered');
+      } catch (error) {
+        updateKoreanAiWorkbench({ lastAction: action, actionState: 'ready', nextAction: 'run-ai-action', saveState: 'idle' });
+        shell.setAttribute('data-workbench-error', String(error?.message || error));
+        setInteractionState('korean-ai-workbench-error');
       }
     });
   });

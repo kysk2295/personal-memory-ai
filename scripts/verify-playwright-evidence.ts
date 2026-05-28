@@ -336,6 +336,18 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
     'Intake graph status board should point to the guided AI session after graph apply',
   );
   assert(
+    (await attribute(page, '[data-korean-ai-workbench="selected-or-imported-memory"]', 'data-workbench-selected-memory')) === intakeAppliedMemoryId,
+    'Korean AI workbench should follow the applied diary memory',
+  );
+  assert(
+    Number(await attribute(page, '[data-korean-ai-workbench="selected-or-imported-memory"]', 'data-workbench-related-count')) > 0,
+    'Korean AI workbench should expose related past-memory count',
+  );
+  assert(
+    (await attribute(page, '[data-korean-ai-workbench="selected-or-imported-memory"]', 'data-workbench-next-action')) === 'choose-ai-action',
+    'Korean AI workbench should ask the user to choose a grounded AI action after graph apply',
+  );
+  assert(
     (await attribute(page, '[data-prototype-journey-cockpit="diary-memory-ai"]', 'data-journey-current-step')) === 'related',
     'Prototype journey cockpit should move to related after diary graph apply',
   );
@@ -464,6 +476,19 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
     'Diary inbox click should update selected command rail',
   );
 
+  await page.waitForFunction(
+    ({ memoryNodeCount, renderedMemoryNodeCount, graphNodeCount, edgeCount }) => {
+      const graph = (window as any).__personalMemoryGraph;
+      return (
+        graph?.stats?.memoryNodeCount === memoryNodeCount &&
+        graph?.stats?.renderedMemoryNodeCount === renderedMemoryNodeCount &&
+        graph?.stats?.graphNodeCount === graphNodeCount &&
+        graph?.stats?.edgeCount === edgeCount
+      );
+    },
+    { memoryNodeCount: initialMemoryNodeCount, renderedMemoryNodeCount: initialRenderedMemoryNodeCount, graphNodeCount: initialGraphNodeCount, edgeCount: initialGraphEdgeCount },
+    { timeout: 10_000 },
+  );
   const graphStats = await page.evaluate(() => {
     const graph = (window as any).__personalMemoryGraph;
     return graph?.stats;
@@ -485,6 +510,14 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
     assert(
       Number(await attribute(page, '.second-brain-shell', 'data-live-ask-highlighted-memory-count')) === askCitationCount,
       'Live Ask should highlight the same number of cited graph memories',
+    );
+    await page.waitForFunction(
+      (expectedCount) => {
+        const graph = (window as any).__personalMemoryGraph;
+        return (graph?.cy?.nodes('.ask-citation-memory').length ?? 0) === expectedCount;
+      },
+      askCitationCount,
+      { timeout: 10_000 },
     );
     const highlightedAskCitationCount = await page.evaluate(() => {
       const graph = (window as any).__personalMemoryGraph;
@@ -516,6 +549,14 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
       Number(await attribute(page, '.second-brain-shell', 'data-live-replay-highlighted-memory-count')) === replayCitationCount,
       'Live Decision Replay should highlight the same number of cited graph memories',
     );
+    await page.waitForFunction(
+      (expectedCount) => {
+        const graph = (window as any).__personalMemoryGraph;
+        return (graph?.cy?.nodes('.replay-citation-memory').length ?? 0) === expectedCount;
+      },
+      replayCitationCount,
+      { timeout: 10_000 },
+    );
     const highlightedReplayCitationCount = await page.evaluate(() => {
       const graph = (window as any).__personalMemoryGraph;
       return graph?.cy?.nodes('.replay-citation-memory').length ?? 0;
@@ -534,12 +575,36 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
       Number(await attribute(page, '.second-brain-shell', 'data-live-weekly-highlighted-memory-count')) === weeklyCitationCount,
       'Live Weekly Report should highlight the same number of cited graph memories',
     );
+    await page.waitForFunction(
+      (expectedCount) => {
+        const graph = (window as any).__personalMemoryGraph;
+        return (graph?.cy?.nodes('.weekly-citation-memory').length ?? 0) === expectedCount;
+      },
+      weeklyCitationCount,
+      { timeout: 10_000 },
+    );
     const highlightedWeeklyCitationCount = await page.evaluate(() => {
       const graph = (window as any).__personalMemoryGraph;
       return graph?.cy?.nodes('.weekly-citation-memory').length ?? 0;
     });
     assert(highlightedWeeklyCitationCount === weeklyCitationCount, 'Cytoscape graph should mark Weekly Report citation memory nodes');
   }
+  await page.locator('[data-workbench-action="ask"]').click();
+  await page.waitForFunction(
+    () =>
+      document.querySelector('[data-korean-ai-workbench="selected-or-imported-memory"]')?.getAttribute('data-workbench-last-action') === 'ask' &&
+      document.querySelector('[data-korean-ai-workbench="selected-or-imported-memory"]')?.getAttribute('data-workbench-action-state') === 'answered',
+    null,
+    { timeout: 10_000 },
+  );
+  assert(
+    (await attribute(page, '[data-korean-ai-workbench="selected-or-imported-memory"]', 'data-workbench-action-state')) === 'answered',
+    'Korean AI workbench should show Ask as answered after the action runs',
+  );
+  assert(
+    (await attribute(page, '[data-korean-ai-workbench="selected-or-imported-memory"]', 'data-workbench-save-state')) === 'ready',
+    'Korean AI workbench should allow saveback after a grounded action answers',
+  );
   await page.locator('[data-control="intake-run-ask"]').click();
   await page.waitForFunction(() => document.querySelector('[data-intake-related-bundle="past-memory-nodes"]')?.getAttribute('data-intake-ai-action-result') === 'ask-answered');
   assert((await attribute(page, '.second-brain-shell', 'data-ask-state')) === 'answered', 'Intake Ask action should run the grounded Ask flow');
