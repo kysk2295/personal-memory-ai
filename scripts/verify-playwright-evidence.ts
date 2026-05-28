@@ -189,6 +189,11 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
     return graph?.stats;
   });
   assert(rebuiltGraphStats?.memoryNodeCount > 8, 'Rebuilt Cytoscape graph should include newly imported private memories');
+  await page.locator('[data-control="undo-local-import"]').click();
+  await page.waitForFunction(() => document.querySelector('[data-import-upload-panel="local-file"]')?.getAttribute('data-import-upload-state') === 'undone');
+  assert((await attribute(page, '.second-brain-shell', 'data-interaction-state')) === 'import-undone', 'Shell should expose local import undo state');
+  assert((await attribute(page, '.second-brain-shell', 'data-import-undone-count')) === '1', 'Import undo should remove the Playwright-created memory');
+  assert((await attribute(page, '[data-import-applied-feedback="local-upload"]', 'data-import-applied-count')) === '0', 'Import undo should clear applied import feedback');
 
   await page.locator('[data-control="spacing"][data-spacing="wide"]').click();
   assert((await attribute(page, '.second-brain-shell', 'data-spacing')) === 'wide', 'Spacing control should switch graph spacing to wide');
@@ -389,6 +394,7 @@ try {
           'applied import timeline append',
           'app shell rehydration after import',
           'cytoscape graph rebuild after import',
+          'local import undo cleanup',
           'spacing click',
           'label toggle',
           'filter toggle',

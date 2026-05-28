@@ -1235,6 +1235,22 @@ Implemented:
 - `src/lib/appShellEvidenceLayout.test.ts`
 - `scripts/verify-playwright-evidence.ts`
 
+### L64 — Playwright Import Cleanup
+
+Goal: keep browser evidence runs from permanently adding synthetic import memories to the durable local private vault.
+
+Acceptance:
+
+- Playwright still verifies local import preview and apply
+- Playwright clicks undo after the synthetic import is applied
+- shell exposes `data-interaction-state="import-undone"`
+- shell exposes `data-import-undone-count="1"`
+- applied import feedback is cleared back to count `0`
+
+Implemented:
+
+- `scripts/verify-playwright-evidence.ts`
+
 ## 8. MVP Time Estimate
 
 Assuming focused local development without major dependency or deployment blockers:
