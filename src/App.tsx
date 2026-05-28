@@ -1365,6 +1365,94 @@ const APP_SHELL_STYLES = `
     font-size: 10px;
     line-height: 1.25;
   }
+  .related-memory-workbench {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: minmax(180px, 0.54fr) minmax(0, 1fr) minmax(150px, 0.44fr);
+    gap: 8px;
+    min-width: 0;
+    border: 1px solid rgba(225, 29, 63, 0.14);
+    border-radius: 8px;
+    background: rgba(255, 247, 248, 0.82);
+    padding: 9px 10px;
+  }
+  .related-workbench-summary,
+  .related-workbench-list,
+  .related-workbench-actions {
+    min-width: 0;
+  }
+  .related-workbench-summary {
+    display: grid;
+    gap: 4px;
+    align-content: start;
+  }
+  .related-workbench-summary strong,
+  .related-workbench-summary span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .related-workbench-summary strong {
+    color: #9f1239;
+    font-size: 12px;
+  }
+  .related-workbench-summary span {
+    color: #7b6670;
+    font-size: 10px;
+  }
+  .related-workbench-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+    max-height: 102px;
+    overflow: auto;
+  }
+  .related-workbench-item {
+    display: grid;
+    gap: 3px;
+    min-width: 0;
+    border: 1px solid rgba(225, 29, 63, 0.14);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.76);
+    color: #555b6e;
+    padding: 7px;
+    text-align: left;
+    cursor: pointer;
+  }
+  .related-workbench-item[data-related-workbench-active="true"] {
+    border-color: rgba(225, 29, 63, 0.34);
+    background: rgba(255, 228, 233, 0.9);
+  }
+  .related-workbench-item strong,
+  .related-workbench-item span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .related-workbench-item strong {
+    color: #9f1239;
+    font-size: 10px;
+  }
+  .related-workbench-item span {
+    color: #7f4b56;
+    font-size: 10px;
+  }
+  .related-workbench-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+    align-content: start;
+  }
+  .related-workbench-actions button {
+    min-height: 31px;
+    border: 1px solid rgba(225, 29, 63, 0.22);
+    border-radius: 8px;
+    background: rgba(225, 29, 63, 0.08);
+    color: #9f1239;
+    font-size: 10px;
+    font-weight: 780;
+    cursor: pointer;
+  }
   .related-insight-bridge {
     grid-column: 1 / -1;
     display: grid;
@@ -2396,6 +2484,32 @@ const APP_SHELL_STYLES = `
   .memory-path-hop strong {
     color: #f0f0f2;
   }
+  .related-memory-workbench {
+    border-color: rgba(225, 29, 63, 0.24);
+    background: rgba(37, 15, 20, 0.78);
+  }
+  .related-workbench-summary strong,
+  .related-workbench-item strong {
+    color: #ff9aaa;
+  }
+  .related-workbench-summary span,
+  .related-workbench-item span {
+    color: #d8a8af;
+  }
+  .related-workbench-item {
+    border-color: rgba(255, 255, 255, 0.09);
+    background: rgba(255, 255, 255, 0.06);
+    color: #f0f0f2;
+  }
+  .related-workbench-item[data-related-workbench-active="true"] {
+    border-color: rgba(225, 29, 63, 0.4);
+    background: rgba(225, 29, 63, 0.16);
+  }
+  .related-workbench-actions button {
+    border-color: rgba(225, 29, 63, 0.28);
+    background: rgba(225, 29, 63, 0.13);
+    color: #ffb4c0;
+  }
   .related-insight-bridge {
     border-color: rgba(20, 184, 166, 0.2);
     background: rgba(10, 25, 23, 0.78);
@@ -2871,6 +2985,13 @@ const APP_SHELL_STYLES = `
     .selected-memory-path-panel {
       grid-template-columns: 1fr;
     }
+    .related-memory-workbench {
+      grid-template-columns: 1fr;
+    }
+    .related-workbench-list {
+      grid-template-columns: 1fr;
+      max-height: 128px;
+    }
     .memory-path-hops {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
@@ -3307,6 +3428,28 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
               <div class="memory-path-hop" data-memory-path-hop="ai-action"><span>다음 행동</span><strong data-memory-path-action>AI 세션</strong></div>
             </div>
           </div>
+          <section class="related-memory-workbench" data-related-memory-workbench="selected-diary-comparison" data-related-workbench-source="${escapeHtml(currentFlowMemoryId)}" data-related-workbench-active-memory="${escapeHtml(firstFlowRelatedEntry?.memoryId ?? '')}" data-related-workbench-count="${currentFlowRelatedCount}" aria-label="선택 일기와 과거 기억 비교">
+            <div class="related-workbench-summary">
+              <strong>과거 기억 비교</strong>
+              <span>현재 일기 · <b data-related-workbench-source-label>${escapeHtml(currentFlowEntry?.title ?? currentFlowMemoryId)}</b></span>
+              <span>비교할 과거 기억 · <b data-related-workbench-active-label>${escapeHtml(firstFlowRelatedEntry?.title ?? '선택 전')}</b></span>
+            </div>
+            <div class="related-workbench-list" data-related-workbench-list aria-label="비교할 과거 기억">
+              ${currentFlowRelatedEntries
+                .slice(0, 4)
+                .map((entry, index) => {
+                  const reason = entry.facetLabels.find((facet) => currentFlowEntry?.facetLabels.includes(facet)) ?? entry.memoryType;
+                  return `<button type="button" class="related-workbench-item" data-related-workbench-memory-id="${escapeHtml(entry.memoryId)}" data-related-workbench-reason="${escapeHtml(reason)}" data-related-workbench-active="${String(index === 0)}"><strong>${escapeHtml(entry.title)}</strong><span>${escapeHtml(reason)} 때문에 연결됨</span></button>`;
+                })
+                .join('')}
+            </div>
+            <div class="related-workbench-actions" aria-label="비교한 기억으로 실행">
+              <button type="button" data-related-workbench-action="ask">질문</button>
+              <button type="button" data-related-workbench-action="replay">결정</button>
+              <button type="button" data-related-workbench-action="weekly">주간</button>
+              <button type="button" data-related-workbench-action="session">세션</button>
+            </div>
+          </section>
           <section class="related-insight-bridge" data-related-insight-bridge="diary-to-past-memory-actions" data-related-insight-source="${escapeHtml(currentFlowMemoryId)}" data-related-insight-count="${currentFlowRelatedCount}" aria-label="선택 일기와 관련 과거 기억 이유">
             <strong>왜 이 기억이 떠올랐나</strong>
             <div class="related-insight-reason-list" data-related-insight-reason-list>
@@ -3453,6 +3596,11 @@ const GRAPH_CONTROL_SCRIPT = `
   const relatedInsightBridge = document.querySelector('[data-related-insight-bridge="diary-to-past-memory-actions"]');
   const relatedInsightReasonList = relatedInsightBridge?.querySelector('[data-related-insight-reason-list]');
   const relatedInsightActions = Array.from(document.querySelectorAll('[data-related-insight-action]'));
+  const relatedMemoryWorkbench = document.querySelector('[data-related-memory-workbench="selected-diary-comparison"]');
+  const relatedWorkbenchSourceLabel = relatedMemoryWorkbench?.querySelector('[data-related-workbench-source-label]');
+  const relatedWorkbenchActiveLabel = relatedMemoryWorkbench?.querySelector('[data-related-workbench-active-label]');
+  const relatedWorkbenchList = relatedMemoryWorkbench?.querySelector('[data-related-workbench-list]');
+  const relatedWorkbenchActions = Array.from(document.querySelectorAll('[data-related-workbench-action]'));
   const groundedActionResult = document.querySelector('[data-grounded-action-result="related-memory-ai"]');
   const groundedActionSummary = groundedActionResult?.querySelector('[data-grounded-action-summary]');
   const groundedActionSaveNext = groundedActionResult?.querySelector('[data-grounded-action-save-next]');
@@ -3836,6 +3984,46 @@ const GRAPH_CONTROL_SCRIPT = `
     }
   };
 
+  const setActiveRelatedWorkbenchMemory = (memoryId) => {
+    relatedMemoryWorkbench?.setAttribute('data-related-workbench-active-memory', memoryId);
+    shell.setAttribute('data-related-workbench-active-memory', memoryId);
+    Array.from(relatedWorkbenchList?.querySelectorAll('[data-related-workbench-memory-id]') || []).forEach((item) => {
+      const isActive = item.getAttribute('data-related-workbench-memory-id') === memoryId;
+      item.setAttribute('data-related-workbench-active', String(isActive));
+      if (isActive && relatedWorkbenchActiveLabel) {
+        relatedWorkbenchActiveLabel.textContent = item.querySelector('strong')?.textContent || memoryId;
+      }
+    });
+  };
+
+  const renderRelatedMemoryWorkbench = (citation, related) => {
+    if (!relatedMemoryWorkbench || !relatedWorkbenchList) return;
+    relatedMemoryWorkbench.setAttribute('data-related-workbench-source', citation);
+    relatedMemoryWorkbench.setAttribute('data-related-workbench-count', String(related.length));
+    relatedMemoryWorkbench.setAttribute('data-related-workbench-state', related.length ? 'ready' : 'empty');
+    const selectedNode = cytoscapeGraph?.getElementById('memory:' + citation);
+    if (relatedWorkbenchSourceLabel) {
+      relatedWorkbenchSourceLabel.textContent = selectedNode?.data('graphLabel') || selectedNode?.data('label') || citation;
+    }
+    relatedWorkbenchList.replaceChildren();
+    related.slice(0, 4).forEach((item, index) => {
+      const workbenchItem = document.createElement('button');
+      workbenchItem.type = 'button';
+      workbenchItem.className = 'related-workbench-item';
+      workbenchItem.setAttribute('data-related-workbench-memory-id', item.id);
+      workbenchItem.setAttribute('data-related-workbench-reason', item.reason);
+      workbenchItem.setAttribute('data-related-workbench-active', String(index === 0));
+      const title = document.createElement('strong');
+      title.textContent = item.label;
+      const reason = document.createElement('span');
+      reason.textContent = item.reason + ' 때문에 연결됨';
+      workbenchItem.append(title, reason);
+      workbenchItem.addEventListener('click', () => setActiveRelatedWorkbenchMemory(item.id));
+      relatedWorkbenchList.append(workbenchItem);
+    });
+    setActiveRelatedWorkbenchMemory(related[0]?.id || '');
+  };
+
   const renderRelatedMemoryEvidence = (citation) => {
     if (!relatedMemoryStrip || !relatedMemoryList || !cytoscapeGraph || !citation) return;
     cytoscapeGraph.elements().removeClass('related-memory related-facet related-edge');
@@ -3901,6 +4089,7 @@ const GRAPH_CONTROL_SCRIPT = `
           .join(' · ');
       }
     }
+    renderRelatedMemoryWorkbench(citation, related);
     commandRail?.setAttribute('data-command-rail-state', related.length ? 'ready' : 'empty');
     commandRail?.setAttribute('data-command-rail-source', citation);
     commandRail?.setAttribute('data-command-rail-related-count', String(related.length));
@@ -6421,6 +6610,31 @@ const GRAPH_CONTROL_SCRIPT = `
       if (action === 'weekly') {
         reportWithRelatedMemoryContext();
         setInteractionState('command-rail-weekly-ready');
+        return;
+      }
+      if (action === 'session') {
+        void runMemorySession();
+      }
+    });
+  });
+  relatedWorkbenchActions.forEach((button) => {
+    button.addEventListener('click', () => {
+      const action = button.getAttribute('data-related-workbench-action');
+      relatedMemoryWorkbench?.setAttribute('data-related-workbench-last-action', action || '');
+      shell.setAttribute('data-related-workbench-last-action', action || '');
+      if (action === 'ask') {
+        askWithRelatedMemoryContext();
+        setInteractionState('related-workbench-ask-ready');
+        return;
+      }
+      if (action === 'replay') {
+        replayWithRelatedMemoryContext();
+        setInteractionState('related-workbench-replay-ready');
+        return;
+      }
+      if (action === 'weekly') {
+        reportWithRelatedMemoryContext();
+        setInteractionState('related-workbench-weekly-ready');
         return;
       }
       if (action === 'session') {

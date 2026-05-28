@@ -675,6 +675,15 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('data-memory-path-hop="shared-reason"');
     expect(html).toContain('data-memory-path-hop="past-memory"');
     expect(html).toContain('data-memory-path-hop="ai-action"');
+    expect(html).toContain('data-related-memory-workbench="selected-diary-comparison"');
+    expect(html).toContain('data-related-workbench-source="mem_freeze_vs_feature_addition"');
+    expect(html).toContain('data-related-workbench-active-memory=');
+    expect(html).toContain('data-related-workbench-action="ask"');
+    expect(html).toContain('data-related-workbench-action="replay"');
+    expect(html).toContain('data-related-workbench-action="weekly"');
+    expect(html).toContain('data-related-workbench-action="session"');
+    expect(html).toContain('과거 기억 비교');
+    expect(html).toContain('비교할 과거 기억');
     expect(html).toContain('data-related-insight-bridge="diary-to-past-memory-actions"');
     expect(html).toContain('data-related-insight-source="mem_freeze_vs_feature_addition"');
     expect(html).toContain('왜 이 기억이 떠올랐나');
@@ -924,6 +933,11 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(documentHtml).toContain("memoryPathExplainer?.setAttribute('data-memory-path-related-count', String(related.length))");
     expect(documentHtml).toContain("memoryPathPast.textContent = related.length ? related[0].label : '연관 과거 기억 없음'");
     expect(documentHtml).toContain("pathChip.setAttribute('data-selected-path-related-memory-id', item.id)");
+    expect(documentHtml).toContain("const relatedMemoryWorkbench = document.querySelector('[data-related-memory-workbench=\"selected-diary-comparison\"]')");
+    expect(documentHtml).toContain('renderRelatedMemoryWorkbench(citation, related)');
+    expect(documentHtml).toContain("workbenchItem.setAttribute('data-related-workbench-memory-id', item.id)");
+    expect(documentHtml).toContain('setActiveRelatedWorkbenchMemory(item.id)');
+    expect(documentHtml).toContain("relatedMemoryWorkbench?.setAttribute('data-related-workbench-active-memory', memoryId)");
     expect(documentHtml).toContain("shell.setAttribute('data-selected-path-source-memory', citation)");
     expect(documentHtml).toContain("selectedPathActions.forEach((button) =>");
     expect(documentHtml).toContain("shell.setAttribute('data-related-memory-source', citation)");

@@ -665,6 +665,31 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
     'Related insight bridge should expose related-memory reasons',
   );
   assert((await page.locator('[data-related-insight-memory-id]').count()) > 0, 'Related insight bridge should render past-memory reason cards');
+  assert(
+    (await attribute(page, '[data-related-memory-workbench="selected-diary-comparison"]', 'data-related-workbench-source')) === firstCitation,
+    'Related memory comparison workbench should preserve the selected diary memory as source',
+  );
+  assert(
+    Number(await attribute(page, '[data-related-memory-workbench="selected-diary-comparison"]', 'data-related-workbench-count')) > 0,
+    'Related memory comparison workbench should expose related-memory count',
+  );
+  const relatedWorkbenchItems = page.locator('[data-related-workbench-memory-id]');
+  const relatedWorkbenchItemCount = await relatedWorkbenchItems.count();
+  assert(relatedWorkbenchItemCount > 0, 'Related memory comparison workbench should render selectable past memories');
+  const comparisonTarget = relatedWorkbenchItemCount > 1 ? relatedWorkbenchItems.nth(1) : relatedWorkbenchItems.first();
+  const comparisonTargetId = await comparisonTarget.getAttribute('data-related-workbench-memory-id');
+  await comparisonTarget.click();
+  assert(
+    (await attribute(page, '[data-related-memory-workbench="selected-diary-comparison"]', 'data-related-workbench-active-memory')) === comparisonTargetId,
+    'Related memory comparison workbench should track the active past memory',
+  );
+  assert(
+    (await attribute(page, '.second-brain-shell', 'data-active-memory')) === firstCitation,
+    'Related memory comparison should not replace the selected diary source memory',
+  );
+  await page.locator('[data-related-workbench-action="ask"]').click();
+  assert((await attribute(page, '.second-brain-shell', 'data-interaction-state')) === 'related-workbench-ask-ready', 'Related memory comparison Ask action should seed related context');
+  assert((await attribute(page, '.second-brain-shell', 'data-ask-context-source-memory')) === firstCitation, 'Related memory comparison Ask should keep the diary source as context');
   await page.locator('[data-related-insight-action="ask"]').click();
   assert((await attribute(page, '.second-brain-shell', 'data-interaction-state')) === 'related-insight-ask-ready', 'Related insight Ask action should seed related-memory context');
   await page.locator('[data-command-rail-action="ask"]').click();
