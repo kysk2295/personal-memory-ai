@@ -542,6 +542,9 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('data-control="intake-run-ask"');
     expect(html).toContain('data-control="intake-run-decision-replay"');
     expect(html).toContain('data-control="intake-run-weekly-report"');
+    expect(html).toContain('data-control="intake-save-ai-result"');
+    expect(html).toContain('data-intake-ai-save-state="idle"');
+    expect(html).toContain('결과를 기억으로 저장');
     expect(html).toContain('관련 과거 기억');
     expect(html).toContain('data-control="intake-preview-notion-diary"');
     expect(html).toContain('data-control="intake-apply-notion-diary"');
@@ -755,6 +758,10 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(documentHtml).toContain('await replayCurrentDecision()');
     expect(documentHtml).toContain("setIntakeAiActionState('weekly', 'answered'");
     expect(documentHtml).toContain('await refreshWeeklyReport()');
+    expect(documentHtml).toContain('const saveLatestIntakeAiResult = () =>');
+    expect(documentHtml).toContain("intakeSaveAiResultButton?.addEventListener('click'");
+    expect(documentHtml).toContain("targetSaveButton?.click()");
+    expect(documentHtml).toContain("memoryIntakeHub?.setAttribute('data-intake-ai-save-state', 'saved')");
     expect(documentHtml).toContain("intakeRunSessionButton?.removeAttribute('disabled')");
     expect(documentHtml).toContain("intakeRunSessionButton?.addEventListener('click'");
     expect(documentHtml).toContain("intakeSessionResult?.setAttribute('data-intake-saved-session-memory', savedMemoryId)");

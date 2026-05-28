@@ -2481,6 +2481,7 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
                 <button type="button" data-control="intake-run-ask" disabled>기억에게 묻기</button>
                 <button type="button" data-control="intake-run-decision-replay" disabled>결정 되짚기</button>
                 <button type="button" data-control="intake-run-weekly-report" disabled>주간 패턴</button>
+                <button type="button" data-control="intake-save-ai-result" data-intake-ai-save-state="idle" disabled>결과를 기억으로 저장</button>
               </div>
             </section>
             <button type="button" data-control="intake-run-session" disabled>AI 세션 실행</button>
@@ -2676,6 +2677,7 @@ const GRAPH_CONTROL_SCRIPT = `
   const intakeRunAskButton = document.querySelector('[data-control="intake-run-ask"]');
   const intakeRunReplayButton = document.querySelector('[data-control="intake-run-decision-replay"]');
   const intakeRunWeeklyButton = document.querySelector('[data-control="intake-run-weekly-report"]');
+  const intakeSaveAiResultButton = document.querySelector('[data-control="intake-save-ai-result"]');
   const intakeRunSessionButton = document.querySelector('[data-control="intake-run-session"]');
   const intakeActions = Array.from(document.querySelectorAll('[data-intake-action]'));
   const firstRunGuideActions = Array.from(document.querySelectorAll('[data-guide-action]'));
@@ -3201,6 +3203,59 @@ const GRAPH_CONTROL_SCRIPT = `
             ? '결과 패널과 그래프 하이라이트에 인용 근거가 반영됐다.'
             : '액션 실행 중 오류가 발생했다. 같은 기억 묶음으로 다시 시도할 수 있다.');
     }
+    if (intakeSaveAiResultButton) {
+      if (state === 'answered') {
+        intakeSaveAiResultButton.removeAttribute('disabled');
+        intakeSaveAiResultButton.setAttribute('data-intake-ai-save-state', 'ready');
+        intakeSaveAiResultButton.textContent = '결과를 기억으로 저장';
+      } else if (state === 'loading') {
+        intakeSaveAiResultButton.setAttribute('disabled', '');
+        intakeSaveAiResultButton.setAttribute('data-intake-ai-save-state', 'idle');
+      }
+    }
+  };
+
+  const saveLatestIntakeAiResult = () => {
+    const lastAction = memoryIntakeHub?.getAttribute('data-intake-last-ai-action') || '';
+    const targetSaveButton =
+      lastAction === 'ask'
+        ? document.querySelector('[data-save-artifact-action="ask_answer"]')
+        : lastAction === 'replay'
+          ? document.querySelector('[data-save-artifact-action="decision_replay"]')
+          : lastAction === 'weekly'
+            ? document.querySelector('[data-save-artifact-action="weekly_report"]')
+            : null;
+    if (!targetSaveButton || targetSaveButton.getAttribute('data-artifact-save-state') !== 'ready') return;
+    intakeSaveAiResultButton?.setAttribute('data-intake-ai-save-state', 'saving');
+    targetSaveButton?.click();
+    const startedAt = Date.now();
+    const waitForSaved = () => {
+      const saveState = targetSaveButton.getAttribute('data-artifact-save-state') || '';
+      if (saveState === 'saved') {
+        const savedMemoryId = shell.getAttribute('data-last-saved-memory') || '';
+        memoryIntakeHub?.setAttribute('data-intake-ai-save-state', 'saved');
+        memoryIntakeHub?.setAttribute('data-intake-saved-ai-memory', savedMemoryId);
+        intakeRelatedBundle?.setAttribute('data-intake-ai-save-state', 'saved');
+        intakeSessionResult?.setAttribute('data-intake-saved-ai-memory', savedMemoryId);
+        intakeSaveAiResultButton?.setAttribute('data-intake-ai-save-state', 'saved');
+        if (intakeSaveAiResultButton) intakeSaveAiResultButton.textContent = '기억으로 저장됨';
+        if (intakeResultTitle) intakeResultTitle.textContent = 'AI 결과가 미래 기억으로 저장됐다';
+        if (intakeResultSummary) {
+          intakeResultSummary.textContent =
+            (savedMemoryId || '새 기억') + '으로 저장됐다. 다음 고민에서 이 결과도 과거 근거로 다시 불러올 수 있다.';
+        }
+        setInteractionState('intake-ai-result-saved');
+        return;
+      }
+      if (saveState === 'error' || Date.now() - startedAt > 12000) {
+        memoryIntakeHub?.setAttribute('data-intake-ai-save-state', 'error');
+        intakeSaveAiResultButton?.setAttribute('data-intake-ai-save-state', 'error');
+        setInteractionState('intake-ai-result-save-error');
+        return;
+      }
+      window.setTimeout(waitForSaved, 80);
+    };
+    waitForSaved();
   };
 
   const updateIntakeSessionResult = (appliedMemoryId) => {
@@ -4965,6 +5020,7 @@ const GRAPH_CONTROL_SCRIPT = `
       setIntakeAiActionState('weekly', 'error', String(error?.message || error));
     }
   });
+  intakeSaveAiResultButton?.addEventListener('click', saveLatestIntakeAiResult);
   intakeRunSessionButton?.addEventListener('click', () => {
     intakeSessionResult?.setAttribute('data-intake-next-step', 'memory-session-running');
     memoryIntakeHub?.setAttribute('data-intake-next-step', 'memory-session-running');

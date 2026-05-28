@@ -383,6 +383,10 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   await page.locator('[data-control="intake-run-weekly-report"]').click();
   await page.waitForFunction(() => document.querySelector('[data-intake-related-bundle="past-memory-nodes"]')?.getAttribute('data-intake-ai-action-result') === 'weekly-answered');
   assert((await attribute(page, '.second-brain-shell', 'data-weekly-report-state')) === 'ready', 'Intake Weekly action should run the grounded weekly report flow');
+  await page.locator('[data-control="intake-save-ai-result"]').click();
+  await page.waitForFunction(() => document.querySelector('[data-intake-related-bundle="past-memory-nodes"]')?.getAttribute('data-intake-ai-save-state') === 'saved');
+  assert((await attribute(page, '[data-control="intake-save-ai-result"]', 'data-intake-ai-save-state')) === 'saved', 'Intake AI saveback should mark the latest result saved');
+  assert((await attribute(page, '[data-save-artifact-action="weekly_report"]', 'data-artifact-save-state')) === 'saved', 'Intake AI saveback should reuse the weekly saved artifact action');
   await page.locator('[data-control="intake-run-session"]').click();
   await page.waitForFunction(
     () => document.querySelector('.second-brain-shell')?.getAttribute('data-memory-session-state') === 'completed',
