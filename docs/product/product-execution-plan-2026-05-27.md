@@ -1379,6 +1379,26 @@ Implemented:
 - `src/lib/appShellEvidenceLayout.test.ts`
 - `scripts/verify-playwright-evidence.ts`
 
+### L72 — Count-Only Notion Import Resume
+
+Goal: safely retry large Notion imports that were partially skipped by rate limits without leaking token, page title, or page body in logs.
+
+Acceptance:
+
+- multiple Notion source ids can be imported in one resume run
+- result reports source, preview, created, skipped, and failure-group counts only
+- 429 failures are grouped as `429:notion_rate_limited`
+- accessible source discovery can feed the resume run without printing source titles
+- script output includes before/after memory counts but no private Notion content
+- live count-only resume discovered 50 sources: 24 successful duplicate-only scans, 26 still rate-limited, 0 new created records
+
+Implemented:
+
+- `src/lib/notionImportResume.ts`
+- `src/lib/notionImportResume.test.ts`
+- `scripts/resume-notion-import.ts`
+- `package.json`
+
 ## 8. MVP Time Estimate
 
 Assuming focused local development without major dependency or deployment blockers:
