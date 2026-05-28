@@ -675,6 +675,16 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(documentHtml).toContain("cytoscapeGraph.getElementById('memory:' + citation)");
     expect(documentHtml).toContain("memoryNode.addClass('ask-citation-memory')");
     expect(documentHtml).toContain("setInteractionState('ask-citation-path-highlighted')");
+    expect(documentHtml).toContain('data-replay-endpoint="/api/replay"');
+    expect(documentHtml).toContain('data-control="run-decision-replay"');
+    expect(documentHtml).toContain('const replayCurrentDecision = async () =>');
+    expect(documentHtml).toContain('fetch(replayEndpoint');
+    expect(documentHtml).toContain('const renderLiveReplayResult =');
+    expect(documentHtml).toContain('const highlightLiveReplayCitations =');
+    expect(documentHtml).toContain("shell.setAttribute('data-replay-state', 'answered')");
+    expect(documentHtml).toContain("shell.setAttribute('data-live-replay-highlighted-memory-count'");
+    expect(documentHtml).toContain("memoryNode.addClass('replay-citation-memory')");
+    expect(documentHtml).toContain("setInteractionState('replay-citation-path-highlighted')");
     expect(documentHtml).toContain('result.savedArtifact');
     expect(documentHtml).toContain("savedArtifactsById.set(result.savedArtifact.id");
     expect(documentHtml).toContain("askSaveButton.setAttribute('data-artifact-id'");

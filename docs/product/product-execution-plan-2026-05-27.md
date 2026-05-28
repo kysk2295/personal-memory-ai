@@ -224,6 +224,7 @@ No remote push, main merge, production deploy, or secret access is allowed witho
 - L55: Notion database pagination import.
 - L56: live Notion graph rehydration.
 - L76: live Ask citation path graph highlight.
+- L77: live Decision Replay citation path graph highlight.
 
 ## 6. Active Next Loops
 
@@ -1467,6 +1468,25 @@ Acceptance:
 
 Implemented:
 
+- `src/App.tsx`
+- `src/lib/appShellEvidenceLayout.test.ts`
+- `scripts/verify-playwright-evidence.ts`
+
+### L77 — Live Decision Replay Citation Path Graph Highlight
+
+Goal: make the Decision Replay panel act on the current decision from the web shell and visibly connect the result to cited past-decision memories in the graph.
+
+Acceptance:
+
+- Decision Replay panel declares `/api/replay`
+- replay button posts the current decision prompt to the private memory API
+- live replay result updates recommendation, evidence label, citation count, and state markers
+- cited replay memories and connected edges receive graph highlight classes
+- Playwright verifies the browser replay flow highlights the same number of graph memories as the citation count
+
+Implemented:
+
+- `src/components/DecisionReplayPanel.tsx`
 - `src/App.tsx`
 - `src/lib/appShellEvidenceLayout.test.ts`
 - `scripts/verify-playwright-evidence.ts`

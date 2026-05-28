@@ -187,6 +187,25 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
     );
     assert((await attribute(page, '.second-brain-shell', 'data-ask-conversation-mode')) === 'follow_up', 'Expected second live Ask response to use follow-up context');
     assert(Number(await attribute(page, '.second-brain-shell', 'data-ask-citation-count')) >= askCitationCount, 'Expected follow-up Ask to preserve citation context');
+
+    await page.locator('[data-control="decision-replay-current"]').fill('MVP를 오늘 배포할지 그래프를 더 다듬을지 결정해야 해');
+    await page.locator('[data-control="run-decision-replay"]').click();
+    await page.waitForFunction(
+      () => document.querySelector('.second-brain-shell')?.getAttribute('data-replay-state') === 'answered',
+      null,
+      { timeout: 10_000 },
+    );
+    const replayCitationCount = Number(await attribute(page, '.second-brain-shell', 'data-replay-citation-count'));
+    assert(Number.isFinite(replayCitationCount), 'Expected live Decision Replay to expose a citation count marker');
+    assert(
+      Number(await attribute(page, '.second-brain-shell', 'data-live-replay-highlighted-memory-count')) === replayCitationCount,
+      'Live Decision Replay should highlight the same number of cited graph memories',
+    );
+    const highlightedReplayCitationCount = await page.evaluate(() => {
+      const graph = (window as any).__personalMemoryGraph;
+      return graph?.cy?.nodes('.replay-citation-memory').length ?? 0;
+    });
+    assert(highlightedReplayCitationCount === replayCitationCount, 'Cytoscape graph should mark Decision Replay citation memory nodes');
   }
   await page.waitForFunction(() => {
     const graph = document.querySelector('#memory-graph-cytoscape');
@@ -501,6 +520,8 @@ try {
           'remote memory search api',
           'live ask api response',
           'live ask follow-up context',
+          'live decision replay api response',
+          'live decision replay graph highlight',
           'saved artifact action',
           'saved artifact persistence manifest',
           'feedback correction action',

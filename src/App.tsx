@@ -1928,6 +1928,10 @@ const GRAPH_CONTROL_SCRIPT = `
   const cytoscapeMount = document.querySelector('[data-graph-library="cytoscape"]');
   const graphPayloadScript = document.querySelector('#memory-graph-elements');
   const savedArtifactPayloadScript = document.querySelector('#saved-artifact-actions');
+  const decisionReplayPanel = document.querySelector('[data-replay-endpoint]');
+  const decisionReplayInput = document.querySelector('[data-control="decision-replay-current"]');
+  const decisionReplayButton = document.querySelector('[data-control="run-decision-replay"]');
+  const decisionReplayResult = document.querySelector('[data-live-replay-result="recommendation"]');
   let cytoscapeGraph = null;
   let layoutVersion = Number(shell.getAttribute('data-layout-version') || '0');
   let lastLocalImportPreview = null;
@@ -2217,6 +2221,26 @@ const GRAPH_CONTROL_SCRIPT = `
     if (citationList.length) setInteractionState('ask-citation-path-highlighted');
   };
 
+  const highlightLiveReplayCitations = (citations) => {
+    const citationList = Array.from(new Set((citations || []).filter(Boolean)));
+    if (cytoscapeGraph) {
+      cytoscapeGraph.elements().removeClass('replay-citation-memory replay-citation-edge');
+      citationList.forEach((citation) => {
+        const memoryNode = cytoscapeGraph.getElementById('memory:' + citation);
+        if (memoryNode && memoryNode.length) {
+          memoryNode.addClass('replay-citation-memory');
+          memoryNode.connectedEdges().addClass('replay-citation-edge');
+        }
+      });
+    }
+    memoryNodes.forEach((node) => {
+      node.setAttribute('data-replay-citation-highlight', String(citationList.includes(node.getAttribute('data-inspector-citation') || '')));
+    });
+    shell.setAttribute('data-live-replay-highlighted-memory-count', String(citationList.length));
+    shell.setAttribute('data-live-replay-highlighted-memories', citationList.join(','));
+    if (citationList.length) setInteractionState('replay-citation-path-highlighted');
+  };
+
   const setCytoscapeLabelVisibility = (hidden) => {
     if (!cytoscapeGraph) return;
     cytoscapeGraph.nodes().toggleClass('labels-hidden', hidden);
@@ -2349,6 +2373,30 @@ const GRAPH_CONTROL_SCRIPT = `
             'line-color': '#8f80ff',
             width: 1.55,
             opacity: 0.92,
+            'z-index': 17,
+          },
+        },
+        {
+          selector: '.replay-citation-memory',
+          style: {
+            label: 'data(graphLabel)',
+            'background-color': '#16a34a',
+            width: 34,
+            height: 34,
+            'border-color': '#15803d',
+            'border-width': 2,
+            color: '#166534',
+            'font-size': 12,
+            'text-max-width': 220,
+            'z-index': 19,
+          },
+        },
+        {
+          selector: '.replay-citation-edge',
+          style: {
+            'line-color': '#16a34a',
+            width: 1.45,
+            opacity: 0.9,
             'z-index': 17,
           },
         },
@@ -2635,6 +2683,60 @@ const GRAPH_CONTROL_SCRIPT = `
     }
   };
 
+  const renderLiveReplayResult = (result) => {
+    const replay = result?.replay || {};
+    const citations = replay.citationMemoryIds || [];
+    if (decisionReplayResult) {
+      const headline = decisionReplayResult.querySelector('h3');
+      const body = decisionReplayResult.querySelector('p');
+      const topline = decisionReplayResult.querySelector('.panel-topline span');
+      if (headline) headline.textContent = replay.recommendation || '';
+      if (body) body.textContent = replay.uncertainty || '';
+      if (topline) topline.textContent = replay.evidenceLabel || 'unknown';
+    }
+    shell.setAttribute('data-replay-state', 'answered');
+    shell.setAttribute('data-replay-evidence-label', replay.evidenceLabel || 'unknown');
+    shell.setAttribute('data-replay-citation-count', String(citations.length));
+    highlightLiveReplayCitations(citations);
+  };
+
+  const replayCurrentDecision = async () => {
+    const prompt = decisionReplayInput?.value?.trim() || '';
+    const replayEndpoint = decisionReplayPanel?.getAttribute('data-replay-endpoint') || '';
+    if (!prompt || !replayEndpoint || window.location.protocol === 'file:') return;
+    shell.setAttribute('data-replay-state', 'loading');
+    decisionReplayPanel?.setAttribute('data-replay-state', 'loading');
+    decisionReplayButton?.setAttribute('aria-busy', 'true');
+    try {
+      const response = await fetch(replayEndpoint, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          question: prompt,
+          queryId: 'web-replay-' + Date.now(),
+          createdAt: new Date().toISOString(),
+          currentDecision: {
+            id: 'web-replay-current',
+            prompt,
+            emotions: ['anxiety'],
+            choices: ['ship now', 'add more'],
+            topicTags: ['personal-memory-ai', 'decision-replay'],
+          },
+        }),
+      });
+      if (!response.ok) throw new Error('replay failed with ' + response.status);
+      renderLiveReplayResult(await response.json());
+      decisionReplayPanel?.setAttribute('data-replay-state', 'answered');
+    } catch (error) {
+      shell.setAttribute('data-replay-state', 'error');
+      shell.setAttribute('data-replay-error', String(error?.message || error));
+      decisionReplayPanel?.setAttribute('data-replay-state', 'error');
+      setInteractionState('replay-error');
+    } finally {
+      decisionReplayButton?.setAttribute('aria-busy', 'false');
+    }
+  };
+
   spacingButtons.forEach((button) => {
     button.addEventListener('click', () => setSpacing(button.getAttribute('data-spacing') || 'normal'));
   });
@@ -2653,6 +2755,10 @@ const GRAPH_CONTROL_SCRIPT = `
   askForm?.addEventListener('submit', (event) => {
     event.preventDefault();
     void askSecondBrain();
+  });
+
+  decisionReplayButton?.addEventListener('click', () => {
+    void replayCurrentDecision();
   });
 
   memorySearchResults.forEach(wireMemorySearchResult);

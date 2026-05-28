@@ -73,7 +73,7 @@ export function renderDecisionReplayPanel(layout: InitialAppShellEvidenceLayout)
 
   return `<section class="decision-replay-flow" aria-label="Decision Replay cited visual flow" data-replay-highlight="${escapeHtml(
     currentDecisionHighlightId,
-  )}">
+  )}" data-replay-endpoint="/api/replay" data-replay-state="ready">
     <div class="section-header">
       <div>
         <p class="eyebrow">Decision Replay</p>
@@ -84,7 +84,8 @@ export function renderDecisionReplayPanel(layout: InitialAppShellEvidenceLayout)
     <p class="section-intro">Replay stays visible as a product pillar, but the screen now edits the story down to the current decision, recommendation, and the strongest similar memories.</p>
     <div class="decision-current-card" data-current-decision-id="${escapeHtml(currentDecisionHighlightId)}">
       <label for="decision-replay-current">Current decision</label>
-      <input id="decision-replay-current" type="text" value="${escapeHtml(replay.currentDecision.prompt)}" readonly />
+      <input id="decision-replay-current" type="text" value="${escapeHtml(replay.currentDecision.prompt)}" data-control="decision-replay-current" />
+      <button type="button" class="save-artifact-action" data-control="run-decision-replay">Replay decision</button>
       <div class="decision-columns">
         <div>
           <span>emotions</span>
@@ -97,7 +98,7 @@ export function renderDecisionReplayPanel(layout: InitialAppShellEvidenceLayout)
       </div>
       ${renderTagList('Current decision topics', replay.currentDecision.topicTags)}
     </div>
-    <div class="decision-recommendation" aria-label="Decision Replay recommendation and uncertainty">
+    <div class="decision-recommendation" aria-label="Decision Replay recommendation and uncertainty" data-live-replay-result="recommendation">
       <div class="panel-topline">
         <span>${escapeHtml(replay.evidenceLabel)}</span>
         <span>confidence <strong>${Math.round(replay.confidence * 100)}%</strong></span>
