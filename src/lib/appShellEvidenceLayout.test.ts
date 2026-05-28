@@ -1102,6 +1102,8 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(documentHtml).toContain("saveState: 'saved'");
     expect(documentHtml).toContain("useNowRouteActions.forEach((button) =>");
     expect(documentHtml).toContain("if (action === 'open-saved-memory')");
+    expect(documentHtml).toContain('selectHandoffMemoryFromGraph(savedMemoryId)');
+    expect(documentHtml).toContain("setInteractionState('use-now-route-saved-memory-opened')");
     expect(documentHtml).toContain('const updateFlowCoach =');
     expect(documentHtml).toContain("flowCoach?.setAttribute('data-flow-coach-stage', stage)");
     expect(documentHtml).toContain("flowCoach?.setAttribute('data-flow-coach-next-action', nextAction)");

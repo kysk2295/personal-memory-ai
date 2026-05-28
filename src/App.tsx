@@ -7809,11 +7809,8 @@ const GRAPH_CONTROL_SCRIPT = `
           shell.getAttribute('data-last-saved-memory') ||
           shell.getAttribute('data-last-saved-session-memory') ||
           '';
-        const savedNode = savedMemoryId
-          ? document.querySelector('[data-inspector-citation="' + savedMemoryId + '"]')
-          : null;
         setWorkflowFocus('graph');
-        if (savedNode) selectMemory(savedNode);
+        selectHandoffMemoryFromGraph(savedMemoryId);
         document.querySelector('.graph-stage')?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
         updateUseNowRouteBoard({ state: 'graph', sourceMemoryId: savedMemoryId, aiState: 'saved', saveState: 'saved' });
         setInteractionState('use-now-route-saved-memory-opened');

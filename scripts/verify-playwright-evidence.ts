@@ -762,6 +762,26 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
     (await attribute(page, '[data-use-now-action="open-saved-memory"]', 'data-use-now-action-enabled')) === 'true',
     'Use-now route board should enable the saved-memory reentry action after AI result saveback',
   );
+  await page.locator('[data-use-now-action="open-saved-memory"]').click();
+  await page.waitForFunction(
+    (memoryId) =>
+      document.querySelector('.second-brain-shell')?.getAttribute('data-interaction-state') === 'use-now-route-saved-memory-opened' &&
+      document.querySelector('.second-brain-shell')?.getAttribute('data-active-memory') === memoryId,
+    savedIntakeAiMemoryId,
+    { timeout: 10_000 },
+  );
+  assert(
+    (await attribute(page, '.second-brain-shell', 'data-workflow-focus')) === 'graph',
+    'Saved-memory reentry should move the workspace back to the graph',
+  );
+  assert(
+    (await attribute(page, '.second-brain-shell', 'data-active-memory')) === savedIntakeAiMemoryId,
+    'Saved-memory reentry should select the saved future memory',
+  );
+  assert(
+    (await attribute(page, '[data-inspector-panel="pmi015"]', 'data-selected-memory')) === savedIntakeAiMemoryId,
+    'Saved-memory reentry should open the saved future memory in the detail inspector',
+  );
   await page.locator('[data-control="intake-run-session"]').click();
   await page.waitForFunction(
     () => document.querySelector('.second-brain-shell')?.getAttribute('data-memory-session-state') === 'completed',
