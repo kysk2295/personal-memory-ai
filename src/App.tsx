@@ -3087,6 +3087,29 @@ const APP_SHELL_STYLES = `
     font-size: 0.72rem;
     line-height: 1.35;
   }
+  .use-now-flow-receipt {
+    display: grid;
+    gap: 6px;
+    padding: 8px;
+    border: 1px solid rgba(214, 31, 60, 0.18);
+    background: rgba(214, 31, 60, 0.08);
+  }
+  .use-now-flow-receipt strong {
+    color: #fff4f6;
+    font-size: 0.72rem;
+  }
+  .use-now-flow-receipt-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 5px;
+  }
+  .use-now-flow-receipt-grid span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    color: #cfcfd4;
+    font-size: 0.66rem;
+    line-height: 1.28;
+  }
   .use-now-route-path {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -4182,6 +4205,19 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
               <span data-use-now-route-label="save"><strong>미래 기억 저장</strong><span data-use-now-route-save-label>대기</span></span>
             </div>
             <span class="use-now-route-next" data-use-now-route-next-label>일기를 쓰거나 가져오면 이 경로가 그래프와 AI 작업대로 이어진다.</span>
+            <section class="use-now-flow-receipt" data-use-now-flow-receipt="live-service-flow" data-use-now-flow-receipt-state="capture" data-use-now-flow-receipt-memory="${escapeHtml(
+              currentFlowMemoryId,
+            )}" data-use-now-flow-receipt-related-count="${currentFlowRelatedCount}" data-use-now-flow-receipt-ai-state="idle" data-use-now-flow-receipt-save-state="idle" data-use-now-flow-receipt-next-action="write-or-import" aria-label="서비스 흐름 영수증">
+              <strong>서비스 흐름 영수증</strong>
+              <div class="use-now-flow-receipt-grid" aria-label="현재 서비스 흐름 값">
+                <span data-flow-receipt-route-label>단계 · 기록/가져오기</span>
+                <span data-flow-receipt-memory-label>기억 · ${escapeHtml(currentFlowMemoryId)}</span>
+                <span data-flow-receipt-related-label>연관 기억 · ${currentFlowRelatedCount}개</span>
+                <span data-flow-receipt-ai-label>AI · 대기</span>
+                <span data-flow-receipt-save-label>저장 · 대기</span>
+                <span data-flow-receipt-next-action-label>다음 행동 · 일기 쓰기/가져오기</span>
+              </div>
+            </section>
             <div class="use-now-route-path" data-use-now-route-path="related-memory" data-use-now-route-path-state="empty" data-use-now-route-path-source="${escapeHtml(currentFlowMemoryId)}" data-use-now-route-path-related-count="0" aria-label="현재 기억과 과거 기억 연결 경로">
               <span><em>현재</em><strong data-use-now-route-path-current>${escapeHtml(currentFlowMemoryId)}</strong></span>
               <span><em>이유</em><strong data-use-now-route-path-reason>연결 이유 없음</strong></span>
@@ -4714,6 +4750,13 @@ const GRAPH_CONTROL_SCRIPT = `
   const useNowRouteAiLabel = useNowRouteBoard?.querySelector('[data-use-now-route-ai-label]');
   const useNowRouteSaveLabel = useNowRouteBoard?.querySelector('[data-use-now-route-save-label]');
   const useNowRouteNextLabel = useNowRouteBoard?.querySelector('[data-use-now-route-next-label]');
+  const useNowFlowReceipt = useNowRouteBoard?.querySelector('[data-use-now-flow-receipt="live-service-flow"]');
+  const flowReceiptRouteLabel = useNowFlowReceipt?.querySelector('[data-flow-receipt-route-label]');
+  const flowReceiptMemoryLabel = useNowFlowReceipt?.querySelector('[data-flow-receipt-memory-label]');
+  const flowReceiptRelatedLabel = useNowFlowReceipt?.querySelector('[data-flow-receipt-related-label]');
+  const flowReceiptAiLabel = useNowFlowReceipt?.querySelector('[data-flow-receipt-ai-label]');
+  const flowReceiptSaveLabel = useNowFlowReceipt?.querySelector('[data-flow-receipt-save-label]');
+  const flowReceiptNextActionLabel = useNowFlowReceipt?.querySelector('[data-flow-receipt-next-action-label]');
   const useNowRoutePath = useNowRouteBoard?.querySelector('[data-use-now-route-path="related-memory"]');
   const useNowRoutePathCurrent = useNowRouteBoard?.querySelector('[data-use-now-route-path-current]');
   const useNowRoutePathReason = useNowRouteBoard?.querySelector('[data-use-now-route-path-reason]');
@@ -4982,6 +5025,21 @@ const GRAPH_CONTROL_SCRIPT = `
     const aiState = detail.aiState || useNowRouteBoard.getAttribute('data-use-now-route-ai-state') || 'idle';
     const saveState = detail.saveState || useNowRouteBoard.getAttribute('data-use-now-route-save-state') || 'idle';
     const reentryState = saveState === 'saved' && selectedMemory ? 'ready' : 'disabled';
+    const nextAction =
+      detail.nextAction ||
+      (saveState === 'saved'
+        ? 'open-saved-memory'
+        : saveState === 'ready'
+          ? 'save-result'
+          : aiState === 'answered'
+            ? 'save-result'
+            : aiState === 'ready'
+              ? 'run-ai-session'
+              : state === 'related'
+                ? 'run-ai-session'
+                : state === 'ai-workbench'
+                  ? 'save-result'
+                  : 'write-or-import');
     useNowRouteBoard?.setAttribute('data-use-now-route-state', state);
     useNowRouteBoard?.setAttribute('data-use-now-route-memory', selectedMemory);
     useNowRouteBoard?.setAttribute('data-use-now-route-related-count', relatedCount);
@@ -4994,13 +5052,45 @@ const GRAPH_CONTROL_SCRIPT = `
     shell.setAttribute('data-use-now-route-ai-state', aiState);
     shell.setAttribute('data-use-now-route-save-state', saveState);
     shell.setAttribute('data-use-now-route-reentry-state', reentryState);
+    useNowFlowReceipt?.setAttribute('data-use-now-flow-receipt-state', state);
+    useNowFlowReceipt?.setAttribute('data-use-now-flow-receipt-memory', selectedMemory);
+    useNowFlowReceipt?.setAttribute('data-use-now-flow-receipt-related-count', relatedCount);
+    useNowFlowReceipt?.setAttribute('data-use-now-flow-receipt-ai-state', aiState);
+    useNowFlowReceipt?.setAttribute('data-use-now-flow-receipt-save-state', saveState);
+    useNowFlowReceipt?.setAttribute('data-use-now-flow-receipt-next-action', nextAction);
+    shell.setAttribute('data-use-now-flow-receipt-state', state);
+    shell.setAttribute('data-use-now-flow-receipt-next-action', nextAction);
     const selectedNode = selectedMemory ? cytoscapeGraph?.getElementById('memory:' + selectedMemory) : null;
     const memoryLabel = selectedNode?.data('graphLabel') || selectedNode?.data('label') || selectedMemory || '대기';
+    const routeStateLabel =
+      state === 'capture'
+        ? '기록/가져오기'
+        : state === 'related'
+          ? '세컨브레인 연결'
+          : state === 'ai-workbench'
+            ? 'AI 작업대'
+            : state === 'answered'
+              ? 'AI 결과'
+              : state;
+    const nextActionLabel =
+      nextAction === 'open-saved-memory'
+        ? '저장 기억 다시 열기'
+        : nextAction === 'save-result'
+          ? '결과를 미래 기억으로 저장'
+          : nextAction === 'run-ai-session'
+            ? 'AI 세션 실행'
+            : '일기 쓰기/가져오기';
     if (useNowRouteMemoryLabel) useNowRouteMemoryLabel.textContent = memoryLabel;
     if (useNowRouteRelatedLabel) useNowRouteRelatedLabel.textContent = relatedCount + '개 연결';
     if (useNowRouteAiLabel) useNowRouteAiLabel.textContent = useNowAiStateLabels[aiState] || aiState;
     if (useNowRouteSaveLabel) useNowRouteSaveLabel.textContent = useNowSaveStateLabels[saveState] || saveState;
     if (useNowRouteNextLabel) useNowRouteNextLabel.textContent = routeStateCopy[state] || routeStateCopy.capture;
+    if (flowReceiptRouteLabel) flowReceiptRouteLabel.textContent = '단계 · ' + routeStateLabel;
+    if (flowReceiptMemoryLabel) flowReceiptMemoryLabel.textContent = '기억 · ' + (selectedMemory || '대기');
+    if (flowReceiptRelatedLabel) flowReceiptRelatedLabel.textContent = '연관 기억 · ' + relatedCount + '개';
+    if (flowReceiptAiLabel) flowReceiptAiLabel.textContent = 'AI · ' + (useNowAiStateLabels[aiState] || aiState);
+    if (flowReceiptSaveLabel) flowReceiptSaveLabel.textContent = '저장 · ' + (useNowSaveStateLabels[saveState] || saveState);
+    if (flowReceiptNextActionLabel) flowReceiptNextActionLabel.textContent = '다음 행동 · ' + nextActionLabel;
     if (useNowRoutePathCurrent) useNowRoutePathCurrent.textContent = selectedMemory || '대기';
     if (useNowRouteOpenSavedButton) {
       useNowRouteOpenSavedButton.setAttribute('data-use-now-action-enabled', String(reentryState === 'ready'));

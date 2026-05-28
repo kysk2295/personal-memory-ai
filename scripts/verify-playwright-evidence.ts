@@ -104,6 +104,8 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   assert((await attribute(page, '[data-use-now-route-board="live"]', 'data-use-now-route-state')) === 'capture', 'Use-now route board should start in capture state');
   assert((await attribute(page, '[data-use-now-route-board="live"]', 'data-use-now-route-ai-state')) === 'idle', 'Use-now route board should start with idle AI state');
   assert((await attribute(page, '[data-use-now-route-board="live"]', 'data-use-now-route-save-state')) === 'idle', 'Use-now route board should start with idle save state');
+  assert((await attribute(page, '[data-use-now-flow-receipt="live-service-flow"]', 'data-use-now-flow-receipt-state')) === 'capture', 'Use-now flow receipt should start in capture state');
+  assert((await attribute(page, '[data-use-now-flow-receipt="live-service-flow"]', 'data-use-now-flow-receipt-next-action')) === 'write-or-import', 'Use-now flow receipt should start with write/import next action');
   for (const label of ['memory', 'related', 'ai', 'save']) {
     assert((await page.locator(`[data-use-now-route-label="${label}"]`).count()) === 1, `Missing use-now route label ${label}`);
   }
@@ -277,10 +279,14 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
     'One-click Notion diary import should be scoped to 습관리스트',
   );
   await page.locator('[data-control="intake-import-notion-diary-db"]').click();
-  await page.waitForFunction(() => {
-    const state = document.querySelector('[data-memory-intake-hub="app-web-diary"]')?.getAttribute('data-intake-one-click-notion-state');
-    return ['token-required', 'source-required', 'rate-limited', 'preview-ready', 'imported', 'error'].includes(state || '');
-  });
+  await page.waitForFunction(
+    () => {
+      const state = document.querySelector('[data-memory-intake-hub="app-web-diary"]')?.getAttribute('data-intake-one-click-notion-state');
+      return ['token-required', 'source-required', 'rate-limited', 'preview-ready', 'imported', 'error'].includes(state || '');
+    },
+    null,
+    { timeout: 75_000 },
+  );
   const oneClickNotionState = await attribute(page, '[data-memory-intake-hub="app-web-diary"]', 'data-intake-one-click-notion-state');
   assert(
     ['token-required', 'source-required', 'rate-limited', 'preview-ready', 'imported', 'error'].includes(oneClickNotionState || ''),
@@ -372,6 +378,9 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   assert((await attribute(page, '[data-memory-intake-hub="app-web-diary"]', 'data-intake-result')) === 'quick-saved', 'First-screen quick save should mark quick-saved result');
   assert((await attribute(page, '[data-use-now-route-board="live"]', 'data-use-now-route-memory')) === quickSavedMemoryId, 'Use-now route board should follow the quick-saved memory');
   assert((await attribute(page, '[data-use-now-route-board="live"]', 'data-use-now-route-state')) === 'related', 'Use-now route board should move to related after quick save');
+  assert((await attribute(page, '[data-use-now-flow-receipt="live-service-flow"]', 'data-use-now-flow-receipt-memory')) === quickSavedMemoryId, 'Use-now flow receipt should follow the quick-saved memory');
+  assert((await attribute(page, '[data-use-now-flow-receipt="live-service-flow"]', 'data-use-now-flow-receipt-next-action')) === 'run-ai-session', 'Use-now flow receipt should point to AI session after quick save');
+  assert(Boolean(((await page.locator('[data-flow-receipt-memory-label]').textContent()) || '').includes(quickSavedMemoryId || '')), 'Use-now flow receipt should show the quick-saved memory id');
   assert((await attribute(page, '[data-korean-ai-workbench="selected-or-imported-memory"]', 'data-workbench-selected-memory')) === quickSavedMemoryId, 'Korean workbench should follow quick-saved memory');
   assert(Number(await attribute(page, '[data-korean-ai-workbench="selected-or-imported-memory"]', 'data-workbench-related-count')) > 0, 'Quick-saved memory should expose related count in workbench');
   assert((await attribute(page, '.second-brain-shell', 'data-interaction-state')) === 'intake-quick-diary-saved', 'First-screen quick save should expose completion interaction state');

@@ -559,9 +559,16 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('data-use-now-route-reentry-state="disabled"');
     expect(html).toContain('data-use-now-route-path="related-memory"');
     expect(html).toContain('data-use-now-route-path-state="empty"');
+    expect(html).toContain('data-use-now-flow-receipt="live-service-flow"');
+    expect(html).toContain('data-use-now-flow-receipt-state="capture"');
+    expect(html).toContain('data-use-now-flow-receipt-memory="mem_freeze_vs_feature_addition"');
+    expect(html).toContain('data-flow-receipt-route-label');
+    expect(html).toContain('data-flow-receipt-next-action-label');
+    expect(html).toContain('서비스 흐름 영수증');
     expect(documentHtml).toContain('.product-value-strip[data-command-shelf="graph-led"]');
     expect(documentHtml).toContain('.use-now-command-strip');
     expect(documentHtml).toContain('.use-now-route-board');
+    expect(documentHtml).toContain('.use-now-flow-receipt');
     expect(documentHtml).toContain('.use-now-route-actions');
     expect(documentHtml).toContain('.product-value-strip[data-use-now-mode="enabled"][data-flow-collapsed="true"] .service-flow-steps');
     expect(html).toContain('data-prototype-journey-cockpit="diary-memory-ai"');
@@ -1093,6 +1100,9 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(documentHtml).toContain("useNowRouteBoard?.setAttribute('data-use-now-route-ai-state'");
     expect(documentHtml).toContain("useNowRouteBoard?.setAttribute('data-use-now-route-save-state'");
     expect(documentHtml).toContain("useNowRouteBoard?.setAttribute('data-use-now-route-reentry-state'");
+    expect(documentHtml).toContain("useNowFlowReceipt?.setAttribute('data-use-now-flow-receipt-state', state)");
+    expect(documentHtml).toContain("useNowFlowReceipt?.setAttribute('data-use-now-flow-receipt-next-action', nextAction)");
+    expect(documentHtml).toContain("flowReceiptNextActionLabel.textContent = '다음 행동 · ' + nextActionLabel");
     expect(documentHtml).toContain("useNowRoutePath?.setAttribute('data-use-now-route-path-state'");
     expect(documentHtml).toContain("useNowRoutePath?.setAttribute('data-use-now-route-path-source', citation)");
     expect(documentHtml).toContain("useNowRoutePathReason.textContent = related.length ? related[0].reason : '연결 이유 없음'");
