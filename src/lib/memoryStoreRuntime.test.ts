@@ -1,4 +1,7 @@
 import { describe, expect, test } from 'vitest';
+import { mkdtemp, rm } from 'node:fs/promises';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
 import { personalMemoryRecords } from './__fixtures__/personalMemoryRecords';
 import { createMemoryStoreRuntime, type PgPoolLike } from './memoryStoreRuntime';
 import type { PgQueryResult } from './postgresMemoryStore';
@@ -97,5 +100,43 @@ describe('createMemoryStoreRuntime', () => {
     const pool = FakePgPool.instances[0];
     expect(runtime.migrationStatus).toBe('skipped');
     expect(pool.calls).toEqual([]);
+  });
+
+  test('uses local-file storage and preserves imported memories across runtime restarts', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'personal-memory-ai-'));
+    const localStorePath = join(dir, 'vault.json');
+    try {
+      const firstRuntime = await createMemoryStoreRuntime({
+        env: {
+          MEMORY_BACKEND_MODE: 'local-file',
+          LOCAL_MEMORY_STORE_PATH: localStorePath,
+        },
+        fixtureSeedRecords: personalMemoryRecords.slice(0, 1),
+        seedUserId: 'local-user',
+      });
+      expect(firstRuntime.backendMode).toBe('local-file');
+      expect(firstRuntime.migrationStatus).toBe('not_applicable');
+      expect(firstRuntime.databaseUrlPresence).toBe('missing');
+
+      await firstRuntime.store.create('local-user', { ...personalMemoryRecords[1], id: 'mem_imported_001' });
+      await firstRuntime.close();
+
+      const secondRuntime = await createMemoryStoreRuntime({
+        env: {
+          MEMORY_BACKEND_MODE: 'local-file',
+          LOCAL_MEMORY_STORE_PATH: localStorePath,
+        },
+        fixtureSeedRecords: personalMemoryRecords.slice(0, 1),
+        seedUserId: 'local-user',
+      });
+
+      expect((await secondRuntime.store.listByUser('local-user')).map((record) => record.id)).toEqual([
+        personalMemoryRecords[0].id,
+        'mem_imported_001',
+      ]);
+      await secondRuntime.close();
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
   });
 });

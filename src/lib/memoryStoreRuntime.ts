@@ -46,6 +46,7 @@ export interface CreateMemoryStoreRuntimeInput {
 }
 
 const defaultMigrationPath = join(process.cwd(), 'db/migrations/0001_memory_records_pgvector.sql');
+const defaultLocalStorePath = join(process.cwd(), '.local/personal-memory-store.json');
 
 function shouldUsePostgresSsl(env: Record<string, string | undefined>): boolean {
   return env.PGSSLMODE === 'require' || env.DATABASE_SSL === 'true';
@@ -81,15 +82,27 @@ function buildRuntime(
   };
 }
 
+function hasFlush(store: MemoryStore): store is MemoryStore & { flush(): Promise<void> } {
+  return 'flush' in store && typeof store.flush === 'function';
+}
+
 export async function createMemoryStoreRuntime(input: CreateMemoryStoreRuntimeInput): Promise<MemoryStoreRuntime> {
   const backendMode = resolveMemoryBackendMode(input.env);
-  if (backendMode === 'fixture') {
-    const store = createMemoryStore({ env: {} });
+  if (backendMode === 'fixture' || backendMode === 'local-file') {
+    const store = createMemoryStore({
+      env:
+        backendMode === 'local-file'
+          ? { ...input.env, LOCAL_MEMORY_STORE_PATH: input.env.LOCAL_MEMORY_STORE_PATH ?? defaultLocalStorePath }
+          : {},
+    });
     const seedUserId = input.seedUserId ?? 'local-user';
-    for (const record of input.fixtureSeedRecords ?? []) {
-      await store.create(seedUserId, record);
+    if ((await store.listByUser(seedUserId)).length === 0) {
+      for (const record of input.fixtureSeedRecords ?? []) {
+        await store.create(seedUserId, record);
+      }
     }
-    return buildRuntime('fixture', 'not_applicable', 'missing', store, async () => {});
+    const close = hasFlush(store) ? () => store.flush() : async () => {};
+    return buildRuntime(backendMode, 'not_applicable', 'missing', store, close);
   }
 
   const databaseUrl = input.env.DATABASE_URL;

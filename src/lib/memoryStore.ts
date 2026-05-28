@@ -1,6 +1,6 @@
 import type { MemoryRecord } from './memoryRecord';
 
-export type MemoryBackendMode = 'fixture' | 'postgres';
+export type MemoryBackendMode = 'fixture' | 'postgres' | 'local-file';
 
 export interface MemoryEmbeddingRecord {
   memoryId: string;
@@ -28,5 +28,6 @@ export interface MemoryStore {
 }
 
 export function resolveMemoryBackendMode(env: Record<string, string | undefined>): MemoryBackendMode {
+  if (env.MEMORY_BACKEND_MODE === 'local-file') return 'local-file';
   return env.MEMORY_BACKEND_MODE === 'postgres' ? 'postgres' : 'fixture';
 }

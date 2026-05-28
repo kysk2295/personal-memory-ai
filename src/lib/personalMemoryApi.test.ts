@@ -87,6 +87,29 @@ describe('personal memory API boundary', () => {
     expect(appliedBody.skippedPreviewRecordIds).toEqual(['import_preview_api-import_1']);
   });
 
+  test('rejects malformed quick capture bodies without throwing', async () => {
+    const store = createMemoryStore({ env: {} });
+
+    const response = await handlePersonalMemoryApiRequest({
+      store,
+      userId: 'user-a',
+      request: {
+        method: 'POST',
+        path: '/api/capture',
+        body: {
+          rawText: 'Legacy rawText should not crash the capture endpoint.',
+          sourceType: 'api',
+        },
+      },
+    });
+
+    expect(response).toEqual({
+      statusCode: 400,
+      body: { error: 'capture_text_required' },
+    });
+    expect(await store.listByUser('user-a')).toEqual([]);
+  });
+
   test('builds import preview from a live Notion database connector without storing the token', async () => {
     const store = createMemoryStore({ env: {} });
     const fetchCalls: Array<{ url: string; init: { headers?: Record<string, string> } }> = [];

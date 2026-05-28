@@ -172,6 +172,10 @@ function isSavedArtifactCaptureBody(body: unknown): body is SavedArtifactCapture
   );
 }
 
+function isFastDiaryCaptureFlatBody(body: unknown): body is FastDiaryCaptureFlatInput {
+  return isRecord(body) && typeof body.text === 'string' && Boolean(body.text.trim());
+}
+
 function sanitizeOptionalText(value: unknown): string | undefined {
   if (typeof value !== 'string') return undefined;
   const trimmed = value.trim();
@@ -220,10 +224,13 @@ export async function handlePersonalMemoryApiRequest(
       });
       return { statusCode: 201, body: { createdMemoryIds: [record.id], record } };
     }
+    if (!isFastDiaryCaptureFlatBody(request.body)) {
+      return { statusCode: 400, body: { error: 'capture_text_required' } };
+    }
     const result = await ingestFastDiaryCaptureToMemoryStore({
       store,
       userId,
-      input: readBody<FastDiaryCaptureFlatInput>(request.body),
+      input: request.body,
     });
     return { statusCode: 201, body: result };
   }

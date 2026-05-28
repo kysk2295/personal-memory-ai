@@ -1108,6 +1108,32 @@ Implemented:
 - `src/lib/appShellEvidenceLayout.test.ts`
 - `scripts/verify-playwright-evidence.ts`
 
+### L57 — Durable Local Private Vault Store
+
+Goal: let the local one-person prototype keep captured/imported private memories on the Mac even when the web server restarts, without requiring cloud Postgres.
+
+Acceptance:
+
+- `MEMORY_BACKEND_MODE=local-file` selects a local JSON vault backend
+- default local-file path is `.local/personal-memory-store.json` when no explicit path is provided
+- fixture seed records are inserted only into an empty local vault, avoiding duplicate seed/import records on restart
+- local-file store persists creates, updates, embeddings, deletes, and hard deletes by user scope
+- `/api/capture` rejects malformed quick-capture payloads with `400` instead of crashing the server
+- local vault files are ignored by git so private diary/import data is not committed
+- live local smoke verified that a captured memory survived server restart in `local-file` mode
+- live Notion import retry was blocked by Notion API `429`; retry after rate limit clears will write into the same durable local vault
+
+Implemented:
+
+- `.gitignore`
+- `src/lib/fileMemoryStore.ts`
+- `src/lib/createMemoryStore.ts`
+- `src/lib/memoryStore.ts`
+- `src/lib/memoryStoreRuntime.ts`
+- `src/lib/memoryStoreRuntime.test.ts`
+- `src/lib/personalMemoryApi.ts`
+- `src/lib/personalMemoryApi.test.ts`
+
 ## 8. MVP Time Estimate
 
 Assuming focused local development without major dependency or deployment blockers:
