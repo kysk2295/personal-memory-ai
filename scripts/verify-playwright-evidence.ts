@@ -161,6 +161,21 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   assert((await attribute(page, '[data-notion-import-panel="database"]', 'data-notion-source-scope')) === 'diary-only', 'Notion intake should remain diary scoped');
   assert((await page.locator('[data-control="notion-database-id"]').inputValue()) === '습관리스트', 'Notion diary intake should prefill the 습관리스트 database cue');
   assert((await attribute(page, '.second-brain-shell', 'data-interaction-state')) === 'intake-notion-diary-ready', 'Intake Notion action should prepare diary database import');
+  await page.locator('[data-control="intake-apply-notion-diary"]').click();
+  assert((await attribute(page, '[data-memory-intake-hub="app-web-diary"]', 'data-intake-last-action')) === 'apply-notion-diary', 'First-screen Notion apply should mark the intake action');
+  await page.waitForFunction(() => {
+    const state = document.querySelector('[data-notion-import-panel="database"]')?.getAttribute('data-notion-import-state');
+    return state === 'token-required' || state === 'source-required' || state === 'rate-limited' || state === 'preview-ready';
+  });
+  const notionIntakeResult = await attribute(page, '[data-memory-intake-hub="app-web-diary"]', 'data-intake-result');
+  assert(
+    ['notion-token-required', 'notion-source-required', 'notion-rate-limited', 'notion-preview-ready'].includes(notionIntakeResult),
+    'First-screen Notion apply should expose a concrete Notion intake state',
+  );
+  assert(
+    (await page.locator('text=Notion 연결이 필요하다').count()) + (await page.locator('text=습관리스트 소스를 먼저 선택해야 한다').count()) + (await page.locator('text=Notion이 잠시 제한 중이다').count()) >= 1,
+    'Intake result should explain the Notion gate in Korean',
+  );
   const intakeDraft = `오늘 회의에서 또 혼자 해결하려는 마음이 올라왔다 ${Date.now()}`;
   await page.locator('[data-control="intake-diary-draft"]').fill(intakeDraft);
   await page.locator('[data-control="intake-apply-diary"]').click();

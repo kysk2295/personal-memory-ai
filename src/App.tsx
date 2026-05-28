@@ -467,8 +467,20 @@ const APP_SHELL_STYLES = `
     gap: 6px;
     align-content: stretch;
   }
+  .memory-intake-notion-actions {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px;
+  }
   .memory-intake-draft-actions button {
     min-width: 92px;
+  }
+  .memory-intake-notion-actions button {
+    min-width: 0;
+  }
+  .memory-intake-draft-actions button,
+  .memory-intake-notion-actions button {
     border: 1px solid rgba(20, 184, 166, 0.2);
     border-radius: 8px;
     background: rgba(20, 184, 166, 0.1);
@@ -2379,6 +2391,10 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
               <button type="button" data-control="intake-apply-diary">그래프에 적용</button>
             </div>
           </div>
+          <div class="memory-intake-notion-actions" aria-label="습관리스트 Notion DB 인입">
+            <button type="button" data-control="intake-preview-notion-diary">습관리스트 미리보기</button>
+            <button type="button" data-control="intake-apply-notion-diary">Notion 그래프 적용</button>
+          </div>
           <div class="memory-intake-result" data-intake-session-result="applied-memory" data-intake-applied-memory="none" data-intake-related-memory-count="0" data-intake-next-step="waiting-for-diary">
             <div>
               <strong data-intake-result-title>적용하면 여기서 바로 다음 행동을 보여준다</strong>
@@ -2565,6 +2581,8 @@ const GRAPH_CONTROL_SCRIPT = `
   const intakeDiaryDraft = document.querySelector('[data-control="intake-diary-draft"]');
   const intakePreviewDiaryButton = document.querySelector('[data-control="intake-preview-diary"]');
   const intakeApplyDiaryButton = document.querySelector('[data-control="intake-apply-diary"]');
+  const intakePreviewNotionButton = document.querySelector('[data-control="intake-preview-notion-diary"]');
+  const intakeApplyNotionButton = document.querySelector('[data-control="intake-apply-notion-diary"]');
   const intakeSessionResult = document.querySelector('[data-intake-session-result="applied-memory"]');
   const intakeResultTitle = intakeSessionResult?.querySelector('[data-intake-result-title]');
   const intakeResultSummary = intakeSessionResult?.querySelector('[data-intake-result-summary]');
@@ -2623,6 +2641,7 @@ const GRAPH_CONTROL_SCRIPT = `
   let lastReplayRelatedContext = null;
   let lastWeeklyRelatedContext = null;
   let pendingIntakeApplyAfterPreview = false;
+  let pendingIntakeNotionApplyAfterPreview = false;
 
   const setInteractionState = (value) => {
     shell.setAttribute('data-interaction-state', value);
@@ -3039,6 +3058,37 @@ const GRAPH_CONTROL_SCRIPT = `
         appliedMemoryId + ' 기억에서 연관 과거 기억 ' + relatedCount + '개를 찾았다. 이제 AI 세션으로 질문, 결정 되짚기, 주간 패턴을 한 번에 실행할 수 있다.';
     }
     intakeRunSessionButton?.removeAttribute('disabled');
+  };
+
+  const setIntakeNotionState = (state, message) => {
+    memoryIntakeHub?.setAttribute('data-intake-result', 'notion-' + state);
+    memoryIntakeHub?.setAttribute('data-intake-next-step', state === 'preview-ready' ? 'notion-apply-ready' : state);
+    intakeSessionResult?.setAttribute('data-intake-next-step', state === 'preview-ready' ? 'notion-apply-ready' : state);
+    if (intakeResultTitle) {
+      intakeResultTitle.textContent =
+        state === 'token-required'
+          ? 'Notion 연결이 필요하다'
+          : state === 'rate-limited'
+            ? 'Notion이 잠시 제한 중이다'
+            : state === 'source-required'
+              ? '습관리스트 소스를 먼저 선택해야 한다'
+            : state === 'preview-ready'
+              ? '습관리스트 미리보기가 준비됐다'
+              : '습관리스트를 불러오는 중이다';
+    }
+    if (intakeResultSummary) {
+      intakeResultSummary.textContent =
+        message ||
+        (state === 'token-required'
+          ? 'Notion 통합 토큰이 없어서 실제 일기 DB를 아직 가져올 수 없다. 토큰이 연결되면 이 버튼이 같은 그래프 적용 흐름으로 이어진다.'
+          : state === 'rate-limited'
+            ? 'Notion API 제한이 풀리면 같은 버튼으로 다시 시도할 수 있다.'
+            : state === 'source-required'
+              ? '이름만으로는 DB를 확정할 수 없다. 소스 찾기에서 습관리스트를 선택하거나 정확한 database/data source id를 넣으면 그래프 적용이 이어진다.'
+            : state === 'preview-ready'
+              ? '미리보기 후보를 확인했다. Notion 그래프 적용을 누르면 비공개 기억 그래프에 반영된다.'
+              : '습관리스트 일기 DB 미리보기를 준비한다.');
+    }
   };
 
   const selectMemory = (node) => {
@@ -4435,13 +4485,22 @@ const GRAPH_CONTROL_SCRIPT = `
         if (response.status === 424) {
           notionImportPanel.setAttribute('data-notion-import-state', 'token-required');
           if (notionImportSummary) notionImportSummary.textContent = 'Notion token required';
+          setIntakeNotionState('token-required');
           setInteractionState('notion-import-token-required');
           return;
         }
         if (response.status === 429) {
           notionImportPanel.setAttribute('data-notion-import-state', 'rate-limited');
           if (notionImportSummary) notionImportSummary.textContent = 'Notion rate limited. Retry shortly.';
+          setIntakeNotionState('rate-limited');
           setInteractionState('notion-import-rate-limited');
+          return;
+        }
+        if (response.status === 502) {
+          notionImportPanel.setAttribute('data-notion-import-state', 'source-required');
+          if (notionImportSummary) notionImportSummary.textContent = 'Notion source selection required';
+          setIntakeNotionState('source-required');
+          setInteractionState('notion-import-source-required');
           return;
         }
         if (!response.ok) throw new Error('notion import preview failed with ' + response.status);
@@ -4452,8 +4511,15 @@ const GRAPH_CONTROL_SCRIPT = `
       notionImportPanel.setAttribute('data-notion-import-state', 'preview-ready');
       notionImportPanel.setAttribute('data-notion-import-candidate-count', String(records.length));
       if (notionImportSummary) notionImportSummary.textContent = records.length + ' Notion candidates';
+      if (memoryIntakeHub?.getAttribute('data-intake-last-action')?.includes('notion')) {
+        setIntakeNotionState('preview-ready');
+      }
       importApplyButton?.removeAttribute('disabled');
       setInteractionState('notion-import-preview-ready');
+      if (pendingIntakeNotionApplyAfterPreview) {
+        pendingIntakeNotionApplyAfterPreview = false;
+        importApplyButton?.click();
+      }
     } catch (error) {
       notionImportPanel.setAttribute('data-notion-import-state', 'error');
       shell.setAttribute('data-notion-import-error', String(error?.message || error));
@@ -4545,6 +4611,10 @@ const GRAPH_CONTROL_SCRIPT = `
       if (memoryIntakeHub?.getAttribute('data-intake-last-action') === 'apply-diary') {
         memoryIntakeHub?.setAttribute('data-intake-draft-state', 'applied');
         memoryIntakeHub?.setAttribute('data-intake-result', 'graph-applied');
+        updateIntakeSessionResult(appliedMemoryId || shell.getAttribute('data-import-session-source-memory') || '');
+      }
+      if (memoryIntakeHub?.getAttribute('data-intake-last-action') === 'apply-notion-diary') {
+        memoryIntakeHub?.setAttribute('data-intake-result', 'notion-graph-applied');
         updateIntakeSessionResult(appliedMemoryId || shell.getAttribute('data-import-session-source-memory') || '');
       }
       setInteractionState('import-applied');
@@ -4731,6 +4801,30 @@ const GRAPH_CONTROL_SCRIPT = `
       importApplyButton?.click();
     }
     setInteractionState('intake-diary-apply-requested');
+  });
+  const prepareNotionDiaryIntake = (action) => {
+    if (notionDatabaseId && !notionDatabaseId.value.trim()) notionDatabaseId.value = '습관리스트';
+    memoryIntakeHub?.setAttribute('data-intake-last-action', action);
+    memoryIntakeHub?.setAttribute('data-intake-stage', 'notion-diary-ready');
+    memoryIntakeHub?.setAttribute('data-intake-source-scope', 'diary-only');
+    shell.setAttribute('data-intake-last-action', action);
+    notionImportPanel?.setAttribute('data-notion-source-scope', 'diary-only');
+    setIntakeNotionState('loading');
+  };
+  intakePreviewNotionButton?.addEventListener('click', () => {
+    prepareNotionDiaryIntake('preview-notion-diary');
+    notionImportPreviewButton?.click();
+    setInteractionState('intake-notion-diary-preview-requested');
+  });
+  intakeApplyNotionButton?.addEventListener('click', () => {
+    prepareNotionDiaryIntake('apply-notion-diary');
+    if (importApplyButton?.hasAttribute('disabled') || notionImportPanel?.getAttribute('data-notion-import-state') !== 'preview-ready') {
+      pendingIntakeNotionApplyAfterPreview = true;
+      notionImportPreviewButton?.click();
+    } else {
+      importApplyButton?.click();
+    }
+    setInteractionState('intake-notion-diary-apply-requested');
   });
   intakeActions.forEach((button) => {
     button.addEventListener('click', (event) => {
