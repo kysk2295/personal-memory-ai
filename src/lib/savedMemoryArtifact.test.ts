@@ -7,6 +7,7 @@ import { detectRepeatedPatterns } from './patternDetector';
 import {
   createSavedAskArtifact,
   createSavedDecisionReplayArtifact,
+  createSavedMemorySessionArtifact,
   createSavedWeeklyReportArtifact,
   saveArtifactAsMemoryRecord,
   savedArtifactToMemoryRecord,
@@ -127,6 +128,45 @@ describe('saved memory artifacts', () => {
     expect(reportRecord.memoryType).toBe('pattern');
     expect(reportRecord.topicTags).toEqual(expect.arrayContaining(['saved artifact', 'weekly report']));
     expect(reportRecord.rawText).toContain('Included memories: mem_launch_may_anxiety_scope_delay');
+  });
+
+  test('creates a saved memory session artifact from source and related memories', () => {
+    const artifact = createSavedMemorySessionArtifact({
+      sourceMemoryId: 'mem_launch_may_anxiety_scope_delay',
+      relatedMemoryIds: ['mem_freeze_vs_feature_addition', 'mem_launch_june_anxiety_scope_delay'],
+      askCitationMemoryIds: ['mem_launch_may_anxiety_scope_delay'],
+      replayCitationMemoryIds: ['mem_freeze_vs_feature_addition'],
+      weeklyCitationMemoryIds: ['mem_launch_june_anxiety_scope_delay'],
+      createdAt,
+    });
+    const record = savedArtifactToMemoryRecord(artifact);
+
+    expect(artifact).toEqual(
+      expect.objectContaining({
+        id: expect.stringMatching(/^artifact_memory_session_sha-/),
+        kind: 'memory_session',
+        title: 'Guided Memory Session: mem_launch_may_anxiety_scope_delay',
+        citationMemoryIds: [
+          'mem_freeze_vs_feature_addition',
+          'mem_launch_june_anxiety_scope_delay',
+          'mem_launch_may_anxiety_scope_delay',
+        ],
+        metadata: expect.objectContaining({
+          sourceMemoryId: 'mem_launch_may_anxiety_scope_delay',
+          relatedMemoryCount: 2,
+        }),
+      }),
+    );
+    expect(record).toEqual(
+      expect.objectContaining({
+        id: `mem_api_${artifact.id}`,
+        memoryType: 'reflection',
+        sourceRef: `personal-memory-ai://saved-artifacts/${artifact.id}`,
+      }),
+    );
+    expect(record.topicTags).toEqual(expect.arrayContaining(['saved artifact', 'memory session']));
+    expect(record.rawText).toContain('Source memory: mem_launch_may_anxiety_scope_delay');
+    expect(record.rawText).toContain('Related memories: mem_freeze_vs_feature_addition, mem_launch_june_anxiety_scope_delay');
   });
 
   test('saves artifact records through the user-scoped MemoryStore boundary', async () => {

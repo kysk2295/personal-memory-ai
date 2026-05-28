@@ -1959,6 +1959,7 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
               <li data-memory-session-step="replay" data-session-step-state="idle"><span>Decision Replay</span><strong>idle</strong></li>
               <li data-memory-session-step="weekly" data-session-step-state="idle"><span>Weekly Report</span><strong>idle</strong></li>
             </ol>
+            <button type="button" class="save-artifact-action" data-control="save-memory-session" data-artifact-save-state="idle" data-artifact-save-endpoint="/api/capture" data-artifact-save-method="POST">Save session</button>
           </section>
           ${renderAskMyPastSelfPanel(layout)}
           ${renderPrivacyControlPanel(layout)}
@@ -2065,6 +2066,7 @@ const GRAPH_CONTROL_SCRIPT = `
   const weeklyReportSummary = document.querySelector('[data-live-weekly-result="summary"]');
   const memorySessionPanel = document.querySelector('[data-memory-session-panel]');
   const memorySessionSummary = document.querySelector('[data-memory-session-summary]');
+  const memorySessionSaveButton = document.querySelector('[data-control="save-memory-session"]');
   let cytoscapeGraph = null;
   let layoutVersion = Number(shell.getAttribute('data-layout-version') || '0');
   let lastLocalImportPreview = null;
@@ -2425,6 +2427,10 @@ const GRAPH_CONTROL_SCRIPT = `
       memorySessionPanel?.setAttribute('data-session-related-memories', context.relatedMemoryIds.join(','));
       shell.setAttribute('data-memory-session-source-memory', context.sourceMemoryId);
       shell.setAttribute('data-memory-session-related-memory-count', String(context.relatedMemoryIds.length));
+    }
+    if (memorySessionSaveButton && state === 'completed') {
+      memorySessionSaveButton.setAttribute('data-artifact-save-state', 'ready');
+      memorySessionSaveButton.textContent = 'Save session';
     }
     if (memorySessionSummary && context?.sourceMemoryId) {
       memorySessionSummary.textContent =
@@ -3164,6 +3170,89 @@ const GRAPH_CONTROL_SCRIPT = `
     }
   };
 
+  const currentCitationList = (attributeName) =>
+    Array.from(new Set(String(shell.getAttribute(attributeName) || '').split(',').map((item) => item.trim()).filter(Boolean)));
+
+  const buildMemorySessionArtifact = () => {
+    const sourceMemoryId = memorySessionPanel?.getAttribute('data-session-source-memory') || shell.getAttribute('data-memory-session-source-memory') || '';
+    const relatedMemoryIds = String(memorySessionPanel?.getAttribute('data-session-related-memories') || '')
+      .split(',')
+      .map((item) => item.trim())
+      .filter(Boolean);
+    const askCitationMemoryIds = currentCitationList('data-live-ask-highlighted-memories');
+    const replayCitationMemoryIds = currentCitationList('data-live-replay-highlighted-memories');
+    const weeklyCitationMemoryIds = currentCitationList('data-live-weekly-highlighted-memories');
+    const citationMemoryIds = Array.from(new Set([sourceMemoryId, ...relatedMemoryIds, ...askCitationMemoryIds, ...replayCitationMemoryIds, ...weeklyCitationMemoryIds].filter(Boolean))).sort();
+    const createdAt = new Date().toISOString();
+    const basis = [sourceMemoryId, ...citationMemoryIds, createdAt].join('|');
+    let hash = 2166136261;
+    for (let index = 0; index < basis.length; index += 1) {
+      hash ^= basis.charCodeAt(index);
+      hash = Math.imul(hash, 16777619);
+    }
+    const artifactId = 'artifact_memory_session_sha-' + ((hash >>> 0).toString(36).padStart(7, '0'));
+    return {
+      id: artifactId,
+      kind: 'memory_session',
+      title: 'Guided Memory Session: ' + sourceMemoryId,
+      body: [
+        'Source memory: ' + sourceMemoryId,
+        'Related memories: ' + relatedMemoryIds.join(', '),
+        'Ask citations: ' + askCitationMemoryIds.join(', '),
+        'Decision Replay citations: ' + replayCitationMemoryIds.join(', '),
+        'Weekly Report citations: ' + weeklyCitationMemoryIds.join(', '),
+        'Citations: ' + citationMemoryIds.join(', '),
+      ].join('\\n'),
+      createdAt,
+      observedAt: createdAt.slice(0, 10),
+      evidenceLabel: citationMemoryIds.length ? 'sufficient_evidence' : 'insufficient_evidence',
+      confidence: citationMemoryIds.length ? 0.86 : 0,
+      citationMemoryIds,
+      graphHighlightIds: citationMemoryIds.map((memoryId) => 'memory:' + memoryId),
+      privacyScope: 'private',
+      metadata: {
+        sourceMemoryId,
+        relatedMemoryIds,
+        relatedMemoryCount: relatedMemoryIds.length,
+        askCitationCount: askCitationMemoryIds.length,
+        replayCitationCount: replayCitationMemoryIds.length,
+        weeklyCitationCount: weeklyCitationMemoryIds.length,
+      },
+    };
+  };
+
+  const saveMemorySession = async () => {
+    if (!memorySessionSaveButton || window.location.protocol === 'file:') return;
+    const endpoint = memorySessionSaveButton.getAttribute('data-artifact-save-endpoint') || '/api/capture';
+    const method = memorySessionSaveButton.getAttribute('data-artifact-save-method') || 'POST';
+    const artifact = buildMemorySessionArtifact();
+    memorySessionSaveButton.setAttribute('data-artifact-id', artifact.id);
+    memorySessionSaveButton.setAttribute('data-artifact-save-state', 'saving');
+    shell.setAttribute('data-memory-session-save-state', 'saving');
+    try {
+      const response = await fetch(endpoint, {
+        method,
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ artifact }),
+      });
+      if (!response.ok) throw new Error('memory session save failed with ' + response.status);
+      const body = await response.json().catch(() => ({}));
+      const savedMemoryId = body?.createdMemoryIds?.[0] || body?.record?.id || 'mem_api_' + artifact.id;
+      shell.setAttribute('data-last-saved-session-artifact', artifact.id);
+      shell.setAttribute('data-last-saved-session-memory', savedMemoryId);
+      await rehydrateAppShellAfterImport(savedMemoryId);
+      shell.setAttribute('data-memory-session-save-state', 'saved');
+      memorySessionSaveButton.setAttribute('data-artifact-save-state', 'saved');
+      memorySessionSaveButton.textContent = 'Session saved';
+      setInteractionState('memory-session-saved');
+    } catch (error) {
+      shell.setAttribute('data-memory-session-save-state', 'error');
+      shell.setAttribute('data-memory-session-save-error', String(error?.message || error));
+      memorySessionSaveButton.setAttribute('data-artifact-save-state', 'error');
+      setInteractionState('memory-session-save-error');
+    }
+  };
+
   const renderLiveReplayResult = (result) => {
     const replay = result?.replay || {};
     const citations = replay.citationMemoryIds || [];
@@ -3293,6 +3382,9 @@ const GRAPH_CONTROL_SCRIPT = `
 
   weeklyReportRefreshButton?.addEventListener('click', () => {
     void refreshWeeklyReport();
+  });
+  memorySessionSaveButton?.addEventListener('click', () => {
+    void saveMemorySession();
   });
 
   memorySearchResults.forEach(wireMemorySearchResult);

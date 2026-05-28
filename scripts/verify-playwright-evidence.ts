@@ -305,6 +305,18 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
     (await attribute(page, '[data-memory-session-panel]', 'data-session-source-memory')) === importedMemoryId,
     'Imported memory handoff should run the guided session from the imported memory',
   );
+  await page.locator('[data-control="save-memory-session"]').click();
+  await page.waitForFunction(
+    () => document.querySelector('[data-control="save-memory-session"]')?.getAttribute('data-artifact-save-state') === 'saved',
+    null,
+    { timeout: 10_000 },
+  );
+  assert(
+    ((await attribute(page, '.second-brain-shell', 'data-last-saved-session-memory')) || '').startsWith('mem_api_artifact_memory_session_'),
+    'Saved memory session should become a private MemoryRecord',
+  );
+  assert((await attribute(page, '.second-brain-shell', 'data-memory-session-save-state')) === 'saved', 'Shell should expose memory session save state');
+  assert((await attribute(page, '.second-brain-shell', 'data-graph-rehydrate-state')) === 'ready', 'Saving memory session should rehydrate graph state');
   await page.locator('[data-control="undo-local-import"]').click();
   await page.waitForFunction(() => document.querySelector('[data-import-upload-panel="local-file"]')?.getAttribute('data-import-upload-state') === 'undone');
   assert((await attribute(page, '.second-brain-shell', 'data-interaction-state')) === 'import-undone', 'Shell should expose local import undo state');
@@ -680,6 +692,7 @@ try {
           'local import upload preview',
           'local import upload apply',
           'import to guided memory session handoff',
+          'guided memory session saveback',
           'applied import graph feedback',
           'applied import timeline append',
           'app shell rehydration after import',

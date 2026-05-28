@@ -4,7 +4,7 @@ import { normalizeMemoryRecord, type MemoryRecord, type MemoryRecordType } from 
 import type { MemoryStore } from './memoryStore';
 import type { WeeklyReport } from './weeklyReport';
 
-export type SavedMemoryArtifactKind = 'ask_answer' | 'decision_replay' | 'weekly_report';
+export type SavedMemoryArtifactKind = 'ask_answer' | 'decision_replay' | 'weekly_report' | 'memory_session';
 export type SavedMemoryArtifactEvidenceLabel = 'sufficient_evidence' | 'insufficient_evidence';
 
 export interface SavedMemoryArtifact {
@@ -41,6 +41,15 @@ export interface CreateSavedWeeklyReportArtifactInput {
   createdAt?: string;
 }
 
+export interface CreateSavedMemorySessionArtifactInput {
+  sourceMemoryId: string;
+  relatedMemoryIds: string[];
+  askCitationMemoryIds: string[];
+  replayCitationMemoryIds: string[];
+  weeklyCitationMemoryIds: string[];
+  createdAt?: string;
+}
+
 export interface SaveArtifactAsMemoryRecordInput {
   store: MemoryStore;
   userId: string;
@@ -65,7 +74,7 @@ function observedAtFromCreatedAt(createdAt: string): string {
 }
 
 function sortedCitationIds(citationMemoryIds: readonly string[]): string[] {
-  return [...citationMemoryIds].sort((left, right) => left.localeCompare(right));
+  return Array.from(new Set(citationMemoryIds)).sort((left, right) => left.localeCompare(right));
 }
 
 function artifactMemoryType(kind: SavedMemoryArtifactKind): MemoryRecordType {
@@ -77,6 +86,7 @@ function artifactMemoryType(kind: SavedMemoryArtifactKind): MemoryRecordType {
 function artifactTopicTags(kind: SavedMemoryArtifactKind): string[] {
   if (kind === 'decision_replay') return ['saved artifact', 'decision replay'];
   if (kind === 'weekly_report') return ['saved artifact', 'weekly report'];
+  if (kind === 'memory_session') return ['saved artifact', 'memory session'];
   return ['saved artifact', 'ask my past self'];
 }
 
@@ -192,6 +202,47 @@ export function createSavedWeeklyReportArtifact(
       endDate: input.weeklyReport.window.endDate,
       totalMemoryRecords: input.weeklyReport.totalMemoryRecords,
       reportId: input.weeklyReport.id,
+    },
+  });
+}
+
+export function createSavedMemorySessionArtifact(input: CreateSavedMemorySessionArtifactInput): SavedMemoryArtifact {
+  const createdAt = input.createdAt ?? new Date().toISOString();
+  const citationMemoryIds = sortedCitationIds([
+    input.sourceMemoryId,
+    ...input.relatedMemoryIds,
+    ...input.askCitationMemoryIds,
+    ...input.replayCitationMemoryIds,
+    ...input.weeklyCitationMemoryIds,
+  ]);
+  const body = [
+    `Source memory: ${input.sourceMemoryId}`,
+    `Related memories: ${input.relatedMemoryIds.join(', ')}`,
+    `Ask citations: ${input.askCitationMemoryIds.join(', ')}`,
+    `Decision Replay citations: ${input.replayCitationMemoryIds.join(', ')}`,
+    `Weekly Report citations: ${input.weeklyCitationMemoryIds.join(', ')}`,
+    citationLine(citationMemoryIds),
+    `Evidence label: sufficient_evidence`,
+  ].join('\n');
+
+  return createArtifact({
+    id: artifactId('memory_session', [input.sourceMemoryId, ...citationMemoryIds, createdAt]),
+    kind: 'memory_session',
+    title: `Guided Memory Session: ${input.sourceMemoryId}`,
+    body,
+    createdAt,
+    observedAt: observedAtFromCreatedAt(createdAt),
+    evidenceLabel: 'sufficient_evidence',
+    confidence: citationMemoryIds.length ? 0.86 : 0,
+    citationMemoryIds,
+    graphHighlightIds: citationMemoryIds.map((memoryId) => `memory:${memoryId}`),
+    metadata: {
+      sourceMemoryId: input.sourceMemoryId,
+      relatedMemoryIds: input.relatedMemoryIds,
+      relatedMemoryCount: input.relatedMemoryIds.length,
+      askCitationCount: input.askCitationMemoryIds.length,
+      replayCitationCount: input.replayCitationMemoryIds.length,
+      weeklyCitationCount: input.weeklyCitationMemoryIds.length,
     },
   });
 }

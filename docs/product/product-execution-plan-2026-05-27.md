@@ -236,6 +236,7 @@ No remote push, main merge, production deploy, or secret access is allowed witho
 - L86: related context result evidence.
 - L87: guided memory session.
 - L88: import to guided memory session handoff.
+- L89: guided memory session saveback.
 
 ## 6. Active Next Loops
 
@@ -1693,6 +1694,24 @@ Acceptance:
 
 Implemented:
 
+- `src/App.tsx`
+- `scripts/verify-playwright-evidence.ts`
+
+### L89 — Guided Memory Session Saveback
+
+Goal: save a completed Guided Memory Session as a private memory so the session itself becomes future second-brain evidence.
+
+Acceptance:
+
+- domain layer supports `memory_session` saved artifacts and converts them to private `MemoryRecord`s
+- session panel exposes a Save session action after Ask, Decision Replay, and Weekly Report complete
+- Save session posts a private artifact through `/api/capture`
+- saved session memory id is exposed and graph/timeline rehydrate after saveback
+
+Implemented:
+
+- `src/lib/savedMemoryArtifact.ts`
+- `src/lib/savedMemoryArtifact.test.ts`
 - `src/App.tsx`
 - `scripts/verify-playwright-evidence.ts`
 
