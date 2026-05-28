@@ -842,6 +842,14 @@ async function verifyCaptureInteractions(page: Page): Promise<void> {
   assert((await attribute(page, '.capture-app-shell', 'data-privacy-scope')) === 'private', 'Capture app should stay private by default');
   assert((await attribute(page, '.capture-app-shell', 'data-quick-save-endpoint')) === '/api/capture', 'Capture app should target the private capture API');
   assert((await attribute(page, '[data-capture-hints-panel="manual"]', 'aria-label')) === 'Quick save diary form', 'Capture app should expose manual hint controls');
+  assert(
+    Number(await attribute(page, '[data-capture-related-preview="past-memory-nodes"]', 'data-capture-related-count')) === 3,
+    'Capture app should preview related past-memory nodes before handoff',
+  );
+  assert(
+    (await page.locator('[data-capture-related-memory-id]').count()) === 3,
+    'Capture app should render three related memory preview links',
+  );
   await page.locator('#quick-diary-text').fill(`Playwright capture memory playwright-capture-${Date.now()} with manual hints.`);
   await page.locator('[data-control="capture-emotion-hints"]').fill('focused, relieved');
   await page.locator('[data-control="capture-project-hints"]').fill('personal-memory-ai');
@@ -873,6 +881,10 @@ async function verifyCaptureInteractions(page: Page): Promise<void> {
       (await attribute(page, '[data-control="open-captured-memory-session"]', 'href')) ===
         `/?memory=${encodeURIComponent(capturedMemoryId || '')}&start=session`,
       'Capture AI session link should point at the captured memory session',
+    );
+    assert(
+      (await attribute(page, '[data-capture-related-preview="past-memory-nodes"]', 'data-capture-related-state')) === 'ready',
+      'Capture related preview should become ready after quick save',
     );
   } else {
     assert((await attribute(page, '.capture-app-shell', 'data-quick-save-state')) === 'saved', 'Static capture preview should mark local save state');

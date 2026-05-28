@@ -36,7 +36,16 @@ describe('app capture surface state', () => {
         status: 'ready-for-store-backed-graph',
         targetRoute: '/',
       },
+      relatedPreview: {
+        status: 'ready-after-save',
+        count: 3,
+      },
     });
+    expect(state.relatedPreview.memories.map((memory) => memory.id)).toEqual([
+      'mem_launch_may_anxiety_scope_delay',
+      'mem_launch_june_anxiety_scope_delay',
+      'mem_freeze_vs_feature_addition',
+    ]);
     expect(state.quickSaveAction.body).toEqual({
       text: state.draft.text,
       capturedAt: '2026-05-27T15:00:00.000Z',
@@ -67,6 +76,13 @@ describe('app capture surface state', () => {
     expect(html).toContain('data-graph-target-node="memory:');
     expect(html).toContain('data-graph-handoff-url="/?memory=');
     expect(html).toContain('data-session-handoff-url="/?memory=');
+    expect(html).toContain('data-capture-related-preview="past-memory-nodes"');
+    expect(html).toContain('data-capture-related-count="3"');
+    expect(html).toContain('data-capture-related-state="ready-after-save"');
+    expect(html).toContain('data-capture-related-memory-id="mem_launch_may_anxiety_scope_delay"');
+    expect(html).toContain('data-capture-related-memory-id="mem_launch_june_anxiety_scope_delay"');
+    expect(html).toContain('data-capture-related-memory-id="mem_freeze_vs_feature_addition"');
+    expect(html).toContain('저장하면 같이 떠오를 과거 기억');
     expect(html).toContain('data-capture-hints-panel="manual"');
     expect(html).toContain('name="emotionHints"');
     expect(html).toContain('name="projectHints"');
@@ -81,6 +97,8 @@ describe('app capture surface state', () => {
     expect(html).toContain("fetch(quickSaveEndpoint");
     expect(html).toContain("captureShell.setAttribute('data-graph-handoff-url', graphHandoffUrl)");
     expect(html).toContain("captureShell.setAttribute('data-session-handoff-url', sessionHandoffUrl)");
+    expect(html).toContain("captureShell.setAttribute('data-capture-related-state', 'ready')");
+    expect(html).toContain("captureRelatedPreview?.setAttribute('data-capture-related-state', 'ready')");
     expect(html).toContain("openGraphLink?.setAttribute('href', graphHandoffUrl)");
     expect(html).toContain("openSessionLink?.setAttribute('href', sessionHandoffUrl)");
     expect(html).toContain("captureShell.setAttribute('data-quick-save-state', 'saved')");

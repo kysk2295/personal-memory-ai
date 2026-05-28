@@ -182,6 +182,55 @@ const CAPTURE_STYLES = `
     font-size: 11px;
     overflow-wrap: anywhere;
   }
+  .capture-related-preview {
+    display: grid;
+    gap: 9px;
+    border: 1px solid rgba(255, 135, 151, 0.18);
+    border-radius: 12px;
+    background: rgba(214, 31, 60, 0.08);
+    padding: 12px;
+  }
+  .capture-related-preview h2 {
+    margin: 0;
+    color: #f4f4f4;
+    font-size: 14px;
+    line-height: 1.25;
+  }
+  .capture-related-preview p {
+    margin: 0;
+    color: #bebec5;
+    font-size: 12px;
+    line-height: 1.4;
+  }
+  .capture-related-list {
+    display: grid;
+    gap: 7px;
+  }
+  .capture-related-memory {
+    display: grid;
+    gap: 3px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.045);
+    padding: 8px;
+    text-decoration: none;
+  }
+  .capture-related-memory strong,
+  .capture-related-memory span {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .capture-related-memory strong {
+    color: #f4f4f4;
+    font-size: 12px;
+  }
+  .capture-related-memory span {
+    color: #ffabb6;
+    font-size: 11px;
+  }
   .capture-app-shell[data-quick-save-state="saved"] .capture-save-button {
     background: #2f9b65;
     border-color: rgba(47, 155, 101, 0.9);
@@ -287,6 +336,26 @@ export function renderAppCaptureHtml(): string {
         )}</code></p>
         <p>AI session handoff: <code>${escapeHtml(sessionHandoffUrl)}</code></p>
       </section>
+      <section class="capture-related-preview" data-capture-related-preview="past-memory-nodes" data-capture-related-count="${state.relatedPreview.count}" data-capture-related-state="${escapeHtml(
+        state.relatedPreview.status,
+      )}" aria-label="저장 후 같이 떠오를 과거 기억">
+        <div>
+          <h2>저장하면 같이 떠오를 과거 기억</h2>
+          <p>세컨브레인에서는 이 기록과 비슷한 감정, 결정, 프로젝트 기억을 같은 맥락으로 보여준다.</p>
+        </div>
+        <div class="capture-related-list">
+          ${state.relatedPreview.memories
+            .map(
+              (memory) =>
+                `<a class="capture-related-memory" href="${escapeHtml(
+                  `${state.graphSync.targetRoute}?memory=${encodeURIComponent(memory.id)}`,
+                )}" data-capture-related-memory-id="${escapeHtml(memory.id)}"><strong>${escapeHtml(
+                  memory.title,
+                )}</strong><span>${escapeHtml(memory.reason)}</span></a>`,
+            )
+            .join('')}
+        </div>
+      </section>
       <div class="capture-actions">
         <button class="capture-save-button" type="submit" data-control="quick-diary-save" form="quick-diary-form">빠른 저장</button>
         <a class="capture-secondary-link" href="${escapeHtml(
@@ -307,6 +376,7 @@ const CAPTURE_SCRIPT = `
   const saveButton = document.querySelector('[data-control="quick-diary-save"]');
   const openGraphLink = document.querySelector('[data-control="open-captured-memory-graph"]');
   const openSessionLink = document.querySelector('[data-control="open-captured-memory-session"]');
+  const captureRelatedPreview = document.querySelector('[data-capture-related-preview="past-memory-nodes"]');
   if (!captureShell || !form) return;
   form.setAttribute('id', 'quick-diary-form');
   const quickSaveEndpoint = captureShell.getAttribute('data-quick-save-endpoint') || '/api/capture';
@@ -343,6 +413,8 @@ const CAPTURE_SCRIPT = `
         captureShell.setAttribute('data-graph-handoff-url', graphHandoffUrl);
         captureShell.setAttribute('data-session-handoff-url', sessionHandoffUrl);
         captureShell.setAttribute('data-graph-target-node', 'memory:' + memoryId);
+        captureShell.setAttribute('data-capture-related-state', 'ready');
+        captureRelatedPreview?.setAttribute('data-capture-related-state', 'ready');
         openGraphLink?.setAttribute('href', graphHandoffUrl);
         openSessionLink?.setAttribute('href', sessionHandoffUrl);
       }
