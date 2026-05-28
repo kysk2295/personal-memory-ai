@@ -668,6 +668,13 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(documentHtml).toContain('renderLiveAskResult');
     expect(documentHtml).toContain("shell.setAttribute('data-ask-state', 'answered')");
     expect(documentHtml).toContain("shell.setAttribute('data-ask-citation-count'");
+    expect(documentHtml).toContain('const highlightLiveAskCitations =');
+    expect(documentHtml).toContain("shell.setAttribute('data-live-ask-highlighted-memory-count'");
+    expect(documentHtml).toContain("shell.setAttribute('data-live-ask-highlighted-memories'");
+    expect(documentHtml).toContain("cytoscapeGraph.elements().removeClass('ask-citation-memory ask-citation-edge')");
+    expect(documentHtml).toContain("cytoscapeGraph.getElementById('memory:' + citation)");
+    expect(documentHtml).toContain("memoryNode.addClass('ask-citation-memory')");
+    expect(documentHtml).toContain("setInteractionState('ask-citation-path-highlighted')");
     expect(documentHtml).toContain('result.savedArtifact');
     expect(documentHtml).toContain("savedArtifactsById.set(result.savedArtifact.id");
     expect(documentHtml).toContain("askSaveButton.setAttribute('data-artifact-id'");

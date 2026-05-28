@@ -167,6 +167,15 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
     );
     const askCitationCount = Number(await attribute(page, '.second-brain-shell', 'data-ask-citation-count'));
     assert(Number.isFinite(askCitationCount), 'Expected live Ask response to expose a citation count marker');
+    assert(
+      Number(await attribute(page, '.second-brain-shell', 'data-live-ask-highlighted-memory-count')) === askCitationCount,
+      'Live Ask should highlight the same number of cited graph memories',
+    );
+    const highlightedAskCitationCount = await page.evaluate(() => {
+      const graph = (window as any).__personalMemoryGraph;
+      return graph?.cy?.nodes('.ask-citation-memory').length ?? 0;
+    });
+    assert(highlightedAskCitationCount === askCitationCount, 'Cytoscape graph should mark Ask citation memory nodes');
     assert((await attribute(page, '.second-brain-shell', 'data-ask-evidence-label')).length > 0, 'Expected live Ask response to expose an evidence label');
     assert((await attribute(page, '.second-brain-shell', 'data-ask-conversation-mode')) === 'single_turn', 'Expected first live Ask response to start a single-turn context');
     await page.locator('#ask-memory-bar-question').fill('그럼 오늘 뭘 먼저 해야 해?');

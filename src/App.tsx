@@ -2197,6 +2197,26 @@ const GRAPH_CONTROL_SCRIPT = `
     if (node) selectMemory(node);
   };
 
+  const highlightLiveAskCitations = (citations) => {
+    const citationList = Array.from(new Set((citations || []).filter(Boolean)));
+    if (cytoscapeGraph) {
+      cytoscapeGraph.elements().removeClass('ask-citation-memory ask-citation-edge');
+      citationList.forEach((citation) => {
+        const memoryNode = cytoscapeGraph.getElementById('memory:' + citation);
+        if (memoryNode && memoryNode.length) {
+          memoryNode.addClass('ask-citation-memory');
+          memoryNode.connectedEdges().addClass('ask-citation-edge');
+        }
+      });
+    }
+    memoryNodes.forEach((node) => {
+      node.setAttribute('data-ask-citation-highlight', String(citationList.includes(node.getAttribute('data-inspector-citation') || '')));
+    });
+    shell.setAttribute('data-live-ask-highlighted-memory-count', String(citationList.length));
+    shell.setAttribute('data-live-ask-highlighted-memories', citationList.join(','));
+    if (citationList.length) setInteractionState('ask-citation-path-highlighted');
+  };
+
   const setCytoscapeLabelVisibility = (hidden) => {
     if (!cytoscapeGraph) return;
     cytoscapeGraph.nodes().toggleClass('labels-hidden', hidden);
@@ -2306,6 +2326,30 @@ const GRAPH_CONTROL_SCRIPT = `
             width: 1.7,
             opacity: 0.95,
             'z-index': 18,
+          },
+        },
+        {
+          selector: '.ask-citation-memory',
+          style: {
+            label: 'data(graphLabel)',
+            'background-color': '#8f80ff',
+            width: 36,
+            height: 36,
+            'border-color': '#4f46e5',
+            'border-width': 2,
+            color: '#4f46e5',
+            'font-size': 12,
+            'text-max-width': 220,
+            'z-index': 19,
+          },
+        },
+        {
+          selector: '.ask-citation-edge',
+          style: {
+            'line-color': '#8f80ff',
+            width: 1.55,
+            opacity: 0.92,
+            'z-index': 17,
           },
         },
         {
@@ -2535,6 +2579,7 @@ const GRAPH_CONTROL_SCRIPT = `
     shell.setAttribute('data-ask-state', 'answered');
     shell.setAttribute('data-ask-evidence-label', brief.evidenceLabel || ask.evidenceLabel || 'unknown');
     shell.setAttribute('data-ask-citation-count', String(brief.citationCount || ask.citationMemoryIds?.length || 0));
+    highlightLiveAskCitations(ask.citationMemoryIds || []);
     lastAskFollowUpContext = {
       previousQuestion: result.savedArtifact?.metadata?.question || '',
       previousRecommendation: ask.recommendation || brief.recommendation || '',

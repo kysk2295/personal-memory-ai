@@ -223,6 +223,7 @@ No remote push, main merge, production deploy, or secret access is allowed witho
 - L54: Notion block pagination import.
 - L55: Notion database pagination import.
 - L56: live Notion graph rehydration.
+- L76: live Ask citation path graph highlight.
 
 ## 6. Active Next Loops
 
@@ -1446,6 +1447,23 @@ Acceptance:
 - Ask submit calls the private memory API with the current question
 - live result updates inspector recommendation, answer body, citations, evidence label, and citation count markers
 - Playwright verifies the live browser Ask flow against the local durable vault
+
+Implemented:
+
+- `src/App.tsx`
+- `src/lib/appShellEvidenceLayout.test.ts`
+- `scripts/verify-playwright-evidence.ts`
+
+### L76 — Live Ask Citation Path Graph Highlight
+
+Goal: make live Ask answers visibly point back to the exact cited memory nodes in the second-brain graph, so the user sees which past memories the answer is grounded in.
+
+Acceptance:
+
+- live `/api/ask` responses mark cited Cytoscape memory nodes with `ask-citation-memory`
+- connected citation edges receive `ask-citation-edge`
+- shell exposes highlighted citation count and memory ids
+- Playwright verifies browser Ask response highlights the same number of graph memories as the citation count
 
 Implemented:
 
