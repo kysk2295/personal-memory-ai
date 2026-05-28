@@ -1618,6 +1618,7 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
   const graphNodeCount = memoryGraph.stats.graphNodeCount;
   const graphEdgeCount = memoryGraph.stats.edgeCount;
   const memoryNodeCount = memoryGraph.stats.memoryNodeCount;
+  const renderedMemoryNodeCount = memoryGraph.stats.renderedMemoryNodeCount;
   const citationLinks = layout.ask.citationMemoryIds
     .slice(0, 3)
     .map((citationId) => `<a href="#evidence-${escapeHtml(citationId)}" class="citation-ref" data-citation-ref="${escapeHtml(citationId)}">[${escapeHtml(citationId)}]</a>`)
@@ -1627,7 +1628,7 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
     return `<main class="second-brain-shell"><aside class="brain-sidebar"><section class="brain-title"><p class="eyebrow">지식 그래프</p><h1>Second Brain</h1><p>${escapeHtml(layout.northStar)}</p></section></aside></main>`;
   }
 
-  return `<main class="second-brain-shell" data-labels="visible" data-spacing="normal" data-layout-mode="free" data-layout-explainer="Free mode keeps the graph organic for open-ended memory exploration." data-layout-version="0" data-filter-semantic="on" data-filter-reflective="on" data-filter-procedural="on" data-filter-episodic="on" data-filter-thesis="on" data-filter-source="on" data-graph-renderer="cytoscape-pending" data-benchmark-reference="https://www.careerhackeralex.com/memory" data-memory-node-count="${memoryNodeCount}" data-graph-node-count="${graphNodeCount}" data-graph-edge-count="${graphEdgeCount}" data-surface-mode="graph-first" data-rail-mode="collapsed-evidence-drawer" data-first-screen-contract="benchmark-graph-dominant" data-panel-visibility="secondary-drawer" data-interaction-contract="filter-select-space-rearrange">
+  return `<main class="second-brain-shell" data-labels="visible" data-spacing="normal" data-layout-mode="free" data-layout-explainer="Free mode keeps the graph organic for open-ended memory exploration." data-layout-version="0" data-filter-semantic="on" data-filter-reflective="on" data-filter-procedural="on" data-filter-episodic="on" data-filter-thesis="on" data-filter-source="on" data-graph-renderer="cytoscape-pending" data-benchmark-reference="https://www.careerhackeralex.com/memory" data-memory-node-count="${memoryNodeCount}" data-rendered-memory-node-count="${renderedMemoryNodeCount}" data-graph-node-count="${graphNodeCount}" data-graph-edge-count="${graphEdgeCount}" data-surface-mode="graph-first" data-rail-mode="collapsed-evidence-drawer" data-first-screen-contract="benchmark-graph-dominant" data-panel-visibility="secondary-drawer" data-interaction-contract="filter-select-space-rearrange">
     <aside class="brain-sidebar" aria-label="Second Brain graph controls">
       <div class="sidebar-topline">
         <a class="home-button" href="/" aria-label="home">←</a>
@@ -1645,6 +1646,8 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
 
       <div class="graph-meta-line" aria-label="Memory graph scale">
         <span><strong data-live-count="memory-nodes">${memoryNodeCount}</strong> memories</span>
+        <span class="graph-meta-dot">·</span>
+        <span><strong data-live-count="rendered-memory-nodes">${renderedMemoryNodeCount}</strong> rendered</span>
         <span class="graph-meta-dot">·</span>
         <span><strong data-live-count="graph-nodes">${graphNodeCount}</strong> graph nodes</span>
         <span class="graph-meta-dot">·</span>
@@ -1741,7 +1744,7 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
 
       <div class="product-main-grid">
         <div class="graph-stage">
-          <div id="memory-graph-cytoscape" class="cytoscape-memory-graph" data-graph-library="cytoscape" data-memory-node-count="${memoryNodeCount}" data-graph-node-count="${graphNodeCount}" data-graph-edge-count="${graphEdgeCount}" aria-label="Cytoscape data-driven personal memory graph"></div>
+          <div id="memory-graph-cytoscape" class="cytoscape-memory-graph" data-graph-library="cytoscape" data-memory-node-count="${memoryNodeCount}" data-rendered-memory-node-count="${renderedMemoryNodeCount}" data-graph-node-count="${graphNodeCount}" data-graph-edge-count="${graphEdgeCount}" aria-label="Cytoscape data-driven personal memory graph"></div>
           ${renderMemoryGraphPayload(memoryGraph)}
           ${renderSavedArtifactPayload(layout)}
           ${variant === 'no-svg' ? '' : renderMemoryGraph(layout)}
@@ -1838,6 +1841,7 @@ const GRAPH_CONTROL_SCRIPT = `
   const searchCount = document.querySelector('[data-search-count]');
   const liveCountTargets = {
     memoryNodes: document.querySelector('[data-live-count="memory-nodes"]'),
+    renderedMemoryNodes: document.querySelector('[data-live-count="rendered-memory-nodes"]'),
     graphNodes: document.querySelector('[data-live-count="graph-nodes"]'),
     graphEdges: document.querySelector('[data-live-count="graph-edges"]'),
     wikiAtoms: document.querySelector('[data-live-count="wiki-atoms"]'),
@@ -2673,6 +2677,7 @@ const GRAPH_CONTROL_SCRIPT = `
       shell.setAttribute('data-rehydrated-graph-node-count', String(appShell.compiledWiki?.nodeCount || 0));
       shell.setAttribute('data-rehydrated-timeline-entry-count', String(appShell.memoryTimeline?.entries?.length || 0));
       if (liveCountTargets.memoryNodes) liveCountTargets.memoryNodes.textContent = String(memoryGraph?.stats?.memoryNodeCount || 0);
+      if (liveCountTargets.renderedMemoryNodes) liveCountTargets.renderedMemoryNodes.textContent = String(memoryGraph?.stats?.renderedMemoryNodeCount || 0);
       if (liveCountTargets.graphNodes) liveCountTargets.graphNodes.textContent = String(memoryGraph?.stats?.graphNodeCount || 0);
       if (liveCountTargets.graphEdges) liveCountTargets.graphEdges.textContent = String(memoryGraph?.stats?.edgeCount || 0);
       if (liveCountTargets.wikiAtoms) liveCountTargets.wikiAtoms.textContent = String(appShell.compiledWiki?.atomCount || 0);
@@ -2726,9 +2731,11 @@ const GRAPH_CONTROL_SCRIPT = `
     };
     shell.setAttribute('data-graph-rebuild-state', 'rebuilt');
     shell.setAttribute('data-memory-node-count', String(memoryGraph.stats?.memoryNodeCount || 0));
+    shell.setAttribute('data-rendered-memory-node-count', String(memoryGraph.stats?.renderedMemoryNodeCount || 0));
     shell.setAttribute('data-graph-node-count', String(memoryGraph.stats?.graphNodeCount || 0));
     shell.setAttribute('data-graph-edge-count', String(memoryGraph.stats?.edgeCount || 0));
     if (cytoscapeMount) {
+      cytoscapeMount.setAttribute('data-rendered-memory-node-count', String(memoryGraph.stats?.renderedMemoryNodeCount || 0));
       cytoscapeMount.setAttribute('data-cytoscape-node-count', String(memoryGraph.stats?.graphNodeCount || 0));
       cytoscapeMount.setAttribute('data-cytoscape-edge-count', String(memoryGraph.stats?.edgeCount || 0));
     }

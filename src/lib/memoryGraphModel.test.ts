@@ -117,6 +117,7 @@ describe('buildMemoryGraphModel', () => {
     const memoryNodeCount = graph.elements.filter((element) => element.group === 'nodes' && element.data.kind === 'memory').length;
 
     expect(graph.stats.memoryNodeCount).toBe(350);
+    expect(graph.stats.renderedMemoryNodeCount).toBe(300);
     expect(memoryNodeCount).toBeLessThanOrEqual(300);
   });
 });

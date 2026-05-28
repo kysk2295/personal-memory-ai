@@ -23,6 +23,7 @@ export interface CytoscapeMemoryGraphElement {
 
 export interface MemoryGraphStats {
   memoryNodeCount: number;
+  renderedMemoryNodeCount: number;
   graphNodeCount: number;
   edgeCount: number;
 }
@@ -174,6 +175,7 @@ export function buildMemoryGraphModel(records: readonly MemoryRecord[]): MemoryG
     elements,
     stats: {
       memoryNodeCount: records.length,
+      renderedMemoryNodeCount: renderedRecords.length,
       graphNodeCount: nodes.size,
       edgeCount: edges.size,
     },

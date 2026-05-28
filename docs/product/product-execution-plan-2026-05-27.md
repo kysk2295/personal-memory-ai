@@ -1325,6 +1325,25 @@ Implemented:
 - `src/lib/personalMemoryApi.ts`
 - `src/lib/personalMemoryApi.test.ts`
 
+### L69 — Honest Large-Vault Graph Scale Indicators
+
+Goal: avoid implying that only the rendered sample exists when a large private vault has more memories than the browser graph can safely draw at once.
+
+Acceptance:
+
+- graph stats expose total memory count and rendered memory node count separately
+- shell and Cytoscape mount carry `data-rendered-memory-node-count`
+- sidebar scale line shows the rendered count next to the total memory count
+- Playwright verifies rendered count is present, matches browser graph stats, and never exceeds total memories
+
+Implemented:
+
+- `src/lib/memoryGraphModel.ts`
+- `src/lib/memoryGraphModel.test.ts`
+- `src/App.tsx`
+- `src/lib/appShellEvidenceLayout.test.ts`
+- `scripts/verify-playwright-evidence.ts`
+
 ## 8. MVP Time Estimate
 
 Assuming focused local development without major dependency or deployment blockers:

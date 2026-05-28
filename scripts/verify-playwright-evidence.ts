@@ -84,11 +84,18 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
 
   assert((await attribute(page, '.second-brain-shell', 'data-graph-renderer')) === 'cytoscape', 'Expected Cytoscape renderer to become active');
   const initialMemoryNodeCount = Number(await attribute(page, '.second-brain-shell', 'data-memory-node-count'));
+  const initialRenderedMemoryNodeCount = Number(await attribute(page, '.second-brain-shell', 'data-rendered-memory-node-count'));
   const initialGraphNodeCount = Number(await attribute(page, '.second-brain-shell', 'data-graph-node-count'));
   const initialGraphEdgeCount = Number(await attribute(page, '.second-brain-shell', 'data-graph-edge-count'));
   assert(initialMemoryNodeCount >= 8, 'Expected data-derived memory count marker');
+  assert(initialRenderedMemoryNodeCount >= 8, 'Expected rendered memory count marker');
+  assert(initialRenderedMemoryNodeCount <= initialMemoryNodeCount, 'Rendered memory count should not exceed total memory count');
   assert(initialGraphNodeCount >= 44, 'Expected data-derived graph node count marker');
   assert(initialGraphEdgeCount >= 56, 'Expected data-derived graph edge count marker');
+  assert(
+    Number(await attribute(page, '#memory-graph-cytoscape', 'data-rendered-memory-node-count')) === initialRenderedMemoryNodeCount,
+    'Expected Cytoscape mount rendered memory count to match shell marker',
+  );
   assert(Number(await attribute(page, '#memory-graph-cytoscape', 'data-cytoscape-node-count')) === initialGraphNodeCount, 'Expected Cytoscape node count to match graph payload');
   assert(Number(await attribute(page, '#memory-graph-cytoscape', 'data-cytoscape-edge-count')) === initialGraphEdgeCount, 'Expected Cytoscape edge count to match graph payload');
   assert((await page.locator('#memory-graph-cytoscape canvas').count()) > 0, 'Expected Cytoscape to render a canvas');
@@ -128,6 +135,7 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
     return graph?.stats;
   });
   assert(graphStats?.memoryNodeCount === initialMemoryNodeCount, 'Expected browser graph stats to match memory node count marker');
+  assert(graphStats?.renderedMemoryNodeCount === initialRenderedMemoryNodeCount, 'Expected browser graph stats to match rendered memory node count marker');
   assert(graphStats?.graphNodeCount === initialGraphNodeCount, 'Expected browser graph stats to match graph node count marker');
   assert(graphStats?.edgeCount === initialGraphEdgeCount, 'Expected browser graph stats to match graph edge count marker');
   await page.waitForFunction(() => {
