@@ -78,6 +78,11 @@ async function verifyServiceFlow(page: Page): Promise<void> {
     graphHandoffUrl === `/?memory=${encodeURIComponent(capturedMemoryId)}`,
     'Quick save should expose a graph handoff URL for the captured diary memory',
   );
+  const sessionHandoffUrl = await attribute(page, '.capture-app-shell', 'data-session-handoff-url');
+  assert(
+    sessionHandoffUrl === `/?memory=${encodeURIComponent(capturedMemoryId)}&start=session`,
+    'Quick save should expose an AI session handoff URL for the captured diary memory',
+  );
 
   const search = await postJson<{ totalMatchCount: number; records: MemoryRecord[] }>(page, '/api/memory/search', {
     query: marker,
@@ -117,6 +122,29 @@ async function verifyServiceFlow(page: Page): Promise<void> {
   assert(
     (await attribute(page, '.second-brain-shell', 'data-capture-handoff-state')) === 'selected',
     'Web graph should select the captured memory from the handoff URL',
+  );
+
+  await page.goto(`${baseUrl}${sessionHandoffUrl}`, { waitUntil: 'load', timeout: 30_000 });
+  await page.locator('[data-graph-library="cytoscape"][data-cytoscape-ready="true"]').waitFor({ timeout: 15_000 });
+  await page.waitForFunction(
+    () => document.querySelector('.second-brain-shell')?.getAttribute('data-graph-rehydrate-state') === 'ready',
+    null,
+    { timeout: 15_000 },
+  );
+  await page.waitForFunction(
+    (memoryId) =>
+      document.querySelector('.second-brain-shell')?.getAttribute('data-import-session-source-memory') === memoryId &&
+      document.querySelector('.second-brain-shell')?.getAttribute('data-capture-handoff-session-state') === 'ready',
+    capturedMemoryId,
+    { timeout: 15_000 },
+  );
+  assert(
+    (await attribute(page, '.second-brain-shell', 'data-capture-handoff-start-mode')) === 'session',
+    'AI session handoff should mark the web shell as session-started',
+  );
+  assert(
+    (await attribute(page, '.second-brain-shell', 'data-memory-session-state')) === 'ready',
+    'AI session handoff should prepare the related-memory session',
   );
 
   const appShell = await getJson<{

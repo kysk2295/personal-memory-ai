@@ -821,8 +821,17 @@ async function verifyCaptureInteractions(page: Page): Promise<void> {
       'Capture app should expose a graph handoff URL after quick save',
     );
     assert(
+      (await attribute(page, '.capture-app-shell', 'data-session-handoff-url')) === `/?memory=${encodeURIComponent(capturedMemoryId || '')}&start=session`,
+      'Capture app should expose an AI session handoff URL after quick save',
+    );
+    assert(
       (await attribute(page, '[data-control="open-captured-memory-graph"]', 'href')) === `/?memory=${encodeURIComponent(capturedMemoryId || '')}`,
       'Capture graph link should point at the captured memory',
+    );
+    assert(
+      (await attribute(page, '[data-control="open-captured-memory-session"]', 'href')) ===
+        `/?memory=${encodeURIComponent(capturedMemoryId || '')}&start=session`,
+      'Capture AI session link should point at the captured memory session',
     );
   } else {
     assert((await attribute(page, '.capture-app-shell', 'data-quick-save-state')) === 'saved', 'Static capture preview should mark local save state');

@@ -157,10 +157,15 @@ const CAPTURE_STYLES = `
   }
   .capture-save-button {
     min-height: 48px;
-    flex: 1;
     background: #d61f3c;
     border-color: rgba(214, 31, 60, 0.9);
     font-weight: 800;
+  }
+  .capture-actions {
+    flex-wrap: wrap;
+  }
+  .capture-actions > * {
+    flex: 1 1 160px;
   }
   .capture-secondary-link {
     min-height: 48px;
@@ -204,6 +209,7 @@ export function renderAppCaptureHtml(): string {
   });
 
   const graphHandoffUrl = `${state.graphSync.targetRoute}?memory=${encodeURIComponent(state.savedPreview.id)}`;
+  const sessionHandoffUrl = `${graphHandoffUrl}&start=session`;
 
   return `<main class="capture-app-shell" aria-label="Mobile app quick diary capture" data-surface-mode="${escapeHtml(
     state.surfaceMode,
@@ -215,14 +221,14 @@ export function renderAppCaptureHtml(): string {
     state.graphSync.status,
   )}" data-graph-target-route="${escapeHtml(state.graphSync.targetRoute)}" data-graph-target-node="${escapeHtml(
     state.graphSync.targetNodeId,
-  )}" data-graph-handoff-url="${escapeHtml(graphHandoffUrl)}">
+  )}" data-graph-handoff-url="${escapeHtml(graphHandoffUrl)}" data-session-handoff-url="${escapeHtml(sessionHandoffUrl)}">
     <section class="capture-phone">
       <div class="capture-topbar">
         <button class="capture-icon-button" type="button" aria-label="Back">←</button>
         <span class="capture-chip private">private vault</span>
       </div>
       <section class="capture-title">
-        <h1>Quick Diary</h1>
+        <h1>빠른 일기</h1>
         <p>앱에서는 길게 분석하지 않고 바로 기록한다. 저장된 일기는 로컬 우선으로 private MemoryRecord가 되고 웹 세컨브레인 그래프에 연결된다.</p>
       </section>
       <form class="capture-card" aria-label="Quick save diary form" data-capture-hints-panel="manual">
@@ -266,7 +272,7 @@ export function renderAppCaptureHtml(): string {
         </div>
       </form>
       <section class="capture-sync-card" aria-label="Saved capture graph handoff">
-        <span>Saved preview</span>
+        <span>저장 후 연결</span>
         <p>Quick save will call <code>${escapeHtml(
           `${state.quickSaveAction.method} ${state.quickSaveAction.endpoint}`,
         )}</code> with local-first private payload.</p>
@@ -279,10 +285,16 @@ export function renderAppCaptureHtml(): string {
         <p>Graph handoff: <code>${escapeHtml(state.graphSync.targetNodeId)}</code> → <code>${escapeHtml(
           graphHandoffUrl,
         )}</code></p>
+        <p>AI session handoff: <code>${escapeHtml(sessionHandoffUrl)}</code></p>
       </section>
       <div class="capture-actions">
-        <button class="capture-save-button" type="submit" data-control="quick-diary-save" form="quick-diary-form">Quick save</button>
-        <a class="capture-secondary-link" href="${escapeHtml(graphHandoffUrl)}" data-control="open-captured-memory-graph">Open graph</a>
+        <button class="capture-save-button" type="submit" data-control="quick-diary-save" form="quick-diary-form">빠른 저장</button>
+        <a class="capture-secondary-link" href="${escapeHtml(
+          graphHandoffUrl,
+        )}" data-control="open-captured-memory-graph">세컨브레인에서 연관 기억 보기</a>
+        <a class="capture-secondary-link" href="${escapeHtml(
+          sessionHandoffUrl,
+        )}" data-control="open-captured-memory-session">AI 세션 시작</a>
       </div>
     </section>
   </main>`;
@@ -294,6 +306,7 @@ const CAPTURE_SCRIPT = `
   const form = document.querySelector('[data-capture-hints-panel="manual"]');
   const saveButton = document.querySelector('[data-control="quick-diary-save"]');
   const openGraphLink = document.querySelector('[data-control="open-captured-memory-graph"]');
+  const openSessionLink = document.querySelector('[data-control="open-captured-memory-session"]');
   if (!captureShell || !form) return;
   form.setAttribute('id', 'quick-diary-form');
   const quickSaveEndpoint = captureShell.getAttribute('data-quick-save-endpoint') || '/api/capture';
@@ -326,12 +339,15 @@ const CAPTURE_SCRIPT = `
         const memoryId = body.createdMemoryIds?.[0] || body.record?.id || '';
         captureShell.setAttribute('data-last-captured-memory', memoryId);
         const graphHandoffUrl = '/?memory=' + encodeURIComponent(memoryId);
+        const sessionHandoffUrl = graphHandoffUrl + '&start=session';
         captureShell.setAttribute('data-graph-handoff-url', graphHandoffUrl);
+        captureShell.setAttribute('data-session-handoff-url', sessionHandoffUrl);
         captureShell.setAttribute('data-graph-target-node', 'memory:' + memoryId);
         openGraphLink?.setAttribute('href', graphHandoffUrl);
+        openSessionLink?.setAttribute('href', sessionHandoffUrl);
       }
       captureShell.setAttribute('data-quick-save-state', 'saved');
-      if (saveButton) saveButton.textContent = 'Saved';
+      if (saveButton) saveButton.textContent = '저장됨';
     } catch (error) {
       captureShell.setAttribute('data-quick-save-state', 'error');
       captureShell.setAttribute('data-quick-save-error', String(error?.message || error));

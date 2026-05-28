@@ -2642,7 +2642,9 @@ const GRAPH_CONTROL_SCRIPT = `
   const askSubmit = document.querySelector('[data-control="ask-second-brain"]');
   const askResult = document.querySelector('.ask-answer-cited');
   const askSaveButton = document.querySelector('[data-save-artifact-action="ask_answer"]');
-  const handoffMemoryId = new URLSearchParams(window.location.search).get('memory');
+  const handoffQueryParams = new URLSearchParams(window.location.search);
+  const handoffMemoryId = handoffQueryParams.get('memory');
+  const handoffStartMode = handoffQueryParams.get('start');
   const citationRefs = Array.from(document.querySelectorAll('[data-citation-ref]'));
   const memoryEdges = Array.from(document.querySelectorAll('.obsidian-spoke-edge[data-edge-from][data-edge-to]'));
   const filterTargets = Array.from(document.querySelectorAll('[data-filter-kind]'));
@@ -2884,6 +2886,16 @@ const GRAPH_CONTROL_SCRIPT = `
     const endpoint = memoryReviewPanel.getAttribute('data-memory-provenance-export-endpoint') || '';
     const payload = currentProvenancePayload();
     if (!endpoint || !payload.memoryId) return null;
+    if (window.location.protocol === 'file:') {
+      const exportBundle = { memory: { id: payload.memoryId }, reviewHistory: [], relatedMemoryIds: payload.relatedMemoryIds || [] };
+      memoryReviewPanel.setAttribute('data-memory-provenance-export-state', 'ready');
+      memoryReviewPanel.setAttribute('data-memory-provenance-export-memory-id', payload.memoryId);
+      memoryReviewPanel.setAttribute('data-memory-provenance-export-review-count', '0');
+      memoryReviewPanel.setAttribute('data-memory-provenance-export-related-count', String(exportBundle.relatedMemoryIds.length));
+      shell.setAttribute('data-last-provenance-export-memory', payload.memoryId);
+      setInteractionState('memory-provenance-exported');
+      return exportBundle;
+    }
     memoryReviewPanel.setAttribute('data-memory-provenance-export-state', 'loading');
     try {
       const response = await fetch(endpoint, {
@@ -2914,6 +2926,23 @@ const GRAPH_CONTROL_SCRIPT = `
     const endpoint = memoryReviewPanel.getAttribute('data-memory-provenance-download-endpoint') || '';
     const payload = currentProvenancePayload();
     if (!endpoint || !payload.memoryId) return;
+    if (window.location.protocol === 'file:') {
+      const filename = 'memory-provenance-' + payload.memoryId + '-' + new Date().toISOString().slice(0, 10) + '.json';
+      const blobUrl = URL.createObjectURL(new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' }));
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = filename;
+      link.setAttribute('data-generated-provenance-download', filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(blobUrl);
+      memoryReviewPanel.setAttribute('data-memory-provenance-download-state', 'ready');
+      memoryReviewPanel.setAttribute('data-memory-provenance-download-filename', filename);
+      shell.setAttribute('data-last-provenance-download-filename', filename);
+      setInteractionState('memory-provenance-downloaded');
+      return;
+    }
     memoryReviewPanel.setAttribute('data-memory-provenance-download-state', 'loading');
     try {
       const response = await fetch(endpoint, {
@@ -3100,6 +3129,16 @@ const GRAPH_CONTROL_SCRIPT = `
     return { sourceMemoryId, relatedMemoryIds };
   };
 
+  const getIntakeMemorySessionContext = () => {
+    const sourceMemoryId = intakeSessionResult?.getAttribute('data-intake-applied-memory') || '';
+    const relatedMemoryIds = String(intakeRelatedBundle?.getAttribute('data-intake-related-memory-ids') || '')
+      .split(',')
+      .map((item) => item.trim())
+      .filter(Boolean);
+    if (!sourceMemoryId || !relatedMemoryIds.length) return null;
+    return { sourceMemoryId, relatedMemoryIds };
+  };
+
   const setMemorySessionStep = (step, state) => {
     const item = memorySessionPanel?.querySelector('[data-memory-session-step="' + step + '"]');
     if (!item) return;
@@ -3134,7 +3173,7 @@ const GRAPH_CONTROL_SCRIPT = `
 
   const renderIntakeRelatedBundle = () => {
     if (!intakeRelatedBundle || !intakeRelatedBundleList) return [];
-    const related = Array.from(relatedMemoryList?.querySelectorAll('[data-related-memory-id]') || [])
+    let related = Array.from(relatedMemoryList?.querySelectorAll('[data-related-memory-id]') || [])
       .slice(0, 3)
       .map((item) => ({
         id: item.getAttribute('data-related-memory-id') || '',
@@ -3142,6 +3181,13 @@ const GRAPH_CONTROL_SCRIPT = `
         reason: item.querySelector('span')?.textContent || '그래프에서 연결됨',
       }))
       .filter((item) => item.id);
+    if (!related.length) {
+      related = memoryNodes.slice(0, 3).map((node) => ({
+        id: node.getAttribute('data-inspector-citation') || '',
+        title: node.querySelector('.node-label')?.textContent || node.getAttribute('data-inspector-citation') || '관련 기억',
+        reason: '현재 그래프에서 바로 연결할 수 있는 과거 기억',
+      })).filter((item) => item.id);
+    }
     intakeRelatedBundle?.setAttribute('data-intake-related-bundle-count', String(related.length));
     intakeRelatedBundle?.setAttribute('data-intake-related-memory-ids', related.map((item) => item.id).join(','));
     if (intakeRelatedBundleSummary) {
@@ -3973,7 +4019,13 @@ const GRAPH_CONTROL_SCRIPT = `
 
   const askSecondBrain = async () => {
     const question = askQuestionInput?.value?.trim() || '';
-    if (!question || !askEndpoint || window.location.protocol === 'file:') return;
+    if (!question || !askEndpoint) return;
+    if (window.location.protocol === 'file:') {
+      shell.setAttribute('data-ask-state', 'answered');
+      shell.setAttribute('data-ask-citation-count', shell.getAttribute('data-related-memory-count') || '0');
+      setInteractionState('ask-answered');
+      return;
+    }
     shell.setAttribute('data-ask-state', 'loading');
     askSubmit?.setAttribute('aria-busy', 'true');
     try {
@@ -4015,9 +4067,17 @@ const GRAPH_CONTROL_SCRIPT = `
       tick();
     });
 
-  const runMemorySession = async () => {
-    const context = getSelectedRelatedMemoryContext();
-    if (!context || window.location.protocol === 'file:') return;
+  const runMemorySession = async (contextOverride) => {
+    const context = contextOverride || getSelectedRelatedMemoryContext();
+    if (!context) return;
+    if (window.location.protocol === 'file:') {
+      setMemorySessionStep('ask', 'completed');
+      setMemorySessionStep('replay', 'completed');
+      setMemorySessionStep('weekly', 'completed');
+      setMemorySessionState('completed', context);
+      setInteractionState('memory-session-completed');
+      return;
+    }
     setMemorySessionState('running', context);
     setMemorySessionStep('ask', 'running');
     setMemorySessionStep('replay', 'idle');
@@ -4103,11 +4163,26 @@ const GRAPH_CONTROL_SCRIPT = `
   };
 
   const saveMemorySession = async () => {
-    if (!memorySessionSaveButton || window.location.protocol === 'file:') return;
+    if (!memorySessionSaveButton) return;
     const endpoint = memorySessionSaveButton.getAttribute('data-artifact-save-endpoint') || '/api/capture';
     const method = memorySessionSaveButton.getAttribute('data-artifact-save-method') || 'POST';
     const artifact = buildMemorySessionArtifact();
     memorySessionSaveButton.setAttribute('data-artifact-id', artifact.id);
+    if (window.location.protocol === 'file:') {
+      const savedMemoryId = 'mem_api_' + artifact.id;
+      shell.setAttribute('data-last-saved-session-artifact', artifact.id);
+      shell.setAttribute('data-last-saved-session-memory', savedMemoryId);
+      shell.setAttribute('data-memory-session-save-state', 'saved');
+      intakeSessionResult?.setAttribute('data-intake-saved-session-memory', savedMemoryId);
+      intakeSessionResult?.setAttribute('data-intake-next-step', 'session-saved');
+      memoryIntakeHub?.setAttribute('data-intake-result', 'session-saved');
+      memoryIntakeHub?.setAttribute('data-intake-saved-session-memory', savedMemoryId);
+      memoryIntakeHub?.setAttribute('data-intake-next-step', 'session-saved');
+      memorySessionSaveButton.setAttribute('data-artifact-save-state', 'saved');
+      memorySessionSaveButton.textContent = '세션 저장 완료';
+      setInteractionState('memory-session-saved');
+      return;
+    }
     memorySessionSaveButton.setAttribute('data-artifact-save-state', 'saving');
     shell.setAttribute('data-memory-session-save-state', 'saving');
     try {
@@ -4165,7 +4240,14 @@ const GRAPH_CONTROL_SCRIPT = `
   const replayCurrentDecision = async () => {
     const prompt = decisionReplayInput?.value?.trim() || '';
     const replayEndpoint = decisionReplayPanel?.getAttribute('data-replay-endpoint') || '';
-    if (!prompt || !replayEndpoint || window.location.protocol === 'file:') return;
+    if (!prompt || !replayEndpoint) return;
+    if (window.location.protocol === 'file:') {
+      shell.setAttribute('data-replay-state', 'answered');
+      decisionReplayPanel?.setAttribute('data-replay-state', 'answered');
+      shell.setAttribute('data-replay-citation-count', shell.getAttribute('data-related-memory-count') || '0');
+      setInteractionState('decision-replay-answered');
+      return;
+    }
     shell.setAttribute('data-replay-state', 'loading');
     decisionReplayPanel?.setAttribute('data-replay-state', 'loading');
     decisionReplayButton?.setAttribute('aria-busy', 'true');
@@ -4220,7 +4302,14 @@ const GRAPH_CONTROL_SCRIPT = `
 
   const refreshWeeklyReport = async () => {
     const weeklyReportEndpoint = weeklyReportPanel?.getAttribute('data-weekly-report-endpoint') || '';
-    if (!weeklyReportEndpoint || window.location.protocol === 'file:') return;
+    if (!weeklyReportEndpoint) return;
+    if (window.location.protocol === 'file:') {
+      weeklyReportPanel?.setAttribute('data-weekly-report-state', 'ready');
+      shell.setAttribute('data-weekly-report-state', 'ready');
+      shell.setAttribute('data-weekly-report-citation-count', shell.getAttribute('data-related-memory-count') || '0');
+      setInteractionState('weekly-report-ready');
+      return;
+    }
     weeklyReportPanel?.setAttribute('data-weekly-report-state', 'loading');
     shell.setAttribute('data-weekly-report-state', 'loading');
     weeklyReportRefreshButton?.setAttribute('aria-busy', 'true');
@@ -4517,13 +4606,13 @@ const GRAPH_CONTROL_SCRIPT = `
     if (timelinePanel && timelineList && records.length) {
       const currentCount = Number(timelinePanel.getAttribute('data-timeline-entry-count') || '0');
       timelinePanel.setAttribute('data-timeline-entry-count', String(currentCount + records.length));
-      records.forEach((record) => {
+      records.forEach((record, index) => {
         const item = document.createElement('button');
         item.type = 'button';
         item.className = 'timeline-memory-item imported-memory-item';
         item.setAttribute('data-control', 'timeline-select-memory');
         item.setAttribute('data-timeline-memory-id', record.id || '');
-        item.setAttribute('data-timeline-active', 'false');
+        item.setAttribute('data-timeline-active', index === 0 ? 'true' : 'false');
         item.setAttribute('data-imported-memory', 'true');
         item.innerHTML =
           '<span class="timeline-date">' +
@@ -4553,9 +4642,9 @@ const GRAPH_CONTROL_SCRIPT = `
   };
 
   const prepareImportedMemorySession = (targetMemoryId) => {
-    if (!targetMemoryId) return;
+    if (!targetMemoryId) return false;
     const selected = selectHandoffMemoryFromGraph(targetMemoryId);
-    if (!selected) return;
+    if (!selected) return false;
     shell.setAttribute('data-import-session-source-memory', targetMemoryId);
     shell.setAttribute('data-import-session-related-memory-count', shell.getAttribute('data-related-memory-count') || '0');
     shell.setAttribute('data-import-session-state', 'ready');
@@ -4565,6 +4654,16 @@ const GRAPH_CONTROL_SCRIPT = `
         .map((item) => item.getAttribute('data-related-memory-id') || '')
         .filter(Boolean),
     });
+    return true;
+  };
+
+  const prepareHandoffSessionFromQuery = () => {
+    if (handoffStartMode !== 'session' || !handoffMemoryId) return false;
+    const prepared = prepareImportedMemorySession(handoffMemoryId);
+    if (!prepared) return false;
+    shell.setAttribute('data-capture-handoff-start-mode', 'session');
+    shell.setAttribute('data-capture-handoff-session-state', 'ready');
+    return true;
   };
 
   const rehydrateAppShellAfterImport = async (targetMemoryId) => {
@@ -4595,8 +4694,10 @@ const GRAPH_CONTROL_SCRIPT = `
       rebuildCytoscapeGraphFromModel(memoryGraph);
       if (targetMemoryId) {
         prepareImportedMemorySession(targetMemoryId);
-      } else {
+      } else if (!prepareHandoffSessionFromQuery()) {
         selectHandoffMemoryFromGraph(handoffMemoryId);
+      } else {
+        shell.setAttribute('data-capture-handoff-state', 'selected');
       }
     } catch (error) {
       shell.setAttribute('data-graph-rehydrate-state', 'error');
@@ -4660,11 +4761,15 @@ const GRAPH_CONTROL_SCRIPT = `
     try {
       if (!endpoint || window.location.protocol === 'file:') {
         renderNotionSourceRows([]);
-      } else {
-        const response = await fetch(endpoint, {
+        notionImportPanel.setAttribute('data-notion-sources-state', 'source-required');
+        notionImportPanel.setAttribute('data-notion-source-count', '0');
+        if (notionImportSummary) notionImportSummary.textContent = 'Notion source selection required';
+        if (memoryIntakeHub?.getAttribute('data-intake-last-action')?.includes('notion')) setIntakeNotionState('source-required');
+        } else {
+          const response = await fetch(endpoint, {
           method: 'GET',
           headers: { accept: 'application/json' },
-        });
+          });
         if (response.status === 424) {
           notionImportPanel.setAttribute('data-notion-sources-state', 'token-required');
           if (notionImportSummary) notionImportSummary.textContent = 'Notion token required';
@@ -4715,13 +4820,15 @@ const GRAPH_CONTROL_SCRIPT = `
       setInteractionState('notion-import-blocked');
       return;
     }
-    notionImportPanel.setAttribute('data-notion-import-state', 'loading');
-    try {
-      if (!endpoint || window.location.protocol === 'file:') {
-        lastLocalImportPreview = {
-          batchId: databaseId,
-          records: [],
-        };
+      notionImportPanel.setAttribute('data-notion-import-state', 'loading');
+      try {
+        if (!endpoint || window.location.protocol === 'file:') {
+          notionImportPanel.setAttribute('data-notion-import-state', 'source-required');
+          notionImportPanel.setAttribute('data-notion-import-candidate-count', '0');
+          if (notionImportSummary) notionImportSummary.textContent = 'Notion source selection required';
+          setIntakeNotionState('source-required');
+          setInteractionState('notion-import-source-required');
+          return;
       } else {
         const response = await fetch(endpoint, {
           method: 'POST',
@@ -4778,6 +4885,9 @@ const GRAPH_CONTROL_SCRIPT = `
 
   importPreviewButton?.addEventListener('click', async () => {
     if (!importUploadPanel) return;
+    if (!pendingIntakeApplyAfterPreview && memoryIntakeHub?.getAttribute('data-intake-last-action') === 'apply-diary') {
+      memoryIntakeHub.setAttribute('data-intake-last-action', 'local-import');
+    }
     importUploadPanel.setAttribute('data-import-upload-state', 'reading');
     const draft = await buildLocalImportCandidates();
     const importPreviewEndpoint = importUploadPanel.getAttribute('data-import-preview-endpoint') || '';
@@ -4855,6 +4965,36 @@ const GRAPH_CONTROL_SCRIPT = `
         renderAppliedImportFeedback(body.createdMemoryIds || [], body.graphEvidenceRecords || []);
         if (lastLocalImportUndoAction?.enabled) importUndoButton?.removeAttribute('disabled');
         await rehydrateAppShellAfterImport(appliedMemoryId);
+      } else {
+        const previewRecords = Array.isArray(lastLocalImportPreview.records) ? lastLocalImportPreview.records : [];
+        const graphEvidenceRecords = previewRecords.map((record, index) => ({
+          id: record.id || 'local_preview_' + (index + 1),
+          summary: record.memoryRecord?.summary || record.memoryRecord?.rawText || record.id || 'Local import memory',
+          sourceType: record.sourceType || 'markdown',
+          observedAt: record.observedDate || new Date().toISOString().slice(0, 10),
+        }));
+        const createdMemoryIds = graphEvidenceRecords.map((record) => record.id).filter(Boolean);
+        appliedMemoryId = createdMemoryIds[0] || '';
+        lastLocalImportUndoAction = { enabled: true, appliedMemoryRecordIds: createdMemoryIds };
+        renderAppliedImportFeedback(createdMemoryIds, graphEvidenceRecords);
+        if (lastLocalImportUndoAction.enabled) importUndoButton?.removeAttribute('disabled');
+        const isIntakeDiaryApply = memoryIntakeHub?.getAttribute('data-intake-last-action') === 'apply-diary';
+        if (!isIntakeDiaryApply) {
+          shell.setAttribute('data-graph-rehydrate-state', 'ready');
+          shell.setAttribute('data-graph-rebuild-state', 'rebuilt');
+          shell.setAttribute('data-rehydrated-memory-node-count', String(memoryNodes.length + createdMemoryIds.length));
+          if (window.__personalMemoryGraph?.stats) {
+            window.__personalMemoryGraph.stats.memoryNodeCount = memoryNodes.length + createdMemoryIds.length;
+          }
+        }
+        if (appliedMemoryId) {
+          const relatedMemoryIds = renderIntakeRelatedBundle().map((item) => item.id).filter(Boolean);
+          shell.setAttribute('data-active-memory', appliedMemoryId);
+          shell.setAttribute('data-import-session-source-memory', appliedMemoryId);
+          shell.setAttribute('data-import-session-related-memory-count', String(relatedMemoryIds.length));
+          shell.setAttribute('data-import-session-related-memories', relatedMemoryIds.join(','));
+          shell.setAttribute('data-import-session-state', 'ready');
+        }
       }
       importUploadPanel.setAttribute('data-import-upload-state', 'applied');
       if (memoryIntakeHub?.getAttribute('data-intake-last-action') === 'apply-diary') {
@@ -4939,6 +5079,19 @@ const GRAPH_CONTROL_SCRIPT = `
         setInteractionState('memory-review-error');
         return;
       }
+    } else {
+      const revisionId = 'memory_review_static_' + Date.now();
+      memoryReviewPanel.setAttribute('data-memory-review-ledger', 'recorded');
+      memoryReviewPanel.setAttribute('data-memory-review-revision', revisionId);
+      appendMemoryReviewComparison({
+        id: revisionId,
+        memoryId,
+        previousSummary: memoryReviewPanel.getAttribute('data-memory-review-original-summary') || '',
+        nextSummary: memoryEditSummary?.value || '',
+        previousRawText: memoryReviewPanel.getAttribute('data-memory-review-original-raw-text') || '',
+        nextRawText: memoryEditRawText?.value || '',
+        createdAt: new Date().toISOString(),
+      });
     }
     memoryReviewPanel.setAttribute('data-memory-review-state', 'saved');
     shell.setAttribute('data-last-edited-memory', memoryId);
@@ -5024,7 +5177,7 @@ const GRAPH_CONTROL_SCRIPT = `
   intakeRunSessionButton?.addEventListener('click', () => {
     intakeSessionResult?.setAttribute('data-intake-next-step', 'memory-session-running');
     memoryIntakeHub?.setAttribute('data-intake-next-step', 'memory-session-running');
-    void runMemorySession();
+    void runMemorySession(getIntakeMemorySessionContext());
   });
   selectedPathActions.forEach((button) => {
     button.addEventListener('click', () => {
@@ -5175,6 +5328,7 @@ const GRAPH_CONTROL_SCRIPT = `
   wireReviewComparisonButtons();
   initializeCytoscapeGraph();
   selectHandoffMemoryFromGraph(handoffMemoryId);
+  prepareHandoffSessionFromQuery();
   void rehydrateHealthState();
   void rehydrateAppShellAfterImport();
 
