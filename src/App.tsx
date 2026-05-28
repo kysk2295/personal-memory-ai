@@ -3601,15 +3601,26 @@ const GRAPH_CONTROL_SCRIPT = `
     captureHandoffBanner?.setAttribute('data-capture-handoff-banner-state', state);
     captureHandoffBanner?.setAttribute('data-capture-handoff-memory', normalizedMemoryId);
     captureHandoffBanner?.setAttribute('data-capture-handoff-related-count', count);
+    captureHandoffBanner?.setAttribute('data-capture-handoff-save-state', state === 'session-saved' ? 'saved' : 'idle');
     shell.setAttribute('data-capture-handoff-banner-state', state);
     shell.setAttribute('data-capture-handoff-related-count', count);
     if (captureHandoffTitle) {
       captureHandoffTitle.textContent =
-        state === 'session-ready' ? '방금 저장한 일기로 AI 세션 준비 완료' : '방금 저장한 일기가 그래프에 선택됐다';
+        state === 'session-saved'
+          ? '방금 저장한 일기 세션이 미래 기억으로 저장됐다'
+          : state === 'session-completed'
+            ? '방금 저장한 일기 세션 완료'
+            : state === 'session-running'
+              ? '방금 저장한 일기로 AI 세션 실행 중'
+              : state === 'session-ready'
+                ? '방금 저장한 일기로 AI 세션 준비 완료'
+                : '방금 저장한 일기가 그래프에 선택됐다';
     }
     if (captureHandoffSummary) {
       captureHandoffSummary.textContent =
-        normalizedMemoryId + ' 기억에서 연관 과거 기억 ' + count + '개를 찾았다. 바로 질문, 결정 되짚기, 주간 패턴 세션을 실행할 수 있다.';
+        state === 'session-saved'
+          ? normalizedMemoryId + ' 세션 결과가 저장됐다. 다음 고민에서 이 결과도 과거 근거로 다시 불러올 수 있다.'
+          : normalizedMemoryId + ' 기억에서 연관 과거 기억 ' + count + '개를 찾았다. 바로 질문, 결정 되짚기, 주간 패턴 세션을 실행할 수 있다.';
     }
   };
 
@@ -4282,6 +4293,9 @@ const GRAPH_CONTROL_SCRIPT = `
       setMemorySessionStep('replay', 'completed');
       setMemorySessionStep('weekly', 'completed');
       setMemorySessionState('completed', context);
+      if (captureHandoffBanner?.getAttribute('data-capture-handoff-banner-state') === 'session-running') {
+        updateCaptureHandoffBanner('session-completed', context.sourceMemoryId, context.relatedMemoryIds.length);
+      }
       setInteractionState('memory-session-completed');
       return;
     }
@@ -4308,6 +4322,9 @@ const GRAPH_CONTROL_SCRIPT = `
       await waitForShellState('data-weekly-report-state', 'ready');
       setMemorySessionStep('weekly', 'completed');
       setMemorySessionState('completed', context);
+      if (captureHandoffBanner?.getAttribute('data-capture-handoff-banner-state') === 'session-running') {
+        updateCaptureHandoffBanner('session-completed', context.sourceMemoryId, context.relatedMemoryIds.length);
+      }
       setInteractionState('memory-session-completed');
     } catch (error) {
       setMemorySessionState('error', context);
@@ -4387,6 +4404,9 @@ const GRAPH_CONTROL_SCRIPT = `
       memoryIntakeHub?.setAttribute('data-intake-next-step', 'session-saved');
       memorySessionSaveButton.setAttribute('data-artifact-save-state', 'saved');
       memorySessionSaveButton.textContent = '세션 저장 완료';
+      if (captureHandoffBanner?.getAttribute('data-capture-handoff-banner-state') === 'session-completed') {
+        updateCaptureHandoffBanner('session-saved', shell.getAttribute('data-memory-session-source-memory') || memorySessionPanel?.getAttribute('data-session-source-memory') || '', shell.getAttribute('data-memory-session-related-memory-count') || memorySessionPanel?.getAttribute('data-session-related-memory-count') || '0');
+      }
       setInteractionState('memory-session-saved');
       return;
     }
@@ -4417,6 +4437,9 @@ const GRAPH_CONTROL_SCRIPT = `
       }
       memorySessionSaveButton.setAttribute('data-artifact-save-state', 'saved');
       memorySessionSaveButton.textContent = '세션 저장 완료';
+      if (captureHandoffBanner?.getAttribute('data-capture-handoff-banner-state') === 'session-completed') {
+        updateCaptureHandoffBanner('session-saved', shell.getAttribute('data-memory-session-source-memory') || memorySessionPanel?.getAttribute('data-session-source-memory') || '', shell.getAttribute('data-memory-session-related-memory-count') || memorySessionPanel?.getAttribute('data-session-related-memory-count') || '0');
+      }
       setInteractionState('memory-session-saved');
     } catch (error) {
       shell.setAttribute('data-memory-session-save-state', 'error');
@@ -5427,7 +5450,7 @@ const GRAPH_CONTROL_SCRIPT = `
     void runMemorySession(getIntakeMemorySessionContext());
   });
   captureHandoffRunSessionButton?.addEventListener('click', () => {
-    captureHandoffBanner?.setAttribute('data-capture-handoff-banner-state', 'session-running');
+    updateCaptureHandoffBanner('session-running', captureHandoffBanner?.getAttribute('data-capture-handoff-memory') || shell.getAttribute('data-capture-handoff-selected-memory') || '', captureHandoffBanner?.getAttribute('data-capture-handoff-related-count') || shell.getAttribute('data-capture-handoff-related-count') || '0');
     void runMemorySession();
   });
   selectedPathActions.forEach((button) => {

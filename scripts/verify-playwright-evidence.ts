@@ -907,6 +907,32 @@ async function verifyCaptureInteractions(page: Page): Promise<void> {
       (await attribute(page, '[data-capture-handoff-banner="selected-memory-session"]', 'data-capture-handoff-related-count')) !== '0',
       'Capture handoff banner should expose related memories after opening the AI session handoff',
     );
+    await page.locator('[data-control="capture-handoff-run-session"]').click();
+    await page.waitForFunction(
+      () =>
+        document
+          .querySelector('[data-capture-handoff-banner="selected-memory-session"]')
+          ?.getAttribute('data-capture-handoff-banner-state') === 'session-completed',
+      null,
+      { timeout: 30_000 },
+    );
+    assert(
+      (await attribute(page, '.second-brain-shell', 'data-memory-session-state')) === 'completed',
+      'Capture handoff banner should run the guided AI session to completion',
+    );
+    await page.locator('[data-control="save-memory-session"]').click();
+    await page.waitForFunction(
+      () =>
+        document
+          .querySelector('[data-capture-handoff-banner="selected-memory-session"]')
+          ?.getAttribute('data-capture-handoff-banner-state') === 'session-saved',
+      null,
+      { timeout: 15_000 },
+    );
+    assert(
+      (await attribute(page, '[data-capture-handoff-banner="selected-memory-session"]', 'data-capture-handoff-save-state')) === 'saved',
+      'Capture handoff banner should mark the completed session as saved',
+    );
   }
 }
 

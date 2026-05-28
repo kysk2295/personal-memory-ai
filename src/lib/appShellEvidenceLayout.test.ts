@@ -776,6 +776,10 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(documentHtml).toContain('const updateCaptureHandoffBanner =');
     expect(documentHtml).toContain("captureHandoffBanner?.setAttribute('data-capture-handoff-banner-state', state)");
     expect(documentHtml).toContain("captureHandoffRunSessionButton?.addEventListener('click'");
+    expect(documentHtml).toContain("updateCaptureHandoffBanner('session-running'");
+    expect(documentHtml).toContain("updateCaptureHandoffBanner('session-completed'");
+    expect(documentHtml).toContain("updateCaptureHandoffBanner('session-saved'");
+    expect(documentHtml).toContain("captureHandoffBanner?.setAttribute('data-capture-handoff-save-state'");
     expect(documentHtml).toContain("updateCaptureHandoffBanner('ready'");
     expect(documentHtml).toContain("setIntakeFlowStepState('graph', 'done')");
     expect(documentHtml).toContain("setIntakeFlowStepState('related', related.length ? 'ready' : 'loading')");
