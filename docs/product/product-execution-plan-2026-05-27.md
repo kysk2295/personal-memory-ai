@@ -1200,6 +1200,23 @@ Implemented:
 - `src/lib/memoryStore.test.ts`
 - `src/lib/memoryStoreRuntime.test.ts`
 
+### L62 — Safe Local Durable Health Metadata
+
+Goal: make it obvious from health checks whether the server is using the durable local private vault, without exposing a local file path.
+
+Acceptance:
+
+- `/health/live` includes `localDurableStore: 'enabled' | 'disabled'`
+- local-file backend reports `enabled`
+- postgres/fixture backends report `disabled`
+- payload does not include `.local`, user home paths, database URLs, or secrets
+- live smoke verified `PMI_LOCAL_DURABLE_STORE=true` starts the server as `memoryBackend: 'local-file'`
+
+Implemented:
+
+- `src/lib/localServerHealth.ts`
+- `src/lib/localServerHealth.test.ts`
+
 ## 8. MVP Time Estimate
 
 Assuming focused local development without major dependency or deployment blockers:

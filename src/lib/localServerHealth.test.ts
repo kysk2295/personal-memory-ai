@@ -15,8 +15,28 @@ describe('buildLiveHealthPayload', () => {
       memoryBackend: 'postgres',
       migrationStatus: 'applied',
       databaseUrl: 'present',
+      localDurableStore: 'disabled',
     });
     expect(JSON.stringify(payload)).not.toContain('postgres://');
     expect(JSON.stringify(payload)).not.toContain('secret');
+  });
+
+  test('marks local-file backend as durable without exposing a local vault path', () => {
+    const payload = buildLiveHealthPayload({
+      backendMode: 'local-file',
+      migrationStatus: 'not_applicable',
+      databaseUrlPresence: 'missing',
+    });
+
+    expect(payload).toEqual({
+      status: 'ok',
+      service: 'personal-memory-ai-web',
+      memoryBackend: 'local-file',
+      migrationStatus: 'not_applicable',
+      databaseUrl: 'missing',
+      localDurableStore: 'enabled',
+    });
+    expect(JSON.stringify(payload)).not.toContain('.local');
+    expect(JSON.stringify(payload)).not.toContain('/Users/');
   });
 });

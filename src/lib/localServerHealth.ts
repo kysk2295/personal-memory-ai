@@ -6,6 +6,7 @@ export interface LiveHealthPayload {
   memoryBackend: MemoryStoreRuntime['backendMode'];
   migrationStatus: MemoryStoreRuntime['migrationStatus'];
   databaseUrl: MemoryStoreRuntime['databaseUrlPresence'];
+  localDurableStore: 'enabled' | 'disabled';
 }
 
 export function buildLiveHealthPayload(
@@ -17,5 +18,6 @@ export function buildLiveHealthPayload(
     memoryBackend: runtime.backendMode,
     migrationStatus: runtime.migrationStatus,
     databaseUrl: runtime.databaseUrlPresence,
+    localDurableStore: runtime.backendMode === 'local-file' ? 'enabled' : 'disabled',
   };
 }
