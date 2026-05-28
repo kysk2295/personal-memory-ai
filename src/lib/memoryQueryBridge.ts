@@ -3,6 +3,10 @@ import type { CurrentDecision } from './decisionReplay';
 export interface BuildMemoryRetrievalQueryInput {
   question: string;
   currentDecision?: CurrentDecision;
+  followUpContext?: {
+    previousQuestion?: string;
+    previousRecommendation?: string;
+  };
 }
 
 export interface MemoryRetrievalQuery {
@@ -29,6 +33,10 @@ function sourceTermsForInput(input: BuildMemoryRetrievalQueryInput): string[] {
     appendUnique(sourceTerms, input.currentDecision.emotions);
     appendUnique(sourceTerms, input.currentDecision.choices);
     appendUnique(sourceTerms, input.currentDecision.topicTags);
+  }
+  if (input.followUpContext) {
+    appendUnique(sourceTerms, [input.followUpContext.previousQuestion ?? '']);
+    appendUnique(sourceTerms, [input.followUpContext.previousRecommendation ?? '']);
   }
   return sourceTerms;
 }

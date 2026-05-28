@@ -1869,6 +1869,7 @@ const GRAPH_CONTROL_SCRIPT = `
   let layoutVersion = Number(shell.getAttribute('data-layout-version') || '0');
   let lastLocalImportPreview = null;
   let lastLocalImportUndoAction = null;
+  let lastAskFollowUpContext = null;
 
   const setInteractionState = (value) => {
     shell.setAttribute('data-interaction-state', value);
@@ -2471,6 +2472,12 @@ const GRAPH_CONTROL_SCRIPT = `
     shell.setAttribute('data-ask-state', 'answered');
     shell.setAttribute('data-ask-evidence-label', brief.evidenceLabel || ask.evidenceLabel || 'unknown');
     shell.setAttribute('data-ask-citation-count', String(brief.citationCount || ask.citationMemoryIds?.length || 0));
+    lastAskFollowUpContext = {
+      previousQuestion: result.savedArtifact?.metadata?.question || '',
+      previousRecommendation: ask.recommendation || brief.recommendation || '',
+      previousCitationMemoryIds: ask.citationMemoryIds || [],
+    };
+    shell.setAttribute('data-ask-conversation-mode', result.conversationContext?.mode || 'single_turn');
     if (result.savedArtifact) {
       const futureMemoryId = 'mem_api_' + result.savedArtifact.id;
       savedArtifactsById.set(result.savedArtifact.id, {
@@ -2502,7 +2509,12 @@ const GRAPH_CONTROL_SCRIPT = `
       const response = await fetch(askEndpoint, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ question, queryId: 'web-ask-' + Date.now(), createdAt: new Date().toISOString() }),
+        body: JSON.stringify({
+          question,
+          queryId: 'web-ask-' + Date.now(),
+          createdAt: new Date().toISOString(),
+          followUpContext: lastAskFollowUpContext,
+        }),
       });
       if (!response.ok) throw new Error('ask failed with ' + response.status);
       renderLiveAskResult(await response.json());

@@ -658,6 +658,9 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(documentHtml).toContain('result.savedArtifact');
     expect(documentHtml).toContain("savedArtifactsById.set(result.savedArtifact.id");
     expect(documentHtml).toContain("askSaveButton.setAttribute('data-artifact-id'");
+    expect(documentHtml).toContain('lastAskFollowUpContext');
+    expect(documentHtml).toContain('followUpContext: lastAskFollowUpContext');
+    expect(documentHtml).toContain("shell.setAttribute('data-ask-conversation-mode'");
     expect(documentHtml).toContain('const rebuildCytoscapeGraphFromModel =');
     expect(documentHtml).toContain('cytoscapeGraph.elements().remove()');
     expect(documentHtml).toContain('void rehydrateAppShellAfterImport()');

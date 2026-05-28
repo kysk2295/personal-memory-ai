@@ -2,7 +2,7 @@
 
 Status: active local execution plan  
 Owner: Ko Yunseo  
-Updated: 2026-05-28, live Ask save-back and Notion graph rehydration
+Updated: 2026-05-28, live Ask follow-up/save-back and Notion graph rehydration
 Supersedes for local Codex work: `docs/product/product-master-plan-2026-05-26.md`
 
 ## 1. Product Definition
@@ -123,7 +123,7 @@ Status values:
 | Ask | Ask My Past Self deterministic contract | `done-foundation` | Citation/insufficient evidence tested. |
 | Ask | LLM answer generation | `done-foundation` | Provider adapter routes outputs through the citation guard; live provider config/secrets still planned. |
 | Ask | Saved advice artifacts | `prototype-ui` | Ask answers can become private saved artifacts and future `MemoryRecord`s; live `/api/ask` responses now return a saveable `ask_answer` artifact, and Save answer feeds the graph/timeline display model and posts artifact payloads through `/api/capture` when served over HTTP. |
-| Ask | Follow-up conversation | `planned` | Requires session/report memory. |
+| Ask | Follow-up conversation | `done-foundation` | Web Ask keeps the latest private Ask citation context and sends it as `followUpContext`; the agent anchors vague follow-up questions to prior cited memories inside the same user vault. |
 | Decision | Decision Replay deterministic contract | `done-foundation` | Past outcome citations tested. |
 | Decision | Decision result save-back | `prototype-ui` | Decision replay results can become private saved artifacts and future decision memories; Save replay feeds the graph/timeline display model and posts artifact payloads through `/api/capture` when served over HTTP. |
 | Reports | Weekly Pattern Report foundation | `done-foundation` | Weekly report panel and pattern citation panel are visible in the web surface. |

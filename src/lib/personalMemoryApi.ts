@@ -19,6 +19,7 @@ import { summarizeRawText, type MemoryRecord } from './memoryRecord';
 import type { MemoryStore } from './memoryStore';
 import { queryNotionDatabaseImportCandidates, queryNotionImportSources, type NotionFetch } from './notionImport';
 import { answerPersonalMemoryQuestion } from './personalMemoryAgent';
+import type { PersonalMemoryFollowUpContext } from './personalMemoryAgent';
 import { resolvePrivateVaultAccess, type PrivateVaultSession } from './privateVault';
 import { saveArtifactAsMemoryRecord, type SavedMemoryArtifact } from './savedMemoryArtifact';
 import { saveUserFeedbackMemory, type UserFeedbackMemoryInput } from './userFeedbackMemory';
@@ -133,6 +134,7 @@ interface AskBody {
   queryId?: string;
   createdAt?: string;
   currentDecision?: CurrentDecision;
+  followUpContext?: PersonalMemoryFollowUpContext;
 }
 
 interface ReplayBody {
@@ -514,6 +516,7 @@ export async function handlePersonalMemoryApiRequest(
       userId,
       question: body.question,
       currentDecision: body.currentDecision,
+      followUpContext: body.followUpContext,
       queryId: body.queryId,
       createdAt: body.createdAt,
     });

@@ -755,6 +755,30 @@ describe('personal memory API boundary', () => {
     expect(askBody.ask.evidenceLabel).toBe('sufficient_evidence');
     expect(JSON.stringify(ask.body)).not.toContain('mem_other_user_api_private');
 
+    const followUpAsk = await handlePersonalMemoryApiRequest({
+      store,
+      userId: 'user-a',
+      request: {
+        method: 'POST',
+        path: '/api/ask',
+        body: {
+          question: '그럼 오늘 뭘 먼저 해야 해?',
+          queryId: 'api-ask-follow-up-001',
+          followUpContext: {
+            previousQuestion: '이번에도 기능을 더 넣어야 할까?',
+            previousRecommendation: askBody.ask.recommendation,
+            previousCitationMemoryIds: askBody.ask.citationMemoryIds,
+          },
+        },
+      },
+    });
+
+    expect(followUpAsk.statusCode).toBe(200);
+    const followUpBody = followUpAsk.body as PersonalMemoryAgentResult;
+    expect(followUpBody.conversationContext.mode).toBe('follow_up');
+    expect(followUpBody.conversationContext.anchoredCitationMemoryIds).toEqual(askBody.ask.citationMemoryIds.slice().sort());
+    expect(followUpBody.savedArtifact.metadata.followUpMode).toBe('follow_up');
+
     const replay = await handlePersonalMemoryApiRequest({
       store,
       userId: 'user-a',

@@ -175,4 +175,38 @@ describe('answerPersonalMemoryQuestion', () => {
     expect(result.replay).toBeUndefined();
     expect(result.graphEvidence.highlightIds).toEqual(expect.arrayContaining(['query:agent-query-weak']));
   });
+
+  test('anchors vague follow-up questions to previous cited memories', async () => {
+    const store = createMemoryStore({ env: {} });
+    for (const record of sufficientMemories) {
+      await store.create('user-a', record);
+    }
+
+    const result = await answerPersonalMemoryQuestion({
+      store,
+      userId: 'user-a',
+      question: '그럼 오늘 뭘 먼저 해야 해?',
+      queryId: 'agent-follow-up-001',
+      followUpContext: {
+        previousQuestion: '이번에도 기능을 더 넣어야 할까?',
+        previousRecommendation: '이번에는 기능을 더 넣기보다 freeze하고 사용자 피드백을 먼저 받으세요.',
+        previousCitationMemoryIds: ['mem_agent_may_scope_delay', 'mem_agent_june_scope_delay'],
+      },
+    });
+
+    expect(result.conversationContext).toEqual(
+      expect.objectContaining({
+        mode: 'follow_up',
+        previousQuestion: '이번에도 기능을 더 넣어야 할까?',
+        anchoredCitationMemoryIds: ['mem_agent_june_scope_delay', 'mem_agent_may_scope_delay'],
+      }),
+    );
+    expect(result.loadedMemoryIds.slice().sort()).toEqual(['mem_agent_june_scope_delay', 'mem_agent_may_scope_delay']);
+    expect(result.retrievalQuery.sourceTerms).toEqual(
+      expect.arrayContaining(['그럼 오늘 뭘 먼저 해야 해?', '이번에도 기능을 더 넣어야 할까?']),
+    );
+    expect(result.retrievalQuery.expandedQuery).toContain('freeze');
+    expect(result.ask.evidenceLabel).toBe('sufficient_evidence');
+    expect(result.savedArtifact.metadata.followUpMode).toBe('follow_up');
+  });
 });

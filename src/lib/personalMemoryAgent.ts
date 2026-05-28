@@ -13,9 +13,22 @@ export interface AnswerPersonalMemoryQuestionInput {
   userId: string;
   question: string;
   currentDecision?: CurrentDecision;
+  followUpContext?: PersonalMemoryFollowUpContext;
   queryId?: string;
   createdAt?: string;
   retrievalLimit?: number;
+}
+
+export interface PersonalMemoryFollowUpContext {
+  previousQuestion?: string;
+  previousRecommendation?: string;
+  previousCitationMemoryIds?: string[];
+}
+
+export interface PersonalMemoryConversationContext {
+  mode: 'single_turn' | 'follow_up';
+  previousQuestion?: string;
+  anchoredCitationMemoryIds: string[];
 }
 
 export interface PersonalMemoryAgentResult {
@@ -29,6 +42,7 @@ export interface PersonalMemoryAgentResult {
   replay?: DecisionReplayResult;
   coachingBrief: PersonalMemoryCoachingBrief;
   savedArtifact: SavedMemoryArtifact;
+  conversationContext: PersonalMemoryConversationContext;
   graphEvidence: GraphEvidencePayload;
 }
 
@@ -98,6 +112,29 @@ function buildCoachingBrief(input: {
   };
 }
 
+function sortedExistingAnchors(
+  memories: readonly MemoryRecord[],
+  followUpContext: PersonalMemoryFollowUpContext | undefined,
+): string[] {
+  if (!followUpContext?.previousCitationMemoryIds?.length) return [];
+  const existingIds = new Set(memories.map((memory) => memory.id));
+  return uniqueSorted(followUpContext.previousCitationMemoryIds.filter((memoryId) => existingIds.has(memoryId)));
+}
+
+function mergeAnchoredMemories(
+  retrievedMemories: readonly MemoryRecord[],
+  allUserMemories: readonly MemoryRecord[],
+  anchoredCitationMemoryIds: readonly string[],
+): MemoryRecord[] {
+  const memoriesById = new Map(allUserMemories.map((memory) => [memory.id, memory]));
+  const merged = new Map(retrievedMemories.map((memory) => [memory.id, memory]));
+  for (const memoryId of anchoredCitationMemoryIds) {
+    const anchoredMemory = memoriesById.get(memoryId);
+    if (anchoredMemory) merged.set(memoryId, anchoredMemory);
+  }
+  return Array.from(merged.values());
+}
+
 export async function answerPersonalMemoryQuestion(
   input: AnswerPersonalMemoryQuestionInput,
 ): Promise<PersonalMemoryAgentResult> {
@@ -105,13 +142,20 @@ export async function answerPersonalMemoryQuestion(
   const retrievalQuery = buildMemoryRetrievalQuery({
     question: input.question,
     currentDecision: input.currentDecision,
+    followUpContext: input.followUpContext,
   });
   const retrieval = retrieveMultiAxisMemoriesFromRecords({
     records: allUserMemories,
     query: retrievalQuery.expandedQuery,
     limit: input.retrievalLimit ?? 8,
   });
-  const memories = retrieval.memories;
+  const anchoredCitationMemoryIds = sortedExistingAnchors(allUserMemories, input.followUpContext);
+  const memories = mergeAnchoredMemories(retrieval.memories, allUserMemories, anchoredCitationMemoryIds);
+  const conversationContext: PersonalMemoryConversationContext = {
+    mode: input.followUpContext ? 'follow_up' : 'single_turn',
+    previousQuestion: input.followUpContext?.previousQuestion,
+    anchoredCitationMemoryIds,
+  };
   const patterns = detectRepeatedPatterns(memories);
   const ask = askMyPastSelf({
     question: input.question,
@@ -143,6 +187,11 @@ export async function answerPersonalMemoryQuestion(
     queryId: input.queryId,
     createdAt: input.createdAt,
   });
+  savedArtifact.metadata.followUpMode = conversationContext.mode;
+  if (conversationContext.previousQuestion) savedArtifact.metadata.previousQuestion = conversationContext.previousQuestion;
+  if (conversationContext.anchoredCitationMemoryIds.length) {
+    savedArtifact.metadata.anchoredCitationMemoryIds = conversationContext.anchoredCitationMemoryIds;
+  }
 
   return {
     privacyScope: 'private',
@@ -155,6 +204,7 @@ export async function answerPersonalMemoryQuestion(
     replay,
     coachingBrief,
     savedArtifact,
+    conversationContext,
     graphEvidence,
   };
 }
