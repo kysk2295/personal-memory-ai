@@ -92,7 +92,7 @@ async function verifyServiceFlow(page: Page): Promise<void> {
   assert(search.records.some((record) => record.id === capturedMemoryId), 'Search should return the captured diary memory');
 
   await page.goto(`${baseUrl}/?memory=${encodeURIComponent(capturedMemoryId)}`, { waitUntil: 'load', timeout: 30_000 });
-  await page.locator('[data-service-flow="diary-to-second-brain"]').waitFor({ timeout: 10_000 });
+  await page.locator('[data-service-flow="diary-to-second-brain"]').waitFor({ state: 'attached', timeout: 10_000 });
   for (const step of [
     'quick-diary-capture',
     'diary-database-load',

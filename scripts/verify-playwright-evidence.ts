@@ -94,6 +94,15 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
     (await attribute(page, '.second-brain-shell', 'data-prototype-ux')) === 'korean-usable-mvp',
     'Expected Korean usable MVP prototype marker',
   );
+  assert((await attribute(page, '.second-brain-shell', 'data-prototype-mode')) === 'use-now', 'Expected first screen to start in use-now prototype mode');
+  assert((await attribute(page, '.second-brain-shell', 'data-visible-core-flow')) === 'capture-graph-ai', 'Expected use-now mode to declare the core flow');
+  assert((await attribute(page, '.second-brain-shell', 'data-secondary-panels')) === 'collapsed', 'Expected secondary panels to start collapsed');
+  assert((await attribute(page, '.product-value-strip', 'data-use-now-mode')) === 'enabled', 'Expected product shelf to enable use-now mode');
+  assert((await attribute(page, '.product-value-strip', 'data-flow-collapsed')) === 'true', 'Expected secondary first-screen chrome to start collapsed');
+  assert((await page.locator('[data-use-now-command-strip="diary-graph-ai"]').count()) === 1, 'Expected use-now command strip');
+  for (const step of ['capture', 'graph', 'ai-workbench']) {
+    assert((await page.locator(`[data-use-now-step="${step}"]`).count()) === 1, `Missing use-now step ${step}`);
+  }
   assert((await page.locator('[data-prototype-flow="tonight-usable"]').count()) === 1, 'Expected visible tonight-usable product flow');
   assert((await page.locator('[data-prototype-journey-cockpit="diary-memory-ai"]').count()) === 1, 'Expected prototype journey cockpit');
   assert(
@@ -121,6 +130,8 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   assert(((await page.locator('[data-workflow-focus-note]').textContent()) || '').includes('기록 인입 허브'), 'Focus note should explain the visible capture step');
   await page.locator('[data-flow-focus-action="graph"]').click();
   assert((await attribute(page, '.second-brain-shell', 'data-workflow-focus')) === 'graph', 'Graph focus action should switch workflow focus');
+  assert((await attribute(page, '.second-brain-shell', 'data-prototype-mode')) === 'use-now', 'Graph focus should preserve use-now mode');
+  assert((await page.locator('[data-korean-ai-workbench="selected-or-imported-memory"]').count()) === 1, 'Graph focus should keep Korean AI workbench available');
   assert((await attribute(page, '.second-brain-shell', 'data-workflow-active-section')) === 'graph', 'Graph focus should become active section');
   assert((await attribute(page, '[data-flow-focus-switcher="core-workflow"]', 'data-flow-focus-current')) === 'graph', 'Flow focus switcher should track graph mode');
   assert((await attribute(page, '[data-workflow-section="graph"]', 'data-workflow-section-state')) === 'focused', 'Graph section should become focused');
@@ -129,6 +140,7 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   assert(((await page.locator('[data-flow-focus-label]').textContent()) || '').includes('세컨브레인'), 'Graph focus should use Korean second-brain label');
   await page.locator('[data-flow-focus-action="ai"]').click();
   assert((await attribute(page, '.second-brain-shell', 'data-workflow-focus')) === 'ai', 'AI focus action should switch workflow focus');
+  assert((await attribute(page, '[data-use-now-command-strip="diary-graph-ai"]', 'data-use-now-current-step')) === 'ai-workbench', 'AI focus should update the use-now command strip');
   assert((await attribute(page, '[data-workflow-section="ai"]', 'data-workflow-section-state')) === 'focused', 'AI section should become focused');
   assert((await attribute(page, '[data-workflow-section="ai"]', 'data-workflow-section-visibility')) === 'active', 'AI section should become active');
   assert(((await page.locator('[data-workflow-next-action]').textContent()) || '').includes('결과 저장'), 'AI focus should expose a Korean next action');
@@ -222,10 +234,12 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
     return hit === button || Boolean(hit?.closest('[data-control="apply-local-import"]'));
   });
   assert(importApplyClickable, 'Local import apply button should not be covered by the diary handoff shelf');
-  await page.locator('[data-guide-action="import-diary"]').click();
+  await page.locator('[data-use-now-step="capture"]').click();
+  assert((await attribute(page, '.second-brain-shell', 'data-interaction-state')) === 'use-now-capture', 'Use-now capture step should be directly clickable');
+  await page.locator('[data-guide-action="import-diary"]').evaluate((button: HTMLElement) => button.click());
   assert((await attribute(page, '.second-brain-shell', 'data-first-run-last-action')) === 'import-diary', 'First-run import action should update shell state');
   assert((await attribute(page, '.second-brain-shell', 'data-interaction-state')) === 'diary-import-focused', 'First-run import action should focus diary import');
-  await page.locator('[data-control="focus-local-import"]').click();
+  await page.locator('[data-control="focus-local-import"]').evaluate((button: HTMLElement) => button.click());
   assert((await attribute(page, '.second-brain-shell', 'data-interaction-state')) === 'diary-import-focused', 'First-screen import action should focus diary import');
   await page.locator('[data-intake-action="paste-diary"]').click();
   assert((await attribute(page, '[data-memory-intake-hub="app-web-diary"]', 'data-intake-last-action')) === 'paste-diary', 'Intake paste action should update hub state');
@@ -511,18 +525,16 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
       Number(await attribute(page, '.second-brain-shell', 'data-live-ask-highlighted-memory-count')) === askCitationCount,
       'Live Ask should highlight the same number of cited graph memories',
     );
-    await page.waitForFunction(
+    const askHighlightState = await page.waitForFunction(
       (expectedCount) => {
         const graph = (window as any).__personalMemoryGraph;
-        return (graph?.cy?.nodes('.ask-citation-memory').length ?? 0) === expectedCount;
+        const highlightedCount = graph?.cy?.nodes('.ask-citation-memory').length ?? 0;
+        return highlightedCount === expectedCount ? { highlightedCount } : false;
       },
       askCitationCount,
       { timeout: 10_000 },
     );
-    const highlightedAskCitationCount = await page.evaluate(() => {
-      const graph = (window as any).__personalMemoryGraph;
-      return graph?.cy?.nodes('.ask-citation-memory').length ?? 0;
-    });
+    const highlightedAskCitationCount = (await askHighlightState.jsonValue()).highlightedCount;
     assert(highlightedAskCitationCount === askCitationCount, 'Cytoscape graph should mark Ask citation memory nodes');
     assert((await attribute(page, '.second-brain-shell', 'data-ask-evidence-label')).length > 0, 'Expected live Ask response to expose an evidence label');
     assert((await attribute(page, '.second-brain-shell', 'data-ask-conversation-mode')) === 'single_turn', 'Expected first live Ask response to start a single-turn context');

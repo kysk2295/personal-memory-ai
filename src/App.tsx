@@ -3017,6 +3017,45 @@ const APP_SHELL_STYLES = `
   .product-value-strip[data-command-shelf="graph-led"] .flow-focus-actions {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+  .use-now-command-strip {
+    display: grid;
+    gap: 8px;
+    padding: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(18, 18, 20, 0.86);
+  }
+  .use-now-copy {
+    display: grid;
+    gap: 3px;
+  }
+  .use-now-copy strong {
+    color: #f4f4f5;
+    font-size: 0.88rem;
+  }
+  .use-now-copy span {
+    color: #b8b8bf;
+    font-size: 0.74rem;
+    line-height: 1.35;
+  }
+  .use-now-steps {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+  .use-now-steps button {
+    min-height: 32px;
+    padding: 6px 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.05);
+    color: #dddde1;
+    font-size: 0.72rem;
+    text-align: left;
+  }
+  .use-now-steps button[data-use-now-step-state="active"] {
+    border-color: rgba(214, 31, 60, 0.44);
+    background: rgba(214, 31, 60, 0.16);
+    color: #ff9aa7;
+  }
   .product-value-strip[data-command-shelf="graph-led"] .prototype-journey-cockpit {
     grid-template-columns: 1fr;
   }
@@ -3033,6 +3072,15 @@ const APP_SHELL_STYLES = `
   .product-value-strip[data-command-shelf="graph-led"][data-flow-collapsed="true"] .prototype-entry-dock,
   .product-value-strip[data-command-shelf="graph-led"][data-flow-collapsed="true"] .first-run-guide,
   .product-value-strip[data-command-shelf="graph-led"][data-flow-collapsed="true"] .flow-coach {
+    display: none;
+  }
+  .product-value-strip[data-use-now-mode="enabled"][data-flow-collapsed="true"] .service-flow-steps {
+    display: none;
+  }
+  .product-value-strip[data-use-now-mode="enabled"][data-flow-collapsed="true"] .privacy-actions,
+  .product-value-strip[data-use-now-mode="enabled"][data-flow-collapsed="true"] .prototype-entry-dock,
+  .product-value-strip[data-use-now-mode="enabled"][data-flow-collapsed="true"] .first-run-guide,
+  .product-value-strip[data-use-now-mode="enabled"][data-flow-collapsed="true"] .flow-coach {
     display: none;
   }
   .product-value-strip[data-command-shelf="graph-led"][data-flow-collapsed="true"] .guided-flow-steps {
@@ -3928,7 +3976,7 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
     return `<main class="second-brain-shell"><aside class="brain-sidebar"><section class="brain-title"><p class="eyebrow">지식 그래프</p><h1>내 세컨브레인</h1><p>${escapeHtml(layout.northStar)}</p></section></aside></main>`;
   }
 
-  return `<main class="second-brain-shell" data-prototype-ux="korean-usable-mvp" data-product-goal="quick-diary-to-private-second-brain-ai" data-labels="visible" data-spacing="normal" data-layout-mode="free" data-layout-explainer="Free mode keeps the graph organic for open-ended memory exploration." data-layout-version="0" data-filter-semantic="on" data-filter-reflective="on" data-filter-procedural="on" data-filter-episodic="on" data-filter-thesis="on" data-filter-source="on" data-graph-renderer="cytoscape-pending" data-benchmark-reference="https://www.careerhackeralex.com/memory" data-memory-node-count="${memoryNodeCount}" data-rendered-memory-node-count="${renderedMemoryNodeCount}" data-graph-node-count="${graphNodeCount}" data-graph-edge-count="${graphEdgeCount}" data-surface-mode="graph-first" data-rail-mode="collapsed-evidence-drawer" data-first-screen-contract="korean-diary-flow-graph-dominant" data-panel-visibility="secondary-drawer" data-interaction-contract="capture-import-select-related-session-save" data-workflow-focus="capture" data-workflow-focus-mode="guided-collapse" data-workflow-active-section="capture" data-workflow-collapsed-section-count="2">
+  return `<main class="second-brain-shell" data-prototype-ux="korean-usable-mvp" data-prototype-mode="use-now" data-product-goal="quick-diary-to-private-second-brain-ai" data-visible-core-flow="capture-graph-ai" data-secondary-panels="collapsed" data-labels="visible" data-spacing="normal" data-layout-mode="free" data-layout-explainer="Free mode keeps the graph organic for open-ended memory exploration." data-layout-version="0" data-filter-semantic="on" data-filter-reflective="on" data-filter-procedural="on" data-filter-episodic="on" data-filter-thesis="on" data-filter-source="on" data-graph-renderer="cytoscape-pending" data-benchmark-reference="https://www.careerhackeralex.com/memory" data-memory-node-count="${memoryNodeCount}" data-rendered-memory-node-count="${renderedMemoryNodeCount}" data-graph-node-count="${graphNodeCount}" data-graph-edge-count="${graphEdgeCount}" data-surface-mode="graph-first" data-rail-mode="collapsed-evidence-drawer" data-first-screen-contract="korean-diary-flow-graph-dominant" data-panel-visibility="secondary-drawer" data-interaction-contract="capture-import-select-related-session-save" data-workflow-focus="capture" data-workflow-focus-mode="guided-collapse" data-workflow-active-section="capture" data-workflow-collapsed-section-count="2">
     <aside class="brain-sidebar" aria-label="세컨브레인 그래프 조절">
       <div class="sidebar-topline">
         <a class="home-button" href="/" aria-label="home">←</a>
@@ -4028,7 +4076,7 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
         <button class="ask-submit" type="submit" aria-label="질문하기" data-control="ask-second-brain">→</button>
       </form>
 
-      <section class="product-value-strip" aria-label="Private memory product value" data-command-shelf="graph-led" data-benchmark-alignment="careerhacker-memory-graph-first" data-visible-priority="capture-import-ai-session" data-first-screen-density="compact-command-shelf" data-focus-collapse="enabled">
+      <section class="product-value-strip" aria-label="Private memory product value" data-command-shelf="graph-led" data-use-now-mode="enabled" data-flow-collapsed="true" data-benchmark-alignment="careerhacker-memory-graph-first" data-visible-priority="capture-import-ai-session" data-first-screen-density="compact-command-shelf" data-focus-collapse="enabled">
         <div class="prototype-goal-copy">
           <p class="eyebrow">개인 일기 세컨브레인</p>
           <h2>오늘 쓴 고민을 과거 기억과 연결해서 답하게 한다</h2>
@@ -4045,6 +4093,17 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
             <button type="button" data-flow-focus-action="capture" data-flow-focus-active="true">기록부터</button>
             <button type="button" data-flow-focus-action="graph" data-flow-focus-active="false">세컨브레인 보기</button>
             <button type="button" data-flow-focus-action="ai" data-flow-focus-active="false">AI 결과</button>
+          </div>
+        </section>
+        <section class="use-now-command-strip" data-use-now-command-strip="diary-graph-ai" data-use-now-current-step="capture" aria-label="오늘 바로 쓰기">
+          <div class="use-now-copy">
+            <strong>오늘 바로 쓰기</strong>
+            <span data-use-now-next-label>일기를 쓰거나 가져오면 세컨브레인 그래프와 AI 작업대가 열린다.</span>
+          </div>
+          <div class="use-now-steps" aria-label="오늘 바로 쓰기 단계">
+            <button type="button" data-use-now-step="capture" data-use-now-step-state="active">일기 쓰기/가져오기</button>
+            <button type="button" data-use-now-step="graph" data-use-now-step-state="idle">세컨브레인 연결</button>
+            <button type="button" data-use-now-step="ai-workbench" data-use-now-step-state="idle">AI 작업대</button>
           </div>
         </section>
         <section class="prototype-journey-cockpit" data-prototype-journey-cockpit="diary-memory-ai" data-journey-current-step="capture" data-journey-selected-memory="${escapeHtml(currentFlowMemoryId)}" data-journey-related-count="${currentFlowRelatedCount}" data-journey-ai-state="idle" data-journey-save-state="idle" data-journey-next-action="write-or-import" aria-label="일기에서 AI 고민 해결까지 현재 흐름">
@@ -4555,6 +4614,9 @@ const GRAPH_CONTROL_SCRIPT = `
   const flowFocusNote = flowFocusSwitcher?.querySelector('[data-workflow-focus-note]');
   const flowFocusNextAction = flowFocusSwitcher?.querySelector('[data-workflow-next-action]');
   const flowFocusActions = Array.from(document.querySelectorAll('[data-flow-focus-action]'));
+  const useNowCommandStrip = document.querySelector('[data-use-now-command-strip="diary-graph-ai"]');
+  const useNowNextLabel = useNowCommandStrip?.querySelector('[data-use-now-next-label]');
+  const useNowSteps = Array.from(document.querySelectorAll('[data-use-now-step]'));
   const workflowSections = Array.from(document.querySelectorAll('[data-workflow-section]'));
   const relatedMemoryWorkbench = document.querySelector('[data-related-memory-workbench="selected-diary-comparison"]');
   const relatedWorkbenchSourceLabel = relatedMemoryWorkbench?.querySelector('[data-related-workbench-source-label]');
@@ -4766,12 +4828,31 @@ const GRAPH_CONTROL_SCRIPT = `
     if (flowFocusNextAction) flowFocusNextAction.textContent = copy.next;
   };
 
+  const useNowStepCopy = {
+    capture: '일기를 쓰거나 가져오면 세컨브레인 그래프와 AI 작업대가 열린다.',
+    graph: '그래프에서 현재 일기와 연관 과거 기억 노드를 확인한다.',
+    'ai-workbench': 'AI 작업대에서 질문, 결정 되짚기, 주간 패턴을 바로 실행한다.',
+  };
+
+  const updateUseNowCommandStrip = (step = 'capture') => {
+    step = useNowStepCopy[step] ? step : 'capture';
+    useNowCommandStrip?.setAttribute('data-use-now-current-step', step);
+    shell.setAttribute('data-use-now-current-step', step);
+    if (useNowNextLabel) useNowNextLabel.textContent = useNowStepCopy[step];
+    useNowSteps.forEach((button) => {
+      const active = button.getAttribute('data-use-now-step') === step;
+      button.setAttribute('data-use-now-step-state', active ? 'active' : 'idle');
+      button.setAttribute('aria-pressed', String(active));
+    });
+  };
+
   const setWorkflowFocus = (focus) => {
     focus = workflowFocusCopy[focus] ? focus : 'capture';
     shell.setAttribute('data-workflow-focus', focus);
     shell.setAttribute('data-workflow-active-section', focus);
     flowFocusSwitcher?.setAttribute('data-flow-focus-current', focus);
     updateWorkflowFocusSummary(focus);
+    updateUseNowCommandStrip(focus === 'ai' ? 'ai-workbench' : focus);
     let collapsedCount = 0;
     workflowSections.forEach((section) => {
       const isActive = section.getAttribute('data-workflow-section') === focus;
@@ -5932,6 +6013,7 @@ const GRAPH_CONTROL_SCRIPT = `
       saveState: step === 'save' ? detail.saveState || 'saved' : detail.saveState,
       nextAction: detail.nextAction,
     });
+    updateUseNowCommandStrip(step === 'ai' || step === 'save' ? 'ai-workbench' : step === 'related' ? 'graph' : step);
     guidedFlowSteps.forEach((item) => {
       const itemStep = item.getAttribute('data-guided-flow-step') || '';
       const itemIndex = guidedStepOrder.indexOf(itemStep);
@@ -7496,6 +7578,21 @@ const GRAPH_CONTROL_SCRIPT = `
       const focus = button.getAttribute('data-flow-focus-action') || 'capture';
       setWorkflowFocus(focus);
       setInteractionState('workflow-focus-' + focus);
+    });
+  });
+
+  useNowSteps.forEach((button) => {
+    button.addEventListener('click', () => {
+      const step = button.getAttribute('data-use-now-step') || 'capture';
+      const focus = step === 'ai-workbench' ? 'ai' : step === 'graph' ? 'graph' : 'capture';
+      setWorkflowFocus(focus);
+      if (focus === 'graph') {
+        document.querySelector('.graph-stage')?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+      }
+      if (focus === 'ai') {
+        koreanAiWorkbench?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+      }
+      setInteractionState('use-now-' + step);
     });
   });
 
