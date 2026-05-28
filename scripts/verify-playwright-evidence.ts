@@ -598,6 +598,16 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   assert((await page.locator('[data-selected-path-action="replay"]').count()) === 1, 'Selected memory path panel should expose replay action');
   assert((await page.locator('[data-selected-path-action="weekly"]').count()) === 1, 'Selected memory path panel should expose weekly action');
   assert((await page.locator('[data-selected-path-action="session"]').count()) === 1, 'Selected memory path panel should expose session action');
+  assert(
+    (await attribute(page, '[data-command-rail="selected-memory-actions"]', 'data-command-rail-source')) === firstCitation,
+    'Selected command rail should follow graph selection',
+  );
+  assert(
+    Number(await attribute(page, '[data-command-rail="selected-memory-actions"]', 'data-command-rail-related-count')) > 0,
+    'Selected command rail should expose related-memory count',
+  );
+  await page.locator('[data-command-rail-action="ask"]').click();
+  assert((await attribute(page, '.second-brain-shell', 'data-interaction-state')) === 'command-rail-ask-ready', 'Selected command rail Ask action should seed related context');
   const highlightedRelatedPath = await page.evaluate(() => {
     const graph = (window as any).__personalMemoryGraph;
     return {

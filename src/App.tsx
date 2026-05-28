@@ -1186,6 +1186,64 @@ const APP_SHELL_STYLES = `
     background: #e11d3f;
     color: #ffffff;
   }
+  .selected-command-rail {
+    position: absolute;
+    left: 18px;
+    right: 18px;
+    bottom: 18px;
+    z-index: 5;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px;
+    align-items: center;
+    border: 1px solid rgba(97, 102, 125, 0.15);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.91);
+    box-shadow: 0 16px 36px rgba(132, 138, 164, 0.16);
+    backdrop-filter: blur(14px);
+    padding: 10px 12px;
+  }
+  .selected-command-copy {
+    min-width: 0;
+    display: grid;
+    gap: 3px;
+  }
+  .selected-command-copy strong,
+  .selected-command-copy span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .selected-command-copy strong {
+    color: #4f5363;
+    font-size: 12px;
+    line-height: 1.25;
+  }
+  .selected-command-copy span {
+    color: #72798c;
+    font-size: 11px;
+  }
+  .selected-command-actions {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(62px, 1fr));
+    gap: 6px;
+  }
+  .selected-command-action {
+    min-height: 32px;
+    border: 1px solid rgba(20, 184, 166, 0.2);
+    border-radius: 8px;
+    background: rgba(20, 184, 166, 0.08);
+    color: #0f766e;
+    padding: 6px 8px;
+    font-size: 10px;
+    font-weight: 780;
+  }
+  .selected-command-action.primary {
+    border-color: rgba(225, 29, 63, 0.28);
+    background: #e11d3f;
+    color: #ffffff;
+  }
   .citation-row { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 14px; }
   .citation-row a {
     color: #5f56d8;
@@ -2807,6 +2865,18 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
           ${renderMemoryGraphPayload(memoryGraph)}
           ${renderSavedArtifactPayload(layout)}
           ${variant === 'no-svg' ? '' : renderMemoryGraph(layout)}
+          <section class="selected-command-rail" data-command-rail="selected-memory-actions" data-command-rail-state="ready" data-command-rail-source="${escapeHtml(currentFlowMemoryId)}" data-command-rail-related-count="${currentFlowRelatedCount}" aria-label="선택한 기억 바로 실행">
+            <div class="selected-command-copy">
+              <strong data-command-rail-title>선택 기억 바로 실행</strong>
+              <span data-command-rail-summary>${escapeHtml(currentFlowMemoryId)} 기억과 연관 과거 기억 ${currentFlowRelatedCount}개로 AI 액션을 실행한다.</span>
+            </div>
+            <div class="selected-command-actions" aria-label="선택 기억 AI 액션">
+              <button type="button" class="selected-command-action" data-command-rail-action="ask">질문</button>
+              <button type="button" class="selected-command-action" data-command-rail-action="replay">결정</button>
+              <button type="button" class="selected-command-action" data-command-rail-action="weekly">주간</button>
+              <button type="button" class="selected-command-action primary" data-command-rail-action="session">세션</button>
+            </div>
+          </section>
           <aside class="wiki-compiler-strip" aria-label="LLM Wiki memory structure preview" data-wiki-compiler="pmi017" data-llm-wiki-visible="true">
             <span><strong data-live-count="wiki-atoms">${layout.compiledWiki.atomCount}</strong> 원자 기억</span>
             <span><strong data-live-count="wiki-nodes">${layout.compiledWiki.nodeCount}</strong> 위키 노드</span>
@@ -2897,6 +2967,10 @@ const GRAPH_CONTROL_SCRIPT = `
   const selectedPathSource = selectedPathPanel?.querySelector('[data-selected-path-source]');
   const selectedPathRelatedList = selectedPathPanel?.querySelector('[data-selected-path-related-list]');
   const selectedPathActions = Array.from(document.querySelectorAll('[data-selected-path-action]'));
+  const commandRail = document.querySelector('[data-command-rail="selected-memory-actions"]');
+  const commandRailTitle = commandRail?.querySelector('[data-command-rail-title]');
+  const commandRailSummary = commandRail?.querySelector('[data-command-rail-summary]');
+  const commandRailActions = Array.from(document.querySelectorAll('[data-command-rail-action]'));
   const askWithRelatedMemoryButton = inspector?.querySelector('[data-control="ask-with-related-memory-context"]');
   const replayWithRelatedMemoryButton = inspector?.querySelector('[data-control="replay-with-related-memory-context"]');
   const reportWithRelatedMemoryButton = inspector?.querySelector('[data-control="report-with-related-memory-context"]');
@@ -3326,6 +3400,14 @@ const GRAPH_CONTROL_SCRIPT = `
           .filter(Boolean)
           .join(' · ');
       }
+    }
+    commandRail?.setAttribute('data-command-rail-state', related.length ? 'ready' : 'empty');
+    commandRail?.setAttribute('data-command-rail-source', citation);
+    commandRail?.setAttribute('data-command-rail-related-count', String(related.length));
+    if (commandRailTitle) commandRailTitle.textContent = '선택 기억 바로 실행';
+    if (commandRailSummary) {
+      commandRailSummary.textContent =
+        citation + ' 기억과 연관 과거 기억 ' + String(related.length) + '개로 질문, 결정, 주간 패턴, AI 세션을 실행한다.';
     }
     relatedMemoryStrip.setAttribute('data-related-memory-count', String(related.length));
     shell.setAttribute('data-selected-path-source-memory', citation);
@@ -5641,6 +5723,31 @@ const GRAPH_CONTROL_SCRIPT = `
       }
       if (action === 'weekly') {
         reportWithRelatedMemoryContext();
+        return;
+      }
+      if (action === 'session') {
+        void runMemorySession();
+      }
+    });
+  });
+  commandRailActions.forEach((button) => {
+    button.addEventListener('click', () => {
+      const action = button.getAttribute('data-command-rail-action');
+      commandRail?.setAttribute('data-command-rail-last-action', action || '');
+      shell.setAttribute('data-command-rail-last-action', action || '');
+      if (action === 'ask') {
+        askWithRelatedMemoryContext();
+        setInteractionState('command-rail-ask-ready');
+        return;
+      }
+      if (action === 'replay') {
+        replayWithRelatedMemoryContext();
+        setInteractionState('command-rail-replay-ready');
+        return;
+      }
+      if (action === 'weekly') {
+        reportWithRelatedMemoryContext();
+        setInteractionState('command-rail-weekly-ready');
         return;
       }
       if (action === 'session') {
