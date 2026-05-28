@@ -645,6 +645,10 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(documentHtml).toContain("chip.setAttribute('data-related-memory-id', item.id)");
     expect(documentHtml).toContain("shell.setAttribute('data-related-memory-source', citation)");
     expect(documentHtml).toContain("shell.setAttribute('data-related-memory-count', String(related.length))");
+    expect(documentHtml).toContain("cytoscapeGraph.elements().removeClass('related-memory related-facet related-edge')");
+    expect(documentHtml).toContain("candidate.addClass('related-memory')");
+    expect(documentHtml).toContain("facetNode.addClass('related-facet')");
+    expect(documentHtml).toContain("shell.setAttribute('data-related-memory-highlighted-edge-count'");
     expect(documentHtml).toContain('renderRelatedMemoryEvidence(citation)');
     expect(documentHtml).toContain("shell.setAttribute('data-labels', hidden ? 'visible' : 'hidden')");
     expect(documentHtml).toContain("setSpacing('normal')");

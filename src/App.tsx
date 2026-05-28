@@ -2201,10 +2201,12 @@ const GRAPH_CONTROL_SCRIPT = `
 
   const renderRelatedMemoryEvidence = (citation) => {
     if (!relatedMemoryStrip || !relatedMemoryList || !cytoscapeGraph || !citation) return;
+    cytoscapeGraph.elements().removeClass('related-memory related-facet related-edge');
     const selectedNode = cytoscapeGraph.getElementById('memory:' + citation);
     if (!selectedNode || !selectedNode.length) return;
     const related = [];
     const seen = new Set();
+    let highlightedEdgeCount = 0;
     selectedNode.connectedEdges().forEach((edge) => {
       const facetNode = edge.connectedNodes().not(selectedNode).first();
       if (!facetNode || !facetNode.length) return;
@@ -2218,6 +2220,11 @@ const GRAPH_CONTROL_SCRIPT = `
           label: candidate.data('graphLabel') || candidate.data('label') || candidateId,
           reason: facetNode.data('label') || facetNode.data('graphLabel') || facetNode.data('kind') || 'shared edge',
         });
+        candidate.addClass('related-memory');
+        facetNode.addClass('related-facet');
+        edge.addClass('related-edge');
+        facetEdge.addClass('related-edge');
+        highlightedEdgeCount += 2;
       });
     });
     relatedMemoryList.replaceChildren();
@@ -2234,6 +2241,7 @@ const GRAPH_CONTROL_SCRIPT = `
     relatedMemoryStrip.setAttribute('data-related-memory-count', String(related.length));
     shell.setAttribute('data-related-memory-source', citation);
     shell.setAttribute('data-related-memory-count', String(related.length));
+    shell.setAttribute('data-related-memory-highlighted-edge-count', String(highlightedEdgeCount));
   };
 
   const selectMemory = (node) => {
@@ -2487,6 +2495,41 @@ const GRAPH_CONTROL_SCRIPT = `
             width: 1.7,
             opacity: 0.95,
             'z-index': 18,
+          },
+        },
+        {
+          selector: '.related-memory',
+          style: {
+            label: 'data(graphLabel)',
+            'background-color': '#14b8a6',
+            width: 28,
+            height: 28,
+            'border-color': '#0f766e',
+            'border-width': 2,
+            color: '#0f766e',
+            'font-size': 11,
+            'text-max-width': 210,
+            'z-index': 18,
+          },
+        },
+        {
+          selector: '.related-facet',
+          style: {
+            'background-color': '#2dd4bf',
+            width: 20,
+            height: 20,
+            color: '#0f766e',
+            'font-size': 10,
+            'z-index': 17,
+          },
+        },
+        {
+          selector: '.related-edge',
+          style: {
+            'line-color': '#14b8a6',
+            width: 1.5,
+            opacity: 0.9,
+            'z-index': 16,
           },
         },
         {

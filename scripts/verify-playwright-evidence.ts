@@ -323,6 +323,18 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   assert(relatedMemoryCount > 0, 'Selected memory should expose related past memory nodes');
   assert((await attribute(page, '.second-brain-shell', 'data-related-memory-source')) === firstCitation, 'Shell should expose selected related-memory source');
   assert((await page.locator('[data-related-memory-id]').count()) > 0, 'Related memory strip should render clickable related memory chips');
+  const highlightedRelatedPath = await page.evaluate(() => {
+    const graph = (window as any).__personalMemoryGraph;
+    return {
+      memories: graph?.cy?.nodes('.related-memory').length ?? 0,
+      facets: graph?.cy?.nodes('.related-facet').length ?? 0,
+      edges: graph?.cy?.edges('.related-edge').length ?? 0,
+    };
+  });
+  assert(highlightedRelatedPath.memories > 0, 'Selected memory should highlight related memory nodes in Cytoscape');
+  assert(highlightedRelatedPath.facets > 0, 'Selected memory should highlight shared facet nodes in Cytoscape');
+  assert(highlightedRelatedPath.edges > 0, 'Selected memory should highlight related graph edges in Cytoscape');
+  assert(Number(await attribute(page, '.second-brain-shell', 'data-related-memory-highlighted-edge-count')) > 0, 'Shell should expose highlighted related edge count');
 
   await page.locator('[data-filter-chip="semantic"]').click();
   assert((await attribute(page, '[data-filter-chip="semantic"]', 'aria-pressed')) === 'false', 'Semantic filter chip should toggle off');

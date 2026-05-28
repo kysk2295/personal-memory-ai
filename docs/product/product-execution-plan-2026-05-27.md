@@ -228,6 +228,7 @@ No remote push, main merge, production deploy, or secret access is allowed witho
 - L78: live Weekly Report citation path graph highlight.
 - L79: quick diary capture graph handoff selection.
 - L80: selected memory related-node evidence drawer.
+- L81: selected memory related-path graph highlight.
 
 ## 6. Active Next Loops
 
@@ -1544,6 +1545,24 @@ Acceptance:
 - selecting a graph memory updates related-memory count/source markers
 - related chips can jump to another cited memory
 - Playwright verifies that a selected memory exposes related past-memory nodes
+
+Implemented:
+
+- `src/App.tsx`
+- `src/lib/appShellEvidenceLayout.test.ts`
+- `scripts/verify-playwright-evidence.ts`
+
+### L81 — Selected Memory Related-Path Graph Highlight
+
+Goal: make the graph visibly show the shared facet path between a selected diary memory and related past memories.
+
+Acceptance:
+
+- selecting a memory clears stale related-path highlights
+- related past memory nodes receive a dedicated Cytoscape class
+- shared facet nodes receive a dedicated Cytoscape class
+- edges from selected memory to shared facets and from facets to related memories are highlighted
+- Playwright verifies related memories, facets, and edges are highlighted in Cytoscape
 
 Implemented:
 
