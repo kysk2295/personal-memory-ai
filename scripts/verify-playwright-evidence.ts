@@ -107,9 +107,13 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   for (const label of ['memory', 'related', 'ai', 'save']) {
     assert((await page.locator(`[data-use-now-route-label="${label}"]`).count()) === 1, `Missing use-now route label ${label}`);
   }
-  for (const action of ['focus-graph', 'run-ai', 'save-result']) {
+  for (const action of ['focus-graph', 'run-ai', 'save-result', 'open-saved-memory']) {
     assert((await page.locator(`[data-use-now-action="${action}"]`).count()) === 1, `Missing use-now route action ${action}`);
   }
+  assert(
+    (await attribute(page, '[data-use-now-route-board="live"]', 'data-use-now-route-reentry-state')) === 'disabled',
+    'Use-now route board saved-memory reentry should start disabled',
+  );
   for (const step of ['capture', 'graph', 'ai-workbench']) {
     assert((await page.locator(`[data-use-now-step="${step}"]`).count()) === 1, `Missing use-now step ${step}`);
   }
@@ -718,6 +722,8 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   await page.waitForFunction(() => document.querySelector('[data-intake-related-bundle="past-memory-nodes"]')?.getAttribute('data-intake-ai-save-state') === 'saved');
   assert((await attribute(page, '[data-control="intake-save-ai-result"]', 'data-intake-ai-save-state')) === 'saved', 'Intake AI saveback should mark the latest result saved');
   assert((await attribute(page, '[data-save-artifact-action="weekly_report"]', 'data-artifact-save-state')) === 'saved', 'Intake AI saveback should reuse the weekly saved artifact action');
+  const savedIntakeAiMemoryId = await attribute(page, '[data-memory-intake-hub="app-web-diary"]', 'data-intake-saved-ai-memory');
+  assert(Boolean(savedIntakeAiMemoryId), 'Intake AI saveback should expose the saved future memory id');
   assert((await attribute(page, '[data-intake-flow-step="save"]', 'data-intake-flow-state')) === 'done', 'Intake flow tracker should mark saveback done after saving the AI result');
   assert((await attribute(page, '[data-flow-coach="diary-to-memory-ai"]', 'data-flow-coach-stage')) === 'saved', 'Flow coach should make the saved future-memory step visible');
   assert(
@@ -731,6 +737,30 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   assert(
     (await attribute(page, '[data-prototype-journey-cockpit="diary-memory-ai"]', 'data-journey-next-action')) === 'reopen-saved-memory',
     'Prototype journey cockpit should point to saved-memory reentry after saveback',
+  );
+  assert(
+    (await attribute(page, '[data-use-now-route-board="live"]', 'data-use-now-route-memory')) === savedIntakeAiMemoryId,
+    'Use-now route board should point at the saved future memory after AI result saveback',
+  );
+  assert(
+    (await attribute(page, '[data-use-now-route-board="live"]', 'data-use-now-route-state')) === 'save',
+    'Use-now route board should move to saved result state after AI result saveback',
+  );
+  assert(
+    (await attribute(page, '[data-use-now-route-board="live"]', 'data-use-now-route-ai-state')) === 'saved',
+    'Use-now route board should show saved AI state after AI result saveback',
+  );
+  assert(
+    (await attribute(page, '[data-use-now-route-board="live"]', 'data-use-now-route-save-state')) === 'saved',
+    'Use-now route board should show saved saveback state after AI result saveback',
+  );
+  assert(
+    (await attribute(page, '[data-use-now-route-board="live"]', 'data-use-now-route-reentry-state')) === 'ready',
+    'Use-now route board should enable saved-memory reentry after AI result saveback',
+  );
+  assert(
+    (await attribute(page, '[data-use-now-action="open-saved-memory"]', 'data-use-now-action-enabled')) === 'true',
+    'Use-now route board should enable the saved-memory reentry action after AI result saveback',
   );
   await page.locator('[data-control="intake-run-session"]').click();
   await page.waitForFunction(

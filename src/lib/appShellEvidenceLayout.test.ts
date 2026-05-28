@@ -555,6 +555,8 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('data-use-now-action="focus-graph"');
     expect(html).toContain('data-use-now-action="run-ai"');
     expect(html).toContain('data-use-now-action="save-result"');
+    expect(html).toContain('data-use-now-action="open-saved-memory"');
+    expect(html).toContain('data-use-now-route-reentry-state="disabled"');
     expect(documentHtml).toContain('.product-value-strip[data-command-shelf="graph-led"]');
     expect(documentHtml).toContain('.use-now-command-strip');
     expect(documentHtml).toContain('.use-now-route-board');
@@ -1088,12 +1090,18 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(documentHtml).toContain("useNowRouteBoard?.setAttribute('data-use-now-route-related-count'");
     expect(documentHtml).toContain("useNowRouteBoard?.setAttribute('data-use-now-route-ai-state'");
     expect(documentHtml).toContain("useNowRouteBoard?.setAttribute('data-use-now-route-save-state'");
+    expect(documentHtml).toContain("useNowRouteBoard?.setAttribute('data-use-now-route-reentry-state'");
+    expect(documentHtml).toContain("const reentryState = saveState === 'saved' && selectedMemory ? 'ready' : 'disabled'");
     expect(documentHtml).toContain("shell.setAttribute('data-use-now-route-state'");
     expect(documentHtml).toContain("updateUseNowRouteBoard({");
     expect(documentHtml).toContain("state: state === 'completed' ? 'ai-workbench'");
     expect(documentHtml).toContain("aiState: state === 'completed' ? 'answered'");
     expect(documentHtml).toContain("saveState: state === 'completed' ? 'ready'");
+    expect(documentHtml).toContain("sourceMemoryId: savedMemoryId || 'saved-memory'");
+    expect(documentHtml).toContain("aiState: 'saved'");
+    expect(documentHtml).toContain("saveState: 'saved'");
     expect(documentHtml).toContain("useNowRouteActions.forEach((button) =>");
+    expect(documentHtml).toContain("if (action === 'open-saved-memory')");
     expect(documentHtml).toContain('const updateFlowCoach =');
     expect(documentHtml).toContain("flowCoach?.setAttribute('data-flow-coach-stage', stage)");
     expect(documentHtml).toContain("flowCoach?.setAttribute('data-flow-coach-next-action', nextAction)");

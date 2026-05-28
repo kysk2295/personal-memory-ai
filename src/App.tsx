@@ -4150,7 +4150,7 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
             <button type="button" data-use-now-step="graph" data-use-now-step-state="idle">세컨브레인 연결</button>
             <button type="button" data-use-now-step="ai-workbench" data-use-now-step-state="idle">AI 작업대</button>
           </div>
-          <section class="use-now-route-board" data-use-now-route-board="live" data-use-now-route-state="capture" data-use-now-route-memory="${escapeHtml(currentFlowMemoryId)}" data-use-now-route-related-count="${currentFlowRelatedCount}" data-use-now-route-ai-state="idle" data-use-now-route-save-state="idle" aria-label="오늘 바로 쓰기 현재 경로">
+          <section class="use-now-route-board" data-use-now-route-board="live" data-use-now-route-state="capture" data-use-now-route-memory="${escapeHtml(currentFlowMemoryId)}" data-use-now-route-related-count="${currentFlowRelatedCount}" data-use-now-route-ai-state="idle" data-use-now-route-save-state="idle" data-use-now-route-reentry-state="disabled" aria-label="오늘 바로 쓰기 현재 경로">
             <div class="use-now-route-signals" aria-label="오늘 바로 쓰기 상태">
               <span data-use-now-route-label="memory"><strong>선택 기억</strong><span data-use-now-route-memory-label>${escapeHtml(currentFlowEntry?.title ?? currentFlowMemoryId)}</span></span>
               <span data-use-now-route-label="related"><strong>연관 과거 기억</strong><span data-use-now-route-related-label>${currentFlowRelatedCount}개 연결</span></span>
@@ -4162,6 +4162,7 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
               <button type="button" data-use-now-action="focus-graph">그래프에서 연결 보기</button>
               <button type="button" data-use-now-action="run-ai">AI 작업대 실행</button>
               <button type="button" data-use-now-action="save-result">결과를 미래 기억으로 저장</button>
+              <button type="button" data-use-now-action="open-saved-memory" data-use-now-action-enabled="false" disabled>저장 기억 다시 열기</button>
             </div>
           </section>
         </section>
@@ -4684,6 +4685,7 @@ const GRAPH_CONTROL_SCRIPT = `
   const useNowRouteAiLabel = useNowRouteBoard?.querySelector('[data-use-now-route-ai-label]');
   const useNowRouteSaveLabel = useNowRouteBoard?.querySelector('[data-use-now-route-save-label]');
   const useNowRouteNextLabel = useNowRouteBoard?.querySelector('[data-use-now-route-next-label]');
+  const useNowRouteOpenSavedButton = useNowRouteBoard?.querySelector('[data-use-now-action="open-saved-memory"]');
   const useNowRouteActions = Array.from(document.querySelectorAll('[data-use-now-action]'));
   const workflowSections = Array.from(document.querySelectorAll('[data-workflow-section]'));
   const relatedMemoryWorkbench = document.querySelector('[data-related-memory-workbench="selected-diary-comparison"]');
@@ -4946,16 +4948,19 @@ const GRAPH_CONTROL_SCRIPT = `
     );
     const aiState = detail.aiState || useNowRouteBoard.getAttribute('data-use-now-route-ai-state') || 'idle';
     const saveState = detail.saveState || useNowRouteBoard.getAttribute('data-use-now-route-save-state') || 'idle';
+    const reentryState = saveState === 'saved' && selectedMemory ? 'ready' : 'disabled';
     useNowRouteBoard?.setAttribute('data-use-now-route-state', state);
     useNowRouteBoard?.setAttribute('data-use-now-route-memory', selectedMemory);
     useNowRouteBoard?.setAttribute('data-use-now-route-related-count', relatedCount);
     useNowRouteBoard?.setAttribute('data-use-now-route-ai-state', aiState);
     useNowRouteBoard?.setAttribute('data-use-now-route-save-state', saveState);
+    useNowRouteBoard?.setAttribute('data-use-now-route-reentry-state', reentryState);
     shell.setAttribute('data-use-now-route-state', state);
     shell.setAttribute('data-use-now-route-memory', selectedMemory);
     shell.setAttribute('data-use-now-route-related-count', relatedCount);
     shell.setAttribute('data-use-now-route-ai-state', aiState);
     shell.setAttribute('data-use-now-route-save-state', saveState);
+    shell.setAttribute('data-use-now-route-reentry-state', reentryState);
     const selectedNode = selectedMemory ? cytoscapeGraph?.getElementById('memory:' + selectedMemory) : null;
     const memoryLabel = selectedNode?.data('graphLabel') || selectedNode?.data('label') || selectedMemory || '대기';
     if (useNowRouteMemoryLabel) useNowRouteMemoryLabel.textContent = memoryLabel;
@@ -4963,6 +4968,10 @@ const GRAPH_CONTROL_SCRIPT = `
     if (useNowRouteAiLabel) useNowRouteAiLabel.textContent = useNowAiStateLabels[aiState] || aiState;
     if (useNowRouteSaveLabel) useNowRouteSaveLabel.textContent = useNowSaveStateLabels[saveState] || saveState;
     if (useNowRouteNextLabel) useNowRouteNextLabel.textContent = routeStateCopy[state] || routeStateCopy.capture;
+    if (useNowRouteOpenSavedButton) {
+      useNowRouteOpenSavedButton.setAttribute('data-use-now-action-enabled', String(reentryState === 'ready'));
+      useNowRouteOpenSavedButton.toggleAttribute('disabled', reentryState !== 'ready');
+    }
   };
 
   const updateUseNowCommandStrip = (step = 'capture') => {
@@ -7792,6 +7801,22 @@ const GRAPH_CONTROL_SCRIPT = `
           void saveMemorySession();
         }
         setInteractionState('use-now-route-save-requested');
+        return;
+      }
+      if (action === 'open-saved-memory') {
+        const savedMemoryId =
+          useNowRouteBoard?.getAttribute('data-use-now-route-memory') ||
+          shell.getAttribute('data-last-saved-memory') ||
+          shell.getAttribute('data-last-saved-session-memory') ||
+          '';
+        const savedNode = savedMemoryId
+          ? document.querySelector('[data-inspector-citation="' + savedMemoryId + '"]')
+          : null;
+        setWorkflowFocus('graph');
+        if (savedNode) selectMemory(savedNode);
+        document.querySelector('.graph-stage')?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+        updateUseNowRouteBoard({ state: 'graph', sourceMemoryId: savedMemoryId, aiState: 'saved', saveState: 'saved' });
+        setInteractionState('use-now-route-saved-memory-opened');
       }
     });
   });
