@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "build": "tsx scripts/render-static.ts",
+    "cleanup:evidence": "tsx scripts/cleanup-playwright-evidence.ts",
     "evidence:playwright": "tsx scripts/verify-playwright-evidence.ts",
     "start": "tsx server.ts",
     "test": "vitest run",

@@ -1267,6 +1267,25 @@ Implemented:
 - `src/lib/userFeedbackMemory.ts`
 - `src/lib/userFeedbackMemory.test.ts`
 
+### L66 — Evidence Residue Cleanup
+
+Goal: keep the durable local vault usable after repeated Playwright evidence runs by safely removing only explicit synthetic evidence records.
+
+Acceptance:
+
+- cleanup selector only chooses records with Playwright import text, saved artifact source refs, or feedback source refs
+- real Notion/diary records are not selected by incidental text
+- dry-run reports selected count without deletion
+- apply mode deletes only explicit ids through the existing `/api/delete` endpoint
+- live cleanup reduced the local durable vault from 34 records to 16 and left 0 synthetic evidence records
+
+Implemented:
+
+- `src/lib/evidenceCleanup.ts`
+- `src/lib/evidenceCleanup.test.ts`
+- `scripts/cleanup-playwright-evidence.ts`
+- `package.json`
+
 ## 8. MVP Time Estimate
 
 Assuming focused local development without major dependency or deployment blockers:
