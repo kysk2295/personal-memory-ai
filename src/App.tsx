@@ -2733,6 +2733,12 @@ const GRAPH_CONTROL_SCRIPT = `
           setInteractionState('notion-import-token-required');
           return;
         }
+        if (response.status === 429) {
+          notionImportPanel.setAttribute('data-notion-sources-state', 'rate-limited');
+          if (notionImportSummary) notionImportSummary.textContent = 'Notion rate limited. Retry shortly.';
+          setInteractionState('notion-sources-rate-limited');
+          return;
+        }
         if (!response.ok) throw new Error('notion source search failed with ' + response.status);
         const body = await response.json();
         const sources = body?.sources || [];
@@ -2778,6 +2784,12 @@ const GRAPH_CONTROL_SCRIPT = `
           notionImportPanel.setAttribute('data-notion-import-state', 'token-required');
           if (notionImportSummary) notionImportSummary.textContent = 'Notion token required';
           setInteractionState('notion-import-token-required');
+          return;
+        }
+        if (response.status === 429) {
+          notionImportPanel.setAttribute('data-notion-import-state', 'rate-limited');
+          if (notionImportSummary) notionImportSummary.textContent = 'Notion rate limited. Retry shortly.';
+          setInteractionState('notion-import-rate-limited');
           return;
         }
         if (!response.ok) throw new Error('notion import preview failed with ' + response.status);

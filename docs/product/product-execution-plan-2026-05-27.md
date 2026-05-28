@@ -1167,6 +1167,22 @@ Implemented:
 - `src/lib/personalMemoryApi.ts`
 - `src/lib/personalMemoryApi.test.ts`
 
+### L60 — Notion Rate Limit Frontend State
+
+Goal: reflect retryable Notion rate limit states in the import panel instead of showing a generic source/preview error.
+
+Acceptance:
+
+- Notion source discovery HTTP `429` sets `data-notion-sources-state="rate-limited"`
+- Notion preview HTTP `429` sets `data-notion-import-state="rate-limited"`
+- interaction state records `notion-sources-rate-limited` or `notion-import-rate-limited`
+- summary text tells the user to retry shortly
+
+Implemented:
+
+- `src/App.tsx`
+- `src/lib/appShellEvidenceLayout.test.ts`
+
 ## 8. MVP Time Estimate
 
 Assuming focused local development without major dependency or deployment blockers:

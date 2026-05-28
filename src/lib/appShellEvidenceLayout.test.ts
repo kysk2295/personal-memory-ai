@@ -431,6 +431,8 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(documentHtml).toContain('data-notion-import-summary');
     expect(documentHtml).toContain("setInteractionState('notion-import-token-required')");
     expect(documentHtml).toContain("setInteractionState('notion-sources-ready')");
+    expect(documentHtml).toContain("setInteractionState('notion-sources-rate-limited')");
+    expect(documentHtml).toContain("setInteractionState('notion-import-rate-limited')");
   });
 
   test('renders Ask My Past Self as a cited path over the graph with evidence drawer trace', () => {
