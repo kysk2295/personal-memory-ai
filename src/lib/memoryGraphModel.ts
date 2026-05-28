@@ -33,6 +33,8 @@ export interface MemoryGraphModel {
   stats: MemoryGraphStats;
 }
 
+const MAX_RENDERED_MEMORY_NODES = 300;
+
 function slugifyGraphValue(value: string): string {
   return value
     .trim()
@@ -45,6 +47,16 @@ function compactGraphLabel(value: string, maxLength: number): string {
   const trimmed = value.trim();
   if (trimmed.length <= maxLength) return trimmed;
   return `${trimmed.slice(0, maxLength - 3).trimEnd()}...`;
+}
+
+function compactSearchText(parts: readonly unknown[], maxLength = 800): string {
+  const text = parts.filter(Boolean).join(' ').replace(/\s+/g, ' ').trim().toLocaleLowerCase();
+  if (text.length <= maxLength) return text;
+  return text.slice(0, maxLength).trimEnd();
+}
+
+function compactRawTextForSearch(value: string): string {
+  return compactGraphLabel(value.replace(/\s+/g, ' '), 240);
 }
 
 function appendNode(
@@ -64,7 +76,7 @@ function appendNode(
         label,
         graphLabel,
         filterKind: filterKindForNode(kind),
-        searchText: [label, kind, options.recordId, options.sourceType, options.recordType, options.observedAt].filter(Boolean).join(' ').toLocaleLowerCase(),
+        searchText: compactSearchText([label, kind, options.recordId, options.sourceType, options.recordType, options.observedAt]),
         ...options,
       },
     });
@@ -117,16 +129,16 @@ function appendTagEdges(
 export function buildMemoryGraphModel(records: readonly MemoryRecord[]): MemoryGraphModel {
   const nodes = new Map<string, CytoscapeMemoryGraphElement>();
   const edges = new Map<string, CytoscapeMemoryGraphElement>();
+  const renderedRecords = records.slice(0, MAX_RENDERED_MEMORY_NODES);
 
-  for (const record of records) {
+  for (const record of renderedRecords) {
     const memoryNodeId = appendNode(nodes, 'memory', record.summary, {
       recordId: record.id,
       sourceType: record.sourceType,
       recordType: record.memoryType,
       observedAt: record.observedAt ?? record.createdAt.slice(0, 10),
-      searchText: [
+      searchText: compactSearchText([
         record.summary,
-        record.rawText,
         record.memoryType,
         record.sourceType,
         record.observedAt,
@@ -134,10 +146,8 @@ export function buildMemoryGraphModel(records: readonly MemoryRecord[]): MemoryG
         ...record.emotionTags,
         ...record.topicTags,
         ...record.projectTags,
-      ]
-        .filter(Boolean)
-        .join(' ')
-        .toLocaleLowerCase(),
+        compactRawTextForSearch(record.rawText),
+      ]),
     });
 
     appendTagEdges(nodes, edges, memoryNodeId, 'emotion', record.emotionTags);

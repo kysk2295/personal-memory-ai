@@ -1301,6 +1301,30 @@ Implemented:
 
 - `scripts/verify-playwright-evidence.ts`
 
+### L68 — Large Notion Vault App-Shell Performance
+
+Goal: keep the web graph usable after thousands of live Notion memories are imported into the durable local vault.
+
+Acceptance:
+
+- live Notion source discovery recovered from rate limit and imported 4,093 new memories into the durable local vault
+- server restart preserved 4,102 total memories, including 4,094 Notion memories
+- app-shell records use lightweight raw text excerpts for HTTP rehydration
+- timeline related-memory ids are capped and skipped for very large timelines to avoid O(n²) payload growth
+- graph node `searchText` is bounded so large Notion page bodies are not duplicated into Cytoscape payloads
+- graph rendering caps memory elements at 300 while preserving total memory stats
+- `/api/app-shell` dropped from about 364MB / 11.5s to about 8.8MB / 0.7s on the current local vault
+- Playwright evidence passes against the 4k-memory durable vault
+
+Implemented:
+
+- `src/lib/memoryGraphModel.ts`
+- `src/lib/memoryGraphModel.test.ts`
+- `src/lib/memoryDetailTimeline.ts`
+- `src/lib/memoryDetailTimeline.test.ts`
+- `src/lib/personalMemoryApi.ts`
+- `src/lib/personalMemoryApi.test.ts`
+
 ## 8. MVP Time Estimate
 
 Assuming focused local development without major dependency or deployment blockers:

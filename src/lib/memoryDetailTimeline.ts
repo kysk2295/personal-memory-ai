@@ -91,6 +91,7 @@ function relatedMemoryIdsForRecord(record: MemoryRecord, records: readonly Memor
       if (dateComparison !== 0) return dateComparison;
       return left.id.localeCompare(right.id);
     })
+    .slice(0, 8)
     .map((candidate) => candidate.id);
 }
 
@@ -124,6 +125,7 @@ export function buildMemoryDetailTimeline(
   const memoryRecords = records.filter((record) => !isMemoryReviewLedgerRecord(record));
   const orderedRecords = [...memoryRecords].sort(compareNewestFirst);
   const dates = orderedRecords.map(recordDate).sort((left, right) => left.localeCompare(right));
+  const shouldBuildRelatedMemoryIds = memoryRecords.length <= 500;
 
   return {
     summary: {
@@ -144,7 +146,7 @@ export function buildMemoryDetailTimeline(
         privacyScope: record.privacyScope,
         memoryType: record.memoryType,
         facetLabels: facetLabelsForRecord(record),
-        relatedMemoryIds: relatedMemoryIdsForRecord(record, memoryRecords),
+        relatedMemoryIds: shouldBuildRelatedMemoryIds ? relatedMemoryIdsForRecord(record, memoryRecords) : [],
         reviewHistory,
         reviewComparisons,
         reviewHistoryCount: reviewHistory.length,

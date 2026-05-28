@@ -84,4 +84,30 @@ describe('buildMemoryDetailTimeline', () => {
       }),
     );
   });
+
+  test('caps related memory ids so large imports do not balloon app shell payloads', () => {
+    const records = Array.from({ length: 30 }, (_, index) => ({
+      ...personalMemoryRecords[0],
+      id: `mem_large_related_${index}`,
+      observedAt: `2026-05-${String(index + 1).padStart(2, '0')}`,
+      summary: `Large related memory ${index}`,
+      topicTags: ['shared-topic'],
+    }));
+    const timeline = buildMemoryDetailTimeline(records, 'mem_large_related_0');
+
+    expect(timeline.entries.every((entry) => entry.relatedMemoryIds.length <= 8)).toBe(true);
+  });
+
+  test('skips eager related memory computation for very large timelines', () => {
+    const records = Array.from({ length: 501 }, (_, index) => ({
+      ...personalMemoryRecords[0],
+      id: `mem_very_large_related_${index}`,
+      observedAt: `2026-05-${String((index % 28) + 1).padStart(2, '0')}`,
+      summary: `Very large related memory ${index}`,
+      topicTags: ['shared-topic'],
+    }));
+    const timeline = buildMemoryDetailTimeline(records, 'mem_very_large_related_0');
+
+    expect(timeline.entries.every((entry) => entry.relatedMemoryIds.length === 0)).toBe(true);
+  });
 });

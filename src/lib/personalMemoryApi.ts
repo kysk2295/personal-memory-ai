@@ -14,6 +14,7 @@ import {
   listMemoryReviewLedgerEntries,
 } from './memoryReviewLedger';
 import { buildMemoryProvenanceExport } from './memoryProvenanceExport';
+import { summarizeRawText } from './memoryRecord';
 import type { MemoryStore } from './memoryStore';
 import { queryNotionDatabaseImportCandidates, queryNotionImportSources, type NotionFetch } from './notionImport';
 import { answerPersonalMemoryQuestion } from './personalMemoryAgent';
@@ -198,6 +199,16 @@ function notionConnectorErrorResponse(error: unknown, fallbackError: string): Pe
   return { statusCode: 502, body: { error: fallbackError } };
 }
 
+function lightweightAppShellRecords<T extends { records: Array<{ rawText: string }> }>(appShell: T): T {
+  return {
+    ...appShell,
+    records: appShell.records.map((record) => ({
+      ...record,
+      rawText: summarizeRawText(record.rawText, 240),
+    })),
+  };
+}
+
 function methodNotAllowed(): PersonalMemoryApiResponse<{ error: string }> {
   return {
     statusCode: 405,
@@ -216,7 +227,7 @@ export async function handlePersonalMemoryApiRequest(
     return {
       statusCode: 200,
       body: {
-        appShell,
+        appShell: lightweightAppShellRecords(appShell),
         memoryGraph: buildMemoryGraphModel(appShell.records),
       },
     };

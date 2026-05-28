@@ -993,6 +993,31 @@ describe('personal memory API boundary', () => {
     expect(JSON.stringify(response.body)).not.toContain('mem_other_user_app_shell_guard');
   });
 
+  test('returns lightweight app shell records without full raw text payloads', async () => {
+    const store = createMemoryStore({ env: {} });
+    await store.create('user-a', {
+      ...personalMemoryRecords[0],
+      id: 'mem_large_app_shell_payload',
+      rawText: 'Large app shell raw body '.repeat(5_000),
+      summary: 'Large app shell summary.',
+    });
+
+    const response = await handlePersonalMemoryApiRequest({
+      store,
+      userId: 'user-a',
+      request: {
+        method: 'GET',
+        path: '/api/app-shell',
+      },
+    });
+
+    expect(response.statusCode).toBe(200);
+    const body = response.body as { appShell: { records: MemoryRecord[] } };
+    const record = body.appShell.records.find((item) => item.id === 'mem_large_app_shell_payload');
+    expect(record?.rawText.length).toBeLessThanOrEqual(240);
+    expect(JSON.stringify(response.body)).not.toContain('Large app shell raw body '.repeat(20).trim());
+  });
+
   test('persists user feedback corrections inside one private memory scope', async () => {
     const store = createMemoryStore({ env: {} });
     await store.create('user-a', personalMemoryRecords[0]);

@@ -88,4 +88,35 @@ describe('buildMemoryGraphModel', () => {
       ]),
     );
   });
+
+  test('keeps memory node search text bounded for large imported pages', () => {
+    const graph = buildMemoryGraphModel([
+      {
+        ...personalMemoryRecords[0],
+        id: 'mem_large_notion_page',
+        summary: 'Large Notion page summary.',
+        rawText: 'Long Notion body '.repeat(5_000),
+        topicTags: ['notion import'],
+      },
+    ]);
+    const memoryNode = graph.elements.find((element) => element.data.id === 'memory:mem_large_notion_page');
+
+    expect(memoryNode?.data.searchText?.length).toBeLessThanOrEqual(800);
+    expect(memoryNode?.data.searchText).toContain('large notion page summary');
+    expect(memoryNode?.data.searchText).toContain('notion import');
+  });
+
+  test('limits rendered memory elements while preserving total memory stats for large vaults', () => {
+    const records = Array.from({ length: 350 }, (_, index) => ({
+      ...personalMemoryRecords[0],
+      id: `mem_large_graph_${index}`,
+      summary: `Large graph memory ${index}`,
+      rawText: `Large graph raw text ${index}`,
+    }));
+    const graph = buildMemoryGraphModel(records);
+    const memoryNodeCount = graph.elements.filter((element) => element.group === 'nodes' && element.data.kind === 'memory').length;
+
+    expect(graph.stats.memoryNodeCount).toBe(350);
+    expect(memoryNodeCount).toBeLessThanOrEqual(300);
+  });
 });
