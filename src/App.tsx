@@ -1244,6 +1244,52 @@ const APP_SHELL_STYLES = `
     background: #e11d3f;
     color: #ffffff;
   }
+  .memory-path-explainer {
+    grid-column: 1 / -1;
+    display: grid;
+    gap: 8px;
+    min-width: 0;
+    border: 1px solid rgba(143, 128, 255, 0.16);
+    border-radius: 8px;
+    background: rgba(248, 247, 255, 0.82);
+    padding: 9px 10px;
+  }
+  .memory-path-explainer strong,
+  .memory-path-explainer span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .memory-path-explainer > strong {
+    color: #6255d7;
+    font-size: 12px;
+    line-height: 1.25;
+  }
+  .memory-path-hops {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(110px, 0.7fr) minmax(0, 1fr) minmax(96px, 0.56fr);
+    gap: 6px;
+  }
+  .memory-path-hop {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+    border: 1px solid rgba(97, 102, 125, 0.12);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.72);
+    padding: 6px 7px;
+  }
+  .memory-path-hop span {
+    color: #8b91a1;
+    font-size: 9px;
+    font-weight: 800;
+  }
+  .memory-path-hop strong {
+    color: #555b6e;
+    font-size: 10px;
+    line-height: 1.25;
+  }
   .citation-row { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 14px; }
   .citation-row a {
     color: #5f56d8;
@@ -2063,6 +2109,23 @@ const APP_SHELL_STYLES = `
   .selected-path-related-chip span {
     color: #a7c9c4;
   }
+  .memory-path-explainer {
+    border-color: rgba(143, 128, 255, 0.2);
+    background: rgba(18, 18, 26, 0.78);
+  }
+  .memory-path-explainer > strong {
+    color: #c7bfff;
+  }
+  .memory-path-hop {
+    border-color: rgba(255, 255, 255, 0.09);
+    background: rgba(255, 255, 255, 0.06);
+  }
+  .memory-path-hop span {
+    color: #9a94ce;
+  }
+  .memory-path-hop strong {
+    color: #f0f0f2;
+  }
   .selected-path-action {
     border-color: rgba(255, 255, 255, 0.1);
     background: rgba(255, 255, 255, 0.065);
@@ -2495,6 +2558,9 @@ const APP_SHELL_STYLES = `
     .selected-memory-path-panel {
       grid-template-columns: 1fr;
     }
+    .memory-path-hops {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
     .selected-path-actions {
       grid-template-columns: repeat(4, minmax(74px, 1fr));
     }
@@ -2534,6 +2600,7 @@ const APP_SHELL_STYLES = `
       grid-template-columns: 1fr;
     }
     .selected-path-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .memory-path-hops { grid-template-columns: 1fr; }
     .decision-columns { grid-template-columns: 1fr; }
   }
 `;
@@ -2599,6 +2666,11 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
     .map((memoryId) => layout.memoryTimeline.entries.find((entry) => entry.memoryId === memoryId))
     .filter((entry): entry is NonNullable<typeof entry> => Boolean(entry))
     .slice(0, 4);
+  const firstFlowRelatedEntry = currentFlowRelatedEntries[0];
+  const firstFlowSharedFacet =
+    firstFlowRelatedEntry?.facetLabels.find((facet) => currentFlowEntry?.facetLabels.includes(facet)) ??
+    firstFlowRelatedEntry?.memoryType ??
+    '감정/결정/결과';
   const currentFlowRelatedHtml = currentFlowRelatedEntries
     .map((entry) => {
       const sharedFacet = entry.facetLabels.find((facet) => currentFlowEntry?.facetLabels.includes(facet)) ?? entry.memoryType;
@@ -2850,6 +2922,15 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
               ${currentFlowRelatedHtml}
             </div>
           </div>
+          <div class="memory-path-explainer" data-memory-path-explainer="selected-memory-related-reasons" data-memory-path-state="ready" data-memory-path-source="${escapeHtml(currentFlowMemoryId)}" data-memory-path-related-count="${currentFlowRelatedCount}">
+            <strong>기억 연결 경로</strong>
+            <div class="memory-path-hops" aria-label="선택 기억에서 AI 액션까지 연결 경로">
+              <div class="memory-path-hop" data-memory-path-hop="current"><span>현재 기억</span><strong data-memory-path-current>${escapeHtml(currentFlowMemoryId)}</strong></div>
+              <div class="memory-path-hop" data-memory-path-hop="shared-reason"><span>공통 이유</span><strong data-memory-path-reason>${escapeHtml(firstFlowSharedFacet)}</strong></div>
+              <div class="memory-path-hop" data-memory-path-hop="past-memory"><span>과거 기억</span><strong data-memory-path-past>${escapeHtml(firstFlowRelatedEntry?.title ?? '연관 과거 기억 없음')}</strong></div>
+              <div class="memory-path-hop" data-memory-path-hop="ai-action"><span>다음 행동</span><strong data-memory-path-action>AI 세션</strong></div>
+            </div>
+          </div>
           <div class="selected-path-actions" aria-label="AI 세션 준비">
             <button type="button" class="selected-path-action" data-selected-path-action="ask">질문</button>
             <button type="button" class="selected-path-action" data-selected-path-action="replay">결정</button>
@@ -2971,6 +3052,11 @@ const GRAPH_CONTROL_SCRIPT = `
   const commandRailTitle = commandRail?.querySelector('[data-command-rail-title]');
   const commandRailSummary = commandRail?.querySelector('[data-command-rail-summary]');
   const commandRailActions = Array.from(document.querySelectorAll('[data-command-rail-action]'));
+  const memoryPathExplainer = document.querySelector('[data-memory-path-explainer="selected-memory-related-reasons"]');
+  const memoryPathCurrent = memoryPathExplainer?.querySelector('[data-memory-path-current]');
+  const memoryPathReason = memoryPathExplainer?.querySelector('[data-memory-path-reason]');
+  const memoryPathPast = memoryPathExplainer?.querySelector('[data-memory-path-past]');
+  const memoryPathAction = memoryPathExplainer?.querySelector('[data-memory-path-action]');
   const askWithRelatedMemoryButton = inspector?.querySelector('[data-control="ask-with-related-memory-context"]');
   const replayWithRelatedMemoryButton = inspector?.querySelector('[data-control="replay-with-related-memory-context"]');
   const reportWithRelatedMemoryButton = inspector?.querySelector('[data-control="report-with-related-memory-context"]');
@@ -3409,6 +3495,13 @@ const GRAPH_CONTROL_SCRIPT = `
       commandRailSummary.textContent =
         citation + ' 기억과 연관 과거 기억 ' + String(related.length) + '개로 질문, 결정, 주간 패턴, AI 세션을 실행한다.';
     }
+    memoryPathExplainer?.setAttribute('data-memory-path-state', related.length ? 'ready' : 'empty');
+    memoryPathExplainer?.setAttribute('data-memory-path-source', citation);
+    memoryPathExplainer?.setAttribute('data-memory-path-related-count', String(related.length));
+    if (memoryPathCurrent) memoryPathCurrent.textContent = citation;
+    if (memoryPathReason) memoryPathReason.textContent = related.length ? related[0].reason : '연결 이유 없음';
+    if (memoryPathPast) memoryPathPast.textContent = related.length ? related[0].label : '연관 과거 기억 없음';
+    if (memoryPathAction) memoryPathAction.textContent = related.length ? '질문/결정/주간/세션' : '먼저 기억 선택';
     relatedMemoryStrip.setAttribute('data-related-memory-count', String(related.length));
     shell.setAttribute('data-selected-path-source-memory', citation);
     shell.setAttribute('data-selected-path-related-memory-count', String(related.length));

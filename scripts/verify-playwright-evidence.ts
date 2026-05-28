@@ -606,6 +606,15 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
     Number(await attribute(page, '[data-command-rail="selected-memory-actions"]', 'data-command-rail-related-count')) > 0,
     'Selected command rail should expose related-memory count',
   );
+  assert(
+    (await attribute(page, '[data-memory-path-explainer="selected-memory-related-reasons"]', 'data-memory-path-source')) === firstCitation,
+    'Memory path explainer should follow the selected graph memory',
+  );
+  assert(
+    Number(await attribute(page, '[data-memory-path-explainer="selected-memory-related-reasons"]', 'data-memory-path-related-count')) > 0,
+    'Memory path explainer should expose related-memory count',
+  );
+  assert((await page.locator('[data-memory-path-hop="shared-reason"]').textContent())?.includes('공통 이유'), 'Memory path explainer should show why memories are connected');
   await page.locator('[data-command-rail-action="ask"]').click();
   assert((await attribute(page, '.second-brain-shell', 'data-interaction-state')) === 'command-rail-ask-ready', 'Selected command rail Ask action should seed related context');
   const highlightedRelatedPath = await page.evaluate(() => {

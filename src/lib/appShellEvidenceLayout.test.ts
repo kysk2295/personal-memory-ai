@@ -649,6 +649,13 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('data-command-rail-action="replay"');
     expect(html).toContain('data-command-rail-action="weekly"');
     expect(html).toContain('data-command-rail-action="session"');
+    expect(html).toContain('data-memory-path-explainer="selected-memory-related-reasons"');
+    expect(html).toContain('data-memory-path-state="ready"');
+    expect(html).toContain('기억 연결 경로');
+    expect(html).toContain('data-memory-path-hop="current"');
+    expect(html).toContain('data-memory-path-hop="shared-reason"');
+    expect(html).toContain('data-memory-path-hop="past-memory"');
+    expect(html).toContain('data-memory-path-hop="ai-action"');
 
     expect(html).toContain('class="product-rail"');
     expect(html).toContain('빠른 일기 기록');
@@ -866,6 +873,9 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(documentHtml).toContain("commandRail?.setAttribute('data-command-rail-related-count', String(related.length))");
     expect(documentHtml).toContain("commandRailTitle.textContent = '선택 기억 바로 실행'");
     expect(documentHtml).toContain('commandRailActions.forEach((button) =>');
+    expect(documentHtml).toContain("memoryPathExplainer?.setAttribute('data-memory-path-source', citation)");
+    expect(documentHtml).toContain("memoryPathExplainer?.setAttribute('data-memory-path-related-count', String(related.length))");
+    expect(documentHtml).toContain("memoryPathPast.textContent = related.length ? related[0].label : '연관 과거 기억 없음'");
     expect(documentHtml).toContain("pathChip.setAttribute('data-selected-path-related-memory-id', item.id)");
     expect(documentHtml).toContain("shell.setAttribute('data-selected-path-source-memory', citation)");
     expect(documentHtml).toContain("selectedPathActions.forEach((button) =>");
