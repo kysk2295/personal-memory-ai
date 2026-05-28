@@ -2,12 +2,15 @@ import { mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { chromium, type Page } from 'playwright';
+import { selectEvidenceCleanupMemoryIds } from '../src/lib/evidenceCleanup';
+import type { MemoryRecord } from '../src/lib/memoryRecord';
 
 const outputDir = resolve('artifacts/web-second-brain-product-surface');
 const benchmarkScreenshot = resolve(outputDir, 'benchmark-careerhacker-memory-playwright.png');
 const localScreenshot = resolve(outputDir, 'local-graph-density-playwright.png');
 const interactionScreenshot = resolve(outputDir, 'local-graph-interactions-playwright.png');
 const searchScreenshot = resolve(outputDir, 'local-memory-search-detail-playwright.png');
+const shouldCleanupEvidenceRecords = process.env.PMI_EVIDENCE_KEEP_RECORDS !== 'true';
 
 function assert(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(message);
@@ -365,6 +368,24 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   await page.screenshot({ path: searchScreenshot, fullPage: false });
 }
 
+async function cleanupEvidenceRecords(): Promise<number> {
+  const localUrl = process.env.PMI_LOCAL_URL;
+  if (!shouldCleanupEvidenceRecords || !localUrl?.startsWith('http')) return 0;
+  const exported = await fetch(`${localUrl}/api/export`);
+  if (!exported.ok) throw new Error('evidence cleanup export failed with ' + exported.status);
+  const body = (await exported.json()) as { records?: MemoryRecord[] };
+  const memoryIds = selectEvidenceCleanupMemoryIds(body.records ?? []);
+  if (!memoryIds.length) return 0;
+  const deleted = await fetch(`${localUrl}/api/delete`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ memoryIds }),
+  });
+  if (!deleted.ok) throw new Error('evidence cleanup delete failed with ' + deleted.status);
+  const deletedBody = (await deleted.json()) as { deletedCount?: number };
+  return deletedBody.deletedCount ?? 0;
+}
+
 await mkdir(outputDir, { recursive: true });
 const browser = await chromium.launch({ headless: true });
 try {
@@ -374,6 +395,7 @@ try {
 
   const localPage = await context.newPage();
   await verifyLocalInteractions(localPage);
+  const evidenceCleanupDeletedCount = await cleanupEvidenceRecords();
 
   console.log(
     JSON.stringify(
@@ -382,6 +404,7 @@ try {
         localScreenshot,
         interactionScreenshot,
         searchScreenshot,
+        evidenceCleanupDeletedCount,
         verified: [
           'cytoscape data graph ready',
           'data-derived graph stats',
@@ -408,6 +431,7 @@ try {
           'memory review drawer mode switch',
           'memory provenance export action',
           'memory provenance download action',
+          'evidence cleanup',
         ],
       },
       null,

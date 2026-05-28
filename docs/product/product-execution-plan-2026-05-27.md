@@ -1286,6 +1286,21 @@ Implemented:
 - `scripts/cleanup-playwright-evidence.ts`
 - `package.json`
 
+### L67 — Automatic Playwright Evidence Cleanup
+
+Goal: keep the default browser evidence command from leaving saved artifact or feedback smoke records in the durable vault.
+
+Acceptance:
+
+- `npm run evidence:playwright` cleans selected synthetic records after assertions pass
+- output reports `evidenceCleanupDeletedCount`
+- `PMI_EVIDENCE_KEEP_RECORDS=true` can opt out when debugging
+- `npm run cleanup:evidence` dry-run reports 0 selected records after the default evidence run
+
+Implemented:
+
+- `scripts/verify-playwright-evidence.ts`
+
 ## 8. MVP Time Estimate
 
 Assuming focused local development without major dependency or deployment blockers:
