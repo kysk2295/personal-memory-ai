@@ -3056,6 +3056,51 @@ const APP_SHELL_STYLES = `
     background: rgba(214, 31, 60, 0.16);
     color: #ff9aa7;
   }
+  .use-now-route-board {
+    display: grid;
+    gap: 8px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  .use-now-route-signals {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 5px;
+  }
+  .use-now-route-signals span {
+    display: grid;
+    gap: 2px;
+    min-height: 36px;
+    padding: 7px;
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    background: rgba(255, 255, 255, 0.04);
+    color: #a8a8af;
+    font-size: 0.68rem;
+    line-height: 1.25;
+  }
+  .use-now-route-signals strong {
+    color: #ececef;
+    font-size: 0.72rem;
+  }
+  .use-now-route-next {
+    color: #cfcfd4;
+    font-size: 0.72rem;
+    line-height: 1.35;
+  }
+  .use-now-route-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+  .use-now-route-actions button {
+    min-height: 31px;
+    padding: 6px 8px;
+    border: 1px solid rgba(214, 31, 60, 0.26);
+    background: rgba(214, 31, 60, 0.1);
+    color: #f0d4d9;
+    font-size: 0.7rem;
+    text-align: left;
+  }
   .product-value-strip[data-command-shelf="graph-led"] .prototype-journey-cockpit {
     grid-template-columns: 1fr;
   }
@@ -4105,6 +4150,20 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
             <button type="button" data-use-now-step="graph" data-use-now-step-state="idle">세컨브레인 연결</button>
             <button type="button" data-use-now-step="ai-workbench" data-use-now-step-state="idle">AI 작업대</button>
           </div>
+          <section class="use-now-route-board" data-use-now-route-board="live" data-use-now-route-state="capture" data-use-now-route-memory="${escapeHtml(currentFlowMemoryId)}" data-use-now-route-related-count="${currentFlowRelatedCount}" data-use-now-route-ai-state="idle" data-use-now-route-save-state="idle" aria-label="오늘 바로 쓰기 현재 경로">
+            <div class="use-now-route-signals" aria-label="오늘 바로 쓰기 상태">
+              <span data-use-now-route-label="memory"><strong>선택 기억</strong><span data-use-now-route-memory-label>${escapeHtml(currentFlowEntry?.title ?? currentFlowMemoryId)}</span></span>
+              <span data-use-now-route-label="related"><strong>연관 과거 기억</strong><span data-use-now-route-related-label>${currentFlowRelatedCount}개 연결</span></span>
+              <span data-use-now-route-label="ai"><strong>AI 결과</strong><span data-use-now-route-ai-label>대기</span></span>
+              <span data-use-now-route-label="save"><strong>미래 기억 저장</strong><span data-use-now-route-save-label>대기</span></span>
+            </div>
+            <span class="use-now-route-next" data-use-now-route-next-label>일기를 쓰거나 가져오면 이 경로가 그래프와 AI 작업대로 이어진다.</span>
+            <div class="use-now-route-actions" aria-label="오늘 바로 쓰기 직접 실행">
+              <button type="button" data-use-now-action="focus-graph">그래프에서 연결 보기</button>
+              <button type="button" data-use-now-action="run-ai">AI 작업대 실행</button>
+              <button type="button" data-use-now-action="save-result">결과를 미래 기억으로 저장</button>
+            </div>
+          </section>
         </section>
         <section class="prototype-journey-cockpit" data-prototype-journey-cockpit="diary-memory-ai" data-journey-current-step="capture" data-journey-selected-memory="${escapeHtml(currentFlowMemoryId)}" data-journey-related-count="${currentFlowRelatedCount}" data-journey-ai-state="idle" data-journey-save-state="idle" data-journey-next-action="write-or-import" aria-label="일기에서 AI 고민 해결까지 현재 흐름">
           <div class="journey-cockpit-head">
@@ -4617,6 +4676,13 @@ const GRAPH_CONTROL_SCRIPT = `
   const useNowCommandStrip = document.querySelector('[data-use-now-command-strip="diary-graph-ai"]');
   const useNowNextLabel = useNowCommandStrip?.querySelector('[data-use-now-next-label]');
   const useNowSteps = Array.from(document.querySelectorAll('[data-use-now-step]'));
+  const useNowRouteBoard = document.querySelector('[data-use-now-route-board="live"]');
+  const useNowRouteMemoryLabel = useNowRouteBoard?.querySelector('[data-use-now-route-memory-label]');
+  const useNowRouteRelatedLabel = useNowRouteBoard?.querySelector('[data-use-now-route-related-label]');
+  const useNowRouteAiLabel = useNowRouteBoard?.querySelector('[data-use-now-route-ai-label]');
+  const useNowRouteSaveLabel = useNowRouteBoard?.querySelector('[data-use-now-route-save-label]');
+  const useNowRouteNextLabel = useNowRouteBoard?.querySelector('[data-use-now-route-next-label]');
+  const useNowRouteActions = Array.from(document.querySelectorAll('[data-use-now-action]'));
   const workflowSections = Array.from(document.querySelectorAll('[data-workflow-section]'));
   const relatedMemoryWorkbench = document.querySelector('[data-related-memory-workbench="selected-diary-comparison"]');
   const relatedWorkbenchSourceLabel = relatedMemoryWorkbench?.querySelector('[data-related-workbench-source-label]');
@@ -4834,11 +4900,73 @@ const GRAPH_CONTROL_SCRIPT = `
     'ai-workbench': 'AI 작업대에서 질문, 결정 되짚기, 주간 패턴을 바로 실행한다.',
   };
 
+  const routeStateCopy = {
+    capture: '일기를 쓰거나 가져오면 이 경로가 그래프와 AI 작업대로 이어진다.',
+    graph: '선택 기억과 연관 과거 기억이 그래프에서 연결됐다.',
+    related: '연관 과거 기억을 확인했다. 이제 AI 작업대에서 실행한다.',
+    'ai-workbench': 'AI 작업대에서 질문, 결정 되짚기, 주간 패턴을 실행할 수 있다.',
+    save: 'AI 결과를 미래 기억으로 저장하면 다음 고민의 근거가 된다.',
+  };
+
+  const useNowAiStateLabels = {
+    idle: '대기',
+    ready: '준비',
+    running: '실행 중',
+    answered: '완료',
+    saved: '저장됨',
+    error: '오류',
+  };
+
+  const useNowSaveStateLabels = {
+    idle: '대기',
+    ready: '저장 가능',
+    saving: '저장 중',
+    saved: '저장됨',
+    error: '오류',
+  };
+
+  const updateUseNowRouteBoard = (detail = {}) => {
+    if (!useNowRouteBoard) return;
+    const state = detail.state || useNowRouteBoard.getAttribute('data-use-now-route-state') || 'capture';
+    const selectedMemory =
+      detail.sourceMemoryId ||
+      detail.selectedMemory ||
+      shell.getAttribute('data-active-memory') ||
+      useNowRouteBoard.getAttribute('data-use-now-route-memory') ||
+      '';
+    const relatedCount = String(
+      detail.relatedCount ??
+        shell.getAttribute('data-related-memory-count') ??
+        useNowRouteBoard.getAttribute('data-use-now-route-related-count') ??
+        '0',
+    );
+    const aiState = detail.aiState || useNowRouteBoard.getAttribute('data-use-now-route-ai-state') || 'idle';
+    const saveState = detail.saveState || useNowRouteBoard.getAttribute('data-use-now-route-save-state') || 'idle';
+    useNowRouteBoard?.setAttribute('data-use-now-route-state', state);
+    useNowRouteBoard?.setAttribute('data-use-now-route-memory', selectedMemory);
+    useNowRouteBoard?.setAttribute('data-use-now-route-related-count', relatedCount);
+    useNowRouteBoard?.setAttribute('data-use-now-route-ai-state', aiState);
+    useNowRouteBoard?.setAttribute('data-use-now-route-save-state', saveState);
+    shell.setAttribute('data-use-now-route-state', state);
+    shell.setAttribute('data-use-now-route-memory', selectedMemory);
+    shell.setAttribute('data-use-now-route-related-count', relatedCount);
+    shell.setAttribute('data-use-now-route-ai-state', aiState);
+    shell.setAttribute('data-use-now-route-save-state', saveState);
+    const selectedNode = selectedMemory ? cytoscapeGraph?.getElementById('memory:' + selectedMemory) : null;
+    const memoryLabel = selectedNode?.data('graphLabel') || selectedNode?.data('label') || selectedMemory || '대기';
+    if (useNowRouteMemoryLabel) useNowRouteMemoryLabel.textContent = memoryLabel;
+    if (useNowRouteRelatedLabel) useNowRouteRelatedLabel.textContent = relatedCount + '개 연결';
+    if (useNowRouteAiLabel) useNowRouteAiLabel.textContent = useNowAiStateLabels[aiState] || aiState;
+    if (useNowRouteSaveLabel) useNowRouteSaveLabel.textContent = useNowSaveStateLabels[saveState] || saveState;
+    if (useNowRouteNextLabel) useNowRouteNextLabel.textContent = routeStateCopy[state] || routeStateCopy.capture;
+  };
+
   const updateUseNowCommandStrip = (step = 'capture') => {
     step = useNowStepCopy[step] ? step : 'capture';
     useNowCommandStrip?.setAttribute('data-use-now-current-step', step);
     shell.setAttribute('data-use-now-current-step', step);
     if (useNowNextLabel) useNowNextLabel.textContent = useNowStepCopy[step];
+    updateUseNowRouteBoard({ state: step });
     useNowSteps.forEach((button) => {
       const active = button.getAttribute('data-use-now-step') === step;
       button.setAttribute('data-use-now-step-state', active ? 'active' : 'idle');
@@ -5216,6 +5344,13 @@ const GRAPH_CONTROL_SCRIPT = `
               : '저장 · 대기';
     }
     if (workbenchNextLabel) workbenchNextLabel.textContent = workbenchNextLabels[nextAction] || nextAction;
+    updateUseNowRouteBoard({
+      state: nextAction === 'open-saved-memory' ? 'save' : actionState === 'answered' || actionState === 'running' ? 'ai-workbench' : undefined,
+      sourceMemoryId: selectedMemory,
+      relatedCount,
+      aiState: actionState,
+      saveState,
+    });
     workbenchActions.forEach((button) => {
       const action = button.getAttribute('data-workbench-action') || '';
       const isActive = action === lastAction || (action === 'save' && saveState === 'ready');
@@ -6014,6 +6149,13 @@ const GRAPH_CONTROL_SCRIPT = `
       nextAction: detail.nextAction,
     });
     updateUseNowCommandStrip(step === 'ai' || step === 'save' ? 'ai-workbench' : step === 'related' ? 'graph' : step);
+    updateUseNowRouteBoard({
+      state: step === 'ai' || step === 'save' ? (step === 'save' ? 'save' : 'ai-workbench') : step,
+      sourceMemoryId: detail.sourceMemoryId,
+      relatedCount: detail.relatedCount,
+      aiState: step === 'ai' ? detail.aiState || 'ready' : detail.aiState,
+      saveState: step === 'save' ? detail.saveState || 'saved' : detail.saveState,
+    });
     guidedFlowSteps.forEach((item) => {
       const itemStep = item.getAttribute('data-guided-flow-step') || '';
       const itemIndex = guidedStepOrder.indexOf(itemStep);
@@ -7593,6 +7735,41 @@ const GRAPH_CONTROL_SCRIPT = `
         koreanAiWorkbench?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
       }
       setInteractionState('use-now-' + step);
+    });
+  });
+
+  useNowRouteActions.forEach((button) => {
+    button.addEventListener('click', () => {
+      const action = button.getAttribute('data-use-now-action') || '';
+      useNowRouteBoard?.setAttribute('data-use-now-route-last-action', action);
+      shell.setAttribute('data-use-now-route-last-action', action);
+      if (action === 'focus-graph') {
+        setWorkflowFocus('graph');
+        document.querySelector('.graph-stage')?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+        setInteractionState('use-now-route-graph-focused');
+        return;
+      }
+      if (action === 'run-ai') {
+        setWorkflowFocus('ai');
+        updateUseNowRouteBoard({ state: 'ai-workbench', aiState: 'running', saveState: 'idle' });
+        const context = getWorkbenchMemoryContext();
+        if (context) {
+          void runMemorySession(context);
+        } else {
+          void runMemorySession();
+        }
+        setInteractionState('use-now-route-ai-running');
+        return;
+      }
+      if (action === 'save-result') {
+        updateUseNowRouteBoard({ state: 'save', saveState: 'saving' });
+        if (intakeSaveAiResultButton?.getAttribute('data-intake-ai-save-state') === 'ready') {
+          saveLatestIntakeAiResult();
+        } else {
+          void saveMemorySession();
+        }
+        setInteractionState('use-now-route-save-requested');
+      }
     });
   });
 

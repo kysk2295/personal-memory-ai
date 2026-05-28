@@ -100,6 +100,16 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   assert((await attribute(page, '.product-value-strip', 'data-use-now-mode')) === 'enabled', 'Expected product shelf to enable use-now mode');
   assert((await attribute(page, '.product-value-strip', 'data-flow-collapsed')) === 'true', 'Expected secondary first-screen chrome to start collapsed');
   assert((await page.locator('[data-use-now-command-strip="diary-graph-ai"]').count()) === 1, 'Expected use-now command strip');
+  assert((await page.locator('[data-use-now-route-board="live"]').count()) === 1, 'Expected use-now live route board');
+  assert((await attribute(page, '[data-use-now-route-board="live"]', 'data-use-now-route-state')) === 'capture', 'Use-now route board should start in capture state');
+  assert((await attribute(page, '[data-use-now-route-board="live"]', 'data-use-now-route-ai-state')) === 'idle', 'Use-now route board should start with idle AI state');
+  assert((await attribute(page, '[data-use-now-route-board="live"]', 'data-use-now-route-save-state')) === 'idle', 'Use-now route board should start with idle save state');
+  for (const label of ['memory', 'related', 'ai', 'save']) {
+    assert((await page.locator(`[data-use-now-route-label="${label}"]`).count()) === 1, `Missing use-now route label ${label}`);
+  }
+  for (const action of ['focus-graph', 'run-ai', 'save-result']) {
+    assert((await page.locator(`[data-use-now-action="${action}"]`).count()) === 1, `Missing use-now route action ${action}`);
+  }
   for (const step of ['capture', 'graph', 'ai-workbench']) {
     assert((await page.locator(`[data-use-now-step="${step}"]`).count()) === 1, `Missing use-now step ${step}`);
   }
@@ -132,6 +142,7 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   assert((await attribute(page, '.second-brain-shell', 'data-workflow-focus')) === 'graph', 'Graph focus action should switch workflow focus');
   assert((await attribute(page, '.second-brain-shell', 'data-prototype-mode')) === 'use-now', 'Graph focus should preserve use-now mode');
   assert((await page.locator('[data-korean-ai-workbench="selected-or-imported-memory"]').count()) === 1, 'Graph focus should keep Korean AI workbench available');
+  assert((await attribute(page, '[data-use-now-route-board="live"]', 'data-use-now-route-state')) === 'graph', 'Graph focus should update use-now route board state');
   assert((await attribute(page, '.second-brain-shell', 'data-workflow-active-section')) === 'graph', 'Graph focus should become active section');
   assert((await attribute(page, '[data-flow-focus-switcher="core-workflow"]', 'data-flow-focus-current')) === 'graph', 'Flow focus switcher should track graph mode');
   assert((await attribute(page, '[data-workflow-section="graph"]', 'data-workflow-section-state')) === 'focused', 'Graph section should become focused');
@@ -141,6 +152,7 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   await page.locator('[data-flow-focus-action="ai"]').click();
   assert((await attribute(page, '.second-brain-shell', 'data-workflow-focus')) === 'ai', 'AI focus action should switch workflow focus');
   assert((await attribute(page, '[data-use-now-command-strip="diary-graph-ai"]', 'data-use-now-current-step')) === 'ai-workbench', 'AI focus should update the use-now command strip');
+  assert((await attribute(page, '[data-use-now-route-board="live"]', 'data-use-now-route-state')) === 'ai-workbench', 'AI focus should update use-now route board state');
   assert((await attribute(page, '[data-workflow-section="ai"]', 'data-workflow-section-state')) === 'focused', 'AI section should become focused');
   assert((await attribute(page, '[data-workflow-section="ai"]', 'data-workflow-section-visibility')) === 'active', 'AI section should become active');
   assert(((await page.locator('[data-workflow-next-action]').textContent()) || '').includes('결과 저장'), 'AI focus should expose a Korean next action');
