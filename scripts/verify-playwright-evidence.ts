@@ -763,6 +763,20 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
       (await attribute(page, '[data-memory-session-step="weekly"]', 'data-session-step-state')) === 'completed',
       'Guided memory session should complete Weekly Report',
     );
+    await page.locator('[data-control="grounded-action-saveback"]').click();
+    await page.waitForFunction(
+      () => document.querySelector('[data-grounded-action-result="related-memory-ai"]')?.getAttribute('data-grounded-action-save-state') === 'saved',
+      null,
+      { timeout: 30_000 },
+    );
+    assert(
+      Boolean(await attribute(page, '[data-grounded-action-result="related-memory-ai"]', 'data-grounded-action-saved-memory')),
+      'Grounded action result saveback should expose the future memory id',
+    );
+    assert(
+      (await attribute(page, '.second-brain-shell', 'data-interaction-state')) === 'grounded-action-result-saved',
+      'Grounded action result saveback should expose saved interaction state',
+    );
   }
 
   await page.locator('[data-filter-chip="semantic"]').click();

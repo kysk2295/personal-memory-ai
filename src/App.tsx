@@ -1375,6 +1375,22 @@ const APP_SHELL_STYLES = `
     border-color: rgba(225, 29, 63, 0.3);
     background: rgba(255, 228, 233, 0.88);
   }
+  .grounded-action-saveback {
+    grid-column: 1 / -1;
+    min-height: 34px;
+    border: 1px solid rgba(225, 29, 63, 0.28);
+    border-radius: 8px;
+    background: #e11d3f;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+  }
+  .grounded-action-saveback[data-grounded-action-save-state="saved"] {
+    background: rgba(20, 184, 166, 0.16);
+    border-color: rgba(20, 184, 166, 0.32);
+    color: #0f766e;
+  }
   .citation-row { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 14px; }
   .citation-row a {
     color: #5f56d8;
@@ -2311,6 +2327,9 @@ const APP_SHELL_STYLES = `
   .grounded-action-result span {
     color: #d8a8af;
   }
+  .grounded-action-saveback[data-grounded-action-save-state="saved"] {
+    color: #9bf2e8;
+  }
   .selected-path-action {
     border-color: rgba(255, 255, 255, 0.1);
     background: rgba(255, 255, 255, 0.065);
@@ -3175,10 +3194,11 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
               <button type="button" data-related-insight-action="weekly">주간 패턴 보기</button>
             </div>
           </section>
-          <section class="grounded-action-result" data-grounded-action-result="related-memory-ai" data-grounded-action-state="idle" data-grounded-action-kind="none" data-grounded-action-source="${escapeHtml(currentFlowMemoryId)}" data-grounded-action-related-count="${currentFlowRelatedCount}" data-grounded-action-citation-count="0" aria-label="관련 기억 기반 AI 실행 결과">
+          <section class="grounded-action-result" data-grounded-action-result="related-memory-ai" data-grounded-action-state="idle" data-grounded-action-kind="none" data-grounded-action-source="${escapeHtml(currentFlowMemoryId)}" data-grounded-action-related-count="${currentFlowRelatedCount}" data-grounded-action-citation-count="0" data-grounded-action-save-state="idle" data-grounded-action-saved-memory="" aria-label="관련 기억 기반 AI 실행 결과">
             <strong>근거 있는 실행 결과</strong>
             <span data-grounded-action-summary>질문, 결정 되짚기, 주간 패턴을 실행하면 선택한 기억과 관련 과거 기억 수가 여기에 남는다.</span>
             <span data-grounded-action-save-next>결과가 나오면 세션 저장으로 미래 기억에 남길 수 있다.</span>
+            <button type="button" class="grounded-action-saveback" data-control="grounded-action-saveback" data-grounded-action-save-state="idle">결과를 미래 기억으로 저장</button>
           </section>
           <div class="selected-path-actions" aria-label="AI 세션 준비">
             <button type="button" class="selected-path-action" data-selected-path-action="ask">질문</button>
@@ -3312,6 +3332,7 @@ const GRAPH_CONTROL_SCRIPT = `
   const groundedActionResult = document.querySelector('[data-grounded-action-result="related-memory-ai"]');
   const groundedActionSummary = groundedActionResult?.querySelector('[data-grounded-action-summary]');
   const groundedActionSaveNext = groundedActionResult?.querySelector('[data-grounded-action-save-next]');
+  const groundedActionSaveback = document.querySelector('[data-control="grounded-action-saveback"]');
   const askWithRelatedMemoryButton = inspector?.querySelector('[data-control="ask-with-related-memory-context"]');
   const replayWithRelatedMemoryButton = inspector?.querySelector('[data-control="replay-with-related-memory-context"]');
   const reportWithRelatedMemoryButton = inspector?.querySelector('[data-control="report-with-related-memory-context"]');
@@ -5048,6 +5069,10 @@ const GRAPH_CONTROL_SCRIPT = `
       shell.setAttribute('data-last-saved-session-artifact', artifact.id);
       shell.setAttribute('data-last-saved-session-memory', savedMemoryId);
       shell.setAttribute('data-memory-session-save-state', 'saved');
+      groundedActionResult?.setAttribute('data-grounded-action-save-state', 'saved');
+      groundedActionResult?.setAttribute('data-grounded-action-saved-memory', savedMemoryId);
+      groundedActionSaveback?.setAttribute('data-grounded-action-save-state', 'saved');
+      if (groundedActionSaveback) groundedActionSaveback.textContent = '미래 기억으로 저장됨';
       intakeSessionResult?.setAttribute('data-intake-saved-session-memory', savedMemoryId);
       intakeSessionResult?.setAttribute('data-intake-next-step', 'session-saved');
       memoryIntakeHub?.setAttribute('data-intake-result', 'session-saved');
@@ -5065,7 +5090,7 @@ const GRAPH_CONTROL_SCRIPT = `
         'AI 세션이 미래 기억으로 저장됐다',
         savedMemoryId + '으로 저장됐다. 그래프에서 다시 열면 이 판단도 다음 고민의 과거 근거가 된다.',
       );
-      setInteractionState('memory-session-saved');
+      setInteractionState('grounded-action-result-saved');
       return;
     }
     memorySessionSaveButton.setAttribute('data-artifact-save-state', 'saving');
@@ -5091,6 +5116,10 @@ const GRAPH_CONTROL_SCRIPT = `
       shell.setAttribute('data-last-saved-session-memory', savedMemoryId);
       await rehydrateAppShellAfterImport(savedMemoryId);
       shell.setAttribute('data-memory-session-save-state', 'saved');
+      groundedActionResult?.setAttribute('data-grounded-action-save-state', 'saved');
+      groundedActionResult?.setAttribute('data-grounded-action-saved-memory', savedMemoryId);
+      groundedActionSaveback?.setAttribute('data-grounded-action-save-state', 'saved');
+      if (groundedActionSaveback) groundedActionSaveback.textContent = '미래 기억으로 저장됨';
       intakeSessionResult?.setAttribute('data-intake-saved-session-memory', savedMemoryId);
       intakeSessionResult?.setAttribute('data-intake-next-step', 'session-saved');
       memoryIntakeHub?.setAttribute('data-intake-result', 'session-saved');
@@ -5114,6 +5143,7 @@ const GRAPH_CONTROL_SCRIPT = `
         savedMemoryId + '으로 저장됐다. 그래프에서 다시 열면 이 판단도 다음 고민의 과거 근거가 된다.',
       );
       setInteractionState('memory-session-saved');
+      setInteractionState('grounded-action-result-saved');
     } catch (error) {
       shell.setAttribute('data-memory-session-save-state', 'error');
       shell.setAttribute('data-memory-session-save-error', String(error?.message || error));
@@ -5268,6 +5298,15 @@ const GRAPH_CONTROL_SCRIPT = `
   });
   memorySessionSaveButton?.addEventListener('click', () => {
     void saveMemorySession();
+  });
+  groundedActionSaveback?.addEventListener('click', async () => {
+    groundedActionResult?.setAttribute('data-grounded-action-save-state', 'saving');
+    groundedActionSaveback?.setAttribute('data-grounded-action-save-state', 'saving');
+    if (shell.getAttribute('data-memory-session-state') !== 'completed') {
+      await runMemorySession();
+      await waitForShellState('data-memory-session-state', 'completed');
+    }
+    await saveMemorySession();
   });
 
   memorySearchResults.forEach(wireMemorySearchResult);

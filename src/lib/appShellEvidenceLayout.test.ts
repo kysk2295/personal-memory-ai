@@ -677,6 +677,9 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('data-grounded-action-source');
     expect(html).toContain('data-grounded-action-summary');
     expect(html).toContain('data-grounded-action-save-next');
+    expect(html).toContain('data-control="grounded-action-saveback"');
+    expect(html).toContain('data-grounded-action-save-state="idle"');
+    expect(html).toContain('결과를 미래 기억으로 저장');
 
     expect(html).toContain('class="product-rail"');
     expect(html).toContain('빠른 일기 기록');
@@ -914,6 +917,10 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(documentHtml).toContain('const renderGroundedActionResult = (kind, context, citationCount) =>');
     expect(documentHtml).toContain("groundedActionResult?.setAttribute('data-grounded-action-state', 'ready')");
     expect(documentHtml).toContain("groundedActionResult?.setAttribute('data-grounded-action-kind', kind)");
+    expect(documentHtml).toContain("const groundedActionSaveback = document.querySelector('[data-control=\"grounded-action-saveback\"]')");
+    expect(documentHtml).toContain("groundedActionResult?.setAttribute('data-grounded-action-save-state', 'saved')");
+    expect(documentHtml).toContain("groundedActionResult?.setAttribute('data-grounded-action-saved-memory'");
+    expect(documentHtml).toContain("setInteractionState('grounded-action-result-saved')");
     expect(documentHtml).toContain("cytoscapeGraph.elements().removeClass('related-memory related-facet related-edge')");
     expect(documentHtml).toContain("candidate.addClass('related-memory')");
     expect(documentHtml).toContain("facetNode.addClass('related-facet')");
