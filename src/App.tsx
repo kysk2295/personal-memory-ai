@@ -2007,6 +2007,40 @@ const APP_SHELL_STYLES = `
   .memory-session-steps strong[data-session-status-label] {
     color: #0f766e;
   }
+  .memory-session-outcome-board {
+    display: grid;
+    gap: 9px;
+    border: 1px solid rgba(20, 184, 166, 0.16);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.68);
+    padding: 10px;
+  }
+  .memory-session-outcome-board strong {
+    color: #0f766e;
+    font-size: 12px;
+  }
+  .session-outcome-grid,
+  .session-outcome-steps {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+  .session-outcome-grid span,
+  .session-outcome-steps span,
+  .session-outcome-save span {
+    border: 1px solid rgba(20, 184, 166, 0.14);
+    border-radius: 8px;
+    background: rgba(240, 253, 250, 0.72);
+    color: #0f766e;
+    padding: 6px 7px;
+    font-size: 10px;
+    font-weight: 760;
+    line-height: 1.25;
+  }
+  .session-outcome-save {
+    display: grid;
+    gap: 6px;
+  }
   .selected-memory-reader {
     display: grid;
     gap: 10px;
@@ -4089,6 +4123,24 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
               <li data-memory-session-step="replay" data-session-step-state="idle"><span>결정 되짚기</span><strong>대기</strong></li>
               <li data-memory-session-step="weekly" data-session-step-state="idle"><span>주간 패턴</span><strong>대기</strong></li>
             </ol>
+            <section class="memory-session-outcome-board" data-memory-session-outcome-board="guided-ai-session" data-session-outcome-state="idle" data-session-outcome-source-memory="" data-session-outcome-related-count="0" data-session-outcome-citation-count="0" data-session-outcome-save-state="idle" data-session-outcome-saved-memory="" aria-label="AI 세션 결과 보드">
+              <strong>AI 세션 결과 보드</strong>
+              <div class="session-outcome-grid" aria-label="세션 근거 상태">
+                <span data-session-outcome-source-label>출발 기억 · 대기</span>
+                <span data-session-outcome-related-label>연관 기억 · 0개</span>
+                <span data-session-outcome-citation-label>인용 근거 · 0개</span>
+                <span data-session-outcome-state-label>세션 상태 · 대기</span>
+              </div>
+              <div class="session-outcome-steps" aria-label="세션 실행 결과">
+                <span data-session-outcome-step="ask" data-session-outcome-step-state="idle">질문 · 대기</span>
+                <span data-session-outcome-step="replay" data-session-outcome-step-state="idle">결정 · 대기</span>
+                <span data-session-outcome-step="weekly" data-session-outcome-step-state="idle">주간 · 대기</span>
+              </div>
+              <div class="session-outcome-save" aria-label="세션 저장 상태">
+                <span data-session-outcome-save-label>미래 기억 저장 · 대기</span>
+                <span data-session-outcome-saved-label>저장된 기억 · 없음</span>
+              </div>
+            </section>
             <button type="button" class="save-artifact-action" data-control="save-memory-session" data-artifact-save-state="idle" data-artifact-save-endpoint="/api/capture" data-artifact-save-method="POST">세션 저장</button>
           </section>
           ${renderAskMyPastSelfPanel(layout)}
@@ -4296,6 +4348,13 @@ const GRAPH_CONTROL_SCRIPT = `
   const memorySessionPanel = document.querySelector('[data-memory-session-panel]');
   const memorySessionSummary = document.querySelector('[data-memory-session-summary]');
   const memorySessionSaveButton = document.querySelector('[data-control="save-memory-session"]');
+  const memorySessionOutcomeBoard = document.querySelector('[data-memory-session-outcome-board="guided-ai-session"]');
+  const memorySessionOutcomeSourceLabel = memorySessionOutcomeBoard?.querySelector('[data-session-outcome-source-label]');
+  const memorySessionOutcomeRelatedLabel = memorySessionOutcomeBoard?.querySelector('[data-session-outcome-related-label]');
+  const memorySessionOutcomeCitationLabel = memorySessionOutcomeBoard?.querySelector('[data-session-outcome-citation-label]');
+  const memorySessionOutcomeStateLabel = memorySessionOutcomeBoard?.querySelector('[data-session-outcome-state-label]');
+  const memorySessionOutcomeSaveLabel = memorySessionOutcomeBoard?.querySelector('[data-session-outcome-save-label]');
+  const memorySessionOutcomeSavedLabel = memorySessionOutcomeBoard?.querySelector('[data-session-outcome-saved-label]');
   let cytoscapeGraph = null;
   let layoutVersion = Number(shell.getAttribute('data-layout-version') || '0');
   let lastLocalImportPreview = null;
@@ -5006,6 +5065,73 @@ const GRAPH_CONTROL_SCRIPT = `
     return { sourceMemoryId, relatedMemoryIds };
   };
 
+  const memorySessionOutcomeStateLabels = {
+    idle: '대기',
+    running: '실행 중',
+    completed: '완료',
+    error: '오류',
+    saved: '저장됨',
+  };
+
+  const setMemorySessionOutcomeStep = (step, state) => {
+    const item = memorySessionOutcomeBoard?.querySelector('[data-session-outcome-step="' + step + '"]');
+    if (!item) return;
+    const labels = { ask: '질문', replay: '결정', weekly: '주간' };
+    const stateLabels = { idle: '대기', running: '실행 중', completed: '완료', error: '오류' };
+    item.setAttribute('data-session-outcome-step-state', state);
+    item.textContent = (labels[step] || step) + ' · ' + (stateLabels[state] || state);
+  };
+
+  const updateMemorySessionOutcomeBoard = (detail = {}) => {
+    if (!memorySessionOutcomeBoard) return;
+    const sourceMemoryId =
+      detail.sourceMemoryId ||
+      memorySessionPanel?.getAttribute('data-session-source-memory') ||
+      shell.getAttribute('data-memory-session-source-memory') ||
+      '';
+    const relatedCount = String(
+      detail.relatedCount ??
+        memorySessionPanel?.getAttribute('data-session-related-memory-count') ??
+        shell.getAttribute('data-memory-session-related-memory-count') ??
+        '0',
+    );
+    const citationCount = String(
+      detail.citationCount ??
+        currentCitationList('data-live-ask-highlighted-memories').length +
+          currentCitationList('data-live-replay-highlighted-memories').length +
+          currentCitationList('data-live-weekly-highlighted-memories').length,
+    );
+    const state = detail.state || memorySessionPanel?.getAttribute('data-session-state') || 'idle';
+    const saveState = detail.saveState || shell.getAttribute('data-memory-session-save-state') || 'idle';
+    const savedMemoryId = detail.savedMemoryId || shell.getAttribute('data-last-saved-session-memory') || '';
+    memorySessionOutcomeBoard?.setAttribute('data-session-outcome-state', state);
+    memorySessionOutcomeBoard?.setAttribute('data-session-outcome-source-memory', sourceMemoryId);
+    memorySessionOutcomeBoard?.setAttribute('data-session-outcome-related-count', relatedCount);
+    memorySessionOutcomeBoard?.setAttribute('data-session-outcome-citation-count', citationCount);
+    memorySessionOutcomeBoard?.setAttribute('data-session-outcome-save-state', saveState);
+    memorySessionOutcomeBoard?.setAttribute('data-session-outcome-saved-memory', savedMemoryId);
+    shell.setAttribute('data-session-outcome-state', state);
+    shell.setAttribute('data-session-outcome-source-memory', sourceMemoryId);
+    shell.setAttribute('data-session-outcome-related-count', relatedCount);
+    shell.setAttribute('data-session-outcome-citation-count', citationCount);
+    shell.setAttribute('data-session-outcome-save-state', saveState);
+    if (memorySessionOutcomeSourceLabel) memorySessionOutcomeSourceLabel.textContent = '출발 기억 · ' + (sourceMemoryId || '대기');
+    if (memorySessionOutcomeRelatedLabel) memorySessionOutcomeRelatedLabel.textContent = '연관 기억 · ' + relatedCount + '개';
+    if (memorySessionOutcomeCitationLabel) memorySessionOutcomeCitationLabel.textContent = '인용 근거 · ' + citationCount + '개';
+    if (memorySessionOutcomeStateLabel) memorySessionOutcomeStateLabel.textContent = '세션 상태 · ' + (memorySessionOutcomeStateLabels[state] || state);
+    if (memorySessionOutcomeSaveLabel) {
+      memorySessionOutcomeSaveLabel.textContent =
+        saveState === 'saved'
+          ? '미래 기억 저장 · 완료'
+          : saveState === 'saving'
+            ? '미래 기억 저장 · 저장 중'
+            : saveState === 'ready'
+              ? '미래 기억 저장 · 가능'
+              : '미래 기억 저장 · 대기';
+    }
+    if (memorySessionOutcomeSavedLabel) memorySessionOutcomeSavedLabel.textContent = '저장된 기억 · ' + (savedMemoryId || '없음');
+  };
+
   const setMemorySessionStep = (step, state) => {
     const item = memorySessionPanel?.querySelector('[data-memory-session-step="' + step + '"]');
     if (!item) return;
@@ -5016,6 +5142,7 @@ const GRAPH_CONTROL_SCRIPT = `
       status.textContent =
         state === 'completed' ? '완료' : state === 'running' ? '실행 중' : state === 'failed' ? '실패' : '대기';
     }
+    setMemorySessionOutcomeStep(step, state);
   };
 
   const setMemorySessionState = (state, context) => {
@@ -5056,6 +5183,12 @@ const GRAPH_CONTROL_SCRIPT = `
       memorySessionSaveButton.setAttribute('data-artifact-save-state', 'ready');
       memorySessionSaveButton.textContent = '세션 저장';
     }
+    updateMemorySessionOutcomeBoard({
+      state,
+      sourceMemoryId: context?.sourceMemoryId,
+      relatedCount: context?.relatedMemoryIds?.length,
+      saveState: state === 'completed' ? 'ready' : shell.getAttribute('data-memory-session-save-state') || 'idle',
+    });
     if (memorySessionSummary && context?.sourceMemoryId) {
       memorySessionSummary.textContent =
         context.sourceMemoryId + ' 기억과 관련 과거 기억 ' + String(context.relatedMemoryIds.length) + '개로 질문, 결정 되짚기, 주간 패턴을 실행한다.';
@@ -6405,6 +6538,14 @@ const GRAPH_CONTROL_SCRIPT = `
       shell.setAttribute('data-last-saved-session-artifact', artifact.id);
       shell.setAttribute('data-last-saved-session-memory', savedMemoryId);
       shell.setAttribute('data-memory-session-save-state', 'saved');
+      updateMemorySessionOutcomeBoard({
+        state: 'saved',
+        sourceMemoryId: artifact.metadata.sourceMemoryId,
+        relatedCount: artifact.metadata.relatedMemoryCount,
+        citationCount: artifact.citationMemoryIds.length,
+        saveState: 'saved',
+        savedMemoryId,
+      });
       groundedActionResult?.setAttribute('data-grounded-action-save-state', 'saved');
       groundedActionResult?.setAttribute('data-grounded-action-saved-memory', savedMemoryId);
       groundedActionSaveback?.setAttribute('data-grounded-action-save-state', 'saved');
@@ -6452,6 +6593,7 @@ const GRAPH_CONTROL_SCRIPT = `
     }
     memorySessionSaveButton.setAttribute('data-artifact-save-state', 'saving');
     shell.setAttribute('data-memory-session-save-state', 'saving');
+    updateMemorySessionOutcomeBoard({ saveState: 'saving' });
     const shouldUpdateCaptureHandoffAfterSave =
       captureHandoffBanner?.getAttribute('data-capture-handoff-banner-state') === 'session-completed';
     const captureHandoffSaveSource =
@@ -6473,6 +6615,14 @@ const GRAPH_CONTROL_SCRIPT = `
       shell.setAttribute('data-last-saved-session-memory', savedMemoryId);
       await rehydrateAppShellAfterImport(savedMemoryId);
       shell.setAttribute('data-memory-session-save-state', 'saved');
+      updateMemorySessionOutcomeBoard({
+        state: 'saved',
+        sourceMemoryId: artifact.metadata.sourceMemoryId,
+        relatedCount: artifact.metadata.relatedMemoryCount,
+        citationCount: artifact.citationMemoryIds.length,
+        saveState: 'saved',
+        savedMemoryId,
+      });
       groundedActionResult?.setAttribute('data-grounded-action-save-state', 'saved');
       groundedActionResult?.setAttribute('data-grounded-action-saved-memory', savedMemoryId);
       groundedActionSaveback?.setAttribute('data-grounded-action-save-state', 'saved');
@@ -6526,6 +6676,7 @@ const GRAPH_CONTROL_SCRIPT = `
       shell.setAttribute('data-memory-session-save-state', 'error');
       shell.setAttribute('data-memory-session-save-error', String(error?.message || error));
       memorySessionSaveButton.setAttribute('data-artifact-save-state', 'error');
+      updateMemorySessionOutcomeBoard({ state: 'error', saveState: 'error' });
       setInteractionState('memory-session-save-error');
     }
   };

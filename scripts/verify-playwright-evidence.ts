@@ -646,6 +646,24 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
     (await attribute(page, '[data-memory-session-panel]', 'data-session-source-memory')) === importedMemoryId,
     'Imported memory handoff should run the guided session from the imported memory',
   );
+  assert(
+    (await attribute(page, '[data-memory-session-outcome-board="guided-ai-session"]', 'data-session-outcome-state')) === 'completed',
+    'Memory session outcome board should mark the imported session as completed',
+  );
+  assert(
+    (await attribute(page, '[data-memory-session-outcome-board="guided-ai-session"]', 'data-session-outcome-source-memory')) === importedMemoryId,
+    'Memory session outcome board should expose the imported source memory',
+  );
+  assert(
+    Number(await attribute(page, '[data-memory-session-outcome-board="guided-ai-session"]', 'data-session-outcome-citation-count')) > 0,
+    'Memory session outcome board should expose citation evidence count',
+  );
+  assert(
+    (await attribute(page, '[data-session-outcome-step="ask"]', 'data-session-outcome-step-state')) === 'completed' &&
+      (await attribute(page, '[data-session-outcome-step="replay"]', 'data-session-outcome-step-state')) === 'completed' &&
+      (await attribute(page, '[data-session-outcome-step="weekly"]', 'data-session-outcome-step-state')) === 'completed',
+    'Memory session outcome board should complete Ask, Decision, and Weekly states',
+  );
   await page.locator('[data-control="save-memory-session"]').click();
   await page.waitForFunction(
     () => document.querySelector('[data-control="save-memory-session"]')?.getAttribute('data-artifact-save-state') === 'saved',
@@ -658,6 +676,14 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   );
   const savedSessionMemoryId = await attribute(page, '.second-brain-shell', 'data-last-saved-session-memory');
   assert((await attribute(page, '.second-brain-shell', 'data-memory-session-save-state')) === 'saved', 'Shell should expose memory session save state');
+  assert(
+    (await attribute(page, '[data-memory-session-outcome-board="guided-ai-session"]', 'data-session-outcome-save-state')) === 'saved',
+    'Memory session outcome board should mark session saveback as saved',
+  );
+  assert(
+    (await attribute(page, '[data-memory-session-outcome-board="guided-ai-session"]', 'data-session-outcome-saved-memory')) === savedSessionMemoryId,
+    'Memory session outcome board should expose the saved future memory id',
+  );
   assert((await page.locator('text=Session saved').count()) === 0, 'Saved session CTA should remain Korean');
   assert((await page.locator('text=세션 저장 완료').count()) === 1, 'Saved session CTA should use Korean copy');
   assert(
@@ -965,6 +991,14 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
     assert(
       (await attribute(page, '[data-memory-session-step="weekly"]', 'data-session-step-state')) === 'completed',
       'Guided memory session should complete Weekly Report',
+    );
+    assert(
+      (await attribute(page, '[data-memory-session-outcome-board="guided-ai-session"]', 'data-session-outcome-source-memory')) === firstCitation,
+      'Selected-memory session outcome board should keep the selected source memory',
+    );
+    assert(
+      (await attribute(page, '[data-memory-session-outcome-board="guided-ai-session"]', 'data-session-outcome-save-state')) === 'ready',
+      'Selected-memory session outcome board should show saveback readiness',
     );
     await page.locator('[data-control="grounded-action-saveback"]').click();
     await page.waitForFunction(
