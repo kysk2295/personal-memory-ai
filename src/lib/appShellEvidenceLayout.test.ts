@@ -533,6 +533,12 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('Weekly Pattern Report');
     expect(html).toContain('aria-label="Weekly Report cited memory summary"');
     expect(html).toContain('data-weekly-report-id="weekly_report_2026-05-01_2026-05-20"');
+    expect(html).toContain('data-weekly-report-generated-at="2026-05-27T11:00:00.000Z"');
+    expect(html).toContain('data-weekly-report-endpoint="/api/report/weekly"');
+    expect(html).toContain('data-weekly-report-window-start="2026-05-01"');
+    expect(html).toContain('data-weekly-report-window-end="2026-05-20"');
+    expect(html).toContain('data-weekly-included-memory-count="3"');
+    expect(html).toContain('aria-label="Weekly Report included memories"');
     expect(html).toContain('2026-05-01 to 2026-05-20');
     expect(html).toContain('data-weekly-aggregate-kind="emotions"');
     expect(html).toContain('data-weekly-aggregate-value="anxiety"');

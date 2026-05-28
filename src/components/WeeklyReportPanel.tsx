@@ -39,7 +39,9 @@ export function renderWeeklyReportPanel(layout: InitialAppShellEvidenceLayout): 
 
   return `<section class="weekly-report-flow product-panel" aria-label="Weekly Report cited memory summary" data-weekly-report-id="${escapeHtml(
     report.id,
-  )}">
+  )}" data-weekly-report-generated-at="${escapeHtml(report.generatedAt)}" data-weekly-report-endpoint="/api/report/weekly" data-weekly-report-window-start="${escapeHtml(
+    report.window.startDate,
+  )}" data-weekly-report-window-end="${escapeHtml(report.window.endDate)}" data-weekly-included-memory-count="${report.includedMemoryIds.length}">
     <div class="section-header">
       <div>
         <p class="eyebrow">Weekly Report</p>
@@ -52,6 +54,12 @@ export function renderWeeklyReportPanel(layout: InitialAppShellEvidenceLayout): 
       <span>${escapeHtml(report.evidenceLabel)}</span>
       <span>citations <strong>${report.includedMemoryIds.length}</strong></span>
     </div>
+    <ol class="decision-tag-list" aria-label="Weekly Report included memories">
+      ${report.includedMemoryIds
+        .slice(0, 5)
+        .map((memoryId) => `<li data-weekly-included-memory-id="${escapeHtml(memoryId)}">${renderCitationReference(memoryId)}</li>`)
+        .join('')}
+    </ol>
     ${renderSavedArtifactActionButton(saveAction)}
     <ul class="weekly-report-aggregate-list" aria-label="Weekly report cited aggregates">
       ${topEmotions.map((aggregate) => renderAggregate('emotions', aggregate)).join('')}

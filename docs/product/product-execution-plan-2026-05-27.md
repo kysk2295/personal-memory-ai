@@ -1419,6 +1419,21 @@ Implemented:
 - `src/components/AskMyPastSelfPanel.tsx`
 - `src/lib/appShellEvidenceLayout.test.ts`
 
+### L74 — Weekly Report Operational Metadata
+
+Goal: make weekly reports feel like durable personal-memory artifacts rather than a static summary card.
+
+Acceptance:
+
+- Weekly Report panel exposes generated time, report endpoint, date window, and included memory count
+- panel lists included memory citations so the report can be traced back to source memories
+- save action remains available next to the operational report metadata
+
+Implemented:
+
+- `src/components/WeeklyReportPanel.tsx`
+- `src/lib/appShellEvidenceLayout.test.ts`
+
 ## 8. MVP Time Estimate
 
 Assuming focused local development without major dependency or deployment blockers:
