@@ -222,6 +222,17 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
     (await attribute(page, '[data-intake-session-result="applied-memory"]', 'data-intake-next-step')) === 'memory-session-ready',
     'Intake result panel should offer the guided AI session as the next step',
   );
+  assert(
+    Number(await attribute(page, '[data-intake-related-bundle="past-memory-nodes"]', 'data-intake-related-bundle-count')) > 0,
+    'Intake result panel should surface related past-memory nodes after diary apply',
+  );
+  assert(
+    (await page.locator('[data-intake-related-memory-id]').count()) > 0,
+    'Intake related bundle should render clickable related-memory chips',
+  );
+  assert(!(await page.locator('[data-control="intake-run-ask"]').isDisabled()), 'Intake related Ask action should be enabled');
+  assert(!(await page.locator('[data-control="intake-run-decision-replay"]').isDisabled()), 'Intake related Decision Replay action should be enabled');
+  assert(!(await page.locator('[data-control="intake-run-weekly-report"]').isDisabled()), 'Intake related Weekly action should be enabled');
   const initialMemoryNodeCount = Number(await attribute(page, '.second-brain-shell', 'data-memory-node-count'));
   const initialRenderedMemoryNodeCount = Number(await attribute(page, '.second-brain-shell', 'data-rendered-memory-node-count'));
   const initialGraphNodeCount = Number(await attribute(page, '.second-brain-shell', 'data-graph-node-count'));

@@ -535,6 +535,13 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('data-control="intake-diary-draft"');
     expect(html).toContain('data-intake-session-result="applied-memory"');
     expect(html).toContain('data-control="intake-run-session"');
+    expect(html).toContain('data-intake-related-bundle="past-memory-nodes"');
+    expect(html).toContain('data-intake-related-bundle-count="0"');
+    expect(html).toContain('data-intake-related-bundle-list');
+    expect(html).toContain('data-control="intake-run-ask"');
+    expect(html).toContain('data-control="intake-run-decision-replay"');
+    expect(html).toContain('data-control="intake-run-weekly-report"');
+    expect(html).toContain('관련 과거 기억');
     expect(html).toContain('data-control="intake-preview-notion-diary"');
     expect(html).toContain('data-control="intake-apply-notion-diary"');
     expect(html).toContain('data-control="intake-find-notion-source"');
@@ -734,6 +741,12 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(documentHtml).toContain("timelinePanel?.querySelectorAll('[data-control=\"timeline-select-memory\"]')");
     expect(documentHtml).toContain("memoryIntakeHub?.setAttribute('data-intake-applied-memory', appliedMemoryId)");
     expect(documentHtml).toContain("memoryIntakeHub?.setAttribute('data-intake-next-step', 'memory-session-ready')");
+    expect(documentHtml).toContain('const renderIntakeRelatedBundle = () =>');
+    expect(documentHtml).toContain("intakeRelatedBundle?.setAttribute('data-intake-related-bundle-count'");
+    expect(documentHtml).toContain("intakeRelatedBundleList.replaceChildren");
+    expect(documentHtml).toContain("intakeRunAskButton?.addEventListener('click'");
+    expect(documentHtml).toContain("intakeRunReplayButton?.addEventListener('click'");
+    expect(documentHtml).toContain("intakeRunWeeklyButton?.addEventListener('click'");
     expect(documentHtml).toContain("intakeRunSessionButton?.removeAttribute('disabled')");
     expect(documentHtml).toContain("intakeRunSessionButton?.addEventListener('click'");
     expect(documentHtml).toContain("intakeSessionResult?.setAttribute('data-intake-saved-session-memory', savedMemoryId)");

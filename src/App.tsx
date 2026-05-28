@@ -326,6 +326,7 @@ const APP_SHELL_STYLES = `
   .product-value-strip {
     position: relative;
     z-index: 4;
+    pointer-events: none;
     width: min(1180px, 100%);
     margin: 0 auto;
     border: 1px solid rgba(117, 122, 143, 0.16);
@@ -337,6 +338,12 @@ const APP_SHELL_STYLES = `
     grid-template-columns: minmax(250px, 0.62fr) minmax(0, 1.38fr) auto;
     gap: 14px;
     align-items: center;
+  }
+  .product-value-strip a,
+  .product-value-strip button,
+  .product-value-strip input,
+  .product-value-strip textarea {
+    pointer-events: auto;
   }
   .prototype-goal-copy {
     min-width: 0;
@@ -533,6 +540,69 @@ const APP_SHELL_STYLES = `
     color: #57716d;
     border-color: rgba(20, 184, 166, 0.18);
     background: rgba(20, 184, 166, 0.06);
+  }
+  .memory-intake-related-bundle {
+    grid-column: 1 / -1;
+    display: grid;
+    gap: 7px;
+    min-width: 0;
+  }
+  .memory-intake-related-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 11px;
+    color: #0f766e;
+  }
+  .memory-intake-related-heading strong {
+    color: #134e4a;
+  }
+  .memory-intake-related-list {
+    display: flex;
+    gap: 6px;
+    overflow: hidden;
+  }
+  .memory-intake-related-chip {
+    flex: 1 1 0;
+    min-width: 0;
+    border: 1px solid rgba(20, 184, 166, 0.18);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.74);
+    padding: 6px 7px;
+    text-align: left;
+    color: #33524d;
+  }
+  .memory-intake-related-chip strong,
+  .memory-intake-related-chip span {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .memory-intake-related-chip strong {
+    color: #123b39;
+    font-size: 10px;
+  }
+  .memory-intake-related-chip span {
+    margin-top: 2px;
+    color: #5f7f78;
+    font-size: 9px;
+  }
+  .memory-intake-related-actions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+  .memory-intake-related-actions button {
+    min-width: 0;
+    min-height: 30px;
+    border-color: rgba(20, 184, 166, 0.2);
+    background: rgba(20, 184, 166, 0.1);
+    color: #0f766e;
+    padding: 6px 7px;
+    font-size: 10px;
+    white-space: nowrap;
   }
   .memory-intake-action {
     min-width: 0;
@@ -964,7 +1034,7 @@ const APP_SHELL_STYLES = `
   .pill-red { color: #7a6ae7; }
   .product-rail {
     position: relative;
-    z-index: 4;
+    z-index: 7;
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -2401,6 +2471,18 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
               <strong data-intake-result-title>적용하면 여기서 바로 다음 행동을 보여준다</strong>
               <span data-intake-result-summary>일기를 그래프에 넣으면 생성된 기억과 연관 과거 기억 수를 확인하고 AI 세션을 실행할 수 있다.</span>
             </div>
+            <section class="memory-intake-related-bundle" data-intake-related-bundle="past-memory-nodes" data-intake-related-bundle-count="0" aria-label="인입된 일기와 연결된 과거 기억">
+              <div class="memory-intake-related-heading">
+                <strong>관련 과거 기억</strong>
+                <span data-intake-related-bundle-summary>일기 적용 후 실제 그래프 연결을 보여준다</span>
+              </div>
+              <div class="memory-intake-related-list" data-intake-related-bundle-list></div>
+              <div class="memory-intake-related-actions" aria-label="연관 기억 기반 AI 액션">
+                <button type="button" data-control="intake-run-ask" disabled>기억에게 묻기</button>
+                <button type="button" data-control="intake-run-decision-replay" disabled>결정 되짚기</button>
+                <button type="button" data-control="intake-run-weekly-report" disabled>주간 패턴</button>
+              </div>
+            </section>
             <button type="button" data-control="intake-run-session" disabled>AI 세션 실행</button>
           </div>
         </section>
@@ -2588,6 +2670,12 @@ const GRAPH_CONTROL_SCRIPT = `
   const intakeSessionResult = document.querySelector('[data-intake-session-result="applied-memory"]');
   const intakeResultTitle = intakeSessionResult?.querySelector('[data-intake-result-title]');
   const intakeResultSummary = intakeSessionResult?.querySelector('[data-intake-result-summary]');
+  const intakeRelatedBundle = document.querySelector('[data-intake-related-bundle="past-memory-nodes"]');
+  const intakeRelatedBundleSummary = intakeRelatedBundle?.querySelector('[data-intake-related-bundle-summary]');
+  const intakeRelatedBundleList = intakeRelatedBundle?.querySelector('[data-intake-related-bundle-list]');
+  const intakeRunAskButton = document.querySelector('[data-control="intake-run-ask"]');
+  const intakeRunReplayButton = document.querySelector('[data-control="intake-run-decision-replay"]');
+  const intakeRunWeeklyButton = document.querySelector('[data-control="intake-run-weekly-report"]');
   const intakeRunSessionButton = document.querySelector('[data-control="intake-run-session"]');
   const intakeActions = Array.from(document.querySelectorAll('[data-intake-action]'));
   const firstRunGuideActions = Array.from(document.querySelectorAll('[data-guide-action]'));
@@ -3042,9 +3130,53 @@ const GRAPH_CONTROL_SCRIPT = `
     }
   };
 
+  const renderIntakeRelatedBundle = () => {
+    if (!intakeRelatedBundle || !intakeRelatedBundleList) return [];
+    const related = Array.from(relatedMemoryList?.querySelectorAll('[data-related-memory-id]') || [])
+      .slice(0, 3)
+      .map((item) => ({
+        id: item.getAttribute('data-related-memory-id') || '',
+        title: item.querySelector('strong')?.textContent || item.getAttribute('data-related-memory-id') || '관련 기억',
+        reason: item.querySelector('span')?.textContent || '그래프에서 연결됨',
+      }))
+      .filter((item) => item.id);
+    intakeRelatedBundle?.setAttribute('data-intake-related-bundle-count', String(related.length));
+    intakeRelatedBundle?.setAttribute('data-intake-related-memory-ids', related.map((item) => item.id).join(','));
+    if (intakeRelatedBundleSummary) {
+      intakeRelatedBundleSummary.textContent = related.length
+        ? '현재 일기와 연결된 과거 기억 ' + String(related.length) + '개'
+        : '아직 연결된 과거 기억을 찾는 중이다';
+    }
+    intakeRelatedBundleList.replaceChildren();
+    related.forEach((item) => {
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'memory-intake-related-chip';
+      chip.setAttribute('data-intake-related-memory-id', item.id);
+      chip.setAttribute('data-intake-related-reason', item.reason);
+      chip.innerHTML =
+        '<strong>' +
+        escapeText(item.title) +
+        '</strong><span>' +
+        escapeText(item.reason) +
+        '</span>';
+      chip.addEventListener('click', () => {
+        selectMemoryByCitation(item.id);
+        setInteractionState('intake-related-memory-selected');
+      });
+      intakeRelatedBundleList.append(chip);
+    });
+    [intakeRunAskButton, intakeRunReplayButton, intakeRunWeeklyButton, intakeRunSessionButton].forEach((button) => {
+      if (related.length) button?.removeAttribute('disabled');
+    });
+    return related;
+  };
+
   const updateIntakeSessionResult = (appliedMemoryId) => {
     if (!intakeSessionResult || !appliedMemoryId) return;
+    const related = renderIntakeRelatedBundle();
     const relatedCount =
+      String(related.length || '') ||
       shell.getAttribute('data-import-session-related-memory-count') ||
       shell.getAttribute('data-related-memory-count') ||
       '0';
@@ -4766,6 +4898,18 @@ const GRAPH_CONTROL_SCRIPT = `
   replayWithRelatedMemoryButton?.addEventListener('click', replayWithRelatedMemoryContext);
   reportWithRelatedMemoryButton?.addEventListener('click', reportWithRelatedMemoryContext);
   runMemorySessionButton?.addEventListener('click', () => void runMemorySession());
+  intakeRunAskButton?.addEventListener('click', () => {
+    memoryIntakeHub?.setAttribute('data-intake-last-ai-action', 'ask');
+    askWithRelatedMemoryContext();
+  });
+  intakeRunReplayButton?.addEventListener('click', () => {
+    memoryIntakeHub?.setAttribute('data-intake-last-ai-action', 'decision-replay');
+    replayWithRelatedMemoryContext();
+  });
+  intakeRunWeeklyButton?.addEventListener('click', () => {
+    memoryIntakeHub?.setAttribute('data-intake-last-ai-action', 'weekly-report');
+    reportWithRelatedMemoryContext();
+  });
   intakeRunSessionButton?.addEventListener('click', () => {
     intakeSessionResult?.setAttribute('data-intake-next-step', 'memory-session-running');
     memoryIntakeHub?.setAttribute('data-intake-next-step', 'memory-session-running');
