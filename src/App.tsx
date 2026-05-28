@@ -4261,6 +4261,7 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
             <label for="intake-diary-draft">오늘의 일기를 바로 붙여넣기</label>
             <textarea id="intake-diary-draft" data-control="intake-diary-draft" placeholder="오늘의 일기를 바로 붙여넣기"></textarea>
             <div class="memory-intake-draft-actions">
+              <button type="button" data-control="intake-quick-save-diary" data-intake-quick-save-endpoint="/api/capture">바로 기억으로 저장</button>
               <button type="button" data-control="intake-preview-diary">미리보기 만들기</button>
               <button type="button" data-control="intake-apply-diary">그래프에 적용</button>
             </div>
@@ -4753,6 +4754,7 @@ const GRAPH_CONTROL_SCRIPT = `
   const diaryInbox = document.querySelector('[data-diary-inbox="app-web-diary-sources"]');
   const diaryInboxItems = Array.from(document.querySelectorAll('[data-control="diary-inbox-select-memory"]'));
   const intakeDiaryDraft = document.querySelector('[data-control="intake-diary-draft"]');
+  const intakeQuickSaveDiaryButton = document.querySelector('[data-control="intake-quick-save-diary"]');
   const intakePreviewDiaryButton = document.querySelector('[data-control="intake-preview-diary"]');
   const intakeApplyDiaryButton = document.querySelector('[data-control="intake-apply-diary"]');
   const intakeFindNotionSourceButton = document.querySelector('[data-control="intake-find-notion-source"]');
@@ -8988,6 +8990,66 @@ const GRAPH_CONTROL_SCRIPT = `
     memoryIntakeHub?.setAttribute('data-intake-draft-length', String(intakeDiaryDraft.value.trim().length));
     return Boolean(intakeDiaryDraft.value.trim());
   };
+  const quickSaveIntakeDiary = async () => {
+    if (!intakeDiaryDraft || !memoryIntakeHub) return;
+    const text = intakeDiaryDraft.value.trim();
+    if (!text) {
+      memoryIntakeHub.setAttribute('data-intake-draft-state', 'empty');
+      memoryIntakeHub.setAttribute('data-intake-quick-save-state', 'empty');
+      setInteractionState('intake-diary-draft-empty');
+      return;
+    }
+    memoryIntakeHub.setAttribute('data-intake-last-action', 'quick-save-diary');
+    memoryIntakeHub.setAttribute('data-intake-draft-state', 'saving');
+    memoryIntakeHub.setAttribute('data-intake-quick-save-state', 'saving');
+    updateDiaryGraphHandoffMap({ route: 'web-paste-diary', stage: 'saving', aiState: 'idle', savebackState: 'idle' });
+    updateIntakeGraphStatusBoard({ route: 'web-paste-diary', nextAction: 'save-to-graph', aiState: 'idle', saveState: 'idle' });
+    try {
+      const response = await fetch('/api/capture', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          text,
+          capturedAt: new Date().toISOString(),
+          sourceRef: 'web-first-screen://diary-intake',
+          deviceId: 'web-first-screen',
+          emotionHints: [],
+          projectHints: ['personal-memory-ai'],
+          topicHints: ['web diary quick save'],
+          decisionHint: 'none',
+        }),
+      });
+      if (!response.ok) throw new Error('quick diary save failed with ' + response.status);
+      const body = await response.json().catch(() => ({}));
+      const savedMemoryId = body.createdMemoryIds?.[0] || body.record?.id || '';
+      if (!savedMemoryId) throw new Error('quick diary save did not return a memory id');
+      memoryIntakeHub.setAttribute('data-intake-quick-saved-memory', savedMemoryId);
+      memoryIntakeHub.setAttribute('data-intake-result', 'quick-saved');
+      shell.setAttribute('data-intake-quick-saved-memory', savedMemoryId);
+      updateIntakeSessionResult(savedMemoryId);
+      await rehydrateAppShellAfterImport(savedMemoryId);
+      updateIntakeSessionResult(savedMemoryId);
+      updateUseNowRouteBoard({
+        state: 'related',
+        sourceMemoryId: savedMemoryId,
+        relatedCount: shell.getAttribute('data-related-memory-count') || memoryIntakeHub.getAttribute('data-intake-related-memory-count') || '0',
+        aiState: 'ready',
+        saveState: 'idle',
+      });
+      memoryIntakeHub?.setAttribute('data-intake-quick-save-state', 'saved');
+      memoryIntakeHub.setAttribute('data-intake-draft-state', 'saved');
+      setInteractionState('intake-quick-diary-saved');
+    } catch (error) {
+      memoryIntakeHub.setAttribute('data-intake-quick-save-state', 'error');
+      memoryIntakeHub.setAttribute('data-intake-draft-state', 'error');
+      shell.setAttribute('data-intake-quick-save-error', String(error?.message || error));
+      updateDiaryGraphHandoffMap({ route: 'web-paste-diary', stage: 'error', aiState: 'idle', savebackState: 'idle' });
+      setInteractionState('intake-quick-diary-save-error');
+    }
+  };
+  intakeQuickSaveDiaryButton?.addEventListener('click', () => {
+    void quickSaveIntakeDiary();
+  });
   intakePreviewDiaryButton?.addEventListener('click', () => {
     if (!syncIntakeDraftToImportPaste()) {
       memoryIntakeHub?.setAttribute('data-intake-draft-state', 'empty');

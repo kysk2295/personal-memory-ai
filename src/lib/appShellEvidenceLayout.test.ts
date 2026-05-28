@@ -649,6 +649,9 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('data-intake-last-action="none"');
     expect(html).toContain('data-intake-draft-state="idle"');
     expect(html).toContain('data-control="intake-diary-draft"');
+    expect(html).toContain('data-control="intake-quick-save-diary"');
+    expect(html).toContain('data-intake-quick-save-endpoint="/api/capture"');
+    expect(html).toContain('바로 기억으로 저장');
     expect(html).toContain('data-intake-session-result="applied-memory"');
     expect(html).toContain('data-control="intake-run-session"');
     expect(html).toContain('data-memory-session-outcome-board="guided-ai-session"');
@@ -1056,6 +1059,11 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(documentHtml).toContain('importApplyButton?.click()');
     expect(documentHtml).toContain("timelinePanel?.querySelectorAll('[data-control=\"timeline-select-memory\"]')");
     expect(documentHtml).toContain("memoryIntakeHub?.setAttribute('data-intake-applied-memory', appliedMemoryId)");
+    expect(documentHtml).toContain('const quickSaveIntakeDiary = async () =>');
+    expect(documentHtml).toContain("fetch('/api/capture'");
+    expect(documentHtml).toContain("sourceRef: 'web-first-screen://diary-intake'");
+    expect(documentHtml).toContain("memoryIntakeHub?.setAttribute('data-intake-quick-save-state', 'saved')");
+    expect(documentHtml).toContain("setInteractionState('intake-quick-diary-saved')");
     expect(documentHtml).toContain("memoryIntakeHub?.setAttribute('data-intake-next-step', 'memory-session-ready')");
     expect(documentHtml).toContain('const setIntakeFlowStepState =');
     expect(documentHtml).toContain("const intakeGraphStatusBoard = document.querySelector('[data-intake-graph-status-board=\"diary-to-graph\"]')");

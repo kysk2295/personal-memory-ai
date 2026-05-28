@@ -207,6 +207,8 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   assert((await attribute(page, '[data-memory-intake-hub="app-web-diary"]', 'data-intake-result')) === 'graph-handoff', 'Diary intake hub should advertise graph handoff');
   assert((await attribute(page, '[data-intake-action="quick-capture"]', 'href'))?.endsWith('/capture/'), 'Intake quick capture should open capture app');
   assert((await page.locator('[data-control="intake-diary-draft"]').count()) === 1, 'Expected first-screen web diary draft textarea');
+  assert((await page.locator('[data-control="intake-quick-save-diary"]').count()) === 1, 'Expected first-screen web diary quick save action');
+  assert((await attribute(page, '[data-control="intake-quick-save-diary"]', 'data-intake-quick-save-endpoint')) === '/api/capture', 'First-screen quick save should target capture API');
   assert((await page.locator('[data-control="intake-preview-diary"]').count()) === 1, 'Expected first-screen web diary preview action');
   assert((await page.locator('[data-control="intake-apply-diary"]').count()) === 1, 'Expected first-screen web diary apply action');
   assert((await page.locator('[data-control="intake-find-notion-source"]').count()) === 1, 'Expected first-screen Notion source discovery action');
@@ -318,14 +320,41 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
     'Intake result should explain the Notion gate or preview state in Korean',
   );
   const intakeDraft = `오늘 회의에서 또 혼자 해결하려는 마음이 올라왔다 ${Date.now()}`;
-  await page.locator('[data-control="intake-diary-draft"]').fill(intakeDraft);
-  await page.locator('[data-control="intake-apply-diary"]').click();
+  const quickSaveDraft = `오늘 바로 저장 테스트 ${Date.now()} 때문에 세컨브레인 연결을 먼저 확인했다`;
+  await page.locator('[data-control="intake-diary-draft"]').fill(quickSaveDraft);
+  await page.locator('[data-control="intake-quick-save-diary"]').click();
   await page.waitForFunction(
     () =>
-      document.querySelector('[data-import-upload-panel="local-file"]')?.getAttribute('data-import-upload-state') === 'applied' &&
-      document.querySelector('[data-memory-intake-hub="app-web-diary"]')?.getAttribute('data-intake-draft-state') === 'applied' &&
+      document.querySelector('[data-memory-intake-hub="app-web-diary"]')?.getAttribute('data-intake-quick-save-state') === 'saved' &&
       (document.querySelector('[data-intake-session-result="applied-memory"]')?.getAttribute('data-intake-applied-memory') || '') !== 'none',
   );
+  const quickSavedMemoryId = await attribute(page, '[data-memory-intake-hub="app-web-diary"]', 'data-intake-quick-saved-memory');
+  assert(Boolean(quickSavedMemoryId), 'First-screen quick save should expose the saved memory id');
+  assert((await attribute(page, '[data-memory-intake-hub="app-web-diary"]', 'data-intake-last-action')) === 'quick-save-diary', 'First-screen quick save should update hub action state');
+  assert((await attribute(page, '[data-memory-intake-hub="app-web-diary"]', 'data-intake-result')) === 'quick-saved', 'First-screen quick save should mark quick-saved result');
+  assert((await attribute(page, '[data-use-now-route-board="live"]', 'data-use-now-route-memory')) === quickSavedMemoryId, 'Use-now route board should follow the quick-saved memory');
+  assert((await attribute(page, '[data-use-now-route-board="live"]', 'data-use-now-route-state')) === 'related', 'Use-now route board should move to related after quick save');
+  assert((await attribute(page, '[data-korean-ai-workbench="selected-or-imported-memory"]', 'data-workbench-selected-memory')) === quickSavedMemoryId, 'Korean workbench should follow quick-saved memory');
+  assert(Number(await attribute(page, '[data-korean-ai-workbench="selected-or-imported-memory"]', 'data-workbench-related-count')) > 0, 'Quick-saved memory should expose related count in workbench');
+  assert((await attribute(page, '.second-brain-shell', 'data-interaction-state')) === 'intake-quick-diary-saved', 'First-screen quick save should expose completion interaction state');
+
+  await page.locator('[data-control="intake-diary-draft"]').fill(intakeDraft);
+  await page.locator('[data-control="intake-apply-diary"]').click();
+  await page.waitForFunction((previousMemoryId) => {
+    const uploadState = document.querySelector('[data-import-upload-panel="local-file"]')?.getAttribute('data-import-upload-state');
+    const draftState = document.querySelector('[data-memory-intake-hub="app-web-diary"]')?.getAttribute('data-intake-draft-state');
+    const appliedMemoryId = document.querySelector('[data-intake-session-result="applied-memory"]')?.getAttribute('data-intake-applied-memory') || '';
+    const workbenchMemoryId = document
+      .querySelector('[data-korean-ai-workbench="selected-or-imported-memory"]')
+      ?.getAttribute('data-workbench-selected-memory');
+    return (
+      uploadState === 'applied' &&
+      draftState === 'applied' &&
+      appliedMemoryId !== 'none' &&
+      appliedMemoryId !== previousMemoryId &&
+      workbenchMemoryId === appliedMemoryId
+    );
+  }, quickSavedMemoryId);
   assert((await attribute(page, '[data-memory-intake-hub="app-web-diary"]', 'data-intake-last-action')) === 'apply-diary', 'Intake draft apply should update hub action state');
   assert((await attribute(page, '[data-memory-intake-hub="app-web-diary"]', 'data-intake-result')) === 'graph-applied', 'Intake draft apply should mark the first-screen handoff as graph-applied');
   assert((await page.locator('[data-control="local-import-paste-text"]').inputValue()) === intakeDraft, 'Intake draft should sync into the private import paste field');
