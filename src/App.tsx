@@ -3087,6 +3087,30 @@ const APP_SHELL_STYLES = `
     font-size: 0.72rem;
     line-height: 1.35;
   }
+  .use-now-route-path {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 5px;
+  }
+  .use-now-route-path span {
+    min-width: 0;
+    display: grid;
+    gap: 2px;
+    padding: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.035);
+    color: #a9a9b0;
+    font-size: 0.64rem;
+    line-height: 1.25;
+  }
+  .use-now-route-path strong {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #efeff2;
+    font-size: 0.68rem;
+  }
   .use-now-route-actions {
     display: grid;
     grid-template-columns: 1fr;
@@ -4158,6 +4182,11 @@ export function renderAppShellHtml(variant: RenderVariant = 'full'): string {
               <span data-use-now-route-label="save"><strong>미래 기억 저장</strong><span data-use-now-route-save-label>대기</span></span>
             </div>
             <span class="use-now-route-next" data-use-now-route-next-label>일기를 쓰거나 가져오면 이 경로가 그래프와 AI 작업대로 이어진다.</span>
+            <div class="use-now-route-path" data-use-now-route-path="related-memory" data-use-now-route-path-state="empty" data-use-now-route-path-source="${escapeHtml(currentFlowMemoryId)}" data-use-now-route-path-related-count="0" aria-label="현재 기억과 과거 기억 연결 경로">
+              <span><em>현재</em><strong data-use-now-route-path-current>${escapeHtml(currentFlowMemoryId)}</strong></span>
+              <span><em>이유</em><strong data-use-now-route-path-reason>연결 이유 없음</strong></span>
+              <span><em>과거</em><strong data-use-now-route-path-past>연관 과거 기억 없음</strong></span>
+            </div>
             <div class="use-now-route-actions" aria-label="오늘 바로 쓰기 직접 실행">
               <button type="button" data-use-now-action="focus-graph">그래프에서 연결 보기</button>
               <button type="button" data-use-now-action="run-ai">AI 작업대 실행</button>
@@ -4685,6 +4714,10 @@ const GRAPH_CONTROL_SCRIPT = `
   const useNowRouteAiLabel = useNowRouteBoard?.querySelector('[data-use-now-route-ai-label]');
   const useNowRouteSaveLabel = useNowRouteBoard?.querySelector('[data-use-now-route-save-label]');
   const useNowRouteNextLabel = useNowRouteBoard?.querySelector('[data-use-now-route-next-label]');
+  const useNowRoutePath = useNowRouteBoard?.querySelector('[data-use-now-route-path="related-memory"]');
+  const useNowRoutePathCurrent = useNowRouteBoard?.querySelector('[data-use-now-route-path-current]');
+  const useNowRoutePathReason = useNowRouteBoard?.querySelector('[data-use-now-route-path-reason]');
+  const useNowRoutePathPast = useNowRouteBoard?.querySelector('[data-use-now-route-path-past]');
   const useNowRouteOpenSavedButton = useNowRouteBoard?.querySelector('[data-use-now-action="open-saved-memory"]');
   const useNowRouteActions = Array.from(document.querySelectorAll('[data-use-now-action]'));
   const workflowSections = Array.from(document.querySelectorAll('[data-workflow-section]'));
@@ -4968,6 +5001,7 @@ const GRAPH_CONTROL_SCRIPT = `
     if (useNowRouteAiLabel) useNowRouteAiLabel.textContent = useNowAiStateLabels[aiState] || aiState;
     if (useNowRouteSaveLabel) useNowRouteSaveLabel.textContent = useNowSaveStateLabels[saveState] || saveState;
     if (useNowRouteNextLabel) useNowRouteNextLabel.textContent = routeStateCopy[state] || routeStateCopy.capture;
+    if (useNowRoutePathCurrent) useNowRoutePathCurrent.textContent = selectedMemory || '대기';
     if (useNowRouteOpenSavedButton) {
       useNowRouteOpenSavedButton.setAttribute('data-use-now-action-enabled', String(reentryState === 'ready'));
       useNowRouteOpenSavedButton.toggleAttribute('disabled', reentryState !== 'ready');
@@ -5725,6 +5759,12 @@ const GRAPH_CONTROL_SCRIPT = `
     if (memoryPathReason) memoryPathReason.textContent = related.length ? related[0].reason : '연결 이유 없음';
     if (memoryPathPast) memoryPathPast.textContent = related.length ? related[0].label : '연관 과거 기억 없음';
     if (memoryPathAction) memoryPathAction.textContent = related.length ? '질문/결정/주간/세션' : '먼저 기억 선택';
+    useNowRoutePath?.setAttribute('data-use-now-route-path-state', related.length ? 'ready' : 'empty');
+    useNowRoutePath?.setAttribute('data-use-now-route-path-source', citation);
+    useNowRoutePath?.setAttribute('data-use-now-route-path-related-count', String(related.length));
+    if (useNowRoutePathCurrent) useNowRoutePathCurrent.textContent = citation;
+    if (useNowRoutePathReason) useNowRoutePathReason.textContent = related.length ? related[0].reason : '연결 이유 없음';
+    if (useNowRoutePathPast) useNowRoutePathPast.textContent = related.length ? related[0].label : '연관 과거 기억 없음';
     relatedInsightBridge?.setAttribute('data-related-insight-source', citation);
     relatedInsightBridge?.setAttribute('data-related-insight-count', String(related.length));
     if (relatedInsightReasonList) {

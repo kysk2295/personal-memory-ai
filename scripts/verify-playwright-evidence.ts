@@ -782,6 +782,18 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
     (await attribute(page, '[data-inspector-panel="pmi015"]', 'data-selected-memory')) === savedIntakeAiMemoryId,
     'Saved-memory reentry should open the saved future memory in the detail inspector',
   );
+  assert(
+    (await attribute(page, '[data-use-now-route-path="related-memory"]', 'data-use-now-route-path-state')) === 'ready',
+    'Saved-memory reentry should populate the route-board related path strip',
+  );
+  assert(
+    (await attribute(page, '[data-use-now-route-path="related-memory"]', 'data-use-now-route-path-source')) === savedIntakeAiMemoryId,
+    'Route-board related path strip should point at the saved future memory',
+  );
+  assert(
+    Number(await attribute(page, '[data-use-now-route-path="related-memory"]', 'data-use-now-route-path-related-count')) > 0,
+    'Route-board related path strip should expose related past-memory count',
+  );
   await page.locator('[data-control="intake-run-session"]').click();
   await page.waitForFunction(
     () => document.querySelector('.second-brain-shell')?.getAttribute('data-memory-session-state') === 'completed',

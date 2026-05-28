@@ -557,6 +557,8 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('data-use-now-action="save-result"');
     expect(html).toContain('data-use-now-action="open-saved-memory"');
     expect(html).toContain('data-use-now-route-reentry-state="disabled"');
+    expect(html).toContain('data-use-now-route-path="related-memory"');
+    expect(html).toContain('data-use-now-route-path-state="empty"');
     expect(documentHtml).toContain('.product-value-strip[data-command-shelf="graph-led"]');
     expect(documentHtml).toContain('.use-now-command-strip');
     expect(documentHtml).toContain('.use-now-route-board');
@@ -1091,6 +1093,9 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(documentHtml).toContain("useNowRouteBoard?.setAttribute('data-use-now-route-ai-state'");
     expect(documentHtml).toContain("useNowRouteBoard?.setAttribute('data-use-now-route-save-state'");
     expect(documentHtml).toContain("useNowRouteBoard?.setAttribute('data-use-now-route-reentry-state'");
+    expect(documentHtml).toContain("useNowRoutePath?.setAttribute('data-use-now-route-path-state'");
+    expect(documentHtml).toContain("useNowRoutePath?.setAttribute('data-use-now-route-path-source', citation)");
+    expect(documentHtml).toContain("useNowRoutePathReason.textContent = related.length ? related[0].reason : '연결 이유 없음'");
     expect(documentHtml).toContain("const reentryState = saveState === 'saved' && selectedMemory ? 'ready' : 'disabled'");
     expect(documentHtml).toContain("shell.setAttribute('data-use-now-route-state'");
     expect(documentHtml).toContain("updateUseNowRouteBoard({");
