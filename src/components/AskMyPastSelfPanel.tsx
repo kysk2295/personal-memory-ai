@@ -38,7 +38,7 @@ export function renderAskMyPastSelfPanel(layout: InitialAppShellEvidenceLayout):
     <p class="section-intro">The first question stays emotionally legible, but the answer is still bounded to memory evidence instead of generic coaching.</p>
     <div class="ask-question-row">
       <label for="ask-my-past-self-question">Question</label>
-      <input id="ask-my-past-self-question" type="text" value="${escapeHtml(layout.askQuestion)}" readonly />
+      <input id="ask-my-past-self-question" type="text" name="question" value="${escapeHtml(layout.askQuestion)}" />
       <button type="button">Ask</button>
     </div>
     <article class="ask-answer-cited">

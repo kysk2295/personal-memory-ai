@@ -167,6 +167,16 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
     const askCitationCount = Number(await attribute(page, '.second-brain-shell', 'data-ask-citation-count'));
     assert(Number.isFinite(askCitationCount), 'Expected live Ask response to expose a citation count marker');
     assert((await attribute(page, '.second-brain-shell', 'data-ask-evidence-label')).length > 0, 'Expected live Ask response to expose an evidence label');
+    assert((await attribute(page, '.second-brain-shell', 'data-ask-conversation-mode')) === 'single_turn', 'Expected first live Ask response to start a single-turn context');
+    await page.locator('#ask-memory-bar-question').fill('그럼 오늘 뭘 먼저 해야 해?');
+    await page.locator('[data-control="ask-second-brain"]').click();
+    await page.waitForFunction(
+      () => document.querySelector('.second-brain-shell')?.getAttribute('data-ask-conversation-mode') === 'follow_up',
+      null,
+      { timeout: 10_000 },
+    );
+    assert((await attribute(page, '.second-brain-shell', 'data-ask-conversation-mode')) === 'follow_up', 'Expected second live Ask response to use follow-up context');
+    assert(Number(await attribute(page, '.second-brain-shell', 'data-ask-citation-count')) >= askCitationCount, 'Expected follow-up Ask to preserve citation context');
   }
   await page.waitForFunction(() => {
     const graph = document.querySelector('#memory-graph-cytoscape');
@@ -448,6 +458,7 @@ try {
           'data-derived graph stats',
           'remote memory search api',
           'live ask api response',
+          'live ask follow-up context',
           'saved artifact action',
           'saved artifact persistence manifest',
           'feedback correction action',
