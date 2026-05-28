@@ -92,6 +92,68 @@ describe('notion import connector', () => {
     expect(candidates[0]?.sourceRef).toBe('notion://data-source/db_launch/page/page-1');
   });
 
+  test('includes Notion page child block text in import candidates without exposing the token', async () => {
+    const calls: Array<{ url: string; init: { method?: string; headers?: Record<string, string>; body?: string } }> = [];
+    const fetchNotion = async (url: string, init: { method?: string; headers?: Record<string, string>; body?: string }) => {
+      calls.push({ url, init });
+      if (url.includes('/blocks/page-1/children')) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            results: [
+              {
+                object: 'block',
+                type: 'paragraph',
+                paragraph: {
+                  rich_text: [{ plain_text: 'The full diary body lives in a Notion page block.' }],
+                },
+              },
+              {
+                object: 'block',
+                type: 'bulleted_list_item',
+                bulleted_list_item: {
+                  rich_text: [{ plain_text: 'Evidence note: I chose to keep the scope frozen.' }],
+                },
+              },
+            ],
+          }),
+        };
+      }
+      return {
+        ok: true,
+        status: 200,
+        json: async () => notionQueryResponse,
+      };
+    };
+
+    const candidates = await queryNotionDatabaseImportCandidates({
+      databaseId: 'db_launch',
+      notionToken: 'secret_live_token',
+      createdAt: '2026-05-28T00:00:00.000Z',
+      fetchNotion,
+    });
+
+    expect(calls.map((call) => call.url)).toEqual([
+      'https://api.notion.com/v1/data_sources/db_launch/query',
+      'https://api.notion.com/v1/blocks/page-1/children?page_size=50',
+    ]);
+    expect(calls[1]?.init).toEqual(
+      expect.objectContaining({
+        method: 'GET',
+        headers: expect.objectContaining({
+          authorization: 'Bearer secret_live_token',
+          'notion-version': '2025-09-03',
+        }),
+      }),
+    );
+    expect(candidates[0]?.rawText).toContain('Launch scope journal');
+    expect(candidates[0]?.rawText).toContain('Reflection: I felt anxious and chose to freeze the feature list.');
+    expect(candidates[0]?.rawText).toContain('The full diary body lives in a Notion page block.');
+    expect(candidates[0]?.rawText).toContain('Evidence note: I chose to keep the scope frozen.');
+    expect(JSON.stringify(candidates)).not.toContain('secret_live_token');
+  });
+
   test('lists accessible Notion import sources without exposing the token', async () => {
     const calls: Array<{ url: string; init: { method?: string; headers?: Record<string, string>; body?: string } }> = [];
     const fetchNotion = async (url: string, init: { method?: string; headers?: Record<string, string>; body?: string }) => {

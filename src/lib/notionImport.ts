@@ -12,6 +12,7 @@ export interface BuildNotionImportCandidatesInput {
   databaseId: string;
   pages: readonly NotionImportPage[];
   createdAt: string;
+  pageBlocksByPageId?: Record<string, readonly NotionImportBlock[]>;
 }
 
 export interface NotionFetchResponse {
@@ -20,7 +21,10 @@ export interface NotionFetchResponse {
   json: () => Promise<unknown>;
 }
 
-export type NotionFetch = (url: string, init: { method: string; headers: Record<string, string>; body: string }) => Promise<NotionFetchResponse>;
+export type NotionFetch = (
+  url: string,
+  init: { method: string; headers: Record<string, string>; body?: string },
+) => Promise<NotionFetchResponse>;
 
 export interface QueryNotionDatabaseImportCandidatesInput {
   databaseId: string;
@@ -35,6 +39,22 @@ export interface NotionImportSource {
   title: string;
   object: 'data_source' | 'database';
   url?: string;
+}
+
+export interface NotionImportBlock {
+  object?: string;
+  type?: string;
+  paragraph?: { rich_text?: unknown };
+  heading_1?: { rich_text?: unknown };
+  heading_2?: { rich_text?: unknown };
+  heading_3?: { rich_text?: unknown };
+  bulleted_list_item?: { rich_text?: unknown };
+  numbered_list_item?: { rich_text?: unknown };
+  quote?: { rich_text?: unknown };
+  callout?: { rich_text?: unknown };
+  to_do?: { rich_text?: unknown };
+  toggle?: { rich_text?: unknown };
+  code?: { rich_text?: unknown };
 }
 
 export interface QueryNotionImportSourcesInput {
@@ -117,14 +137,31 @@ function rawTextFromProperties(title: string, properties: Record<string, unknown
   return Array.from(new Set(lines)).join('\n');
 }
 
+function textFromBlock(block: NotionImportBlock): string[] {
+  if (!block.type) return [];
+  const blockValue = block[block.type as keyof NotionImportBlock];
+  if (!isRecord(blockValue)) return [];
+  return plainTextList(blockValue.rich_text);
+}
+
+function rawTextFromBlocks(blocks: readonly NotionImportBlock[]): string {
+  return blocks
+    .flatMap(textFromBlock)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .join('\n');
+}
+
 export function buildNotionImportCandidates(input: BuildNotionImportCandidatesInput): ImportPreviewCandidate[] {
   return input.pages
     .map((page, index): ImportPreviewCandidate | null => {
       const properties = page.properties ?? {};
       const title = titleFromProperties(properties) ?? `Notion page ${index + 1}`;
-      const rawText = rawTextFromProperties(title, properties);
-      if (!rawText.trim()) return null;
       const pageId = page.id ?? `page-${index + 1}`;
+      const rawText = [rawTextFromProperties(title, properties), rawTextFromBlocks(input.pageBlocksByPageId?.[pageId] ?? [])]
+        .filter((section) => section.trim())
+        .join('\n');
+      if (!rawText.trim()) return null;
       return {
         sourceType: 'notion',
         sourceRef: `notion://data-source/${input.databaseId}/page/${pageId}`,
@@ -140,6 +177,25 @@ export function buildNotionImportCandidates(input: BuildNotionImportCandidatesIn
       };
     })
     .filter((candidate): candidate is ImportPreviewCandidate => Boolean(candidate));
+}
+
+async function queryNotionPageBlocks(input: {
+  pageId: string;
+  notionToken: string;
+  fetchNotion: NotionFetch;
+}): Promise<NotionImportBlock[]> {
+  const response = await input.fetchNotion(`https://api.notion.com/v1/blocks/${input.pageId}/children?page_size=50`, {
+    method: 'GET',
+    headers: {
+      authorization: `Bearer ${input.notionToken}`,
+      'notion-version': '2025-09-03',
+      'content-type': 'application/json',
+    },
+  });
+  if (!response.ok) throw new Error(`notion_blocks_failed:${response.status}`);
+  const body = await response.json();
+  const blocks = isRecord(body) && Array.isArray(body.results) ? body.results : [];
+  return blocks.filter((block): block is NotionImportBlock => isRecord(block));
 }
 
 export async function queryNotionDatabaseImportCandidates(
@@ -159,10 +215,27 @@ export async function queryNotionDatabaseImportCandidates(
   if (!response.ok) throw new Error(`notion_query_failed:${response.status}`);
   const body = await response.json();
   const pages = isRecord(body) && Array.isArray(body.results) ? body.results : [];
+  const validPages = pages.filter((page): page is NotionImportPage => isRecord(page));
+  const pageBlocksByPageId: Record<string, NotionImportBlock[]> = {};
+  await Promise.all(
+    validPages.map(async (page) => {
+      if (!page.id) return;
+      try {
+        pageBlocksByPageId[page.id] = await queryNotionPageBlocks({
+          pageId: page.id,
+          notionToken: input.notionToken,
+          fetchNotion,
+        });
+      } catch {
+        pageBlocksByPageId[page.id] = [];
+      }
+    }),
+  );
   return buildNotionImportCandidates({
     databaseId: input.databaseId,
     createdAt: input.createdAt,
-    pages: pages.filter((page): page is NotionImportPage => isRecord(page)),
+    pages: validPages,
+    pageBlocksByPageId,
   });
 }
 

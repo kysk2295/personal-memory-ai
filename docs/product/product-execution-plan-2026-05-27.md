@@ -2,7 +2,7 @@
 
 Status: active local execution plan  
 Owner: Ko Yunseo  
-Updated: 2026-05-28, Notion source discovery
+Updated: 2026-05-28, Notion page block import
 Supersedes for local Codex work: `docs/product/product-master-plan-2026-05-26.md`
 
 ## 1. Product Definition
@@ -106,7 +106,7 @@ Status values:
 | Capture | Mobile/PWA capture UI | `done-foundation` | `/capture/` renders a mobile-first local/private quick diary capture surface. |
 | Capture | Voice capture | `later` | In PRD direction, not MVP-critical. |
 | Capture | Emotion/project/decision hints | `done-foundation` | Data contract exists; full UI still planned. |
-| Import | Notion/Obsidian/Markdown preview | `done-foundation` | Preview/dedupe contract exists. Local files support Markdown/Text/JSON/Obsidian-style exports, and the web/API now expose direct Notion source discovery plus database preview paths gated by the user's Notion integration token. |
+| Import | Notion/Obsidian/Markdown preview | `done-foundation` | Preview/dedupe contract exists. Local files support Markdown/Text/JSON/Obsidian-style exports, and the web/API now expose direct Notion source discovery plus database preview paths gated by the user's Notion integration token. Notion database imports include supported page child block text so body notes are preserved with property metadata. |
 | Import | Apply/undo import state model | `done-foundation` | Batch state model tracks preview, applied, skipped, graph evidence, and undone states. |
 | Import | File upload/import UI | `prototype-ui` | Local Markdown/Text/JSON upload and paste surface can build preview candidates, call owner-scoped preview/apply APIs, and show applied memories in graph/timeline feedback without reload. |
 | Memory Store | Fixture user isolation | `done-foundation` | Tests cover user-scoped records. |
@@ -219,6 +219,7 @@ No remote push, main merge, production deploy, or secret access is allowed witho
 - L50: source review drawer mode polish.
 - L51: direct Notion database import preview.
 - L52: Notion import source discovery.
+- L53: Notion page block import fidelity.
 
 ## 6. Active Next Loops
 
@@ -1063,6 +1064,25 @@ Implemented:
 - `src/lib/appShellEvidenceLayout.test.ts`
 - `src/lib/localHttpTransport.test.ts`
 - `docs/superpowers/plans/2026-05-28-notion-import-source-picker.md`
+
+### L53 — Notion Page Block Import Fidelity
+
+Goal: preserve the actual Notion page body when direct database import previews are built from live Notion data.
+
+Acceptance:
+
+- Notion database query pages fetch first-page child blocks by page id
+- supported child block text is appended to import candidate raw text
+- per-page child block fetch failures fall back to property-only import instead of failing the whole preview
+- Notion token remains server-side and absent from candidate payloads
+- source refs, observed dates, tags, and provenance remain stable
+
+Implemented:
+
+- `src/lib/notionImport.ts`
+- `src/lib/notionImport.test.ts`
+- `TASKS/PMI-053-notion-page-block-import.md`
+- `docs/superpowers/plans/2026-05-28-notion-page-block-import.md`
 
 ## 8. MVP Time Estimate
 
