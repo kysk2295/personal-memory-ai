@@ -431,7 +431,16 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
     ((await attribute(page, '.second-brain-shell', 'data-last-saved-session-memory')) || '').startsWith('mem_api_artifact_memory_session_'),
     'Saved memory session should become a private MemoryRecord',
   );
+  const savedSessionMemoryId = await attribute(page, '.second-brain-shell', 'data-last-saved-session-memory');
   assert((await attribute(page, '.second-brain-shell', 'data-memory-session-save-state')) === 'saved', 'Shell should expose memory session save state');
+  assert((await page.locator('text=Session saved').count()) === 0, 'Saved session CTA should remain Korean');
+  assert((await page.locator('text=세션 저장 완료').count()) === 1, 'Saved session CTA should use Korean copy');
+  assert(
+    (await attribute(page, '[data-intake-session-result="applied-memory"]', 'data-intake-saved-session-memory')) === savedSessionMemoryId,
+    'Intake result panel should expose the saved session memory id',
+  );
+  assert((await attribute(page, '[data-memory-intake-hub="app-web-diary"]', 'data-intake-result')) === 'session-saved', 'Intake hub should mark the flow saved back as memory');
+  assert((await attribute(page, '[data-intake-session-result="applied-memory"]', 'data-intake-next-step')) === 'session-saved', 'Intake result should mark session saveback complete');
   assert((await attribute(page, '.second-brain-shell', 'data-graph-rehydrate-state')) === 'ready', 'Saving memory session should rehydrate graph state');
   await page.locator('[data-control="undo-local-import"]').click();
   await page.waitForFunction(() => document.querySelector('[data-import-upload-panel="local-file"]')?.getAttribute('data-import-upload-state') === 'undone');

@@ -3845,8 +3845,18 @@ const GRAPH_CONTROL_SCRIPT = `
       shell.setAttribute('data-last-saved-session-memory', savedMemoryId);
       await rehydrateAppShellAfterImport(savedMemoryId);
       shell.setAttribute('data-memory-session-save-state', 'saved');
+      intakeSessionResult?.setAttribute('data-intake-saved-session-memory', savedMemoryId);
+      intakeSessionResult?.setAttribute('data-intake-next-step', 'session-saved');
+      memoryIntakeHub?.setAttribute('data-intake-result', 'session-saved');
+      memoryIntakeHub?.setAttribute('data-intake-saved-session-memory', savedMemoryId);
+      memoryIntakeHub?.setAttribute('data-intake-next-step', 'session-saved');
+      if (intakeResultTitle) intakeResultTitle.textContent = 'AI 세션이 미래 기억으로 저장됐다';
+      if (intakeResultSummary) {
+        intakeResultSummary.textContent =
+          savedMemoryId + ' 기억으로 저장됐다. 다음 질문과 결정 되짚기는 이 세션도 과거 근거로 다시 불러올 수 있다.';
+      }
       memorySessionSaveButton.setAttribute('data-artifact-save-state', 'saved');
-      memorySessionSaveButton.textContent = 'Session saved';
+      memorySessionSaveButton.textContent = '세션 저장 완료';
       setInteractionState('memory-session-saved');
     } catch (error) {
       shell.setAttribute('data-memory-session-save-state', 'error');

@@ -733,6 +733,10 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(documentHtml).toContain("memoryIntakeHub?.setAttribute('data-intake-next-step', 'memory-session-ready')");
     expect(documentHtml).toContain("intakeRunSessionButton?.removeAttribute('disabled')");
     expect(documentHtml).toContain("intakeRunSessionButton?.addEventListener('click'");
+    expect(documentHtml).toContain("intakeSessionResult?.setAttribute('data-intake-saved-session-memory', savedMemoryId)");
+    expect(documentHtml).toContain("memoryIntakeHub?.setAttribute('data-intake-result', 'session-saved')");
+    expect(documentHtml).toContain("memorySessionSaveButton.textContent = '세션 저장 완료'");
+    expect(documentHtml).not.toContain("memorySessionSaveButton.textContent = 'Session saved'");
     expect(documentHtml).toContain("setInteractionState('intake-paste-diary-focused')");
     expect(documentHtml).toContain("setInteractionState('intake-notion-diary-ready')");
     expect(documentHtml).toContain('const applyMemorySearch = (query) =>');
