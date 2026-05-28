@@ -66,7 +66,7 @@ describe('citation constrained generation', () => {
     });
   });
 
-  test('falls back to insufficient evidence when generated output is generic or uncited', async () => {
+  test('falls back to 근거 부족 when generated output is generic or uncited', async () => {
     const generic = await generateCitationConstrainedOutput({
       task: 'ask',
       userInput: '이번에도 기능을 더 넣어야 할까?',
@@ -81,7 +81,7 @@ describe('citation constrained generation', () => {
       status: 'implemented',
       evidenceLabel: 'insufficient_evidence',
       output: {
-        answer: 'insufficient evidence: generated output was rejected because it was not grounded in supplied citations.',
+        answer: '근거 부족: 생성 결과가 제공된 인용에 근거하지 않아 거절되었습니다.',
         citationMemoryIds: [],
       },
       rejectionReason: 'Output must include at least one citation id.',

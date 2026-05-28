@@ -21,18 +21,18 @@ describe('memory retrieval contract', () => {
     expect(result.status).toBe('implemented');
     expect(result.evidenceLabel).toBe('sufficient_evidence');
     expect(result.retrievedMemoryIds).toEqual([
-      'mem_launch_june_anxiety_scope_delay',
-      'mem_launch_may_anxiety_scope_delay',
       'mem_freeze_vs_feature_addition',
+      'mem_launch_may_anxiety_scope_delay',
+      'mem_launch_june_anxiety_scope_delay',
     ]);
     expect(result.retrievedMemories[0]).toMatchObject({
-      memory: expect.objectContaining({ id: 'mem_launch_june_anxiety_scope_delay' }),
-      matchedTerms: expect.arrayContaining(['anxiety', 'launch']),
+      memory: expect.objectContaining({ id: 'mem_freeze_vs_feature_addition' }),
+      matchedTerms: expect.arrayContaining(['anxiety', 'launch', 'delay']),
     });
     expect(result.retrievedMemoryIds).not.toContain('mem_unrelated_calm_import');
   });
 
-  test('retrieves only one user memories from MemoryStore and reports insufficient evidence explicitly', async () => {
+  test('retrieves only one user memories from MemoryStore and reports 근거 부족 explicitly', async () => {
     const store = createMemoryStore({ env: {} });
     for (const record of personalMemoryRecords) {
       await store.create('user-a', record);

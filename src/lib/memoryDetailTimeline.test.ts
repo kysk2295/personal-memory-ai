@@ -25,10 +25,10 @@ describe('buildMemoryDetailTimeline', () => {
         active: true,
         sourceLabel: 'markdown · markdown://retros/freezing-vs-features.md',
         observedAt: '2026-05-20',
-        title: 'Anxiety creates a freeze-vs-feature-addition choice, and feature addition postpones launches.',
+        title: '불안하면 멈추거나 기능을 더 넣는 선택으로 빠지고 출시가 밀린다.',
         privacyScope: 'private',
         rawExcerpt:
-          'When anxiety spikes I either freeze or add features instead of deciding what to cut. The feature-addition branch keeps postponing launches.',
+          '불안이 커지면 무엇을 덜어낼지 정하지 못하고 멈추거나 기능을 더 넣는다. 기능 추가 쪽을 택하면 출시가 계속 밀린다.',
       }),
     );
   });
@@ -76,7 +76,7 @@ describe('buildMemoryDetailTimeline', () => {
             changedFieldLabels: ['summary', 'raw text'],
             sourceRef: 'markdown://retros/freezing-vs-features.md',
             beforeSummary:
-              'Anxiety creates a freeze-vs-feature-addition choice, and feature addition postpones launches.',
+              '불안하면 멈추거나 기능을 더 넣는 선택으로 빠지고 출시가 밀린다.',
             afterSummary: 'Edited source-backed freeze decision.',
             deltaLabel: 'summary, raw text changed',
           },

@@ -18,7 +18,7 @@ describe('buildImportPreview', () => {
           sourceRef: 'notion://launch-journal/may',
           observedAt: '2026-05-01',
           rawText:
-            'Felt anxious before shipping the memory import demo, so I expanded scope with graph filters and extra polish. Launch slipped by two days.',
+            '기억 가져오기 데모를 내보내기 전 불안해서 그래프 필터와 추가 다듬기를 붙였다. 결국 출시가 이틀 늦어졌다.',
           provenance: {
             importer: 'notion',
             sourceName: 'Launch Journal',

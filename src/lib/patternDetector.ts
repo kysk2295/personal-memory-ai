@@ -31,7 +31,7 @@ const REPEATED_PATTERN_THRESHOLD = 2;
 
 const ANXIETY_PATTERN = {
   id: 'pattern_anxiety_scope_expansion_launch_delay',
-  title: 'Anxiety -> scope expansion -> launch delay',
+  title: '불안 -> 범위 확장 -> 출시 지연',
 } as const;
 
 function includesAny(value: string, terms: readonly string[]): boolean {
@@ -53,7 +53,7 @@ function evidenceText(record: MemoryRecord): string {
 
 function isAnxietyScopeDelayEvidence(record: MemoryRecord): boolean {
   const text = evidenceText(record);
-  const hasAnxiety = includesAny(text, ['anxiety', 'anxious']);
+  const hasAnxiety = includesAny(text, ['anxiety', 'anxious', '불안']);
   const hasScopeExpansion = includesAny(text, [
     'scope expansion',
     'expanded scope',
@@ -62,6 +62,13 @@ function isAnxietyScopeDelayEvidence(record: MemoryRecord): boolean {
     'adding graph',
     'adding onboarding',
     'extra polish',
+    '범위',
+    '기능 추가',
+    '기능을 더',
+    '더 넣',
+    '추가 다듬',
+    '그래프 필터',
+    '온보딩 예시',
   ]);
   const hasLaunchDelay = includesAny(text, [
     'launch delay',
@@ -72,6 +79,11 @@ function isAnxietyScopeDelayEvidence(record: MemoryRecord): boolean {
     'delayed the launch',
     'postponing launches',
     'slipped by',
+    '출시가',
+    '출시 지연',
+    '출시가 늦',
+    '출시가 밀',
+    '계속 밀린',
   ]);
 
   return hasAnxiety && hasScopeExpansion && hasLaunchDelay;
@@ -119,14 +131,14 @@ function calculateConfidence(supportingRecords: readonly MemoryRecord[]): number
 function buildSufficientExplanation(records: readonly MemoryRecord[]): string {
   const citations = records.map((record) => `${record.id} (${record.sourceRef})`).join('; ');
   return [
-    `Detected repeated anxiety -> scope expansion -> launch delay evidence across ${records.length} MemoryRecord citations: ${citations}.`,
-    'The freeze-vs-feature-addition citation is treated as supporting evidence because it names anxiety, feature addition, and postponed launches.',
+    `반복된 불안 -> 범위 확장/기능 추가 -> 출시 지연 흐름을 ${records.length}개의 MemoryRecord 인용에서 찾았습니다: ${citations}.`,
+    '멈춤-vs-기능추가 기억은 불안, 기능 추가, 출시 지연을 함께 말하기 때문에 보조 근거로 사용합니다.',
   ].join(' ');
 }
 
 function buildInsufficientExplanation(records: readonly MemoryRecord[]): string {
   const citations = records.length > 0 ? records.map((record) => record.id).join(', ') : 'none';
-  return `Need at least ${REPEATED_PATTERN_THRESHOLD} supporting MemoryRecord citations before labeling a repeated pattern. Current support: ${citations}.`;
+  return `반복 패턴으로 표시하려면 최소 ${REPEATED_PATTERN_THRESHOLD}개의 MemoryRecord 인용이 필요합니다. 현재 근거: ${citations}.`;
 }
 
 function buildPattern(records: readonly MemoryRecord[]): DetectedPattern {
@@ -145,7 +157,7 @@ function buildPattern(records: readonly MemoryRecord[]): DetectedPattern {
 function buildInsufficientPattern(records: readonly MemoryRecord[]): DetectedPattern {
   return {
     id: 'pattern_insufficient_evidence',
-    title: 'Insufficient repeated-pattern evidence',
+    title: '반복 패턴 근거 부족',
     confidence: 0,
     evidenceLabel: 'insufficient_evidence',
     supportingMemoryIds: records.map((record) => record.id),

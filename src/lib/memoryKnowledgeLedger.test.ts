@@ -37,7 +37,7 @@ describe('buildMemoryKnowledgeLedger', () => {
         memoryId: 'mem_launch_may_anxiety_scope_delay',
         sourceType: 'notion',
         sourceRef: 'notion://launch-journal/may',
-        rawText: 'Felt anxious before shipping the memory import demo, so I expanded scope with graph filters and extra polish. Launch slipped by two days.',
+        rawText: '기억 가져오기 데모를 내보내기 전 불안해서 그래프 필터와 추가 다듬기를 붙였다. 결국 출시가 이틀 늦어졌다.',
         rawTextFingerprint: expect.stringMatching(/^sha-/),
         confidentiality: 'private',
         immutable: true,
@@ -54,7 +54,7 @@ describe('buildMemoryKnowledgeLedger', () => {
       expect.objectContaining({
         id: 'thought:mem_launch_may_anxiety_scope_delay',
         atomId: 'atom:mem_launch_may_anxiety_scope_delay',
-        canonicalClaim: 'Anxiety before the memory import demo led to graph filter scope expansion and a two-day launch delay.',
+        canonicalClaim: '불안해서 기억 가져오기 데모 범위를 넓혔고 출시가 이틀 늦어졌다.',
         sourceArchiveIds: ['raw:mem_launch_may_anxiety_scope_delay'],
         citationIds: ['mem_launch_may_anxiety_scope_delay'],
         sourceMemoryIds: ['mem_launch_may_anxiety_scope_delay'],
@@ -98,7 +98,7 @@ describe('buildMemoryKnowledgeLedger', () => {
         expect.objectContaining({
           kind: 'produced-outcome',
           sourceId: 'atom:mem_launch_may_anxiety_scope_delay',
-          targetId: 'outcome:launch-delayed-by-two-days-after-adding-graph-filters',
+          targetId: 'outcome:그래프-필터를-더-붙인-뒤-출시가-이틀-늦어졌다',
         }),
         expect.objectContaining({
           kind: 'reinforces-pattern',

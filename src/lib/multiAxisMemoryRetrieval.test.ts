@@ -32,13 +32,13 @@ describe('multi-axis memory retrieval router', () => {
       feedback: 1.6,
     });
     expect(first.retrievedMemoryIds).toEqual([
-      'mem_launch_june_anxiety_scope_delay',
-      'mem_launch_may_anxiety_scope_delay',
       'mem_freeze_vs_feature_addition',
+      'mem_launch_may_anxiety_scope_delay',
+      'mem_launch_june_anxiety_scope_delay',
     ]);
     expect(first.retrievedMemories[0]).toEqual(
       expect.objectContaining({
-        memory: expect.objectContaining({ id: 'mem_launch_june_anxiety_scope_delay' }),
+        memory: expect.objectContaining({ id: 'mem_freeze_vs_feature_addition' }),
         axisScores: expect.objectContaining({
           keyword: expect.any(Number),
           semantic: expect.any(Number),
@@ -54,7 +54,7 @@ describe('multi-axis memory retrieval router', () => {
   test('uses ledger graph traversal to include linked memories that do not directly match the query text', () => {
     const result = retrieveMultiAxisMemoriesFromRecords({
       records: personalMemoryRecords,
-      query: 'onboarding examples replay controls',
+      query: '온보딩 예시 결정 되짚기 제어',
       limit: 4,
     });
 
@@ -76,7 +76,7 @@ describe('multi-axis memory retrieval router', () => {
     );
   });
 
-  test('keeps retrieval user-scoped through MemoryStore and reports insufficient evidence', async () => {
+  test('keeps retrieval user-scoped through MemoryStore and reports 근거 부족', async () => {
     const store = createMemoryStore({ env: {} });
     for (const record of personalMemoryRecords) {
       await store.create('user-a', record);
@@ -90,7 +90,7 @@ describe('multi-axis memory retrieval router', () => {
     const scoped = await retrieveMultiAxisMemories({
       store,
       userId: 'user-a',
-      query: 'onboarding examples replay controls',
+      query: '온보딩 예시 결정 되짚기 제어',
       limit: 5,
     });
 

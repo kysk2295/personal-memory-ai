@@ -37,7 +37,7 @@ const sufficientMemories = [
     topicTags: ['scope expansion', 'launch'],
     projectTags: ['personal-memory-ai'],
     decisionSignal: 'chosen',
-    outcomeText: 'Launch delayed by two days after adding graph filters.',
+    outcomeText: '그래프 필터를 더 붙인 뒤 출시가 이틀 늦어졌다.',
   }),
   memory({
     id: 'mem_agent_june_scope_delay',
@@ -123,7 +123,7 @@ describe('answerPersonalMemoryQuestion', () => {
     expect(result.savedArtifact).toEqual(
       expect.objectContaining({
         kind: 'ask_answer',
-        title: 'Ask My Past Self: 이번에도 기능을 더 넣어야 할까?',
+        title: '과거의 나에게 묻기: 이번에도 기능을 더 넣어야 할까?',
         citationMemoryIds: expect.arrayContaining(result.loadedMemoryIds),
         metadata: expect.objectContaining({
           citationCount: 2,
@@ -139,7 +139,7 @@ describe('answerPersonalMemoryQuestion', () => {
     );
   });
 
-  test('returns explicit insufficient evidence instead of generic advice when user memories are weak', async () => {
+  test('returns explicit 근거 부족 instead of generic advice when user memories are weak', async () => {
     const store = createMemoryStore({ env: {} });
     await store.create(
       'user-a',
@@ -170,8 +170,8 @@ describe('answerPersonalMemoryQuestion', () => {
       'Import or write at least two relevant memories before asking for a personal recommendation.',
       'Capture the current decision, emotion, options, and expected outcome as a diary memory.',
     ]);
-    expect(result.ask.answer).toContain('insufficient evidence');
-    expect(result.ask.answer).toContain('No generic advice was generated.');
+    expect(result.ask.answer).toContain('근거 부족');
+    expect(result.ask.answer).toContain('일반 조언은 생성하지 않았습니다.');
     expect(result.replay).toBeUndefined();
     expect(result.graphEvidence.highlightIds).toEqual(expect.arrayContaining(['query:agent-query-weak']));
   });
@@ -189,7 +189,7 @@ describe('answerPersonalMemoryQuestion', () => {
       queryId: 'agent-follow-up-001',
       followUpContext: {
         previousQuestion: '이번에도 기능을 더 넣어야 할까?',
-        previousRecommendation: '이번에는 기능을 더 넣기보다 freeze하고 사용자 피드백을 먼저 받으세요.',
+        previousRecommendation: '이번에는 기능을 더 넣기보다 범위를 고정하고 사용자 피드백을 먼저 받으세요.',
         previousCitationMemoryIds: ['mem_agent_may_scope_delay', 'mem_agent_june_scope_delay'],
       },
     });

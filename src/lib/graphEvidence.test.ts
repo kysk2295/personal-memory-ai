@@ -70,9 +70,9 @@ describe('buildGraphEvidence', () => {
       'emotion:avoidance',
       'decision:chosen',
       'decision:avoided',
-      'outcome:launch-delayed-by-two-days-after-adding-graph-filters',
-      'outcome:launch-delayed-after-onboarding-examples-and-replay-controls-were-added',
-      'outcome:launches-keep-being-postponed-when-feature-addition-wins-over-cutting-scope',
+      'outcome:그래프-필터를-더-붙인-뒤-출시가-이틀-늦어졌다',
+      'outcome:온보딩-예시와-결정-되짚기-제어를-추가한-뒤-출시가-늦어졌다',
+      'outcome:범위를-덜어내기보다-기능-추가를-택하면-출시가-계속-밀린다',
       'pattern:pattern_anxiety_scope_expansion_launch_delay',
     ]);
     expect(graph.nodes).toEqual(
@@ -162,10 +162,10 @@ describe('buildGraphEvidence', () => {
     const replay = replayDecision({
       currentDecision: {
         id: 'decision_current_add_replay_polish',
-        prompt: 'Should I add more Decision Replay polish before review?',
+        prompt: '오늘 MVP를 보여줄까, 아니면 결정 되짚기 화면을 더 다듬을까?',
         emotions: ['anxiety', 'pressure'],
-        choices: ['add polish', 'freeze for review'],
-        topicTags: ['launch', 'feature addition', 'Decision Replay'],
+        choices: ['더 다듬기', '리뷰용으로 고정하기'],
+        topicTags: ['launch', 'feature addition', '결정 되짚기'],
       },
       memories: personalMemoryRecords,
       patterns,
@@ -189,11 +189,11 @@ describe('buildGraphEvidence', () => {
           trace: [{ type: 'query', id: 'decision_current_add_replay_polish' }],
         }),
         expect.objectContaining({
-          id: 'choice:add-polish',
+          id: 'choice:더-다듬기',
           trace: [{ type: 'query', id: 'decision_current_add_replay_polish' }],
         }),
         expect.objectContaining({
-          id: 'outcome:launch-delayed-by-two-days-after-adding-graph-filters',
+          id: 'outcome:그래프-필터를-더-붙인-뒤-출시가-이틀-늦어졌다',
           trace: expect.arrayContaining([{ type: 'memory', id: 'mem_launch_may_anxiety_scope_delay' }]),
         }),
       ]),

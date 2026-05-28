@@ -194,7 +194,7 @@ export function compileMemoryRecordsToWikiGraph(
     const id = 'pattern:launch-delay-from-feature-expansion';
     nodesById.set(
       id,
-      createNode('pattern', id, 'Launch delay from feature expansion', patternRecords, [
+      createNode('pattern', id, '기능 확장으로 출시 지연', patternRecords, [
         'concept:launch',
         'concept:feature-addition',
         'decision:chosen',

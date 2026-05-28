@@ -64,9 +64,9 @@ export interface DecisionReplayResult {
 
 const SIMILAR_DECISION_THRESHOLD = 2;
 const SUFFICIENT_RECOMMENDATION =
-  'Based on cited memories, freeze Decision Replay scope for review instead of adding more polish.';
+  '인용된 기억에 따르면 더 다듬기보다 결정 되짚기 범위를 고정하고 리뷰를 받는 편이 낫습니다.';
 const INSUFFICIENT_RECOMMENDATION =
-  'Insufficient cited personal memory to recommend a choice. Import or capture more relevant decisions first.';
+  '선택을 추천할 만큼 인용된 개인 기억이 부족합니다. 관련 결정을 먼저 가져오거나 기록하세요.';
 
 function appendUnique(target: string[], values: readonly string[]): void {
   for (const value of values) {
@@ -225,10 +225,10 @@ function buildGraphHighlightIds(
 
 function buildUncertainty(hasSufficientEvidence: boolean, similarPastDecisionCount: number): string {
   if (!hasSufficientEvidence) {
-    return `Need at least ${SIMILAR_DECISION_THRESHOLD} similar past decision citations with a sufficient pattern before recommending. Current cited support: ${similarPastDecisionCount}.`;
+    return `추천하려면 충분한 패턴과 최소 ${SIMILAR_DECISION_THRESHOLD}개의 비슷한 과거 결정 인용이 필요합니다. 현재 인용 근거: ${similarPastDecisionCount}.`;
   }
 
-  return 'Recommendation is bounded to cited personal memories and should not be treated as general advice.';
+  return '추천은 인용된 개인 기억 안에서만 유효하며 일반 조언으로 취급하지 않습니다.';
 }
 
 export function replayDecision(input: DecisionReplayInput): DecisionReplayResult {

@@ -445,7 +445,7 @@ describe('personal memory API boundary', () => {
         userId: 'user-a',
         memoryId: 'mem_freeze_vs_feature_addition',
         changedFields: ['summary', 'rawText', 'observedAt', 'emotionTags', 'topicTags'],
-        beforeSummary: 'Anxiety creates a freeze-vs-feature-addition choice, and feature addition postpones launches.',
+        beforeSummary: '불안하면 멈추거나 기능을 더 넣는 선택으로 빠지고 출시가 밀린다.',
         afterSummary: 'Edited source-backed freeze decision.',
         sourceRef: 'markdown://retros/freezing-vs-features.md',
       }),

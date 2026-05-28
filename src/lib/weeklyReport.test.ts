@@ -68,7 +68,7 @@ describe('generateWeeklyReport', () => {
       ],
     });
     expect(report.aggregates.outcomes).toContainEqual({
-      value: 'Launch delayed by two days after adding graph filters.',
+      value: '그래프 필터를 더 붙인 뒤 출시가 이틀 늦어졌다.',
       count: 1,
       supportingMemoryIds: ['mem_launch_may_anxiety_scope_delay'],
     });

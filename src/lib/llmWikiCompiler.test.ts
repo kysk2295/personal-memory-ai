@@ -71,7 +71,7 @@ describe('compileMemoryRecordsToWikiGraph', () => {
 
   test('preserves provenance, freshness, and retain/recall/reflect markers on canonical atoms', () => {
     expect(atomById('atom:mem_launch_may_anxiety_scope_delay')).toMatchObject({
-      canonicalClaim: 'Anxiety before the memory import demo led to graph filter scope expansion and a two-day launch delay.',
+      canonicalClaim: '불안해서 기억 가져오기 데모 범위를 넓혔고 출시가 이틀 늦어졌다.',
       origin: 'imported',
       meaningVersion: 1,
       confidentiality: 'private',

@@ -18,9 +18,9 @@ describe('buildMemoryGraphModel', () => {
             id: 'memory:mem_launch_may_anxiety_scope_delay',
             kind: 'memory',
             recordId: 'mem_launch_may_anxiety_scope_delay',
-            label: 'Anxiety before the memory import demo led to graph filter scope expansion and a two-day launch delay.',
-            graphLabel: 'Anxiety before the memory import demo led to...',
-            searchText: expect.stringContaining('anxiety before the memory import demo'),
+            label: '불안해서 기억 가져오기 데모 범위를 넓혔고 출시가 이틀 늦어졌다.',
+            graphLabel: '불안해서 기억 가져오기 데모 범위를 넓혔고 출시가 이틀 늦어졌다.',
+            searchText: expect.stringContaining('불안해서 기억 가져오기 데모 범위를 넓혔고 출시가 이틀 늦어졌다'),
           }),
         }),
         expect.objectContaining({

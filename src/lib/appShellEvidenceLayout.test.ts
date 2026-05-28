@@ -53,7 +53,7 @@ describe('buildInitialAppShellEvidenceLayout', () => {
         }),
         expect.objectContaining({
           from: 'memory:mem_launch_june_anxiety_scope_delay',
-          to: 'outcome:launch-delayed-after-onboarding-examples-and-replay-controls-were-added',
+          to: 'outcome:온보딩-예시와-결정-되짚기-제어를-추가한-뒤-출시가-늦어졌다',
           kind: 'outcome',
           status: 'implemented',
         }),
@@ -149,6 +149,27 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(shell.surfaces.map((surface) => surface.status)).toEqual(
       expect.arrayContaining(['implemented', 'partial', 'skeleton', 'fake/sample']),
     );
+  });
+
+  test('loads the default experience as Korean diary memories instead of an English demo', () => {
+    const shell = buildInitialAppShellEvidenceLayout();
+    const html = renderAppShellHtml();
+
+    expect(shell.records[0].summary).toBe('불안해서 기억 가져오기 데모 범위를 넓혔고 출시가 이틀 늦어졌다.');
+    expect(shell.replay.currentDecision.prompt).toBe('오늘 MVP를 보여줄까, 아니면 결정 되짚기 화면을 더 다듬을까?');
+    expect(shell.surfaces.find((surface) => surface.id === 'ask-my-past-self')?.label).toBe('과거의 나에게 묻기');
+    expect(shell.surfaces.find((surface) => surface.id === 'weekly-report')?.label).toBe('주간 패턴');
+
+    expect(html).toContain('불안해서 기억 가져오기 데모 범위를 넓혔고 출시가 이틀 늦어졌다.');
+    expect(html).toContain('차분하게 Markdown 일기를 가져와 기억 변환을 확인했다.');
+    expect(html).toContain('오늘 MVP를 보여줄까, 아니면 결정 되짚기 화면을 더 다듬을까?');
+    expect(html).toContain('과거의 나에게 묻기');
+    expect(html).toContain('결정 되짚기');
+    expect(html).toContain('주간 패턴');
+    expect(html).not.toContain('Anxiety before the memory import demo');
+    expect(html).not.toContain('Should I add more Decision Replay polish before review?');
+    expect(html).not.toContain('Ask My Past Self');
+    expect(html).not.toContain('Weekly Report');
   });
 
   test('can assemble the app shell data from one user memory store records', async () => {
@@ -248,7 +269,7 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('id="saved-artifact-actions"');
     expect(html).toContain('"library":"cytoscape"');
     expect(html).toContain('"memoryNodeCount":8');
-    expect(html).toContain('"graphLabel":"Anxiety before the memory import demo led to...');
+    expect(html).toContain('"graphLabel":"불안해서 기억 가져오기 데모 범위를 넓혔고 출시가 이틀 늦어졌다."');
     expect(html).toContain('data-surface-mode="graph-first"');
     expect(html).toContain('data-rail-mode="collapsed-evidence-drawer"');
     expect(html).toContain('data-prototype-ux="korean-usable-mvp"');
@@ -471,7 +492,7 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('data-highlight-id="emotion:anxiety"');
     expect(html).toContain('data-highlight-id="decision:chosen"');
     expect(html).toContain(
-      'data-highlight-id="outcome:launch-delayed-by-two-days-after-adding-graph-filters"',
+      'data-highlight-id="outcome:그래프-필터를-더-붙인-뒤-출시가-이틀-늦어졌다"',
     );
     expect(html).toContain('data-current-question-id="question:이번에도-기능을-더-넣어야-할까"');
     expect(html).toContain('근거 서랍');
@@ -553,7 +574,7 @@ describe('buildInitialAppShellEvidenceLayout', () => {
     expect(html).toContain('aria-label="과거의 나에게 묻기 인용"');
     expect(html).toContain('href="#evidence-mem_launch_may_anxiety_scope_delay"');
 
-    expect(html).toContain('data-replay-outcome="launch delayed by two days after adding graph filters"');
+    expect(html).toContain('data-replay-outcome="그래프 필터를 더 붙인 뒤 출시가 이틀 늦어졌다"');
     expect(html).toContain('data-replay-citation-id="mem_launch_may_anxiety_scope_delay"');
 
     expect(html).toContain('주간 패턴');
@@ -599,7 +620,7 @@ describe('buildInitialAppShellEvidenceLayout', () => {
 
     expect(html).toContain('<label for="decision-replay-current">지금 결정</label>');
     expect(html).toContain('id="decision-replay-current"');
-    expect(html).toContain('Should I add more Decision Replay polish before review?');
+    expect(html).toContain('오늘 MVP를 보여줄까, 아니면 결정 되짚기 화면을 더 다듬을까?');
     expect(html).toContain('결정 되짚기');
     expect(html).toContain('패턴 감지');
     expect(html).toContain('data-replay-memory-id="mem_launch_may_anxiety_scope_delay"');

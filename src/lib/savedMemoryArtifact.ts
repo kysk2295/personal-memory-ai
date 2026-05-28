@@ -84,14 +84,14 @@ function artifactMemoryType(kind: SavedMemoryArtifactKind): MemoryRecordType {
 }
 
 function artifactTopicTags(kind: SavedMemoryArtifactKind): string[] {
-  if (kind === 'decision_replay') return ['saved artifact', 'decision replay'];
-  if (kind === 'weekly_report') return ['saved artifact', 'weekly report'];
-  if (kind === 'memory_session') return ['saved artifact', 'memory session'];
-  return ['saved artifact', 'ask my past self'];
+  if (kind === 'decision_replay') return ['saved artifact', 'decision replay', '결정 되짚기'];
+  if (kind === 'weekly_report') return ['saved artifact', 'weekly report', '주간 패턴'];
+  if (kind === 'memory_session') return ['saved artifact', 'memory session', '기억 세션'];
+  return ['saved artifact', 'ask answer', '과거의 나에게 묻기'];
 }
 
 function citationLine(citationMemoryIds: readonly string[]): string {
-  return `Citations: ${sortedCitationIds(citationMemoryIds).join(', ')}`;
+  return `인용: ${sortedCitationIds(citationMemoryIds).join(', ')}`;
 }
 
 function createArtifact(input: Omit<SavedMemoryArtifact, 'privacyScope'>): SavedMemoryArtifact {
@@ -103,14 +103,14 @@ function createArtifact(input: Omit<SavedMemoryArtifact, 'privacyScope'>): Saved
 
 export function createSavedAskArtifact(input: CreateSavedAskArtifactInput): SavedMemoryArtifact {
   const createdAt = input.createdAt ?? new Date().toISOString();
-  const title = `Ask My Past Self: ${input.question}`;
+  const title = `과거의 나에게 묻기: ${input.question}`;
   const body = [
-    `Question: ${input.question}`,
-    `Answer: ${input.answer.answer}`,
-    `Recommendation: ${input.answer.recommendation}`,
+    `질문: ${input.question}`,
+    `답변: ${input.answer.answer}`,
+    `추천: ${input.answer.recommendation}`,
     citationLine(input.answer.citationMemoryIds),
-    `Evidence label: ${input.answer.evidenceLabel}`,
-    `Confidence: ${input.answer.confidence}`,
+    `근거 상태: ${input.answer.evidenceLabel}`,
+    `신뢰도: ${input.answer.confidence}`,
   ].join('\n');
 
   return createArtifact({
@@ -138,20 +138,20 @@ export function createSavedDecisionReplayArtifact(
 ): SavedMemoryArtifact {
   const createdAt = input.createdAt ?? new Date().toISOString();
   const body = [
-    `Decision: ${input.replay.currentDecision.prompt}`,
-    `Recommendation: ${input.replay.recommendation}`,
-    `Uncertainty: ${input.replay.uncertainty}`,
-    `Choices: ${input.replay.currentDecision.choices.join(', ')}`,
-    `Outcomes: ${input.replay.outcomes.join(', ')}`,
+    `결정: ${input.replay.currentDecision.prompt}`,
+    `추천: ${input.replay.recommendation}`,
+    `불확실성: ${input.replay.uncertainty}`,
+    `선택지: ${input.replay.currentDecision.choices.join(', ')}`,
+    `결과: ${input.replay.outcomes.join(', ')}`,
     citationLine(input.replay.citationMemoryIds),
-    `Evidence label: ${input.replay.evidenceLabel}`,
-    `Confidence: ${input.replay.confidence}`,
+    `근거 상태: ${input.replay.evidenceLabel}`,
+    `신뢰도: ${input.replay.confidence}`,
   ].join('\n');
 
   return createArtifact({
     id: artifactId('decision_replay', [input.replay.currentDecision.id, input.replay.recommendation, createdAt]),
     kind: 'decision_replay',
-    title: `Decision Replay: ${input.replay.currentDecision.prompt}`,
+    title: `결정 되짚기: ${input.replay.currentDecision.prompt}`,
     body,
     createdAt,
     observedAt: observedAtFromCreatedAt(createdAt),
@@ -172,22 +172,22 @@ export function createSavedWeeklyReportArtifact(
   input: CreateSavedWeeklyReportArtifactInput,
 ): SavedMemoryArtifact {
   const createdAt = input.createdAt ?? input.weeklyReport.generatedAt;
-  const windowLabel = `${input.weeklyReport.window.startDate} to ${input.weeklyReport.window.endDate}`;
+  const windowLabel = `${input.weeklyReport.window.startDate} ~ ${input.weeklyReport.window.endDate}`;
   const topEmotions = input.weeklyReport.aggregates.emotions.map((emotion) => `${emotion.value}(${emotion.count})`);
   const topProjects = input.weeklyReport.aggregates.projects.map((project) => `${project.value}(${project.count})`);
   const body = [
-    `Weekly report window: ${windowLabel}`,
-    `Included memories: ${input.weeklyReport.includedMemoryIds.join(', ')}`,
-    `Top emotions: ${topEmotions.join(', ') || 'none'}`,
-    `Top projects: ${topProjects.join(', ') || 'none'}`,
-    `Pattern insights: ${input.weeklyReport.patternInsights.map((pattern) => pattern.title).join(', ') || 'none'}`,
-    `Evidence label: ${input.weeklyReport.evidenceLabel}`,
+    `주간 범위: ${windowLabel}`,
+    `포함된 기억: ${input.weeklyReport.includedMemoryIds.join(', ')}`,
+    `주요 감정: ${topEmotions.join(', ') || '없음'}`,
+    `주요 프로젝트: ${topProjects.join(', ') || '없음'}`,
+    `패턴 인사이트: ${input.weeklyReport.patternInsights.map((pattern) => pattern.title).join(', ') || '없음'}`,
+    `근거 상태: ${input.weeklyReport.evidenceLabel}`,
   ].join('\n');
 
   return createArtifact({
     id: artifactId('weekly_report', [input.weeklyReport.id, createdAt]),
     kind: 'weekly_report',
-    title: `Weekly Report: ${windowLabel}`,
+    title: `주간 패턴: ${windowLabel}`,
     body,
     createdAt,
     observedAt: observedAtFromCreatedAt(createdAt),
@@ -216,19 +216,19 @@ export function createSavedMemorySessionArtifact(input: CreateSavedMemorySession
     ...input.weeklyCitationMemoryIds,
   ]);
   const body = [
-    `Source memory: ${input.sourceMemoryId}`,
-    `Related memories: ${input.relatedMemoryIds.join(', ')}`,
-    `Ask citations: ${input.askCitationMemoryIds.join(', ')}`,
-    `Decision Replay citations: ${input.replayCitationMemoryIds.join(', ')}`,
-    `Weekly Report citations: ${input.weeklyCitationMemoryIds.join(', ')}`,
+    `출발 기억: ${input.sourceMemoryId}`,
+    `연관 기억: ${input.relatedMemoryIds.join(', ')}`,
+    `묻기 인용: ${input.askCitationMemoryIds.join(', ')}`,
+    `결정 되짚기 인용: ${input.replayCitationMemoryIds.join(', ')}`,
+    `주간 패턴 인용: ${input.weeklyCitationMemoryIds.join(', ')}`,
     citationLine(citationMemoryIds),
-    `Evidence label: sufficient_evidence`,
+    `근거 상태: sufficient_evidence`,
   ].join('\n');
 
   return createArtifact({
     id: artifactId('memory_session', [input.sourceMemoryId, ...citationMemoryIds, createdAt]),
     kind: 'memory_session',
-    title: `Guided Memory Session: ${input.sourceMemoryId}`,
+    title: `기억 세션: ${input.sourceMemoryId}`,
     body,
     createdAt,
     observedAt: observedAtFromCreatedAt(createdAt),
@@ -256,10 +256,10 @@ export function savedArtifactToMemoryRecord(artifact: SavedMemoryArtifact): Memo
     observedAt: artifact.observedAt,
     rawText: [
       artifact.body,
-      `Artifact: ${artifact.id}`,
-      `Artifact kind: ${artifact.kind}`,
+      `아티팩트: ${artifact.id}`,
+      `아티팩트 종류: ${artifact.kind}`,
       citationLine(artifact.citationMemoryIds),
-      `Graph highlights: ${artifact.graphHighlightIds.join(', ')}`,
+      `그래프 하이라이트: ${artifact.graphHighlightIds.join(', ')}`,
     ].join('\n'),
     summary: artifact.title,
     memoryType: artifactMemoryType(artifact.kind),
@@ -268,8 +268,8 @@ export function savedArtifactToMemoryRecord(artifact: SavedMemoryArtifact): Memo
     decisionSignal: artifact.kind === 'decision_replay' ? 'chosen' : 'none',
     outcomeText:
       artifact.kind === 'weekly_report'
-        ? `Saved weekly report with ${artifact.citationMemoryIds.length} cited memories.`
-        : `Saved ${artifact.kind.replace('_', ' ')} with ${artifact.citationMemoryIds.length} cited memories.`,
+        ? `주간 패턴을 ${artifact.citationMemoryIds.length}개의 인용 기억과 함께 저장했다.`
+        : `${artifact.kind.replace('_', ' ')} 결과를 ${artifact.citationMemoryIds.length}개의 인용 기억과 함께 저장했다.`,
     extractionStatus: 'ready',
   });
 }

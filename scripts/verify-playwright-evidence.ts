@@ -106,6 +106,19 @@ async function verifyLocalInteractions(page: Page): Promise<void> {
   assert((await page.locator('text=세션 저장').count()) > 0, 'Expected Korean save session action');
   assert((await page.locator('text=Run Memory Session').count()) === 0, 'Old English memory-session CTA should not be visible');
   assert((await page.locator('text=Save session').count()) === 0, 'Old English memory-session save CTA should not be visible');
+  assert(
+    (await page.locator('text=불안해서 기억 가져오기 데모 범위를 넓혔고 출시가 이틀 늦어졌다.').count()) > 0,
+    'Expected Korean diary-like default memory summary',
+  );
+  assert(
+    (await page.locator('text=차분하게 Markdown 일기를 가져와 기억 변환을 확인했다.').count()) > 0,
+    'Expected Korean diary import default memory summary',
+  );
+  assert((await page.locator('text=Anxiety before the memory import demo').count()) === 0, 'English demo memory summary should not be visible');
+  assert(
+    (await page.locator('text=Should I add more Decision Replay polish before review?').count()) === 0,
+    'English default Decision Replay prompt should not be visible',
+  );
   assert((await page.locator('[data-entry-dock="diary-start"]').count()) === 1, 'Expected first-screen diary entry dock');
   assert((await page.locator('[data-primary-entry-action="quick-diary"]').count()) === 1, 'Expected first-screen quick diary action');
   assert((await attribute(page, '[data-primary-entry-action="quick-diary"]', 'href'))?.endsWith('/capture/'), 'Quick diary action should open the capture app');

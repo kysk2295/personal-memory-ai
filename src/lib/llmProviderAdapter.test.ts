@@ -65,6 +65,6 @@ describe('LLM provider adapter behind citation guard', () => {
         citationMemoryIds: [],
       },
     });
-    expect(result.output.answer).toContain('insufficient evidence');
+    expect(result.output.answer).toContain('근거 부족');
   });
 });

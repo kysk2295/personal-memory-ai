@@ -39,7 +39,7 @@ describe('saved memory artifacts', () => {
       expect.objectContaining({
         id: expect.stringMatching(/^artifact_ask_answer_sha-/),
         kind: 'ask_answer',
-        title: 'Ask My Past Self: 이번에도 기능을 더 넣어야 할까?',
+        title: '과거의 나에게 묻기: 이번에도 기능을 더 넣어야 할까?',
         evidenceLabel: 'sufficient_evidence',
         privacyScope: 'private',
         createdAt,
@@ -74,9 +74,9 @@ describe('saved memory artifacts', () => {
         embeddingStatus: 'pending',
       }),
     );
-    expect(record.rawText).toContain('Question: 이번에도 기능을 더 넣어야 할까?');
-    expect(record.rawText).toContain('Citations: mem_freeze_vs_feature_addition');
-    expect(record.topicTags).toEqual(expect.arrayContaining(['saved artifact', 'ask my past self']));
+    expect(record.rawText).toContain('질문: 이번에도 기능을 더 넣어야 할까?');
+    expect(record.rawText).toContain('인용: mem_freeze_vs_feature_addition');
+    expect(record.topicTags).toEqual(expect.arrayContaining(['saved artifact', '과거의 나에게 묻기']));
   });
 
   test('creates saved decision replay and weekly report artifacts with future-memory metadata', () => {
@@ -116,7 +116,7 @@ describe('saved memory artifacts', () => {
       expect.objectContaining({
         id: expect.stringMatching(/^artifact_weekly_report_sha-/),
         kind: 'weekly_report',
-        title: 'Weekly Report: 2026-05-01 to 2026-05-20',
+        title: '주간 패턴: 2026-05-01 ~ 2026-05-20',
         citationMemoryIds: weeklyReport.includedMemoryIds,
         metadata: expect.objectContaining({
           startDate: '2026-05-01',
@@ -126,8 +126,8 @@ describe('saved memory artifacts', () => {
       }),
     );
     expect(reportRecord.memoryType).toBe('pattern');
-    expect(reportRecord.topicTags).toEqual(expect.arrayContaining(['saved artifact', 'weekly report']));
-    expect(reportRecord.rawText).toContain('Included memories: mem_launch_may_anxiety_scope_delay');
+    expect(reportRecord.topicTags).toEqual(expect.arrayContaining(['saved artifact', '주간 패턴']));
+    expect(reportRecord.rawText).toContain('포함된 기억: mem_launch_may_anxiety_scope_delay');
   });
 
   test('creates a saved memory session artifact from source and related memories', () => {
@@ -145,7 +145,7 @@ describe('saved memory artifacts', () => {
       expect.objectContaining({
         id: expect.stringMatching(/^artifact_memory_session_sha-/),
         kind: 'memory_session',
-        title: 'Guided Memory Session: mem_launch_may_anxiety_scope_delay',
+        title: '기억 세션: mem_launch_may_anxiety_scope_delay',
         citationMemoryIds: [
           'mem_freeze_vs_feature_addition',
           'mem_launch_june_anxiety_scope_delay',
@@ -164,9 +164,9 @@ describe('saved memory artifacts', () => {
         sourceRef: `personal-memory-ai://saved-artifacts/${artifact.id}`,
       }),
     );
-    expect(record.topicTags).toEqual(expect.arrayContaining(['saved artifact', 'memory session']));
-    expect(record.rawText).toContain('Source memory: mem_launch_may_anxiety_scope_delay');
-    expect(record.rawText).toContain('Related memories: mem_freeze_vs_feature_addition, mem_launch_june_anxiety_scope_delay');
+    expect(record.topicTags).toEqual(expect.arrayContaining(['saved artifact', '기억 세션']));
+    expect(record.rawText).toContain('출발 기억: mem_launch_may_anxiety_scope_delay');
+    expect(record.rawText).toContain('연관 기억: mem_freeze_vs_feature_addition, mem_launch_june_anxiety_scope_delay');
   });
 
   test('saves artifact records through the user-scoped MemoryStore boundary', async () => {

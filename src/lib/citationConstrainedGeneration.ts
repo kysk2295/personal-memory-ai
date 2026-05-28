@@ -144,8 +144,7 @@ export function validateCitationConstrainedOutput(
 
 function buildRejectedOutput(): CitationConstrainedOutput {
   return {
-    answer:
-      'insufficient evidence: generated output was rejected because it was not grounded in supplied citations.',
+    answer: '근거 부족: 생성 결과가 제공된 인용에 근거하지 않아 거절되었습니다.',
     citationMemoryIds: [],
   };
 }

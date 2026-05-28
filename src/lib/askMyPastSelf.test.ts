@@ -19,7 +19,7 @@ describe('askMyPastSelf', () => {
     expect(result.status).toBe('implemented');
     expect(result.evidenceLabel).toBe('sufficient_evidence');
     expect(result.recommendation).toBe(
-      '이번에는 기능을 더 넣기보다 freeze하고 사용자 피드백을 먼저 받으세요.',
+      '이번에는 기능을 더 넣기보다 범위를 고정하고 사용자 피드백을 먼저 받으세요.',
     );
     expect(result.citationMemoryIds).toEqual([
       'mem_launch_may_anxiety_scope_delay',
@@ -34,7 +34,7 @@ describe('askMyPastSelf', () => {
           'memory:mem_launch_may_anxiety_scope_delay',
           'emotion:anxiety',
           'decision:chosen',
-          'outcome:launch-delayed-by-two-days-after-adding-graph-filters',
+          'outcome:그래프-필터를-더-붙인-뒤-출시가-이틀-늦어졌다',
         ]),
       }),
       expect.objectContaining({
@@ -45,7 +45,7 @@ describe('askMyPastSelf', () => {
       }),
     ]);
     expect(result.answer).toContain('mem_launch_may_anxiety_scope_delay');
-    expect(result.answer).toContain('기능을 더 넣기보다 freeze');
+    expect(result.answer).toContain('기능을 더 넣기보다 범위를 고정');
     expect(result.confidence).toBeGreaterThanOrEqual(0.8);
     expect(result.graphHighlightIds).toEqual(
       expect.arrayContaining([
@@ -58,16 +58,16 @@ describe('askMyPastSelf', () => {
         'emotion:avoidance',
         'decision:chosen',
         'decision:avoided',
-        'outcome:launch-delayed-by-two-days-after-adding-graph-filters',
-        'outcome:launch-delayed-after-onboarding-examples-and-replay-controls-were-added',
-        'outcome:launches-keep-being-postponed-when-feature-addition-wins-over-cutting-scope',
+        'outcome:그래프-필터를-더-붙인-뒤-출시가-이틀-늦어졌다',
+        'outcome:온보딩-예시와-결정-되짚기-제어를-추가한-뒤-출시가-늦어졌다',
+        'outcome:범위를-덜어내기보다-기능-추가를-택하면-출시가-계속-밀린다',
         'pattern:pattern_anxiety_scope_expansion_launch_delay',
       ]),
     );
     expect(new Set(result.graphHighlightIds).size).toBe(result.graphHighlightIds.length);
   });
 
-  test('returns insufficient evidence instead of generic advice when citations are too weak', () => {
+  test('returns 근거 부족 instead of generic advice when citations are too weak', () => {
     const patterns = detectRepeatedPatterns(insufficientPatternMemoryRecords).patterns;
 
     const result = askMyPastSelf({
@@ -81,7 +81,7 @@ describe('askMyPastSelf', () => {
     expect(result.recommendation).toBe(
       '아직 답변할 만큼의 개인 기억 근거가 부족합니다. 관련 기억을 더 가져온 뒤 다시 물어보세요.',
     );
-    expect(result.answer).toContain('insufficient evidence');
+    expect(result.answer).toContain('근거 부족');
     expect(result.answer).not.toContain('일반적으로');
     expect(result.citationMemoryIds).toEqual(['mem_single_anxiety_scope_delay']);
     expect(result.evidenceBullets).toEqual([
@@ -94,7 +94,7 @@ describe('askMyPastSelf', () => {
       'memory:mem_single_anxiety_scope_delay',
       'emotion:anxiety',
       'decision:chosen',
-      'outcome:one-launch-was-delayed',
+      'outcome:출시가-한-번-늦어졌다',
     ]);
     expect(result.confidence).toBe(0);
   });

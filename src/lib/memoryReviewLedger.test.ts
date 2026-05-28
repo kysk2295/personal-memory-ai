@@ -31,7 +31,7 @@ describe('buildMemoryReviewLedgerEntry', () => {
       memoryId: 'mem_freeze_vs_feature_addition',
       reviewedAt: '2026-05-28T05:00:00.000Z',
       changedFields: ['summary', 'rawText', 'topicTags'],
-      beforeSummary: 'Anxiety creates a freeze-vs-feature-addition choice, and feature addition postpones launches.',
+      beforeSummary: '불안하면 멈추거나 기능을 더 넣는 선택으로 빠지고 출시가 밀린다.',
       afterSummary: 'Edited source-backed freeze decision.',
       sourceRef: 'markdown://retros/freezing-vs-features.md',
     });

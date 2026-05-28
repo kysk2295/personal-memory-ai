@@ -29,7 +29,7 @@ export interface AskMyPastSelfAnswer {
   graphHighlightIds: string[];
 }
 
-const SUFFICIENT_RECOMMENDATION = '이번에는 기능을 더 넣기보다 freeze하고 사용자 피드백을 먼저 받으세요.';
+const SUFFICIENT_RECOMMENDATION = '이번에는 기능을 더 넣기보다 범위를 고정하고 사용자 피드백을 먼저 받으세요.';
 const INSUFFICIENT_RECOMMENDATION =
   '아직 답변할 만큼의 개인 기억 근거가 부족합니다. 관련 기억을 더 가져온 뒤 다시 물어보세요.';
 
@@ -148,7 +148,7 @@ function buildSufficientAnswer(
     `질문: ${question}`,
     `추천: ${recommendation}`,
     `근거: ${citations}.`,
-    '이 답변은 과거 기억에서 반복된 anxiety -> feature addition/scope expansion -> launch delay 흐름에만 근거합니다.',
+    '이 답변은 과거 기억에서 반복된 불안 -> 기능 추가/범위 확장 -> 출시 지연 흐름에만 근거합니다.',
   ].join(' ');
 }
 
@@ -160,9 +160,9 @@ function buildInsufficientAnswer(
     evidenceBullets.length > 0 ? evidenceBullets.map((bullet) => bullet.citationId).join(', ') : 'none';
   return [
     `질문: ${question}`,
-    `insufficient evidence: 답변을 만들 개인 기억 citation이 부족합니다.`,
-    `현재 확인된 citation ids: ${citations}.`,
-    'No generic advice was generated.',
+    `근거 부족: 답변을 만들 개인 기억 인용이 부족합니다.`,
+    `현재 확인된 인용 id: ${citations}.`,
+    '일반 조언은 생성하지 않았습니다.',
   ].join(' ');
 }
 
